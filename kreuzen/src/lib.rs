@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use arrayvec::ArrayVec;
 use gospel::read::{Reader, Le as _};
 use snafu::{OptionExt as _, ResultExt as _};
@@ -173,6 +175,8 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	Ok(())
 }
 
+pub static COUNTS: Mutex<[u32; 256]> = Mutex::new([0; 256]);
+
 fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 	while !at_end(&mut f, end) {
 		let pos = f.pos();
@@ -181,7 +185,9 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 				println!("{:05X} {op:?}", pos);
 			}
 			Err(e) => {
-				if !matches!(e, FunctionError::Op{source:OpError::UnknownOp { .. }, ..}) {
+				if let FunctionError::Op{source:OpError::UnknownOp { code }, ..} = e {
+					COUNTS.lock().unwrap()[code as usize] += 1;
+				} else {
 					for e in snafu::ErrorCompat::iter_chain(&e) {
 						println!("{e}");
 					}

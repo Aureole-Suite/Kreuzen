@@ -10,6 +10,18 @@ fn main() {
 			println!("Error processing file '{}'\n{}", path.display(), snafu::Report::from_error(err));
 		}
 	}
+
+	println!();
+	let mut counts = vec![];
+	for (i, v) in kreuzen::COUNTS.lock().unwrap().iter().enumerate() {
+		if *v > 0 {
+			counts.push((i as u8, *v));
+		}
+	}
+	counts.sort_by_key(|(_, count)| *count);
+	for (i, v) in counts {
+		println!("{i:02X}: {v}");
+	}
 }
 
 #[derive(Debug, snafu::Snafu)]
