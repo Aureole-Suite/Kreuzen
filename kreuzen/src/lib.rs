@@ -84,6 +84,8 @@ impl Type {
 			Type::FcAuto
 		} else if name.ends_with("Table") || name.ends_with("Data") {
 			Type::Table
+		} else if name.starts_with("AniBtlKisinKamae") {
+			Type::Table // todo
 		} else {
 			Type::Normal
 		}
@@ -365,13 +367,65 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			op.push(expr(f).context(ExprSnafu)?);
 			op.push(Arg::Label(f.u32()?));
 		}
+		0x2C => {
+			op.push(f.u16()?);
+			op.push(f.str()?);
+			op.push(f.u8()?);
+			op.push(f.u8()?);
+			op.push(f.u8()?);
+			op.push(f.u8()?);
+			op.push(f.u8()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.u8()?);
+			op.push(f.u8()?);
+		}
+		0x2D => {
+			op.push(f.u16()?);
+			op.push(f.u32()?);
+			op.push(f.u8()?);
+		}
+		0x32 => match op.sub(f.u8()?) {
+			0x0A => {
+				op.push(f.u16()?);
+				op.push(f.u8()?);
+				op.push(f.str()?);
+				op.push(f.u32()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
 		0x3B => match op.sub(f.u8()?) {
+			0 | 0x32 => {
+				op.push(call_arg2(f)?);
+				op.push(call_arg2(f)?);
+				op.push(call_arg2(f)?);
+				op.push(f.f32()?);
+				op.push(call_arg2(f)?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(call_arg2(f)?);
+				op.push(f.str()?);
+				op.push(call_arg2(f)?);
+				op.push(call_arg2(f)?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.f32()?);
+			}
 			0x3A => {
 				op.push(f.u16()?);
-				op.push(call_arg(f)?);
-				op.push(call_arg(f)?);
-				op.push(call_arg(f)?);
-				op.push(call_arg(f)?);
+				op.push(call_arg2(f)?);
+				op.push(call_arg2(f)?);
+				op.push(call_arg2(f)?);
+				op.push(call_arg2(f)?);
 			}
 			0x3E | 0x3F => {
 				op.push(f.u16()?);
@@ -434,9 +488,9 @@ pub enum CallArg {
 	_11(u32, u8),
 	_22(f32, f32),
 	_33(f32, u8),
-	_44(f32, u8), // sometimes a string
+	_44(f32, u8, String),
 	_55(u32, u8),
-	_DD(String), // sometimes a second string
+	_DD(String, String),
 	_FF(u32, u8),
 	_EE(f32, u8),
 	Unknown(u8),
@@ -447,9 +501,23 @@ fn call_arg(f: &mut Reader) -> Result<CallArg, OpError> {
 		0x11 => CallArg::_11(f.u32()?, f.u8()?),
 		0x22 => CallArg::_22(f.f32()?, f.f32()?),
 		0x33 => CallArg::_33(f.f32()?, f.u8()?),
-		0x44 => CallArg::_44(f.f32()?, f.u8()?), // also a string sometimes?
+		0x44 => CallArg::_44(f.f32()?, f.u8()?, String::new()),
 		0x55 => CallArg::_55(f.u32()?, f.u8()?),
-		0xDD => CallArg::_DD(f.str()?), // sometimes a second string
+		0xDD => CallArg::_DD(String::new(), f.str()?),
+		0xEE => CallArg::_EE(f.f32()?, f.u8()?),
+		0xFF => CallArg::_FF(f.u32()?, f.u8()?),
+		v => CallArg::Unknown(v),
+	})
+}
+
+fn call_arg2(f: &mut Reader) -> Result<CallArg, OpError> {
+	Ok(match f.u8()? {
+		0x11 => CallArg::_11(f.u32()?, f.u8()?),
+		0x22 => CallArg::_22(f.f32()?, f.f32()?),
+		0x33 => CallArg::_33(f.f32()?, f.u8()?),
+		0x44 => CallArg::_44(f.f32()?, f.u8()?, f.str()?),
+		0x55 => CallArg::_55(f.u32()?, f.u8()?),
+		0xDD => CallArg::_DD(f.str()?, f.str()?),
 		0xEE => CallArg::_EE(f.f32()?, f.u8()?),
 		0xFF => CallArg::_FF(f.u32()?, f.u8()?),
 		v => CallArg::Unknown(v),
