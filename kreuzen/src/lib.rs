@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::{LazyLock, Mutex}};
+use std::{collections::HashMap, ops::Deref, sync::{LazyLock, Mutex}};
 
 use arrayvec::ArrayVec;
 use gospel::read::{Reader, Le as _};
@@ -177,7 +177,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	Ok(())
 }
 
-pub static COUNTS: LazyLock<Mutex<HashMap<ArrayVec<u8, 2>, usize>>> = LazyLock::new(Default::default);
+pub static COUNTS: LazyLock<Mutex<HashMap<String, usize>>> = LazyLock::new(Default::default);
 
 fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 	while !at_end(&mut f, end) {
@@ -187,18 +187,20 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 				// println!("{:05X} {op:?}", pos);
 			}
 			Err(e) => {
-				if let FunctionError::Op{source:OpError::UnknownOp { code }, ..} = e {
-					let mut op = ArrayVec::new();
-					op.push(code);
-					*COUNTS.lock().unwrap().entry(op).or_default() += 1;
-				} else if let FunctionError::Op{source:OpError::UnknownSub { code, sub }, ..} = e {
-					let mut op = ArrayVec::new();
-					op.push(code);
-					op.push(sub);
-					*COUNTS.lock().unwrap().entry(op).or_default() += 1;
-				}
-				for e in snafu::ErrorCompat::iter_chain(&e) {
+				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
 					println!("{e}");
+					if let Some(OpError::UnknownOp { code }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
+						let k = format!("{code:02X}");
+						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
+					}
+					if let Some(OpError::UnknownSub { code, sub }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
+						let k = format!("{code:02X}{sub:02X}");
+						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
+					}
+					if let Some(ExprError::UnknownExpr { code, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
+						let k = format!("expr {code:02X}");
+						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
+					}
 				}
 				print!("{:#1X}", f.at(pos).unwrap().dump().num_width_as(0xFFFF).end(end));
 				break;

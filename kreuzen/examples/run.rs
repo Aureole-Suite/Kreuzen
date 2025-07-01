@@ -14,8 +14,8 @@ fn main() {
 	println!();
 	let mut counts = kreuzen::COUNTS.lock().unwrap().iter().map(|(i, v)| (i.clone(), *v)).collect::<Vec<_>>();
 	counts.sort_by_key(|(_, count)| *count);
-	for (i, v) in counts {
-		println!("{i:02X?}: {v}");
+	for (k, v) in counts {
+		println!("{k}: {v}");
 	}
 }
 
