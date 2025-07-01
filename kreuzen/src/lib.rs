@@ -451,11 +451,11 @@ fn expr(f: &mut Reader) -> Result<Expr, ExprError> {
 			0x24 => stack.push(Expr::_24(f.i32()?)),
 			0x25 => stack.push(Expr::_25(f.u16()?)),
 
-			v@(0x03 | 0x08 | 0x13) => {
+			v@(0x08 | 0x0E | 0x13) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Un(v, Box::new(a)));
 			}
-			v@(0x02 | 0x09 | 0x0B | 0x0E | 0x28) => {
+			v@(0x02 | 0x03 | 0x09 | 0x0B | 0x28) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				let b = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Bin(v, Box::new(b), Box::new(a)));
