@@ -167,7 +167,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 		let _span = tracing::trace_span!("chunk", name = entry.name.as_str(), start = entry.start, end).entered();
 		match Type::from_name(&entry.name) {
 			Type::Normal | Type::Lambda => {
-				println!("{}", entry.name);
+				println!("{} {:04X}", entry.name, entry.start);
 				read_func(f.at(entry.start)?, end).context(FunctionSnafu { name: &entry.name })?;
 			}
 			_ => {}
@@ -396,6 +396,9 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			op.push(f.u8()?);
 			op.push(f.u8()?);
 		}
+		0x10 => {
+			op.push(f.u16()?);
+		}
 		0x16 => {
 			op.push(f.u16()?);
 		}
@@ -440,10 +443,27 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 				op.push(call_arg(f)?);
 			}
 		}
+		0x22 => {
+			op.push(f.u16()?);
+			op.push(dialogue(f).context(DialogueSnafu)?);
+		}
+		0x23 => match op.sub(f.u8()?) {
+			0x05 => {
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u8()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
 		0x24 => {
 			op.push(f.u16()?);
 			op.push(f.u32()?);
 			op.push(dialogue(f).context(DialogueSnafu)?);
+		}
+		0x25 => {
+			op.push(f.u8()?);
 		}
 		0x26 => {}
 		0x2A => match op.sub(f.u8()?) {
@@ -629,6 +649,9 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 				op.push(f.f32()?);
 				op.push(f.u16()?);
 			}
+			0x07 => {
+				op.push(f.u16()?);
+			}
 			0x0B => {
 				op.push(f.u8()?);
 				op.push(f.f32()?);
@@ -743,6 +766,12 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
+		0x3D => {
+			op.push(f.u16()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.u8()?);
+		}
 		0x43 => match op.sub(f.u8()?) {
 			0x00 | 0x64 | 0x65 => {
 				op.push(f.u16()?);
@@ -758,6 +787,13 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
+		0x44 => {
+			op.push(f.u16()?);
+			op.push(f.u8()?);
+			op.push(f.f32()?);
+			op.push(f.u16()?);
+			op.push(f.f32()?);
+		}
 		0x45 => {
 			op.push(f.u16()?);
 			op.push(f.f32()?);
@@ -770,6 +806,17 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			0 => {
 				op.push(f.u16()?);
 				op.push(f.u16()?);
+				op.push(f.u16()?);
+			}
+			2 => {
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x49 => match op.sub(f.u8()?) {
+			0x06 => {
 				op.push(f.u16()?);
 			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
@@ -864,6 +911,13 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 		0x8A => match op.sub(f.u8()?) {
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
+		0x91 => match op.sub(f.u8()?) {
+			0 => {
+				op.push(f.u16()?);
+				op.push(f.u32()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
 		0xAC => match op.sub(f.u8()?) {
 			0x00 => {
 				op.push(f.u8()?);
@@ -889,10 +943,23 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			op.push(f.u16()?);
 			op.push(f.u16()?);
 		}
+		0xBB => {
+			op.push(f.u16()?);
+		}
 		0xC8 => match op.sub(f.u8()?) {
+			1 => {
+				op.push(f.u16()?);
+				op.push(f.u32()?);
+			}
 			2 => {
 				op.push(f.u16()?);
 				op.push(f.u32()?);
+				op.push(f.u16()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0xC9 => match op.sub(f.u8()?) {
+			0x01 => {
 				op.push(f.u16()?);
 			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
@@ -992,11 +1059,11 @@ fn expr(f: &mut Reader) -> Result<Expr, ExprError> {
 			0x24 => stack.push(Expr::_24(f.i32()?)),
 			0x25 => stack.push(Expr::_25(f.u16()?)),
 
-			v@(0x08) => {
+			v@(0x03 | 0x08 | 0x13) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Un(v, Box::new(a)));
 			}
-			v@(0x09 | 0x0B | 0x28) => {
+			v@(0x09 | 0x0B | 0x0E | 0x28) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				let b = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Bin(v, Box::new(b), Box::new(a)));
@@ -1039,6 +1106,7 @@ pub enum DialoguePart {
 	Page,
 	_03,
 	_09,
+	_0B,
 	_10(u16),
 	_11(u32),
 	_12(u32),
@@ -1054,6 +1122,7 @@ impl std::fmt::Debug for DialoguePart {
 			Self::Page => write!(f, "Page"),
 			Self::_03 => write!(f, "_03"),
 			Self::_09 => write!(f, "_09"),
+			Self::_0B => write!(f, "_0B"),
 			Self::_10(v) => f.debug_tuple("_10").field(v).finish(),
 			Self::_11(v) => f.debug_tuple("_11").field(v).finish(),
 			Self::_12(v) => f.debug_tuple("_12").field(v).finish(),
@@ -1087,6 +1156,7 @@ fn dialogue(f: &mut Reader) -> Result<Dialogue, DialogueError> {
 				0x02 => out.push(DialoguePart::Page),
 				0x03 => out.push(DialoguePart::_03),
 				0x09 => out.push(DialoguePart::_09),
+				0x0B => out.push(DialoguePart::_0B),
 				0x10 => out.push(DialoguePart::_10(f.u16()?)),
 				0x11 => out.push(DialoguePart::_11(f.u32()?)),
 				0x12 => out.push(DialoguePart::_12(f.u32()?)),
