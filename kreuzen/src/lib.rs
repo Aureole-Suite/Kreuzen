@@ -165,7 +165,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 		let _span = tracing::trace_span!("chunk", name = entry.name.as_str(), start = entry.start, end).entered();
 		match Type::from_name(&entry.name) {
 			Type::Normal | Type::Lambda => {
-				print!("{}", entry.name);
+				println!("{}", entry.name);
 				read_func(f.at(entry.start)?, end).context(FunctionSnafu { name: &entry.name })?;
 			}
 			_ => {}
@@ -253,6 +253,11 @@ impl Op {
 	pub fn push(&mut self, arg: impl Into<Arg>) {
 		self.args.push(arg.into());
 	}
+
+	fn sub(&mut self, u8: u8) -> u8 {
+		self.op.push(u8);
+		u8
+	}
 }
 
 impl std::fmt::Debug for Op {
@@ -310,6 +315,8 @@ pub enum OpError {
 	},
 	#[snafu(display("unknown op {code:02X}"))]
 	UnknownOp { code: u8 },
+	#[snafu(display("unknown op sub {code:02X}{sub:02X}"))]
+	UnknownSub { code: u8, sub: u8 },
 	#[snafu(display("failed to read expr"))]
 	Expr {
 		source: ExprError,
@@ -318,15 +325,15 @@ pub enum OpError {
 
 fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
-	let byte = f.u8()?;
+	let code = f.u8()?;
 	let mut op = Op {
 		op: ArrayVec::new(),
 		line: 0,
 		unk: 0xFF,
 		args: Vec::new(),
 	};
-	op.op.push(byte);
-	if byte == 0x00 || byte == 0x01 {
+	op.op.push(code);
+	if code == 0x00 || code == 0x01 {
 		return Ok(op);
 	}
 
@@ -334,7 +341,7 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	f.check_u8(0)?;
 	op.unk = f.u8()?;
 
-	match byte {
+	match code {
 		0x00 => unreachable!(),
 		0x01 => unreachable!(),
 		0x02 => {
@@ -352,7 +359,20 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			op.push(expr(f).context(ExprSnafu)?);
 			op.push(Arg::Label(f.u32()?));
 		}
-		0x3C => match f.u8()? {
+		0x3B => match op.sub(f.u8()?) {
+			0x3A => {
+				op.push(f.u16()?);
+				op.push(call_arg(f)?);
+				op.push(call_arg(f)?);
+				op.push(call_arg(f)?);
+				op.push(call_arg(f)?);
+			}
+			0x3E | 0x3F => {
+				op.push(f.u16()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x3C => match op.sub(f.u8()?) {
 			1 => {
 				op.push(f.u16()?);
 				op.push(f.str()?);
@@ -378,24 +398,20 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 				op.push(f.str()?);
 				op.push(f.str()?);
 			}
-			code => return UnknownOpSnafu { code }.fail(),
+			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
-		0x7A => match f.u8()? {
+		0x7A => match op.sub(f.u8()?) {
 			0 => {
 				op.push(f.str()?);
 			}
-			1 => {
-				op.push(f.u16()?);
-				op.push(f.str()?);
-			}
-			2 => {
+			1 | 2 => {
 				op.push(f.u16()?);
 				op.push(f.str()?);
 			}
 			3 => {
 				op.push(f.str()?);
 			}
-			code => return UnknownOpSnafu { code }.fail(),
+			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
 		code => return UnknownOpSnafu { code }.fail(),
 	}
@@ -427,7 +443,7 @@ fn call_arg(f: &mut Reader) -> Result<CallArg, OpError> {
 		0x33 => CallArg::_33(f.f32()?, f.u8()?),
 		0x44 => CallArg::_44(f.f32()?, f.u8()?), // also a string sometimes?
 		0x55 => CallArg::_55(f.u32()?, f.u8()?),
-		0xDD => CallArg::_DD(f.str()?.to_owned()), // sometimes a second string
+		0xDD => CallArg::_DD(f.str()?), // sometimes a second string
 		0xEE => CallArg::_EE(f.f32()?, f.u8()?),
 		0xFF => CallArg::_FF(f.u32()?, f.u8()?),
 		v => CallArg::Unknown(v),
