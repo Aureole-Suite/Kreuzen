@@ -194,10 +194,9 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 					op.push(code);
 					op.push(sub);
 					*COUNTS.lock().unwrap().entry(op).or_default() += 1;
-				} else {
-					for e in snafu::ErrorCompat::iter_chain(&e) {
-						println!("{e}");
-					}
+				}
+				for e in snafu::ErrorCompat::iter_chain(&e) {
+					println!("{e}");
 				}
 				print!("{:#1X}", f.at(pos).unwrap().dump().num_width_as(0xFFFF).end(end));
 				break;
@@ -304,7 +303,7 @@ impl std::fmt::Debug for Arg {
 			Arg::I8(v) => write!(f, "{v}"),
 			Arg::I16(v) => write!(f, "{v}"),
 			Arg::I32(v) => write!(f, "{v}"),
-			Arg::F32(v) => write!(f, "{v}"),
+			Arg::F32(v) => write!(f, "{v:?}"),
 			Arg::Expr(e) => write!(f, "{e:?}"),
 			Arg::Label(l) => write!(f, "=> {l:08X}"),
 			Arg::CallArg(ca) => write!(f, "{ca:?}"),
@@ -322,7 +321,7 @@ pub enum OpError {
 	},
 	#[snafu(display("unknown op {code:02X}"))]
 	UnknownOp { code: u8 },
-	#[snafu(display("unknown op sub {code:02X}{sub:02X}"))]
+	#[snafu(display("unknown op {code:02X}{sub:02X}"))]
 	UnknownSub { code: u8, sub: u8 },
 	#[snafu(display("failed to read expr"))]
 	Expr {
@@ -470,7 +469,7 @@ pub enum ExprError {
 	#[snafu(display("failed to read op at {pos:X}"))]
 	ExprOp {
 		pos: usize,
-        #[snafu(source(from(OpError, Box::new)))]
+		#[snafu(source(from(OpError, Box::new)))]
 		source: Box<OpError>,
 	},
 	#[snafu(display("empty stack"))]
