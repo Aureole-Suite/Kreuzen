@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::{collections::HashMap, sync::{LazyLock, Mutex}};
 
 use arrayvec::ArrayVec;
 use gospel::read::{Reader, Le as _};
@@ -175,7 +175,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	Ok(())
 }
 
-pub static COUNTS: Mutex<[u32; 256]> = Mutex::new([0; 256]);
+pub static COUNTS: LazyLock<Mutex<HashMap<ArrayVec<u8, 2>, usize>>> = LazyLock::new(Default::default);
 
 fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 	while !at_end(&mut f, end) {
@@ -186,7 +186,14 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 			}
 			Err(e) => {
 				if let FunctionError::Op{source:OpError::UnknownOp { code }, ..} = e {
-					COUNTS.lock().unwrap()[code as usize] += 1;
+					let mut op = ArrayVec::new();
+					op.push(code);
+					*COUNTS.lock().unwrap().entry(op).or_default() += 1;
+				} else if let FunctionError::Op{source:OpError::UnknownSub { code, sub }, ..} = e {
+					let mut op = ArrayVec::new();
+					op.push(code);
+					op.push(sub);
+					*COUNTS.lock().unwrap().entry(op).or_default() += 1;
 				} else {
 					for e in snafu::ErrorCompat::iter_chain(&e) {
 						println!("{e}");
