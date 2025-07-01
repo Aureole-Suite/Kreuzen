@@ -1,17 +1,16 @@
-use std::ffi::{CStr, CString};
-
+use arrayvec::ArrayVec;
 use gospel::read::{Reader, Le as _};
 use snafu::{OptionExt as _, ResultExt as _};
 
 #[extend::ext]
 impl<'a> Reader<'a> {
-	fn str(&mut self) -> Result<&'a str, gospel::read::Error> {
+	fn str(&mut self) -> Result<String, gospel::read::Error> {
 		let pos = self.pos();
 		let cstr = self.cstr()?;
 		cstr.to_str().map_err(|e| gospel::read::Error::Other {
 			pos,
 			source: Box::new(e),
-		})
+		}).map(String::from)
 	}
 
 	fn ccstr(&mut self) -> Result<&'a [u8], gospel::read::Error> {
@@ -164,7 +163,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 		let _span = tracing::trace_span!("chunk", name = entry.name.as_str(), start = entry.start, end).entered();
 		match Type::from_name(&entry.name) {
 			Type::Normal | Type::Lambda => {
-				print!("{:64}\t{:#1.32X}", entry.name, f.at(entry.start).unwrap().dump().num_width_as(0xFFFFF).end(end));
+				print!("{}", entry.name);
 				read_func(f.at(entry.start)?, end).context(FunctionSnafu { name: &entry.name })?;
 			}
 			_ => {}
@@ -178,7 +177,9 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 	while !at_end(&mut f, end) {
 		let pos = f.pos();
 		match read_op(&mut f).context(OpSnafu { pos }) {
-			Ok(()) => {}
+			Ok(op) => {
+				println!("{:05X} {op:?}", pos);
+			}
 			Err(e) => {
 				if !matches!(e, FunctionError::Op{source:OpError::UnknownOp { .. }, ..}) {
 					for e in snafu::ErrorCompat::iter_chain(&e) {
@@ -191,6 +192,106 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 		}
 	}
 	Ok(())
+}
+
+#[derive(Clone, PartialEq)]
+pub struct Op {
+	pub op: ArrayVec<u8, 2>,
+	pub line: u16,
+	pub unk: u8,
+	pub args: Vec<Arg>
+}
+
+#[derive(Clone, PartialEq, derive_more::From)]
+pub enum Arg {
+	Str(String),
+	U8(u8),
+	U16(u16),
+	U32(u32),
+	I8(i8),
+	I16(i16),
+	I32(i32),
+	F32(f32),
+	Expr(Expr),
+	#[from(skip)]
+	Label(u32),
+	CallArg(CallArg),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Expr {
+	_0(i32),
+	_1c(Op), // op
+	_1e(u16),
+	_1f(u8),
+	_20(u8),
+	_21(u16, u8),
+	_23(u8),
+	_24(i32),
+	_25(u16),
+	Bin(u8, Box<Expr>, Box<Expr>),
+	Un(u8, Box<Expr>),
+}
+
+impl Op {
+	pub fn name(arg: &[u8]) -> Option<&'static str> {
+		Some(match arg {
+			[0x01] => "return",
+			[0x02] => "call",
+			[0x03] => "goto",
+			[0x05] => "if",
+			_ => return None,
+		})
+	}
+	
+	pub fn push(&mut self, arg: impl Into<Arg>) {
+		self.args.push(arg.into());
+	}
+}
+
+impl std::fmt::Debug for Op {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		if self.line != 0 {
+			write!(f, "{}@", self.line)?;
+		}
+		if let Some(name) = Self::name(&self.op) {
+			write!(f, "{name}")?;
+		} else {
+			write!(f, "op")?;
+			for byte in &self.op {
+				write!(f, "{byte:02X}")?;
+			}
+		}
+		if self.unk != 0xFF {
+			write!(f, ":{:04X}", self.unk)?;
+		}
+		write!(f, "(")?;
+		for (i, arg) in self.args.iter().enumerate() {
+			if i > 0 {
+				write!(f, ", ")?;
+			}
+			arg.fmt(f)?;
+		}
+		write!(f, ")")
+	}
+}
+
+impl std::fmt::Debug for Arg {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Arg::Str(s) => write!(f, "{s:?}"),
+			Arg::U8(v) => write!(f, "{v}"),
+			Arg::U16(v) => write!(f, "{v}"),
+			Arg::U32(v) => write!(f, "{v}"),
+			Arg::I8(v) => write!(f, "{v}"),
+			Arg::I16(v) => write!(f, "{v}"),
+			Arg::I32(v) => write!(f, "{v}"),
+			Arg::F32(v) => write!(f, "{v}"),
+			Arg::Expr(e) => write!(f, "{e:?}"),
+			Arg::Label(l) => write!(f, "=> {l:08X}"),
+			Arg::CallArg(ca) => write!(f, "{ca:?}"),
+		}
+	}
 }
 
 #[derive(Debug, snafu::Snafu)]
@@ -209,100 +310,90 @@ pub enum OpError {
 	},
 }
 
-fn read_op(f: &mut Reader) -> Result<(), OpError> {
+fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
-	let op = f.u8()?;
-	if op == 0x00 {
-		println!("{pos:04X}:nop");
-		return Ok(());
-	}
-	if op == 0x01 {
-		println!("{pos:04X}:return");
-		return Ok(());
+	let byte = f.u8()?;
+	let mut op = Op {
+		op: ArrayVec::new(),
+		line: 0,
+		unk: 0xFF,
+		args: Vec::new(),
+	};
+	op.op.push(byte);
+	if byte == 0x00 || byte == 0x01 {
+		return Ok(op);
 	}
 
-	let line = f.u16()?;
+	op.line = f.u16()?;
 	f.check_u8(0)?;
-	let x = f.u8()?;
-	let h = format!("{pos:04X}:{line:04X}@{x:02X}  ");
+	op.unk = f.u8()?;
 
-	match op {
+	match byte {
 		0x00 => unreachable!(),
+		0x01 => unreachable!(),
 		0x02 => {
-			let a = f.u8()?;
-			let b = f.str()?;
+			op.push(f.u8()?);
+			op.push(f.str()?);
 			let n = f.u8()?;
-			let mut args = Vec::with_capacity(n as usize);
 			for _ in 0..n {
-				args.push(call_arg(f)?);
+				op.push(call_arg(f)?);
 			}
-			println!("{h}Call({a} {b:?} {args:?}");
 		}
 		0x03 => {
-			let b = f.u32()?;
-			println!("{h}goto => {b:08X}");
+			op.push(Arg::Label(f.u32()?));
 		}
 		0x05 => {
-			let expr = expr(f).context(ExprSnafu)?;
-			let addr = f.u32()?;
-			println!("{h}if {expr:?} => {addr:08X}");
+			op.push(expr(f).context(ExprSnafu)?);
+			op.push(Arg::Label(f.u32()?));
 		}
 		0x3C => match f.u8()? {
 			1 => {
-				let a = f.u16()?;
-				let s1 = f.str()?;
-				let s2 = f.str()?;
-				println!("{h}3C:1({a} {s1:?} {s2:?})");
+				op.push(f.u16()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
 			}
 			3 => {
-				let a = f.u16()?;
-				let s1 = f.str()?;
-				let s2 = f.str()?;
-				let s3 = f.str()?;
-				let s4 = f.str()?;
-				let s5 = f.str()?;
-				println!("{h}3C:3({a} {s1:?} {s2:?} {s3:?} {s4:?} {s5:?})");
+				op.push(f.u16()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
 			}
 			4 => {
-				let a = f.u16()?;
-				let s1 = f.str()?;
-				println!("{h}3C:4({a} {s1:?})");
+				op.push(f.u16()?);
+				op.push(f.str()?);
 			}
 			5 => {
-				let a = f.u16()?;
-				let s1 = f.str()?;
-				let s2 = f.str()?;
-				let s3 = f.str()?;
-				let s4 = f.str()?;
-				let s5 = f.str()?;
-				println!("{h}3C:5({a} {s1:?} {s2:?} {s3:?} {s4:?} {s5:?})");
+				op.push(f.u16()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
 			}
 			code => return UnknownOpSnafu { code }.fail(),
 		}
 		0x7A => match f.u8()? {
 			0 => {
-				let s1 = f.str()?;
-				println!("{h}7A:0({s1:?})");
+				op.push(f.str()?);
 			}
 			1 => {
-				let s1 = f.u16()?;
-				let s2 = f.str()?;
-				println!("{h}7A:1({s1} {s2:?})");
+				op.push(f.u16()?);
+				op.push(f.str()?);
 			}
 			2 => {
-				let s1 = f.u16()?;
-				let s2 = f.str()?;
-				println!("{h}7A:2({s1} {s2:?})");
+				op.push(f.u16()?);
+				op.push(f.str()?);
 			}
 			3 => {
-				let s1 = f.str()?;
-				println!("{h}7A:3({s1})");
+				op.push(f.str()?);
 			}
 			code => return UnknownOpSnafu { code }.fail(),
 		}
 		code => return UnknownOpSnafu { code }.fail(),
 	}
-	Ok(())
+	Ok(op)
 }
 
 fn at_end(f: &mut Reader<'_>, end: usize) -> bool {
@@ -311,12 +402,12 @@ fn at_end(f: &mut Reader<'_>, end: usize) -> bool {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-enum CallArg {
-	_55(u32, u8),
+pub enum CallArg {
 	_11(u32, u8),
 	_22(f32, f32),
 	_33(f32, u8),
 	_44(f32, u8), // sometimes a string
+	_55(u32, u8),
 	_DD(String), // sometimes a second string
 	_FF(u32, u8),
 	_EE(f32, u8),
@@ -337,21 +428,6 @@ fn call_arg(f: &mut Reader) -> Result<CallArg, OpError> {
 	})
 }
 
-#[derive(Debug, Clone, PartialEq)]
-enum Expr {
-	_0(i32),
-	_1c(()), // op
-	_1e(u16),
-	_1f(u8),
-	_20(u8),
-	_21(u16, u8),
-	_23(u8),
-	_24(i32),
-	_25(u16),
-	Bin(u8, Box<Expr>, Box<Expr>),
-	Un(u8, Box<Expr>),
-}
-
 #[derive(Debug, snafu::Snafu)]
 pub enum ExprError {
 	#[snafu(display("invalid read (at {location})"), context(false))]
@@ -360,8 +436,8 @@ pub enum ExprError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("unknown expr {code:02X}"))]
-	UnknownExpr { code: u8 },
+	#[snafu(display("unknown expr {code:02X} {stack:?}"))]
+	UnknownExpr { code: u8, stack: Vec<Expr> },
 	#[snafu(display("failed to read op at {pos:X}"))]
 	ExprOp {
 		pos: usize,
@@ -397,12 +473,12 @@ fn expr(f: &mut Reader) -> Result<Expr, ExprError> {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Un(v, Box::new(a)));
 			}
-			v@(0x28) => {
+			v@(0x09 | 0x0B | 0x28) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				let b = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Bin(v, Box::new(b), Box::new(a)));
 			}
-			code => return UnknownExprSnafu { code }.fail(),
+			code => return UnknownExprSnafu { code, stack }.fail(),
 		}
 	}
 	if stack.len() == 1 {
