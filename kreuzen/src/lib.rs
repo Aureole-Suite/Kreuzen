@@ -285,7 +285,7 @@ impl std::fmt::Debug for Op {
 			}
 		}
 		if self.unk != 0xFF {
-			write!(f, ":{:04X}", self.unk)?;
+			write!(f, ":{}", self.unk)?;
 		}
 		write!(f, "(")?;
 		for (i, arg) in self.args.iter().enumerate() {
@@ -453,7 +453,7 @@ fn expr(f: &mut Reader) -> Result<Expr, ExprError> {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Un(v, Box::new(a)));
 			}
-			v@(0x09 | 0x0B | 0x0E | 0x28) => {
+			v@(0x02 | 0x09 | 0x0B | 0x0E | 0x28) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				let b = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Bin(v, Box::new(b), Box::new(a)));
@@ -464,7 +464,7 @@ fn expr(f: &mut Reader) -> Result<Expr, ExprError> {
 	if stack.len() == 1 {
 		Ok(stack.pop().unwrap())
 	} else {
-		panic!("expected 1 item on stack, got {stack:?}");
+		OverfullStackSnafu { stack }.fail()
 	}
 }
 
