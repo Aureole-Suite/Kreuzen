@@ -230,6 +230,7 @@ pub enum Arg {
 	#[from(skip)]
 	Label(u32),
 	CallArg(CallArg),
+	Dialogue(Dialogue),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -311,6 +312,7 @@ impl std::fmt::Debug for Arg {
 			Arg::Expr(e) => write!(f, "{e:?}"),
 			Arg::Label(l) => write!(f, "=> {l:08X}"),
 			Arg::CallArg(ca) => write!(f, "{ca:?}"),
+			Arg::Dialogue(d) => write!(f, "{d:?}"),
 		}
 	}
 }
@@ -330,6 +332,10 @@ pub enum OpError {
 	#[snafu(display("failed to read expr"))]
 	Expr {
 		source: ExprError,
+	},
+	#[snafu(display("failed to read dialogue"))]
+	Dialogue {
+		source: DialogueError,
 	},
 }
 
@@ -434,6 +440,12 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 				op.push(call_arg(f)?);
 			}
 		}
+		0x24 => {
+			op.push(f.u16()?);
+			op.push(f.u32()?);
+			op.push(dialogue(f).context(DialogueSnafu)?);
+		}
+		0x26 => {}
 		0x2A => match op.sub(f.u8()?) {
 			0 => {
 				op.push(f.str()?);
@@ -997,4 +1009,92 @@ fn expr(f: &mut Reader) -> Result<Expr, ExprError> {
 	} else {
 		panic!("expected 1 item on stack, got {stack:?}");
 	}
+}
+
+#[derive(Debug, snafu::Snafu)]
+pub enum DialogueError {
+	#[snafu(display("invalid read (at {location})"), context(false))]
+	Read {
+		source: gospel::read::Error,
+		#[snafu(implicit)]
+		location: snafu::Location,
+	},
+	#[snafu(display("invalid string: {text:?}"))]
+	String {
+		text: String,
+	},
+	#[snafu(display("unknown dialogue control byte {byte:02X}"))]
+	BadControl {
+		byte: u8,
+	},
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Dialogue(pub Vec<DialoguePart>);
+
+#[derive(Clone, PartialEq)]
+pub enum DialoguePart {
+	String(String),
+	Line,
+	Page,
+	_03,
+	_09,
+	_10(u16),
+	_11(u32),
+	_12(u32),
+	_17(u16),
+	_19(u16),
+}
+
+impl std::fmt::Debug for DialoguePart {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::String(s) => s.fmt(f),
+			Self::Line => write!(f, "Line"),
+			Self::Page => write!(f, "Page"),
+			Self::_03 => write!(f, "_03"),
+			Self::_09 => write!(f, "_09"),
+			Self::_10(v) => f.debug_tuple("_10").field(v).finish(),
+			Self::_11(v) => f.debug_tuple("_11").field(v).finish(),
+			Self::_12(v) => f.debug_tuple("_12").field(v).finish(),
+			Self::_17(v) => f.debug_tuple("_17").field(v).finish(),
+			Self::_19(v) => f.debug_tuple("_19").field(v).finish(),
+		}
+	}
+}
+
+fn dialogue(f: &mut Reader) -> Result<Dialogue, DialogueError> {
+	let mut out = Vec::new();
+	let mut scratch = Vec::new();
+	loop {
+		let byte = f.u8()?;
+		if byte >= 0x20 {
+			scratch.push(byte);
+		} else {
+			if !scratch.is_empty() {
+				match String::from_utf8(scratch) {
+					Ok(text) => out.push(DialoguePart::String(text)),
+					Err(e) => {
+						let text = String::from_utf8_lossy(&e.into_bytes()).into_owned();
+						return StringSnafu { text }.fail();
+					}
+				}
+				scratch = Vec::new();
+			}
+			match byte {
+				0x00 => break,
+				0x01 => out.push(DialoguePart::Line),
+				0x02 => out.push(DialoguePart::Page),
+				0x03 => out.push(DialoguePart::_03),
+				0x09 => out.push(DialoguePart::_09),
+				0x10 => out.push(DialoguePart::_10(f.u16()?)),
+				0x11 => out.push(DialoguePart::_11(f.u32()?)),
+				0x12 => out.push(DialoguePart::_12(f.u32()?)),
+				0x17 => out.push(DialoguePart::_17(f.u16()?)),
+				0x19 => out.push(DialoguePart::_19(f.u16()?)),
+				byte => return BadControlSnafu { byte }.fail(),
+			}
+		}
+	}
+	Ok(Dialogue(out))
 }
