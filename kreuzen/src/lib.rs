@@ -247,7 +247,60 @@ fn read_op(f: &mut Reader) -> Result<(), OpError> {
 			let addr = f.u32()?;
 			println!("{h}if {expr:?} => {addr:08X}");
 		}
-		unk => return UnknownOpSnafu { code: unk }.fail(),
+		0x3C => match f.u8()? {
+			1 => {
+				let a = f.u16()?;
+				let s1 = f.str()?;
+				let s2 = f.str()?;
+				println!("{h}3C:1({a} {s1:?} {s2:?})");
+			}
+			3 => {
+				let a = f.u16()?;
+				let s1 = f.str()?;
+				let s2 = f.str()?;
+				let s3 = f.str()?;
+				let s4 = f.str()?;
+				let s5 = f.str()?;
+				println!("{h}3C:3({a} {s1:?} {s2:?} {s3:?} {s4:?} {s5:?})");
+			}
+			4 => {
+				let a = f.u16()?;
+				let s1 = f.str()?;
+				println!("{h}3C:4({a} {s1:?})");
+			}
+			5 => {
+				let a = f.u16()?;
+				let s1 = f.str()?;
+				let s2 = f.str()?;
+				let s3 = f.str()?;
+				let s4 = f.str()?;
+				let s5 = f.str()?;
+				println!("{h}3C:5({a} {s1:?} {s2:?} {s3:?} {s4:?} {s5:?})");
+			}
+			code => return UnknownOpSnafu { code }.fail(),
+		}
+		0x7A => match f.u8()? {
+			0 => {
+				let s1 = f.str()?;
+				println!("{h}7A:0({s1:?})");
+			}
+			1 => {
+				let s1 = f.u16()?;
+				let s2 = f.str()?;
+				println!("{h}7A:1({s1} {s2:?})");
+			}
+			2 => {
+				let s1 = f.u16()?;
+				let s2 = f.str()?;
+				println!("{h}7A:2({s1} {s2:?})");
+			}
+			3 => {
+				let s1 = f.str()?;
+				println!("{h}7A:3({s1})");
+			}
+			code => return UnknownOpSnafu { code }.fail(),
+		}
+		code => return UnknownOpSnafu { code }.fail(),
 	}
 	Ok(())
 }
