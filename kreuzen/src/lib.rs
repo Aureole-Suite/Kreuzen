@@ -84,7 +84,7 @@ impl Type {
 			Type::FcAuto
 		} else if name.ends_with("Table") || name.ends_with("Data") {
 			Type::Table
-		} else if name.starts_with("AniBtlKisinKamae") {
+		} else if name.starts_with("AniBtlKisin") {
 			Type::Table // todo
 		} else {
 			Type::Normal
@@ -254,6 +254,7 @@ impl Op {
 			[0x02] => "call",
 			[0x03] => "goto",
 			[0x05] => "if",
+			[0x16] => "sleep",
 			_ => return None,
 		})
 	}
@@ -367,6 +368,31 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			op.push(expr(f).context(ExprSnafu)?);
 			op.push(Arg::Label(f.u32()?));
 		}
+		0x0A => {
+			op.push(f.u8()?);
+			op.push(expr(f).context(ExprSnafu)?);
+		}
+		0x16 => {
+			op.push(f.u16()?);
+		}
+		0x1E => {
+			op.push(f.u16()?);
+			op.push(f.u8()?);
+			op.push(f.str()?);
+			op.push(f.u8()?);
+			let n = f.u8()?;
+			for _ in 0..n {
+				op.push(call_arg(f)?);
+			}
+		}
+		0x2A => match op.sub(f.u8()?) {
+			0 => {
+				op.push(f.str()?);
+				op.push(f.str()?);
+				op.push(f.u8()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
 		0x2C => {
 			op.push(f.u16()?);
 			op.push(f.str()?);
@@ -387,12 +413,148 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			op.push(f.u32()?);
 			op.push(f.u8()?);
 		}
+		0x2F => match op.sub(f.u8()?) {
+			6 | 7 => {
+				op.push(f.u32()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x30 => match op.sub(f.u8()?) {
+			0 | 1 => {
+				op.push(f.u16()?);
+				op.push(f.str()?);
+				op.push(f.str()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x31 => match op.sub(f.u8()?) {
+			0 | 1 | 2 | 3 => {
+				op.push(f.str()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
 		0x32 => match op.sub(f.u8()?) {
 			0x0A => {
 				op.push(f.u16()?);
 				op.push(f.u8()?);
 				op.push(f.str()?);
 				op.push(f.u32()?);
+			}
+			0x0B => {
+				op.push(f.u16()?);
+				op.push(f.u8()?);
+			}
+			0x0C => {
+				op.push(f.u16()?);
+				op.push(call_arg(f)?);
+				op.push(f.u16()?);
+				op.push(f.u32()?);
+				op.push(call_arg(f)?);
+				op.push(call_arg(f)?);
+				op.push(call_arg(f)?);
+				op.push(call_arg(f)?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(call_arg(f)?);
+				op.push(call_arg(f)?);
+				op.push(call_arg(f)?);
+				op.push(f.u8()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x33 => match op.sub(f.u8()?) {
+			0x00 => {
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u8()?);
+				op.push(f.u8()?);
+			}
+			0x01 => {
+				op.push(f.u16()?);
+				op.push(call_arg2(f)?);
+				op.push(call_arg2(f)?);
+				op.push(f.u8()?);
+			}
+			0x02 => {
+				op.push(f.u8()?);
+				op.push(f.u16()?);
+			}
+			0x03 => {
+				op.push(f.u16()?);
+			}
+			0x04 => {
+				op.push(f.u8()?);
+			}
+			0x38 => {}
+			0x41 => {
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+			}
+			0x46 => {
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+			}
+			0x47 => {}
+			0x48 => {
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+			}
+			0x4B => {
+				op.push(f.u16()?);
+				op.push(f.u8()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x35 => match op.sub(f.u8()?) {
+			0 | 1 => {
+				op.push(f.u16()?);
+				op.push(f.u32()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x36 => match op.sub(f.u8()?) {
+			0 => {}
+			5 => {
+				op.push(f.u8()?);
+				op.push(f.f32()?);
+				op.push(f.u16()?);
+			}
+			0x0B => {
+				op.push(f.u8()?);
+				op.push(f.f32()?);
+				op.push(f.u16()?);
+			}
+			0x13 => {
+				op.push(f.u16()?);
+				op.push(f.str()?);
+				op.push(f.u8()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.u16()?);
+				op.push(f.u8()?);
+			}
+			0x14 => {
+				op.push(f.u8()?);
+				op.push(f.u16()?);
+				op.push(f.str()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.u16()?);
 			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
@@ -460,6 +622,67 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
+		0x43 => match op.sub(f.u8()?) {
+			0x65 => {
+				op.push(f.u16()?);
+				op.push(f.f32()?);
+				op.push(f.u16()?);
+			}
+			0xFE => {
+				op.push(f.u16()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x45 => {
+			op.push(f.u16()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.u16()?);
+			op.push(f.u16()?);
+		}
+		0x46 => match op.sub(f.u8()?) {
+			0 => {
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x4B => {
+			op.push(f.u16()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.u16()?);
+			op.push(f.u8()?);
+		}
+		0x53 => match op.sub(f.u8()?) {
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x54 => match op.sub(f.u8()?) {
+			0x0B => {
+				op.push(f.u16()?);
+			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x6C => {
+			op.push(f.u16()?);
+			op.push(f.f32()?);
+			op.push(f.i32()?);
+		}
+		0x76 => {
+			op.push(f.u16()?);
+			op.push(f.str()?);
+			op.push(f.str()?);
+			op.push(f.u8()?);
+			op.push(f.u8()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+		}
 		0x7A => match op.sub(f.u8()?) {
 			0 => {
 				op.push(f.str()?);
@@ -471,6 +694,28 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			3 => {
 				op.push(f.str()?);
 			}
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0x80 => {
+			op.push(f.f32()?);
+		}
+		0x8A => match op.sub(f.u8()?) {
+			sub => return UnknownSubSnafu { code, sub }.fail(),
+		}
+		0xAE => {
+			op.push(f.str()?);
+			op.push(f.u16()?);
+		}
+		0xB5 => {
+			op.push(f.u16()?);
+			op.push(f.u8()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.f32()?);
+			op.push(f.u16()?);
+			op.push(f.u16()?);
+		}
+		0xFF => match op.sub(f.u8()?) {
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
 		code => return UnknownOpSnafu { code }.fail(),
