@@ -341,7 +341,7 @@ pub enum OpError {
 	},
 }
 
-mod table;
+mod spec;
 
 fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
@@ -360,7 +360,69 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	op.line = f.u16()?;
 	f.check_u8(0)?;
 	op.unk = f.u8()?;
-	table::read(f, &mut op, code)?;
+
+	let spec = match spec::SPEC.get(&code) {
+		Some(spec::Spec::Single(spec)) => spec,
+		Some(spec::Spec::Multi(map)) => {
+			let sub = f.u8()?;
+			map.get(&sub).context(UnknownSubSnafu { code, sub })?
+		}
+		None => return UnknownOpSnafu { code }.fail(),
+	};
+
+	match spec.name.as_deref() {
+		Some("goto") => {
+			op.push(Arg::Label(f.u32()?));
+		}
+		Some("if") => {
+			op.push(expr(f).context(ExprSnafu)?);
+			op.push(Arg::Label(f.u32()?));
+		}
+		Some("switch") => {
+			op.push(expr(f).context(ExprSnafu)?);
+			let n = f.u8()?;
+			for _ in 0..n {
+				op.push(f.i32()?);
+				op.push(Arg::Label(f.u32()?));
+			}
+			op.push(Arg::Label(f.u32()?));
+		}
+		_ => {
+			for part in &spec.parts {
+				use spec::Part;
+				match part {
+					Part::U8 => op.push(f.u8()?),
+					Part::U16 => op.push(f.u16()?),
+					Part::U32 => op.push(f.u32()?),
+					Part::I8 => op.push(f.i8()?),
+					Part::I16 => op.push(f.i16()?),
+					Part::I32 => op.push(f.i32()?),
+					Part::F32 => op.push(f.f32()?),
+					Part::Str => op.push(f.str()?),
+					Part::Expr => op.push(expr(f).context(ExprSnafu)?),
+					Part::Text => op.push(dialogue(f).context(DialogueSnafu)?),
+					Part::Dyn => op.push(call_arg(f)?),
+					Part::Dyn2 => op.push(call_arg2(f)?),
+					Part::Ndyn => {
+						for _ in 0..f.u8()? {
+							op.push(call_arg(f)?);
+						}
+					}
+					Part::_3E => {
+						let Some(&Arg::U16(a)) = op.args.first() else {
+							panic!("3E must have a U16 arg");
+						};
+						if a == 0xFE12 {
+							op.push(f.u8()?);
+						} else if a == 0xFE13 {
+							op.push(f.f32()?);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	Ok(op)
 }
 

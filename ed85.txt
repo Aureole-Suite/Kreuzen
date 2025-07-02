@@ -1,0 +1,126 @@
+02   'call' u8 str ndyn
+03   'goto'
+05   'if'
+06   'switch'
+0A   u8 expr
+0C   u8 u8
+10   u16
+13   u32
+16   'sleep' u16
+17   u16 u16
+18   u8 expr
+1D   u16 str str str u8 u32 u32 f32 f32 f32 f32 f32 f32 f32 str str u32 u8 f32 f32 u16
+1E   u16 u8 str u8 ndyn
+20   u8 dyn dyn dyn dyn u8
+22   u16 text
+2301 u16 u16 u8 u8
+2305 u16 u16 u16 u16 u8
+24   u16 u32 text
+25   u8
+26
+2A00 str str u8
+2C   u16 str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
+2D   u16 u32 u8
+2F06 u16 u32
+2F07 u16 u32
+2F08 u16 u8 str str str str str str str str str str str str str str str str
+3000 u16 str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3001 u16 str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3100 str
+3101 str
+3102 str
+3103 str
+320A u16 u8 str u32
+320B u16 u8
+320C u16 dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8
+3300 u16 u16 u8 u8
+3301 u16 dyn2 dyn2 u8
+3302 u8 u16
+3303 u16
+3304 u8
+3319 u32
+3338
+3341 u16 u16 f32 f32
+3346 f32 f32 f32
+3347
+3348 u16 u16
+334B u16 u8
+3500 u16 u32
+3501 u16 u32
+3600
+3602 u8 f32 f32 f32 u16
+3604 u8 f32 f32 f32 u16 u8
+3605 u8 f32 u16
+3606 u8 u16 u8
+3607 u16
+3609 f32 f32 f32
+360B u8 f32 u16
+3612 u16
+3613 u16 str u8 f32 f32 f32 u16 u8
+3614 u8 u16 str f32 f32 f32 u16
+361C u8
+37   u16 f32 f32 f32 f32
+38   u16 u8 u8 str
+39   u16 u8 str u32 f32 u32
+3B00 dyn2 dyn2 dyn2 f32 dyn2 u16 u16 f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 u16 u16 u16 f32
+3B32 dyn2 dyn2 dyn2 f32 dyn2 u16 u16 f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 u16 u16 u16 f32
+3B39 u16
+3B3A u16 dyn2 dyn2 dyn2 dyn2
+3B3E u16
+3B3F u16
+3C01 u16 str str
+3C03 u16 str str str str str
+3C04 u16 str
+3C05 u16 str str str str str
+3D   u16 f32 f32 u8
+3E   u16 u16 f32 u8 _3E
+3F   u16 u32
+4300 u16 f32 u16
+4364 u16 f32 u16
+4365 u16 f32 u16
+43FE u16
+43FF u16 u16
+44   u16 u8 f32 u16 f32
+45   u16 f32 f32 f32 u16 u16
+4600 u16 u16 u16
+4602 u16 u16 u16
+4603 u16 u16 u16 f32 u8
+4905 u16
+4906 u16
+4B   u16 f32 f32 f32 f32 u16 u8
+53   u8
+540B u16
+543A u16 u16 f32 f32 f32 f32 u8
+55   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 u8 str str
+60   u16 u8 str
+63   u16 u8
+6C   u16 f32 i32
+7500 u8 u16 f32 f32 # SSD says the first u8 in 75xx is weird
+7501 u8 str u32
+7502 u8 u8 u16 u16 u8
+7503 u8
+7504 u8 u8
+76   u16 str str u8 u8 f32 f32 f32 f32
+7A00 str
+7A01 u16 str
+7A02 u16 str
+7A03 str
+7D   u16 u32 u32
+7E00
+7E02 u16
+7E05 f32
+7E06 u16
+80   f32
+9100 u16 u32
+9E11 u16 u8
+AC00 u8
+AC07 u16
+AC09 u16
+AC0D dyn2
+AE   str u16
+B1   u8 u16 f32
+B5   u16 u8 f32 f32 f32 u16 u16
+BB   u16
+C801 u16 u32
+C802 u16 u32 u16
+C901 u16
