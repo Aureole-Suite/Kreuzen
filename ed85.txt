@@ -4,8 +4,11 @@
 06   'switch'
 0A   u8 expr
 0C   u8 u8
+0E   u8 u8 u8
 10   u16
+11   u16
 13   u32
+14   u32
 16   'sleep' u16
 17   u16 u16
 18   u8 expr
@@ -18,6 +21,8 @@
 24   u16 u32 text
 25   u8
 26
+2900 u8 u16 f32 f32 # like 75xx, this one is weird
+2901 u8 str u32
 2A00 str str u8
 2C   u16 str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
 2D   u16 u32 u8
@@ -62,7 +67,10 @@
 37   u16 f32 f32 f32 f32
 38   u16 u8 u8 str
 39   u16 u8 str u32 f32 u32
+3A00 u16 f32 u16 f32 u8
+3A03 f32 u16 u8
 3B00 dyn2 dyn2 dyn2 f32 dyn2 u16 u16 f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 u16 u16 u16 f32
+3B01 dyn2 dyn2 u16
 3B32 dyn2 dyn2 dyn2 f32 dyn2 u16 u16 f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 u16 u16 u16 f32
 3B39 u16
 3B3A u16 dyn2 dyn2 dyn2 dyn2
@@ -88,12 +96,15 @@
 4905 u16
 4906 u16
 4B   u16 f32 f32 f32 f32 u16 u8
+50   dyn str u32 u8
 53   u8
 540B u16
 543A u16 u16 f32 f32 f32 f32 u8
 55   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 u8 str str
 60   u16 u8 str
 63   u16 u8
+6800 str u32
+6801 str u32
 6C   u16 f32 i32
 7500 u8 u16 f32 f32 # SSD says the first u8 in 75xx is weird
 7501 u8 str u32
@@ -111,10 +122,12 @@
 7E05 f32
 7E06 u16
 80   f32
+86   u16 u16 u16 u16 u16 u16 u32 u32 u32 str
 9100 u16 u32
 9E11 u16 u8
 AC00 u8
 AC07 u16
+AC08
 AC09 u16
 AC0D dyn2
 AE   str u16
