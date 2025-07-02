@@ -36,10 +36,6 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 			op.push(f.u8()?);
 			op.push(f.u8()?);
 		}
-		0x0E => {
-			op.push(f.u8()?);
-			op.push(f.u8()?);
-		}
 		0x10 => {
 			op.push(f.u16()?);
 		}
@@ -89,6 +85,14 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 			for _ in 0..n {
 				op.push(call_arg(f)?);
 			}
+		}
+		0x20 => {
+			op.push(f.u8()?);
+			op.push(call_arg(f)?);
+			op.push(call_arg(f)?);
+			op.push(call_arg(f)?);
+			op.push(call_arg(f)?);
+			op.push(f.u8()?);
 		}
 		0x22 => {
 			op.push(f.u16()?);
@@ -250,6 +254,9 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 			0x04 => {
 				op.push(f.u8()?);
 			}
+			0x19 => {
+				op.push(f.u32()?);
+			}
 			0x38 => {}
 			0x41 => {
 				op.push(f.u16()?);
@@ -302,6 +309,11 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 				op.push(f.f32()?);
 				op.push(f.u16()?);
 			}
+			0x06 => {
+				op.push(f.u8()?);
+				op.push(f.u16()?);
+				op.push(f.u8()?);
+			}
 			0x07 => {
 				op.push(f.u16()?);
 			}
@@ -313,6 +325,9 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 			0x0B => {
 				op.push(f.u8()?);
 				op.push(f.f32()?);
+				op.push(f.u16()?);
+			}
+			0x12 => {
 				op.push(f.u16()?);
 			}
 			0x13 => {
@@ -333,6 +348,9 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 				op.push(f.f32()?);
 				op.push(f.f32()?);
 				op.push(f.u16()?);
+			}
+			0x1C => {
+				op.push(f.u8()?);
 			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
@@ -383,6 +401,9 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 				op.push(f.u16()?);
 				op.push(f.u16()?);
 				op.push(f.f32()?);
+			}
+			0x39 => {
+				op.push(f.u16()?);
 			}
 			0x3A => {
 				op.push(f.u16()?);
@@ -487,9 +508,19 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 				op.push(f.u16()?);
 				op.push(f.u16()?);
 			}
+			3 => {
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.f32()?);
+				op.push(f.u8()?);
+			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
 		0x49 => match op.sub(f.u8()?) {
+			0x05 => {
+				op.push(f.u16()?);
+			}
 			0x06 => {
 				op.push(f.u16()?);
 			}
@@ -510,6 +541,15 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 		0x54 => match op.sub(f.u8()?) {
 			0x0B => {
 				op.push(f.u16()?);
+			}
+			0x3A => {
+				op.push(f.u16()?);
+				op.push(f.u16()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.f32()?);
+				op.push(f.u8()?);
 			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
@@ -532,6 +572,11 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 			op.push(f.u8()?);
 			op.push(f.u8()?);
 			op.push(f.str()?);
+			op.push(f.str()?);
+		}
+		0x60 => {
+			op.push(f.u16()?);
+			op.push(f.u8()?);
 			op.push(f.str()?);
 		}
 		0x63 => {
@@ -598,6 +643,11 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 			}
 			sub => return UnknownSubSnafu { code, sub }.fail(),
 		}
+		0x7D => {
+			op.push(f.u16()?);
+			op.push(f.u32()?);
+			op.push(f.u32()?);
+		}
 		0x7E => match op.sub(f.u8()?) {
 			0 => {}
 			2 => {
@@ -638,6 +688,9 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 			0x07 => {
 				op.push(f.u16()?);
 			}
+			0x09 => {
+				op.push(f.u16()?);
+			}
 			0x0D => {
 				op.push(call_arg2(f)?);
 			}
@@ -646,6 +699,11 @@ pub fn read(f: &mut Reader, op: &mut Op, code: u8) -> Result<(), OpError> {
 		0xAE => {
 			op.push(f.str()?);
 			op.push(f.u16()?);
+		}
+		0xB1 => {
+			op.push(f.u8()?);
+			op.push(f.u16()?);
+			op.push(f.f32()?);
 		}
 		0xB5 => {
 			op.push(f.u16()?);
