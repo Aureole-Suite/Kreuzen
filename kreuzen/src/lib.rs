@@ -239,6 +239,7 @@ pub enum Expr {
 	_1f(u8),
 	_20(u8),
 	_21(u16, u8),
+	_22, // probably random()
 	_23(u8),
 	_24(i32),
 	_25(u16),
@@ -323,7 +324,7 @@ pub enum OpError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("unknown op {}", hex::encode_upper(&code)))]
+	#[snafu(display("unknown op {}", hex::encode_upper(code)))]
 	UnknownOp { code: ArrayVec<u8, 2> },
 	#[snafu(display("failed to read expr"))]
 	Expr {
@@ -399,34 +400,62 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	Ok(op)
 }
 
-fn read_part(part: &spec::Part, op: &mut Op, f: &mut Reader) -> Result<(), OpError> {
-	use spec::Part;
+fn read_parts(op: &mut Op, f: &mut Reader, part: &[spec::Part]) -> Result<(), OpError> {
+	for p in part {
+		read_part(op, f, p)?;
+	}
+	Ok(())
+}
+
+fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpError> {
+	use spec::Part::*;
 	match part {
-		Part::U8 => op.push(f.u8()?),
-		Part::U16 => op.push(f.u16()?),
-		Part::U32 => op.push(f.u32()?),
-		Part::I8 => op.push(f.i8()?),
-		Part::I16 => op.push(f.i16()?),
-		Part::I32 => op.push(f.i32()?),
-		Part::F32 => op.push(f.f32()?),
-		Part::Str => op.push(f.str()?),
-		Part::Expr => op.push(expr(f).context(ExprSnafu)?),
-		Part::Text => op.push(dialogue(f).context(DialogueSnafu)?),
-		Part::Dyn => op.push(call_arg(f)?),
-		Part::Dyn2 => op.push(call_arg2(f)?),
-		Part::Ndyn => {
+		U8 => op.push(f.u8()?),
+		U16 => op.push(f.u16()?),
+		U32 => op.push(f.u32()?),
+		I8 => op.push(f.i8()?),
+		I16 => op.push(f.i16()?),
+		I32 => op.push(f.i32()?),
+		F32 => op.push(f.f32()?),
+		Str => op.push(f.str()?),
+		Expr => op.push(expr(f).context(ExprSnafu)?),
+		Text => op.push(dialogue(f).context(DialogueSnafu)?),
+		Dyn => op.push(call_arg(f)?),
+		Dyn2 => op.push(call_arg2(f)?),
+		Ndyn => {
 			for _ in 0..f.u8()? {
 				op.push(call_arg(f)?);
 			}
 		}
-		Part::_3E => {
-			let Some(&Arg::U16(a)) = op.args.first() else {
+
+		_3E => {
+			let Some(&Arg::U16(a)) = op.args.get(1) else {
 				panic!("3E must have a U16 arg");
 			};
 			if a == 0xFE12 {
-				op.push(f.u8()?);
+				read_parts(op, f, &[U8])?;
 			} else if a == 0xFE13 {
-				op.push(f.f32()?);
+				read_parts(op, f, &[F32])?;
+			} else if a == 0xFFFF { // Not in SSD
+				read_parts(op, f, &[U8, U8, U8])?;
+			}
+		}
+
+		_40 => {
+			let Some(&Arg::U16(a)) = op.args.get(1) else {
+				panic!("40 must have a U16 arg");
+			};
+			if a == 0xFE15 {
+				read_parts(op, f, &[Dyn, Dyn, Dyn, Dyn])?;
+			} else {
+				read_parts(op, f, &[F32, F32, F32, F32])?;
+				if matches!(a, 0xFE02 | 0xFE03 | 0xFE04) {
+					read_parts(op, f, &[F32])?;
+				}
+			}
+			read_parts(op, f, &[U8, U16, F32, F32, U8])?;
+			if a == 0xFE05 {
+				read_parts(op, f, &[Str])?;
 			}
 		}
 	}
@@ -516,15 +545,16 @@ fn expr(f: &mut Reader) -> Result<Expr, ExprError> {
 			0x1f => stack.push(Expr::_1f(f.u8()?)),
 			0x20 => stack.push(Expr::_20(f.u8()?)),
 			0x21 => stack.push(Expr::_21(f.u16()?, f.u8()?)),
+			0x22 => stack.push(Expr::_22),
 			0x23 => stack.push(Expr::_23(f.u8()?)),
 			0x24 => stack.push(Expr::_24(f.i32()?)),
 			0x25 => stack.push(Expr::_25(f.u16()?)),
 
-			v@(0x08 | 0x0E | 0x13) => {
+			v@(0x08 | 0x0E | 0x13 | 0x18) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Un(v, Box::new(a)));
 			}
-			v@(0x02 | 0x03 | 0x09 | 0x0B | 0x28) => {
+			v@(0x02 | 0x03 | 0x09..=0x0B | 0x12 | 0x28) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				let b = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Bin(v, Box::new(b), Box::new(a)));

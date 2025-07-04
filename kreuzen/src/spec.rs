@@ -17,6 +17,7 @@ pub enum Part {
 	Dyn2,
 	Ndyn,
 	_3E,
+	_40,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
