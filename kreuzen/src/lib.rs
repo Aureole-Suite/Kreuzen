@@ -64,6 +64,7 @@ enum Type {
 	BookData,
 	FcAuto,
 	Underscore,
+	Empty,
 	Lambda,
 	A0,
 }
@@ -76,6 +77,8 @@ impl Type {
 			Type::A0
 		} else if name.starts_with("_") {
 			Type::Underscore
+		} else if name.is_empty() {
+			Type::Empty
 		} else if name.starts_with("BTLSET") {
 			Type::Btlset
 		} else if name.starts_with("BookData") {
@@ -167,7 +170,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 		let _span = tracing::trace_span!("chunk", name = entry.name.as_str(), start = entry.start, end).entered();
 		match Type::from_name(&entry.name) {
 			Type::Normal | Type::Lambda => {
-				println!("{} {:04X}", entry.name, entry.start);
+				println!("disassembling function {}, {:04X}", entry.name, entry.start);
 				read_func(f.at(entry.start)?, end).context(FunctionSnafu { name: &entry.name })?;
 			}
 			_ => {}
@@ -340,6 +343,15 @@ mod spec;
 
 fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
+	let op = read_op2(f)?;
+	if op.unk != 0xFF && pos + op.unk as usize != f.pos() && *op.op != [0x0A] && *op.op != [0x18] {
+		println!("{} + {} != {} for {op:?}", pos, op.unk, f.pos());
+		println!("{:#1X}", f.dump().start(pos).len(op.unk as usize));
+	}
+	Ok(op)
+}
+
+fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 	let mut code = f.u8()?;
 	let mut op = Op {
 		op: ArrayVec::new(),
@@ -385,9 +397,7 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 			return UnknownOpSnafu { code: op.op }.fail();
 		};
 		if let Some(spec) = inc.value() {
-			for part in &spec.parts {
-				read_part(part, &mut op, f)?;
-			}
+			read_parts(&mut op, f, &spec.parts)?;
 		}
 		if ans.is_prefix() {
 			code = f.u8()?;
