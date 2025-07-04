@@ -8,8 +8,10 @@ arrayvec = "0.7.6"
 derive_more = { version = "2.0.1", features = ["from", "from_str"] }
 extend = "1.2.0"
 gospel = "0.3.1"
+hex = "0.4.3"
 snafu = "0.8.5"
 tracing = { version = "0.1.40", features = ["attributes"] }
+trie-rs = "0.4.2"
 
 [dev-dependencies]
 glob = "0.3.2"

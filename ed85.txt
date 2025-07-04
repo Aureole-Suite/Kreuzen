@@ -106,6 +106,10 @@
 6800 str u32
 6801 str u32
 6C   u16 f32 i32
+74   u16
+7400 u32
+7402 u16 f32 u16 u16 str f32
+7403 str u32 u16 u16 str u32
 7500 u8 u16 f32 f32 # SSD says the first u8 in 75xx is weird
 7501 u8 str u32
 7502 u8 u8 u16 u16 u8

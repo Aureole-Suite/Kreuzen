@@ -190,11 +190,7 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
 					println!("{e}");
 					if let Some(OpError::UnknownOp { code }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
-						let k = format!("{code:02X}");
-						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
-					}
-					if let Some(OpError::UnknownSub { code, sub }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
-						let k = format!("{code:02X}{sub:02X}");
+						let k = hex::encode_upper(code);
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
 					if let Some(ExprError::UnknownExpr { code, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
@@ -327,10 +323,8 @@ pub enum OpError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("unknown op {code:02X}"))]
-	UnknownOp { code: u8 },
-	#[snafu(display("unknown op {code:02X}{sub:02X}"))]
-	UnknownSub { code: u8, sub: u8 },
+	#[snafu(display("unknown op {}", hex::encode_upper(&code)))]
+	UnknownOp { code: ArrayVec<u8, 2> },
 	#[snafu(display("failed to read expr"))]
 	Expr {
 		source: ExprError,
@@ -345,7 +339,7 @@ mod spec;
 
 fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
-	let code = f.u8()?;
+	let mut code = f.u8()?;
 	let mut op = Op {
 		op: ArrayVec::new(),
 		line: 0,
@@ -361,22 +355,15 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	f.check_u8(0)?;
 	op.unk = f.u8()?;
 
-	let spec = match spec::SPEC.get(&code) {
-		Some(spec::Spec::Single(spec)) => spec,
-		Some(spec::Spec::Multi(map)) => {
-			let sub = f.u8()?;
-			map.get(&sub).context(UnknownSubSnafu { code, sub })?
-		}
-		None => return UnknownOpSnafu { code }.fail(),
-	};
-
-	match spec.name.as_deref() {
+	match spec::SPEC.exact_match(&op.op).map(|v| v.name.as_ref()) {
 		Some("goto") => {
 			op.push(Arg::Label(f.u32()?));
+			return Ok(op);
 		}
 		Some("if") => {
 			op.push(expr(f).context(ExprSnafu)?);
 			op.push(Arg::Label(f.u32()?));
+			return Ok(op);
 		}
 		Some("switch") => {
 			op.push(expr(f).context(ExprSnafu)?);
@@ -386,44 +373,64 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 				op.push(Arg::Label(f.u32()?));
 			}
 			op.push(Arg::Label(f.u32()?));
+			return Ok(op);
 		}
-		_ => {
+		_ => {}
+	}
+
+	let mut inc = spec::SPEC.inc_search();
+	loop {
+		let Some(ans) = inc.query(&code) else {
+			return UnknownOpSnafu { code: op.op }.fail();
+		};
+		if let Some(spec) = inc.value() {
 			for part in &spec.parts {
-				use spec::Part;
-				match part {
-					Part::U8 => op.push(f.u8()?),
-					Part::U16 => op.push(f.u16()?),
-					Part::U32 => op.push(f.u32()?),
-					Part::I8 => op.push(f.i8()?),
-					Part::I16 => op.push(f.i16()?),
-					Part::I32 => op.push(f.i32()?),
-					Part::F32 => op.push(f.f32()?),
-					Part::Str => op.push(f.str()?),
-					Part::Expr => op.push(expr(f).context(ExprSnafu)?),
-					Part::Text => op.push(dialogue(f).context(DialogueSnafu)?),
-					Part::Dyn => op.push(call_arg(f)?),
-					Part::Dyn2 => op.push(call_arg2(f)?),
-					Part::Ndyn => {
-						for _ in 0..f.u8()? {
-							op.push(call_arg(f)?);
-						}
-					}
-					Part::_3E => {
-						let Some(&Arg::U16(a)) = op.args.first() else {
-							panic!("3E must have a U16 arg");
-						};
-						if a == 0xFE12 {
-							op.push(f.u8()?);
-						} else if a == 0xFE13 {
-							op.push(f.f32()?);
-						}
-					}
-				}
+				read_part(part, &mut op, f)?;
 			}
+		}
+		if ans.is_prefix() {
+			code = f.u8()?;
+			op.op.push(code);
+		} else {
+			break;
 		}
 	}
 
 	Ok(op)
+}
+
+fn read_part(part: &spec::Part, op: &mut Op, f: &mut Reader) -> Result<(), OpError> {
+	use spec::Part;
+	match part {
+		Part::U8 => op.push(f.u8()?),
+		Part::U16 => op.push(f.u16()?),
+		Part::U32 => op.push(f.u32()?),
+		Part::I8 => op.push(f.i8()?),
+		Part::I16 => op.push(f.i16()?),
+		Part::I32 => op.push(f.i32()?),
+		Part::F32 => op.push(f.f32()?),
+		Part::Str => op.push(f.str()?),
+		Part::Expr => op.push(expr(f).context(ExprSnafu)?),
+		Part::Text => op.push(dialogue(f).context(DialogueSnafu)?),
+		Part::Dyn => op.push(call_arg(f)?),
+		Part::Dyn2 => op.push(call_arg2(f)?),
+		Part::Ndyn => {
+			for _ in 0..f.u8()? {
+				op.push(call_arg(f)?);
+			}
+		}
+		Part::_3E => {
+			let Some(&Arg::U16(a)) = op.args.first() else {
+				panic!("3E must have a U16 arg");
+			};
+			if a == 0xFE12 {
+				op.push(f.u8()?);
+			} else if a == 0xFE13 {
+				op.push(f.f32()?);
+			}
+		}
+	}
+	Ok(())
 }
 
 fn at_end(f: &mut Reader<'_>, end: usize) -> bool {
