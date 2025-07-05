@@ -1,3 +1,4 @@
+#![feature(if_let_guard)]
 use std::{collections::HashMap, ops::Deref, sync::{LazyLock, Mutex}};
 
 use arrayvec::ArrayVec;
@@ -232,22 +233,6 @@ pub enum Arg {
 	Label(u32),
 	CallArg(CallArg),
 	Dialogue(Dialogue),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Expr {
-	_0(i32),
-	_1c(Op), // op
-	_1e(u16),
-	_1f(u8),
-	_20(u8),
-	_21(u16, u8),
-	_22, // probably random()
-	_23(u8),
-	_24(i32),
-	_25(u16),
-	Bin(u8, Box<Expr>, Box<Expr>),
-	Un(u8, Box<Expr>),
 }
 
 impl Op {
@@ -540,35 +525,99 @@ pub enum ExprError {
 	OverfullStack { stack: Vec<Expr> },
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Expr {
+	Int(i32),
+	Op(Op),
+	Flag(u16),
+	Var(u8),
+	Attr(u8),
+	CharAttr(u16, u8),
+	Rand,
+	Global(u8),
+	_24(i32),
+	_25(u16),
+	Bin(BinOp, Box<Expr>, Box<Expr>),
+	Un(UnOp, Box<Expr>),
+	Ass(AssOp, Box<Expr>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] // comment to trick rustfmt
+#[derive(num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
+#[repr(u8)]
+pub enum BinOp {
+	Eq = 0x02,      // ==
+	Ne = 0x03,      // !=
+	Lt = 0x04,      // <
+	Gt = 0x05,      // >
+	Le = 0x06,      // <=
+	Ge = 0x07,      // >=
+	BoolAnd = 0x09, // &&
+	BitAnd = 0x0A,  // &
+	BitOr = 0x0B,   // | and ||
+	Add = 0x0C,     // +
+	Sub = 0x0D,     // -
+	BitXor = 0x0F,  // ^
+	Mul = 0x10,     // *
+	Div = 0x11,     // /
+	Mod = 0x12,     // %
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] // comment to trick rustfmt
+#[derive(num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
+#[repr(u8)]
+pub enum UnOp {
+	BoolNot = 0x08, // !
+	Neg = 0x0E,     // -
+	BitNot = 0x1D,  // ~
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] // comment to trick rustfmt
+#[derive(num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
+#[repr(u8)]
+pub enum AssOp {
+	Ass = 0x13,    // =
+	MulAss = 0x14, // *=
+	DivAss = 0x15, // /=
+	ModAss = 0x16, // %=
+	AddAss = 0x17, // +=
+	SubAss = 0x18, // -=
+	AndAss = 0x19, // &=
+	XorAss = 0x1A, // ^=
+	OrAss = 0x1B,  // |=
+}
+
 fn expr(f: &mut Reader) -> Result<Expr, ExprError> {
 	let mut stack = Vec::new();
 	loop {
 		let pos = f.pos();
 		match f.u8()? {
-			0x00 => stack.push(Expr::_0(f.i32()?)),
+			0x00 => stack.push(Expr::Int(f.i32()?)),
 			0x01 => break,
-			0x1c => {
-				let op = read_op(f).context(ExprOpSnafu { pos })?;
-				stack.push(Expr::_1c(op));
-			}
-			0x1e => stack.push(Expr::_1e(f.u16()?)),
-			0x1f => stack.push(Expr::_1f(f.u8()?)),
-			0x20 => stack.push(Expr::_20(f.u8()?)),
-			0x21 => stack.push(Expr::_21(f.u16()?, f.u8()?)),
-			0x22 => stack.push(Expr::_22),
-			0x23 => stack.push(Expr::_23(f.u8()?)),
+			0x1C => stack.push(Expr::Op(read_op(f).context(ExprOpSnafu { pos })?)),
+			0x1E => stack.push(Expr::Flag(f.u16()?)),
+			0x1F => stack.push(Expr::Var(f.u8()?)),
+			0x20 => stack.push(Expr::Attr(f.u8()?)),
+			0x21 => stack.push(Expr::CharAttr(f.u16()?, f.u8()?)),
+			0x22 => stack.push(Expr::Rand),
+			0x23 => stack.push(Expr::Global(f.u8()?)),
 			0x24 => stack.push(Expr::_24(f.i32()?)),
 			0x25 => stack.push(Expr::_25(f.u16()?)),
 
-			v@(0x08 | 0x0E | 0x13 | 0x18) => {
+			v if let Ok(v) = BinOp::try_from(v) => {
+				let b = stack.pop().context(EmptyStackSnafu)?;
+				let a = stack.pop().context(EmptyStackSnafu)?;
+				stack.push(Expr::Bin(v, Box::new(a), Box::new(b)));
+			}
+			v if let Ok(v) = UnOp::try_from(v) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
 				stack.push(Expr::Un(v, Box::new(a)));
 			}
-			v@(0x02 | 0x03 | 0x09..=0x0B | 0x12 | 0x28) => {
+			v if let Ok(v) = AssOp::try_from(v) => {
 				let a = stack.pop().context(EmptyStackSnafu)?;
-				let b = stack.pop().context(EmptyStackSnafu)?;
-				stack.push(Expr::Bin(v, Box::new(b), Box::new(a)));
+				stack.push(Expr::Ass(v, Box::new(a)));
 			}
+
 			code => return UnknownExprSnafu { code, stack }.fail(),
 		}
 	}
