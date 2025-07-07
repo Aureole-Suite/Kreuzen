@@ -236,25 +236,33 @@ pub enum Arg {
 }
 
 impl Op {
-	pub fn name(arg: &[u8]) -> Option<&'static str> {
-		Some(match arg {
-			[0x01] => "return",
-			[0x02] => "call",
-			[0x03] => "goto",
-			[0x05] => "if",
-			[0x06] => "switch",
-			[0x16] => "sleep",
-			_ => return None,
-		})
-	}
-	
 	pub fn push(&mut self, arg: impl Into<Arg>) {
 		self.args.push(arg.into());
 	}
+}
 
-	fn sub(&mut self, u8: u8) -> u8 {
-		self.op.push(u8);
-		u8
+pub struct OpName<'a> {
+	code: &'a [u8],
+}
+
+impl std::fmt::Display for OpName<'_> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let mut inc = spec::SPEC.names.inc_search();
+		let _ = inc.query_until(self.code);
+		let prefix = match inc.value() {
+			Some(name) => {
+				write!(f, "{name}")?;
+				inc.prefix_len()
+			},
+			None => {
+				write!(f, "op")?;
+				0
+			}
+		};
+		for byte in &self.code[prefix..] {
+			write!(f, "{byte:02X}")?;
+		}
+		Ok(())
 	}
 }
 
@@ -263,14 +271,7 @@ impl std::fmt::Debug for Op {
 		if self.line != 0 {
 			write!(f, "{}@", self.line)?;
 		}
-		if let Some(name) = Self::name(&self.op) {
-			write!(f, "{name}")?;
-		} else {
-			write!(f, "op")?;
-			for byte in &self.op {
-				write!(f, "{byte:02X}")?;
-			}
-		}
+		write!(f, "{}", OpName { code: &self.op })?;
 		if self.unk != 0xFF {
 			write!(f, ":{}", self.unk)?;
 		}
@@ -353,7 +354,7 @@ fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 	f.check_u8(0)?;
 	op.unk = f.u8()?;
 
-	match spec::SPEC.exact_match(&op.op).map(|v| v.name.as_ref()) {
+	match spec::SPEC.names.exact_match(&op.op).map(|v| v.as_ref()) {
 		Some("goto") => {
 			op.push(Arg::Label(f.u32()?));
 			return Ok(op);
@@ -376,13 +377,13 @@ fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 		_ => {}
 	}
 
-	let mut inc = spec::SPEC.inc_search();
+	let mut inc = spec::SPEC.ops.inc_search();
 	loop {
 		let Some(ans) = inc.query(&code) else {
 			return UnknownOpSnafu { code: op.op }.fail();
 		};
 		if let Some(spec) = inc.value() {
-			read_parts(&mut op, f, &spec.parts)?;
+			read_parts(&mut op, f, &spec)?;
 		}
 		if ans.is_prefix() {
 			code = f.u8()?;

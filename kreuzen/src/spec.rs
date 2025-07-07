@@ -20,15 +20,15 @@ pub enum Part {
 	_40,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Spec {
-	pub name: String,
-	pub parts: Vec<Part>,
+	pub names: Trie<u8, String>,
+	pub ops: Trie<u8, Vec<Part>>,
 }
 
-pub static SPEC: LazyLock<Trie<u8, Spec>> = LazyLock::new(|| parse_spec(include_str!("../../ed85.txt")));
+pub static SPEC: LazyLock<Spec> = LazyLock::new(|| parse_spec(include_str!("../../ed85.txt")));
 
-fn parse_line(line: &str) -> Option<(Vec<u8>, Spec)> {
+fn parse_line(line: &str) -> Option<(Vec<u8>, String, Vec<Part>)> {
 	let mut words = line.split_whitespace();
 
 	let codeword = words.next().unwrap();
@@ -46,22 +46,29 @@ fn parse_line(line: &str) -> Option<(Vec<u8>, Spec)> {
 			parts.push(word.parse().ok()?);
 		};
 	}
-	Some((code, Spec { name, parts }))
+	Some((code, name, parts))
 }
 
-pub fn parse_spec(text: &str) -> Trie<u8, Spec> {
-	let mut spec = TrieBuilder::new();
+pub fn parse_spec(text: &str) -> Spec {
+	let mut names = TrieBuilder::new();
+	let mut ops = TrieBuilder::new();
 	for line0 in text.lines() {
 		let line = line0.split('#').next().unwrap().trim();
 		if line.is_empty() {
 			continue;
 		}
 
-		let (code, op) = parse_line(line).unwrap_or_else(|| {
+		let (code, name, op) = parse_line(line).unwrap_or_else(|| {
 			panic!("Failed to parse spec: {line0}");
 		});
 
-		spec.insert(code, op); // can't detect duplicates unfortunately
+		if !name.is_empty() {
+			names.insert(code.clone(), name);
+		}
+		ops.insert(code, op);
 	}
-	spec.build()
+	Spec {
+		names: names.build(),
+		ops: ops.build(),
+	}
 }
