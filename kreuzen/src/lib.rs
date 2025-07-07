@@ -171,8 +171,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 		let _span = tracing::trace_span!("chunk", name = entry.name.as_str(), start = entry.start, end).entered();
 		match Type::from_name(&entry.name) {
 			Type::Normal | Type::Lambda => {
-				println!("disassembling function {}, {:04X}", entry.name, entry.start);
-				read_func(f.at(entry.start)?, end).context(FunctionSnafu { name: &entry.name })?;
+				read_func(f.at(entry.start)?, end, &entry.name).context(FunctionSnafu { name: &entry.name })?;
 			}
 			_ => {}
 		}
@@ -183,7 +182,8 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 
 pub static COUNTS: LazyLock<Mutex<HashMap<String, usize>>> = LazyLock::new(Default::default);
 
-fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
+fn read_func(mut f: Reader, end: usize, name: &str) -> Result<(), FunctionError> {
+	let start = f.pos();
 	while !at_end(&mut f, end) {
 		let pos = f.pos();
 		match read_op(&mut f).context(OpSnafu { pos }) {
@@ -192,9 +192,9 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 			}
 			Err(e) => {
 				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
-					println!("{e}");
+					println!("function {name} ({start:05X}): {e}");
 					if let Some(OpError::UnknownOp { op }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
-						let k = hex::encode_upper(&op.code);
+						let k = format!("op {}", hex::encode_upper(&op.code));
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
 					if let Some(ExprError::UnknownExpr { code, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
@@ -383,7 +383,7 @@ fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 			return UnknownOpSnafu { op }.fail();
 		};
 		if let Some(spec) = inc.value() {
-			read_parts(&mut op, f, &spec)?;
+			read_parts(&mut op, f, spec)?;
 		}
 		if ans.is_prefix() {
 			code = f.u8()?;
