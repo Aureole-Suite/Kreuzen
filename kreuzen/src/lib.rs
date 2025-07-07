@@ -463,8 +463,7 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 				3 => read_parts(op, f, &[Str, F32, F32, F32, F32, F32, F32])?,
 				4 => read_parts(op, f, &[Str, U8])?,
 				1000 => read_parts(op, f, &[U16, U16])?,
-				1002 => {}
-				_ => panic!("{}", a),
+				_ => {}
 			}
 		}
 	}

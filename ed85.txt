@@ -16,7 +16,7 @@
 18   u8 expr
 1D   'CharCreate' u16 str str str u8 u32 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 1E   u16 u8 str u8 ndyn
-1F
+1F   u16 u8
 20   u8 dyn dyn dyn dyn u8 # These dyns are usually FF, but with a float
 21   u8 u8
 22   u16 text
@@ -32,6 +32,9 @@
 2903 'MenuHide' u8
 2904 'MenuWait' u8 u8 # id, global
 2A00 u16 str str u8
+2A01 u16 str str u8
+2A02 u16 str str u8
+2A03 u16 str str u8
 2B00 u32 u8 u8 i32 u8 i32 u8 i32 u8 i32 u8
 2B01 u32 u8 u8 u16 u16 u16 u16
 2C   u16 str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
@@ -49,8 +52,7 @@
 2F08 u16 u8 str str str str str str str str str str str str str str str str
 2F09 u16 u8
 2F0A u16 str str
-3000 u16 str str f32 f32 f32 f32 f32 f32 f32 f32 f32
-3001 u16 str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+30   u8 u16 str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3100 str
 3101 str
 3102 str
@@ -67,28 +69,29 @@
 3214 u16 u8 f32 f32 f32 f32 u16 u8
 3215 u16 u8 f32 f32 f32 f32 u16 u8
 3217 u16 u8 f32
+321B u16
 321F u16 u16
 3300 u16 u16 u8 u8
 3301 u16 dyn2 dyn2 u8
 3302 u8 u16
 3303 u16
 3304 u8
-3307 u8 str
 3305 u8 str
 3306 u8
+3307 u8 str
 3308 u8
 3309 u16
 330A u16 u16
-330C u16 u32
 330B u16 u32
+330C u16 u32
 330D u16
 330E u16 u16 u32
 330F u16 u16
 3310 u16
 3311 u16 u8
 331200 str u16 f32 f32
-331202
 331201
+331202
 3313 u16 u16 u16 u32 u32 u32
 3314 u16
 3315 u16 f32 f32 f32 f32 f32
@@ -233,10 +236,10 @@
 33D3 u32 u8
 33D400
 33D401
-33D405 u16 u8
 33D402 u8
 33D403 u8
 33D404 u16
+33D405 u16 u8
 33D5 u8 u16 u16
 35   u8 u16 u32
 3600
@@ -256,13 +259,21 @@
 3613 u16 str u8 f32 f32 f32 u16 u8
 3614 u8 u16 str f32 f32 f32 u16
 3616 u8 f32 u16
+3617 u16
 361C u8
 37   u16 f32 f32 f32 f32
 38   u16 u8 u8 str
 39   u16 u8 str f32 f32 u32
 3A00 u16 f32 u16 f32 u8
 3A01 u16 u8
+3A02 u8
 3A03 f32 u16 u8
+3A04 u16 f32 u16 f32 u8
+3A05 u16 u16
+3A06 u16
+3A07
+3A08 u16 u8
+3A09 u8
 3B00 dyn2 dyn2 dyn2 f32 dyn2 u16 u16 f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 u16 u16 u16 f32
 3B01 dyn2 dyn2 u16
 3B32 dyn2 dyn2 dyn2 f32 dyn2 u16 u16 f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 u16 u16 u16 f32
@@ -285,7 +296,12 @@
 4100
 4101
 4104 f32 f32 f32 f32 u8
+42   u16 f32 f32 f32 f32 f32 u8 u16
 4300 u16 f32 u16
+4301 u16 f32 u16
+4302 u16 f32 u16
+4303 u16 f32 u16
+4304 u16 f32 u16
 4305 u16
 4306 u16
 430A u16
@@ -293,6 +309,7 @@
 430C u16
 4364 u16 f32 u16
 4365 u16 f32 u16
+4367 u16 f32 u16
 4369 u16
 436A u16
 436B u16
@@ -312,6 +329,8 @@
 4905 u16
 4906 u16
 4907
+490A u16
+4910
 4A   u8 f32 f32 f32 f32 u32 u8
 4B   u16 f32 f32 f32 f32 u16 u8
 4C   u16 f32 f32 f32 u16 u8
@@ -327,15 +346,23 @@
 540B u16
 5427
 542E
+543100 u16 u16 f32 f32 u8 u8 u16
+543101 u16
+543102 u16
 5434 u32
 543A u16 u16 f32 f32 f32 f32 u8
+543F
 5443
 5447 u8 u16
+5448 u16 f32
+5450 f32
 55   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 u8 str str
 56   u8 u8 u8 f32 f32 f32 f32 f32
 57 u8
 58
+5A00 u16 u16 str u16
 5C   u16 u8 str
+5D   u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u8 u8
 5E00 u16 f32 u16 u16 u16 u32 u16 str f32 f32 f32
 5E01 u16
 60   u16 u8 str
@@ -346,9 +373,13 @@
 6501 str u16
 6502 str f32
 6503 str f32
+6600 u16 u16
 6800 str u32
 6801 str u32
+6802 f32 f32 f32
 6805 str
+680B u16
+6900 u16 u16 u8 u8 u8
 6A   u16 # fall through
 6A00 f32 u8 u16
 6A01
@@ -356,6 +387,7 @@
 6C   u16 f32 i32
 6F00 u16 u32
 7000 u16 u16 u8 u8
+7007 u16 u16
 74   u16 # fall through
 7400 u32
 7402 u16 f32 u16 u16 str f32
@@ -384,6 +416,7 @@
 8C00 u16
 8D   u16 f32 f32 f32 f32
 9100 u16 u32
+99   u16 u16
 9E11 u16 u8
 9E1401 u16 str
 9E1402 u16
@@ -419,11 +452,35 @@ AD01 u8
 AD02 u32
 AD03 u8
 AE   str u16
+B004 u8
 B1   u8 u16 f32
 B4
 B5   u16 u8 f32 f32 f32 u16 u16
 BB   u16
 BC00 u16 dyn2 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
+BC01 u16 dyn2 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
+BC02 u16 dyn2 u8
+BC04 u16 dyn2 u16 u16
+BC05 u16 dyn2 u16 u16
+BC07 u16 dyn2 f32 f32 u16 u16
+BC08 u16 dyn2 u32
+BC09 u16 dyn2 f32 f32 f32 f32 f32 f32 u16 u16
+BC0A u16 dyn2 f32 f32
+BC0B u16 dyn2 f32
+BC0C u16 dyn2 str f32 f32
+BC0D u16 dyn2 f32
+BC0E u16 dyn2 dyn2 u16 u16
+BC0F u16 dyn2 u16 f32 str
+BC10 u16 dyn2 u32 u32 u16
+BC11 u16 dyn2 str u32 u32
+BC12 u16 dyn2 str u32 u32
+BC13 u16 dyn2 str u32 u32
+BC14 u16 dyn2 u32
+BC15 u16 dyn2 u32
+BC16 u16 dyn2 u32
+BC18 u16 dyn2 u32
+BC17 u16 dyn2 u32 u32
+BC19 u16 dyn2 str
 C0   u16 _C0
 C801 u16 u32
 C802 u16 u32 u16
