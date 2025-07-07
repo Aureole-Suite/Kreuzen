@@ -193,8 +193,8 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 			Err(e) => {
 				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
 					println!("{e}");
-					if let Some(OpError::UnknownOp { code }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
-						let k = hex::encode_upper(code);
+					if let Some(OpError::UnknownOp { op }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
+						let k = hex::encode_upper(&op.code);
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
 					if let Some(ExprError::UnknownExpr { code, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
@@ -212,7 +212,7 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 
 #[derive(Clone, PartialEq)]
 pub struct Op {
-	pub op: ArrayVec<u8, 2>,
+	pub code: ArrayVec<u8, 2>,
 	pub line: u16,
 	pub unk: u8,
 	pub args: Vec<Arg>
@@ -271,7 +271,7 @@ impl std::fmt::Debug for Op {
 		if self.line != 0 {
 			write!(f, "{}@", self.line)?;
 		}
-		write!(f, "{}", OpName { code: &self.op })?;
+		write!(f, "{}", OpName { code: &self.code })?;
 		if self.unk != 0xFF {
 			write!(f, ":{}", self.unk)?;
 		}
@@ -313,8 +313,8 @@ pub enum OpError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("unknown op {}", hex::encode_upper(code)))]
-	UnknownOp { code: ArrayVec<u8, 2> },
+	#[snafu(display("unknown op {} ({} bytes)", hex::encode_upper(&op.code), op.unk))]
+	UnknownOp { op: Op },
 	#[snafu(display("failed to read expr"))]
 	Expr {
 		source: ExprError,
@@ -330,7 +330,7 @@ mod spec;
 fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
 	let op = read_op2(f)?;
-	if op.unk != 0xFF && pos + op.unk as usize != f.pos() && *op.op != [0x0A] && *op.op != [0x18] {
+	if op.unk != 0xFF && pos + op.unk as usize != f.pos() && !matches!(*op.code, [0x05 | 0x0A | 0x18]) {
 		println!("{} + {} != {} for {op:?}", pos, op.unk, f.pos());
 		println!("{:#1X}", f.dump().start(pos).len(op.unk as usize));
 	}
@@ -340,12 +340,12 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 	let mut code = f.u8()?;
 	let mut op = Op {
-		op: ArrayVec::new(),
+		code: ArrayVec::new(),
 		line: 0,
 		unk: 0xFF,
 		args: Vec::new(),
 	};
-	op.op.push(code);
+	op.code.push(code);
 	if code == 0x00 || code == 0x01 {
 		return Ok(op);
 	}
@@ -354,7 +354,7 @@ fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 	f.check_u8(0)?;
 	op.unk = f.u8()?;
 
-	match spec::SPEC.names.exact_match(&op.op).map(|v| v.as_ref()) {
+	match spec::SPEC.names.exact_match(&op.code).map(|v| v.as_ref()) {
 		Some("goto") => {
 			op.push(Arg::Label(f.u32()?));
 			return Ok(op);
@@ -380,14 +380,14 @@ fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 	let mut inc = spec::SPEC.ops.inc_search();
 	loop {
 		let Some(ans) = inc.query(&code) else {
-			return UnknownOpSnafu { code: op.op }.fail();
+			return UnknownOpSnafu { op }.fail();
 		};
 		if let Some(spec) = inc.value() {
 			read_parts(&mut op, f, &spec)?;
 		}
 		if ans.is_prefix() {
 			code = f.u8()?;
-			op.op.push(code);
+			op.code.push(code);
 		} else {
 			break;
 		}
