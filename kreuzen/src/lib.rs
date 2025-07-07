@@ -454,6 +454,19 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 				read_parts(op, f, &[Str])?;
 			}
 		}
+		_C0 => {
+			let Some(&Arg::U16(a)) = op.args.get(0) else {
+				panic!("40 must have a U16 arg");
+			};
+			match a {
+				1 => read_parts(op, f, &[F32])?,
+				3 => read_parts(op, f, &[Str, F32, F32, F32, F32, F32, F32])?,
+				4 => read_parts(op, f, &[Str, U8])?,
+				1000 => read_parts(op, f, &[U16, U16])?,
+				1002 => {}
+				_ => panic!("{}", a),
+			}
+		}
 	}
 	Ok(())
 }
