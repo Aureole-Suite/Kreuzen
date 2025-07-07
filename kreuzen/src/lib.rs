@@ -470,8 +470,8 @@ pub enum CallArg {
 	_44(f32, u8, String),
 	_55(u32, u8),
 	_DD(String, String),
-	_FF(u32, u8),
 	_EE(f32, u8),
+	_FF(i32, u8),
 	Unknown(u8),
 }
 
@@ -484,7 +484,7 @@ fn call_arg(f: &mut Reader) -> Result<CallArg, OpError> {
 		0x55 => CallArg::_55(f.u32()?, f.u8()?),
 		0xDD => CallArg::_DD(String::new(), f.str()?),
 		0xEE => CallArg::_EE(f.f32()?, f.u8()?),
-		0xFF => CallArg::_FF(f.u32()?, f.u8()?),
+		0xFF => CallArg::_FF(f.i32()?, f.u8()?),
 		v => CallArg::Unknown(v),
 	})
 }
@@ -498,7 +498,7 @@ fn call_arg2(f: &mut Reader) -> Result<CallArg, OpError> {
 		0x55 => CallArg::_55(f.u32()?, f.u8()?),
 		0xDD => CallArg::_DD(f.str()?, f.str()?),
 		0xEE => CallArg::_EE(f.f32()?, f.u8()?),
-		0xFF => CallArg::_FF(f.u32()?, f.u8()?),
+		0xFF => CallArg::_FF(f.i32()?, f.u8()?),
 		v => CallArg::Unknown(v),
 	})
 }
