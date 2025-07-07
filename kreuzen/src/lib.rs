@@ -212,7 +212,7 @@ fn read_func(mut f: Reader, end: usize) -> Result<(), FunctionError> {
 
 #[derive(Clone, PartialEq)]
 pub struct Op {
-	pub code: ArrayVec<u8, 2>,
+	pub code: ArrayVec<u8, 4>,
 	pub line: u16,
 	pub unk: u8,
 	pub args: Vec<Arg>
