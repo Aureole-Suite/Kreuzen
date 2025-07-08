@@ -184,15 +184,20 @@ pub static COUNTS: LazyLock<Mutex<HashMap<String, usize>>> = LazyLock::new(Defau
 
 fn read_func(mut f: Reader, end: usize, name: &str) -> Result<(), FunctionError> {
 	let start = f.pos();
+	println!("function {name} ({start:05X})");
+	let mut ops = Vec::new();
 	while !at_end(&mut f, end) {
 		let pos = f.pos();
 		match read_op(&mut f).context(OpSnafu { pos }) {
 			Ok(op) => {
-				// println!("{:05X} {op:?}", pos);
+				ops.push(op);
 			}
 			Err(e) => {
+				for op in &ops[ops.len().saturating_sub(10)..] {
+					println!("{:?}", op);
+				}
 				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
-					println!("function {name} ({start:05X}): {e}");
+					println!("{e}");
 					if let Some(OpError::UnknownOp { op }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
 						let k = format!("op {}", hex::encode_upper(&op.code));
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
