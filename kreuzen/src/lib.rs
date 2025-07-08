@@ -454,9 +454,42 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 				read_parts(op, f, &[Str])?;
 			}
 		}
+
+		_98 => {
+			let Some(&Arg::U16(a)) = op.args.get(0) else {
+				panic!("98 must have a U16 arg");
+			};
+			match a {
+				1 => read_parts(op, f, &[F32])?,
+				2 => read_parts(op, f, &[F32])?,
+				6 => read_parts(op, f, &[F32])?,
+				7 => read_parts(op, f, &[F32])?,
+				3 => read_parts(op, f, &[U16, U8])?,
+				1000 => read_parts(op, f, &[F32, U8])?,
+				1001 => read_parts(op, f, &[F32, U8])?,
+				2000 => read_parts(op, f, &[U8, F32, U8])?,
+				3000 => read_parts(op, f, &[F32, F32, U16, F32])?,
+				4000 => read_parts(op, f, &[U16, F32, U16, U8])?,
+				4001 => read_parts(op, f, &[Str, F32, U16, U8])?,
+				4002 => read_parts(op, f, &[U16])?,
+				5000 => read_parts(op, f, &[F32])?,
+				5001 => read_parts(op, f, &[F32])?,
+				5002 => read_parts(op, f, &[F32])?,
+				6000 => read_parts(op, f, &[F32])?,
+				6001 => read_parts(op, f, &[F32])?,
+				6500 => read_parts(op, f, &[F32])?,
+				7000 => read_parts(op, f, &[U8])?,
+				7001 => read_parts(op, f, &[U8])?,
+				8000 => read_parts(op, f, &[Str, U8])?,
+				9000 => read_parts(op, f, &[F32])?,
+				10000 => read_parts(op, f, &[F32, F32, F32, F32, F32, F32, F32, F32])?,
+				_ => {}
+			}
+		}
+
 		_C0 => {
 			let Some(&Arg::U16(a)) = op.args.get(0) else {
-				panic!("40 must have a U16 arg");
+				panic!("C0 must have a U16 arg");
 			};
 			match a {
 				1 => read_parts(op, f, &[F32])?,

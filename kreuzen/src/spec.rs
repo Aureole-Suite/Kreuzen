@@ -18,6 +18,7 @@ pub enum Part {
 	Ndyn,
 	_3E,
 	_40,
+	_98,
 	_C0,
 }
 
