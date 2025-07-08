@@ -165,7 +165,6 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	assert_eq!(f.pos(), asm_end);
 	f.align_zeroed(4)?;
 
-	println!();
 	let ends = table.iter().map(|e| e.start).skip(1).chain([f.len()]);
 	for (entry, end) in table.iter().zip(ends) {
 		let _span = tracing::trace_span!("chunk", name = entry.name.as_str(), start = entry.start, end).entered();
@@ -184,7 +183,6 @@ pub static COUNTS: LazyLock<Mutex<HashMap<String, usize>>> = LazyLock::new(Defau
 
 fn read_func(mut f: Reader, end: usize, name: &str) -> Result<(), FunctionError> {
 	let start = f.pos();
-	println!("function {name} ({start:05X})");
 	let mut ops = Vec::new();
 	while !at_end(&mut f, end) {
 		let pos = f.pos();
@@ -193,6 +191,7 @@ fn read_func(mut f: Reader, end: usize, name: &str) -> Result<(), FunctionError>
 				ops.push(op);
 			}
 			Err(e) => {
+				println!("function {name} ({start:05X})");
 				for op in &ops[ops.len().saturating_sub(10)..] {
 					println!("{:?}", op);
 				}
@@ -336,7 +335,7 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
 	let op = read_op2(f)?;
 	if op.unk != 0xFF && pos + op.unk as usize != f.pos() && !matches!(*op.code, [0x05 | 0x0A | 0x18]) {
-		println!("{} + {} != {} for {op:?}", pos, op.unk, f.pos());
+		println!("{} + {} == {} != {} for {op:?}", pos, op.unk, pos + op.unk as usize, f.pos());
 		println!("{:#1X}", f.dump().start(pos).len(op.unk as usize));
 	}
 	Ok(op)
@@ -711,8 +710,12 @@ pub enum DialoguePart {
 	Line,
 	Page,
 	_03,
+	_06,
+	_07,
+	_08,
 	_09,
 	_0B,
+	_0C,
 	_10(u16),
 	_11(u32),
 	_12(u32),
@@ -727,8 +730,12 @@ impl std::fmt::Debug for DialoguePart {
 			Self::Line => write!(f, "Line"),
 			Self::Page => write!(f, "Page"),
 			Self::_03 => write!(f, "_03"),
+			Self::_06 => write!(f, "_06"),
+			Self::_07 => write!(f, "_07"),
+			Self::_08 => write!(f, "_08"),
 			Self::_09 => write!(f, "_09"),
 			Self::_0B => write!(f, "_0B"),
+			Self::_0C => write!(f, "_0C"),
 			Self::_10(v) => f.debug_tuple("_10").field(v).finish(),
 			Self::_11(v) => f.debug_tuple("_11").field(v).finish(),
 			Self::_12(v) => f.debug_tuple("_12").field(v).finish(),
@@ -761,8 +768,12 @@ fn dialogue(f: &mut Reader) -> Result<Dialogue, DialogueError> {
 				0x01 => out.push(DialoguePart::Line),
 				0x02 => out.push(DialoguePart::Page),
 				0x03 => out.push(DialoguePart::_03),
+				0x06 => out.push(DialoguePart::_06),
+				0x07 => out.push(DialoguePart::_07),
+				0x08 => out.push(DialoguePart::_08),
 				0x09 => out.push(DialoguePart::_09),
 				0x0B => out.push(DialoguePart::_0B),
+				0x0C => out.push(DialoguePart::_0C),
 				0x10 => out.push(DialoguePart::_10(f.u16()?)),
 				0x11 => out.push(DialoguePart::_11(f.u32()?)),
 				0x12 => out.push(DialoguePart::_12(f.u32()?)),
