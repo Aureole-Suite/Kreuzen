@@ -349,6 +349,11 @@ fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 	if code == 0x00 || code == 0x01 {
 		return Ok(op);
 	}
+	if code == 0x04 {
+		op.push(f.u8()?);
+		op.push(f.str()?);
+		return Ok(op);
+	}
 
 	op.line = f.u16()?;
 	f.check_u8(0)?;
