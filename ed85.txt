@@ -80,8 +80,8 @@
 2E01 u16 u8 f32 f32 u8
 2E02 u16 u8 u8
 2E03 u16 u8 u8
-2E04 u16 u8 f32
-2E05 u16 u8 f32
+2E04 u16 u8 u32
+2E05 u16 u8 u32
 2F00 u16 str str
 2F01 u16 str str
 2F02 u16 str str
@@ -382,7 +382,7 @@
 3C05 u16 str str str str str
 3D   u16 f32 f32 u8
 3E   u16 u16 f32 u8 _3E
-3F   u16 u32
+3F   u16 _3F
 40   u16 u16 _40
 41   u16
 4100
@@ -456,7 +456,7 @@
 4B   u16 f32 f32 f32 f32 u16 u8
 4C   u16 f32 f32 f32 u16 u8
 4D   u16 u8
-4E   f32 f32 u8 u8
+4E   f32 f32 u8 _4E
 4F00 u16 u32 u16 u16 u32 u32
 4F01 u16
 4F02 u16 u16 u16 u16

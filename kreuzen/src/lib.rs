@@ -160,7 +160,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 		f.check_u32(0xFF000000)?;
 		version += 1;
 	};
-	let _span = tracing::trace_span!("file", name = name.as_str(), version).entered();
+	let _span = tracing::error_span!("file", name = name.as_str(), version).entered();
 
 	if version == 0 {
 		tracing::warn!("skipping version 0 file");
@@ -174,7 +174,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 
 	let ends = table.iter().map(|e| e.start).skip(1).chain([f.len()]);
 	for (entry, end) in table.iter().zip(ends) {
-		let _span = tracing::trace_span!("chunk", name = entry.name.as_str()).entered();
+		let _span = tracing::error_span!("chunk", name = entry.name.as_str()).entered();
 		let vr = VReader {
 			reader: f.at(entry.start)?,
 			version,
@@ -207,6 +207,7 @@ fn read_func(mut f: VReader, end: usize, name: &str) -> Result<(), FunctionError
 		let pos = f.pos();
 		match read_op(&mut f).context(OpSnafu { pos }) {
 			Ok(op) => {
+				tracing::trace!("{pos:X} {op:?}");
 				ops.push((pos, op));
 			}
 			Err(e) => {
@@ -229,6 +230,7 @@ fn read_func(mut f: VReader, end: usize, name: &str) -> Result<(), FunctionError
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
 				}
+				print!("{:#X}", f.dump().start(start).end(end));
 				break;
 			}
 		}
@@ -455,6 +457,16 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 			} else if a == 0xFE13 {
 				read_parts(op, f, &[F32])?;
 			}
+
+			if op.args == [Arg::U16(65534), Arg::U16(65535), Arg::F32(5.0), Arg::U8(0)] {
+				f.check(&[0, 0, 0])?;
+			}
+		}
+
+		_3F => {
+			if f.version != 2 {
+				read_parts(op, f, &[U32])?;
+			}
 		}
 
 		_40 => {
@@ -472,6 +484,12 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 			read_parts(op, f, &[U8, U16, F32, F32, U8])?;
 			if a == 0xFE05 {
 				read_parts(op, f, &[Str])?;
+			}
+		}
+
+		_4E => {
+			if f.version != 2 {
+				read_parts(op, f, &[U8])?;
 			}
 		}
 

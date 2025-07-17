@@ -20,7 +20,9 @@ pub enum Part {
 	Switch,
 
 	_3E,
+	_3F,
 	_40,
+	_4E,
 	_6C,
 	_79,
 	_98,
