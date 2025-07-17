@@ -88,8 +88,6 @@ impl Type {
 			Type::FcAuto
 		} else if name.ends_with("Table") || name.ends_with("Data") {
 			Type::Table
-		} else if name.starts_with("AniBtlKisin") {
-			Type::Table // todo
 		} else {
 			Type::Normal
 		}
@@ -154,12 +152,17 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	let _span = tracing::trace_span!("file", name = name.as_str()).entered();
 
 	// In most cases, there's an align 4 followed by `00 00 00 FF`. But not always.
-	let mut aligned = 0;
+	let mut version = 0;
 	while f.pos() < table_top {
 		f.align_zeroed(4)?;
 		f.check_u32(0xFF000000)?;
-		aligned += 1;
+		version += 1;
 	};
+
+	if version == 0 {
+		tracing::warn!("skipping version 0 file");
+		return Ok(());
+	}
 
 	assert_eq!(f.pos(), table_top);
 	let table = read_table(&mut f, nfunc)?;
