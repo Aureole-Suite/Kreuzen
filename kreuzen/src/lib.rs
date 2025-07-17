@@ -62,22 +62,17 @@ enum Type {
 	Normal,
 	Table, // TODO separate each table
 	StyleName,
+	AddCollision,
 	Btlset,
 	BookData,
 	FcAuto,
 	Underscore,
 	Empty,
-	Lambda,
-	A0,
 }
 
 impl Type {
 	fn from_name(name: &str) -> Self {
-		if name.starts_with("_Lambda") {
-			Type::Lambda
-		} else if name.starts_with("_a0_") {
-			Type::A0
-		} else if name.starts_with("_") {
+		if name.starts_with("_") && !name.starts_with("_a0_") && !name.starts_with("_Lambda") {
 			Type::Underscore
 		} else if name.is_empty() {
 			Type::Empty
@@ -87,6 +82,8 @@ impl Type {
 			Type::BookData
 		} else if name.starts_with("FC_auto") {
 			Type::FcAuto
+		} else if name == "AddCollision" {
+			Type::AddCollision
 		} else if name.starts_with("StyleName") {
 			Type::StyleName
 		} else if name.ends_with("Table") || name.ends_with("Data") {
@@ -180,7 +177,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 			version,
 		};
 		match Type::from_name(&entry.name) {
-			Type::Normal | Type::Lambda => {
+			Type::Normal => {
 				read_func(vr, end, &entry.name).context(FunctionSnafu { name: &entry.name })?;
 			}
 			_ => {}
