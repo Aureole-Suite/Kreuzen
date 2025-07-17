@@ -276,7 +276,7 @@ pub struct OpName<'a> {
 impl std::fmt::Display for OpName<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let mut prefix = 0;
-		for i in 0..self.code.len() {
+		for i in 0..=self.code.len() {
 			if let Some(s) = spec::SPEC.names.get(&self.code[..i]) {
 				f.write_str(s)?;
 				prefix = i;
