@@ -1,5 +1,5 @@
 #![feature(if_let_guard)]
-use std::{collections::HashMap, ops::Deref, sync::{LazyLock, Mutex}};
+use std::{collections::BTreeMap, ops::Deref, sync::{LazyLock, Mutex}};
 
 use arrayvec::ArrayVec;
 use gospel::read::{Reader, Le as _};
@@ -149,7 +149,6 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 
 	f.check_u32(0xABCDEF00)?;
 	let name = f.str()?;
-	let _span = tracing::trace_span!("file", name = name.as_str()).entered();
 
 	// In most cases, there's an align 4 followed by `00 00 00 FF`. But not always.
 	let mut version = 0;
@@ -158,6 +157,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 		f.check_u32(0xFF000000)?;
 		version += 1;
 	};
+	let _span = tracing::trace_span!("file", name = name.as_str(), version).entered();
 
 	if version == 0 {
 		tracing::warn!("skipping version 0 file");
@@ -183,7 +183,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	Ok(())
 }
 
-pub static COUNTS: LazyLock<Mutex<HashMap<String, usize>>> = LazyLock::new(Default::default);
+pub static COUNTS: LazyLock<Mutex<BTreeMap<String, usize>>> = LazyLock::new(Default::default);
 
 fn read_func(mut f: Reader, end: usize, name: &str) -> Result<(), FunctionError> {
 	let start = f.pos();
@@ -339,7 +339,10 @@ mod spec;
 fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
 	let op = read_op2(f)?;
-	if op.unk != 0xFF && pos + op.unk as usize != f.pos() && !matches!(*op.code, [0x03 | 0x05 | 0x08 | 0x0A | 0x18 | 0x5B]) {
+	if op.unk != 0xFF
+	&& pos + op.unk as usize != f.pos()
+	&& !op.args.iter().any(|a| matches!(a, Arg::Expr(_) | Arg::Label(_)))
+	{
 		tracing::warn!("{} + {} == {} != {} for {op:?}", pos, op.unk, pos + op.unk as usize, f.pos());
 	}
 	Ok(op)
@@ -436,8 +439,6 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 				read_parts(op, f, &[U8])?;
 			} else if a == 0xFE13 {
 				read_parts(op, f, &[F32])?;
-			} else if a == 0xFFFF { // Not in SSD
-				read_parts(op, f, &[U8, U8, U8])?;
 			}
 		}
 
@@ -509,6 +510,18 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 				3 => read_parts(op, f, &[Str, F32, F32, F32, F32, F32, F32])?,
 				4 => read_parts(op, f, &[Str, U8])?,
 				1000.. => read_parts(op, f, &[U16, U16])?,
+				_ => {}
+			}
+		}
+
+		_D2 => {
+			let Some(&Arg::U16(a)) = op.args.get(0) else {
+				panic!("C0 must have a U16 arg");
+			};
+			match a {
+				0 => read_parts(op, f, &[U8])?,
+				3 => read_parts(op, f, &[U8, U8, U32])?,
+				0xFFFE | 0xFFFF => read_parts(op, f, &[Dyn])?,
 				_ => {}
 			}
 		}

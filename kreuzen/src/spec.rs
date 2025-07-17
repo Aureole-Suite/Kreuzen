@@ -24,6 +24,7 @@ pub enum Part {
 	_79,
 	_98,
 	_C0,
+	_D2,
 }
 
 #[derive(Debug)]
