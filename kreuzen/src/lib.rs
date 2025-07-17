@@ -711,6 +711,11 @@ pub struct Dialogue(pub Vec<DialoguePart>);
 #[derive(Clone, PartialEq)]
 pub enum DialoguePart {
 	String(String),
+	Control(DialogueControl),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DialogueControl {
 	Line,
 	Page,
 	_03,
@@ -735,24 +740,7 @@ impl std::fmt::Debug for DialoguePart {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::String(s) => s.fmt(f),
-			Self::Line => write!(f, "Line"),
-			Self::Page => write!(f, "Page"),
-			Self::_03 => write!(f, "_03"),
-			Self::_06 => write!(f, "_06"),
-			Self::_07 => write!(f, "_07"),
-			Self::_08 => write!(f, "_08"),
-			Self::_09 => write!(f, "_09"),
-			Self::_0B => write!(f, "_0B"),
-			Self::_0C => write!(f, "_0C"),
-			Self::_0F => write!(f, "_0F"),
-			Self::_10(v) => f.debug_tuple("_10").field(v).finish(),
-			Self::_11(v) => f.debug_tuple("_11").field(v).finish(),
-			Self::_12(v) => f.debug_tuple("_12").field(v).finish(),
-			Self::_13 => write!(f, "_13"),
-			Self::_16 => write!(f, "_16"),
-			Self::_17(v) => f.debug_tuple("_17").field(v).finish(),
-			Self::_19(v) => f.debug_tuple("_19").field(v).finish(),
-			Self::_1A => write!(f, "_1A"),
+			Self::Control(c) => c.fmt(f),
 		}
 	}
 }
@@ -775,28 +763,29 @@ fn dialogue(f: &mut Reader) -> Result<Dialogue, DialogueError> {
 				}
 				scratch = Vec::new();
 			}
-			match byte {
+			let c = match byte {
 				0x00 => break,
-				0x01 => out.push(DialoguePart::Line),
-				0x02 => out.push(DialoguePart::Page),
-				0x03 => out.push(DialoguePart::_03),
-				0x06 => out.push(DialoguePart::_06),
-				0x07 => out.push(DialoguePart::_07),
-				0x08 => out.push(DialoguePart::_08),
-				0x09 => out.push(DialoguePart::_09),
-				0x0B => out.push(DialoguePart::_0B),
-				0x0C => out.push(DialoguePart::_0C),
-				0x0F => out.push(DialoguePart::_0F),
-				0x10 => out.push(DialoguePart::_10(f.u16()?)),
-				0x11 => out.push(DialoguePart::_11(f.u32()?)),
-				0x12 => out.push(DialoguePart::_12(f.u32()?)),
-				0x13 => out.push(DialoguePart::_13),
-				0x16 => out.push(DialoguePart::_16),
-				0x17 => out.push(DialoguePart::_17(f.u16()?)),
-				0x19 => out.push(DialoguePart::_19(f.u16()?)),
-				0x1A => out.push(DialoguePart::_1A),
+				0x01 => DialogueControl::Line,
+				0x02 => DialogueControl::Page,
+				0x03 => DialogueControl::_03,
+				0x06 => DialogueControl::_06,
+				0x07 => DialogueControl::_07,
+				0x08 => DialogueControl::_08,
+				0x09 => DialogueControl::_09,
+				0x0B => DialogueControl::_0B,
+				0x0C => DialogueControl::_0C,
+				0x0F => DialogueControl::_0F,
+				0x10 => DialogueControl::_10(f.u16()?),
+				0x11 => DialogueControl::_11(f.u32()?),
+				0x12 => DialogueControl::_12(f.u32()?),
+				0x13 => DialogueControl::_13,
+				0x16 => DialogueControl::_16,
+				0x17 => DialogueControl::_17(f.u16()?),
+				0x19 => DialogueControl::_19(f.u16()?),
+				0x1A => DialogueControl::_1A,
 				byte => return BadControlSnafu { byte }.fail(),
-			}
+			};
+			out.push(DialoguePart::Control(c));
 		}
 	}
 	Ok(Dialogue(out))
