@@ -205,6 +205,10 @@ fn read_func(mut f: Reader, end: usize, name: &str) -> Result<(), FunctionError>
 						let k = format!("expr {code:02X}");
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
+					if let Some(DialogueError::BadControl { byte, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
+						let k = format!("dial {byte:02X}");
+						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
+					}
 				}
 				print!("{:#1X}", f.at(pos).unwrap().dump().num_width_as(0xFFFF).end(end));
 				break;
