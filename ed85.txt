@@ -11,6 +11,7 @@
 0E   u8 u8 u8
 10   u16
 11   u16
+12   u16
 13   u32
 14   u32
 16   'Sleep' u16
@@ -283,6 +284,7 @@
 33D404 u16
 33D405 u16 u8
 33D5 u8 u16 u16
+34   u8 f32 f32 f32 f32 u16
 35   u8 u16 u32
 3600
 3602 u8 f32 f32 f32 u16
@@ -296,14 +298,34 @@
 360A f32 f32 f32 u16 u16 u16 u16 u16 u8
 360B u8 f32 u16
 360C u8 f32 f32 f32 u16
+360D u8 u16 str f32 f32 f32 u16
+360E u8 f32 f32 f32 u16
+360F u16 f32 f32 f32
+3610
 3611 u8 f32 f32 f32 u16 u8
 3612 u16
 3613 u16 str u8 f32 f32 f32 u16 u8
 3614 u8 u16 str f32 f32 f32 u16
+3615 u8 f32 u32 u8
 3616 u8 f32 u16
 3617 u16
+3618 u8 str f32 f32 f32 u16
+3619 u8 str f32 f32 f32 u16
+361A str u8 f32 f32 f32 u16 u8
+361B f32 f32
 361C u8
 361D u8
+361F u8 f32 f32 u8
+3620
+3621 u16 str
+3628 f32 f32 f32
+3629 f32 f32 f32
+362A f32
+362B f32
+362C u16
+362D u16
+362E u8
+362F u8
 37   u16 f32 f32 f32 f32
 38   u16 u8 u8 str
 39   u16 u8 str f32 f32 u32
@@ -329,6 +351,7 @@
 3B3E u16
 3B3F u16
 3B64 u32 f32 f32
+3BFE u16
 3BFF f32 f32 f32
 3C01 u16 str str
 3C03 u16 str str str str str
@@ -394,6 +417,7 @@
 4915 u16
 4916 u16 u16
 4917 u16
+4918
 491B u8
 491C u8
 491D u8
@@ -409,11 +433,15 @@
 4F03 u16 u32 u32 u32 u32 u16 u8
 4F06 u16 u8 u32
 50   dyn str f32 u8
+51   f32 f32 f32 f32 f32 u16 f32 f32 f32 f32
+52   u8 u16
+53   u8 u8
 53   u8 u8
 540A u8
 540B u16
 540D str str u16 u16
 540E u8
+5412
 5413
 5414 str str u16 u16 u16 u16 u16 u16
 5415 str
@@ -422,15 +450,19 @@
 5419 str str
 541A u16
 541C str u8 u16
+5420
 5421 u16 f32
 5422 u16
 5423 u16 u16 u16 f32
 5424 u16
+5425
 5426 u8 u32 u32 str
 5427
 5429 u8 u16
+542A
 542B u8 str u16
 542C u8 f32 f32
+542D
 542E
 5430 dyn2
 543100 u16 u16 f32 f32 u8 u8 u16
@@ -447,6 +479,7 @@
 543E u8 str u32
 543F
 5440 u16
+5441
 5442 u16 u16
 5443
 5444 f32 f32 f32
@@ -510,6 +543,7 @@
 60   u16 u8 str
 6100 str u8 u16 f32 f32 f32 f32 f32 f32 f32 u16
 6101 u16
+6102
 62   u16 u16
 63   u16 u8
 6400 f32
@@ -540,6 +574,7 @@
 6803 str f32 f32 f32
 6804 str f32 f32 f32
 6805 str
+6806 str
 6807 str f32 f32 f32 f32 u16 u8
 6808 str f32 f32 f32 u16 u8
 680B str u16
@@ -578,6 +613,12 @@
 6A00 f32 u8 u16
 6A01
 6A02 f32 f32 f32 f32 f32 f32 f32
+6A03 f32 u8 u16
+6A04 f32 f32 f32 f32 f32 u8 u16
+6A05 f32 f32 f32 f32 f32 f32 f32
+6A06 dyn dyn dyn dyn dyn dyn f32
+6A07 dyn u8 u16
+6B   u16 u16 u32 u32 u32
 6C   u16 f32 i32
 6E   u16 f32 f32 f32 f32 u8
 6F00 u16 u32
@@ -652,12 +693,18 @@
 7504 'Menu2Wait' u8 u8
 76   u16 str str u8 u8 f32 f32 f32 f32
 77   u16
+78   u8 str
+7903 u16
+7907 u16 u8 u8
+790A u16
+7915 u16
 7A00 str
 7A01 u16 str
 7A02 u16 str
 7A03 str
 7D   u16 u32 f32
 7E00
+7E01
 7E02 u16
 7E03 f32 f32 f32
 7E04 u16
@@ -681,12 +728,52 @@
 8AFE u16 str f32
 8AFF u16 str f32
 8C00 u16
+8C01
+8C02
+8C03 u8
+8C04 u32
+8C06
+8C08 u32
+8C0A u8 str str
+8C0C str u32
+8C0D u32 u32
+8C0F u32
+8C10 u32 u8
+8C11 str
+8C12
+8C14 u8
 8D   u16 f32 f32 f32 f32
+8F
+90   str u32
 9100 u16 u32
+9101 u16 u32
+9102 str u8
+9105 u16 u32
+9106 u16
+910A u16 u32
+910B u16 u32
+92   u16
+9300 u8
+9301
+93D2 u16
+93DC
 97   u8 u16 u32
 98   u16 _98
 99   u16 u16
+9A   u16 f32 f32 f32 u16
+9B   u8 u16
+9C00 u8 u16 u16 u32
+9C01 u16
+9C03
+9D   u8 u8
+9E00
+9E01
+9E02
+9E0F u8
+9E10
 9E11 u16 u8
+9E12 u8 u8
+9E13
 9E1401 u16 str
 9E1402 u16
 9E1403 u8
@@ -711,6 +798,36 @@
 9E1419 u16 str dyn
 9E141A u16
 9E141B u16
+9E32 u16 str
+9E33 u16 str
+9E35 u8 u16
+9E36 u8 u32
+9E37 u8
+9E38 u16 u8 str
+9E3A u16 u16 f32 f32 f32 f32 f32 f32 f32 f32
+9E3B u16 u8
+9E3C u32 u16
+9E3D u32 u16
+9E3E u16
+9E3F u16
+9E41 u16 u16 u32 u16
+9E42 u16 u32
+9E43 u16 u32
+9E44 u16 u16
+9E45 u16 u16
+9E46 u16 u32 u16
+9E48 u8
+9E49 u8
+9E4A u16 f32 f32 f32
+9E4B u16
+9E4C u16 u8
+9E50 u16
+9E51 u16 u32 u8
+9E53 f32 f32
+9E54 u8
+9E56 u8
+9E59 u32
+A0
 A6   u16 f32 f32 f32
 A8   u32
 A8   u32
@@ -741,7 +858,9 @@ AD01 u8
 AD02 u32
 AD03 u8
 AE   str u16
+AF   u8
 B004 u8
+B009
 B00A u8
 B00B u8 u8
 B00C u8
@@ -752,17 +871,26 @@ B01D u8
 B01E u8
 B021 u8
 B025 u8
+B026
 B028 u8
 B02E u8
 B02F u8
 B031 u32
+B035
 B036 u32 u8
+B038
 B03C u8 u16 u8
 B03D u32
 B03E u32
 B1   u8 u16 u32
+B200 u8 u16
+B201 u8 u8 u8 u16
 B4
 B5   u16 u8 f32 f32 f32 u16 u16
+B900 u32 u16 str str u32
+B901 u32 f32 f32 f32 f32 f32 f32 f32
+B902 u32 f32 f32 f32
+B903 u32
 BB   u16
 BC00 u16 dyn2 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
 BC01 u16 dyn2 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
@@ -807,11 +935,35 @@ C40D u8 u16
 C40E u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
 C40F u8 u8 u8 u8 u8 u8 u8 u8 u8
 C410 dyn u16
+C500 u8 u8
+C501
+C503
+C504 u8
+C505
+C506 u8
+C507 u32
+C508
+C509 u8 u8 u8 u8 u8 u8 u8 u8
+C50A u8 u8 u8 u8 u8 u8 u8 u8
+C50B
+C50C u8 u8 u8 u8 u8
+C600 u8
+C601
+C602 u16 u8
+C603 u16 u8
+C604 u16 u32
+C605 u16 u32
+C606 u16
+C607 u16
+C608 u16 u8 u8 u8
+C609 u16
+C701 u16 u32
 C800 u16 u32
 C801 u16 u32
 C802 u16 u32 u16
 C803 u16 u32 f32 f32 f32
 C901 u16
+C902
 CE00 u8 str str u8
 CE01 u8 u32 u8
 CE02 u8 str f32 f32 f32 f32 u8
@@ -835,12 +987,24 @@ D100 str u16 f32 f32
 D101 str u16
 D304 u16 f32 f32 f32 f32 f32 f32
 D306 f32 f32 f32
+D4   u8 u8
+D501 u8 u16
+D6   u16 dyn dyn dyn dyn
+D7   u8 u32
+D8   u8 u8
 D900 u8
 D902
 D903 u32
 D904 u16 f32 f32 f32 f32 f32 f32
 D906 f32 f32 f32
+DA   u8 u8
+DB   u8
+DC00 u16 u16 u8
+DE01 u8 u32
+DE03 u8 u8 u8
+DF   u32 u8
 E000
+E001
 E002 u8 u16 f32 u32 u32 u8 u8
 E003 u16 f32 f32 f32
 E005 u8
@@ -854,3 +1018,6 @@ E204 u8
 E205 u8 u8
 E302 u16 u8 u16 u16
 E303 u16 u8 u16
+E500 u8
+E501 u8 u8
+E6   u16
