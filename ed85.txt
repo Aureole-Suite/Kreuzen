@@ -726,8 +726,9 @@
 7203 u8 u8
 7204 u8 u8
 7206 u16
-7207 u8 u8
+7207
 7208 dyn
+7209
 720A dyn
 720B dyn u8 u8
 73   u16 # fall through
@@ -1147,7 +1148,12 @@ CE1F u8 str u32 u8
 CE28 u8 str u8
 CE32 u8 str u32 u8
 CE33 u8 str u32 u8
-CF   u8
+CF03
+CF04
+CF05
+CF06
+CF07
+CF14 u16
 D000 u16 str str str str f32 f32 f32
 D01E str str str str f32 f32 f32
 D100 str u16 f32 f32

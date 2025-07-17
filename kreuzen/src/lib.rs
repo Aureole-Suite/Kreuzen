@@ -61,6 +61,7 @@ impl std::fmt::Debug for Entry {
 enum Type {
 	Normal,
 	Table, // TODO separate each table
+	StyleName,
 	Btlset,
 	BookData,
 	FcAuto,
@@ -86,6 +87,8 @@ impl Type {
 			Type::BookData
 		} else if name.starts_with("FC_auto") {
 			Type::FcAuto
+		} else if name.starts_with("StyleName") {
+			Type::StyleName
 		} else if name.ends_with("Table") || name.ends_with("Data") {
 			Type::Table
 		} else {
@@ -343,7 +346,7 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	&& pos + op.unk as usize != f.pos()
 	&& !op.args.iter().any(|a| matches!(a, Arg::Expr(_) | Arg::Label(_)))
 	{
-		tracing::warn!("{} + {} == {} != {} for {op:?}", pos, op.unk, pos + op.unk as usize, f.pos());
+		tracing::warn!("expected length {}, got {} on {op:?}", op.unk, f.pos() - pos);
 	}
 	Ok(op)
 }
@@ -509,7 +512,7 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 				1 => read_parts(op, f, &[F32])?,
 				3 => read_parts(op, f, &[Str, F32, F32, F32, F32, F32, F32])?,
 				4 => read_parts(op, f, &[Str, U8])?,
-				1000.. => read_parts(op, f, &[U16, U16])?,
+				1000 | 1001 | 1003 => read_parts(op, f, &[U16, U16])?,
 				_ => {}
 			}
 		}
