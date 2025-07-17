@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, sync::LazyLock};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq, Eq, derive_more::FromStr)]
 pub enum Part {
@@ -36,6 +36,12 @@ pub struct Spec {
 	pub ops: [Option<Op>; 256],
 }
 
+impl Spec {
+	pub fn parse(text: &str) -> Self {
+		parse_spec(text)
+	}
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Op {
 	pub parts: Vec<Part>,
@@ -57,8 +63,6 @@ impl Op {
 		self.children.get(index)
 	}
 }
-
-pub static SPEC: LazyLock<Spec> = LazyLock::new(|| parse_spec(include_str!("../../ed85.txt")));
 
 struct Line {
 	code: Vec<u8>,
@@ -87,7 +91,7 @@ fn parse_line(line: &str) -> Option<Line> {
 	Some(Line { code, name, parts })
 }
 
-pub fn parse_spec(text: &str) -> Spec {
+fn parse_spec(text: &str) -> Spec {
 	let mut names = BTreeMap::new();
 	let mut ops = BTreeMap::new();
 	for line0 in text.lines() {
