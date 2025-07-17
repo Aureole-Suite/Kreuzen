@@ -175,9 +175,13 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	let ends = table.iter().map(|e| e.start).skip(1).chain([f.len()]);
 	for (entry, end) in table.iter().zip(ends) {
 		let _span = tracing::trace_span!("chunk", name = entry.name.as_str()).entered();
+		let vr = VReader {
+			reader: f.at(entry.start)?,
+			version,
+		};
 		match Type::from_name(&entry.name) {
 			Type::Normal | Type::Lambda => {
-				read_func(f.at(entry.start)?, end, &entry.name).context(FunctionSnafu { name: &entry.name })?;
+				read_func(vr, end, &entry.name).context(FunctionSnafu { name: &entry.name })?;
 			}
 			_ => {}
 		}
@@ -188,7 +192,15 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 
 pub static COUNTS: LazyLock<Mutex<BTreeMap<String, usize>>> = LazyLock::new(Default::default);
 
-fn read_func(mut f: Reader, end: usize, name: &str) -> Result<(), FunctionError> {
+#[derive(Debug, Clone, derive_more::Deref, derive_more::DerefMut)]
+pub struct VReader<'a> {
+	#[deref]
+	#[deref_mut]
+	reader: Reader<'a>,
+	version: u32,
+}
+
+fn read_func(mut f: VReader, end: usize, name: &str) -> Result<(), FunctionError> {
 	let start = f.pos();
 	let mut ops = Vec::new();
 	while !at_end(&mut f, end) {
@@ -339,7 +351,7 @@ pub enum OpError {
 
 mod spec;
 
-fn read_op(f: &mut Reader) -> Result<Op, OpError> {
+fn read_op(f: &mut VReader) -> Result<Op, OpError> {
 	let pos = f.pos();
 	let op = read_op2(f)?;
 	if op.unk != 0xFF
@@ -351,7 +363,7 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	Ok(op)
 }
 
-fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
+fn read_op2(f: &mut VReader) -> Result<Op, OpError> {
 	let mut code = f.u8()?;
 	let mut op = Op {
 		code: ArrayVec::new(),
@@ -395,14 +407,14 @@ fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 	Ok(op)
 }
 
-fn read_parts(op: &mut Op, f: &mut Reader, part: &[spec::Part]) -> Result<(), OpError> {
+fn read_parts(op: &mut Op, f: &mut VReader, part: &[spec::Part]) -> Result<(), OpError> {
 	for p in part {
 		read_part(op, f, p)?;
 	}
 	Ok(())
 }
 
-fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpError> {
+fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpError> {
 	use spec::Part::*;
 	match part {
 		U8 => op.push(f.u8()?),
@@ -460,6 +472,12 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 			read_parts(op, f, &[U8, U16, F32, F32, U8])?;
 			if a == 0xFE05 {
 				read_parts(op, f, &[Str])?;
+			}
+		}
+
+		_6C => {
+			if f.version != 2 {
+				read_parts(op, f, &[I32])?;
 			}
 		}
 
@@ -532,7 +550,7 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 	Ok(())
 }
 
-fn at_end(f: &mut Reader<'_>, end: usize) -> bool {
+fn at_end(f: &mut VReader<'_>, end: usize) -> bool {
 	let rest = &f.data()[f.pos()..end];
 	rest.len() <= 3 && rest.iter().all(|&b| b == 0)
 }
@@ -550,7 +568,7 @@ pub enum CallArg {
 	Unknown(u8),
 }
 
-fn call_arg(f: &mut Reader) -> Result<CallArg, OpError> {
+fn call_arg(f: &mut VReader) -> Result<CallArg, OpError> {
 	Ok(match f.u8()? {
 		0x11 => CallArg::_11(f.u32()?, f.u8()?),
 		0x22 => CallArg::_22(f.f32()?, f.f32()?),
@@ -564,7 +582,7 @@ fn call_arg(f: &mut Reader) -> Result<CallArg, OpError> {
 	})
 }
 
-fn call_arg2(f: &mut Reader) -> Result<CallArg, OpError> {
+fn call_arg2(f: &mut VReader) -> Result<CallArg, OpError> {
 	Ok(match f.u8()? {
 		0x11 => CallArg::_11(f.u32()?, f.u8()?),
 		0x22 => CallArg::_22(f.f32()?, f.f32()?),
@@ -662,7 +680,7 @@ pub enum AssOp {
 	OrAss = 0x1B,  // |=
 }
 
-fn expr(f: &mut Reader) -> Result<Expr, ExprError> {
+fn expr(f: &mut VReader) -> Result<Expr, ExprError> {
 	let mut stack = Vec::new();
 	loop {
 		let pos = f.pos();
@@ -761,7 +779,7 @@ impl std::fmt::Debug for DialoguePart {
 	}
 }
 
-fn dialogue(f: &mut Reader) -> Result<Dialogue, DialogueError> {
+fn dialogue(f: &mut VReader) -> Result<Dialogue, DialogueError> {
 	let mut out = Vec::new();
 	let mut scratch = Vec::new();
 	loop {

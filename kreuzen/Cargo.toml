@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 arrayvec = "0.7.6"
-derive_more = { version = "2.0.1", features = ["from", "from_str"] }
+derive_more = { version = "2.0.1", features = ["deref", "deref_mut", "from", "from_str"] }
 extend = "1.2.0"
 gospel = "0.3.1"
 hex = "0.4.3"

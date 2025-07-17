@@ -667,7 +667,7 @@
 6A06 dyn dyn dyn dyn dyn dyn f32
 6A07 dyn u8 u16
 6B   u8 u16 u16 u32 u32 u32
-6C   u16 f32 i32
+6C   u16 f32 _6C
 6E   u16 f32 f32 f32 f32 u8
 6F00 u16 u32
 6F01 u16 u32
