@@ -458,7 +458,7 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 				read_parts(op, f, &[F32])?;
 			}
 
-			if op.args == [Arg::U16(65534), Arg::U16(65535), Arg::F32(5.0), Arg::U8(0)] {
+			if op.args[1..] == [Arg::U16(65535), Arg::F32(5.0), Arg::U8(0)] {
 				f.check(&[0, 0, 0])?;
 			}
 		}

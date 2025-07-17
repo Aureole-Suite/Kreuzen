@@ -742,6 +742,7 @@
 7402 u16 f32 u16 u16 str f32
 7403 str u32 u16 u16 str u32
 7404
+7416
 7500 'Menu2New' u8 u16 f32 f32
 7501 'Menu2Add' u8 str i32
 7502 'Menu2Show' u8 u8 u16 u16 u8
@@ -948,6 +949,7 @@ A8   u32
 A9   u8
 AA   u8 u8
 AC00 u8
+AC01 dyn2 # SSD says dyn2×4 here but why
 AC02 u32
 AC03 dyn2
 AC04 dyn2
