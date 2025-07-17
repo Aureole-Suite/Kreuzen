@@ -720,11 +720,15 @@ pub enum DialoguePart {
 	_09,
 	_0B,
 	_0C,
+	_0F,
 	_10(u16),
 	_11(u32),
 	_12(u32),
+	_13,
+	_16,
 	_17(u16),
 	_19(u16),
+	_1A,
 }
 
 impl std::fmt::Debug for DialoguePart {
@@ -740,11 +744,15 @@ impl std::fmt::Debug for DialoguePart {
 			Self::_09 => write!(f, "_09"),
 			Self::_0B => write!(f, "_0B"),
 			Self::_0C => write!(f, "_0C"),
+			Self::_0F => write!(f, "_0F"),
 			Self::_10(v) => f.debug_tuple("_10").field(v).finish(),
 			Self::_11(v) => f.debug_tuple("_11").field(v).finish(),
 			Self::_12(v) => f.debug_tuple("_12").field(v).finish(),
+			Self::_13 => write!(f, "_13"),
+			Self::_16 => write!(f, "_16"),
 			Self::_17(v) => f.debug_tuple("_17").field(v).finish(),
 			Self::_19(v) => f.debug_tuple("_19").field(v).finish(),
+			Self::_1A => write!(f, "_1A"),
 		}
 	}
 }
@@ -778,11 +786,15 @@ fn dialogue(f: &mut Reader) -> Result<Dialogue, DialogueError> {
 				0x09 => out.push(DialoguePart::_09),
 				0x0B => out.push(DialoguePart::_0B),
 				0x0C => out.push(DialoguePart::_0C),
+				0x0F => out.push(DialoguePart::_0F),
 				0x10 => out.push(DialoguePart::_10(f.u16()?)),
 				0x11 => out.push(DialoguePart::_11(f.u32()?)),
 				0x12 => out.push(DialoguePart::_12(f.u32()?)),
+				0x13 => out.push(DialoguePart::_13),
+				0x16 => out.push(DialoguePart::_16),
 				0x17 => out.push(DialoguePart::_17(f.u16()?)),
 				0x19 => out.push(DialoguePart::_19(f.u16()?)),
+				0x1A => out.push(DialoguePart::_1A),
 				byte => return BadControlSnafu { byte }.fail(),
 			}
 		}
