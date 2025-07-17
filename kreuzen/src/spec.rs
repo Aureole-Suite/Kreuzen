@@ -1,5 +1,4 @@
-use std::sync::LazyLock;
-use trie_rs::map::{Trie, TrieBuilder};
+use std::{collections::BTreeMap, sync::LazyLock};
 
 #[derive(Debug, Clone, PartialEq, Eq, derive_more::FromStr)]
 pub enum Part {
@@ -16,6 +15,10 @@ pub enum Part {
 	Dyn,
 	Dyn2,
 	Ndyn,
+
+	Label,
+	Switch,
+
 	_3E,
 	_40,
 	_79,
@@ -23,15 +26,43 @@ pub enum Part {
 	_C0,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Spec {
-	pub names: Trie<u8, String>,
-	pub ops: Trie<u8, Vec<Part>>,
+	pub names: BTreeMap<Vec<u8>, String>,
+	pub ops: [Option<Op>; 256],
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Op {
+	pub parts: Vec<Part>,
+	child_keys: Vec<u8>,
+	children: Vec<Op>,
+}
+
+impl Op {
+	pub fn has_children(&self) -> bool {
+		!self.child_keys.is_empty()
+	}
+
+	pub fn child(&self, key: u8) -> Option<&Op> {
+		assert_eq!(self.child_keys.len(), self.children.len());
+		if self.child_keys.is_empty() {
+			return None;
+		}
+		let index = self.child_keys.binary_search(&key).ok()?;
+		self.children.get(index)
+	}
 }
 
 pub static SPEC: LazyLock<Spec> = LazyLock::new(|| parse_spec(include_str!("../../ed85.txt")));
 
-fn parse_line(line: &str) -> Option<(Vec<u8>, String, Vec<Part>)> {
+struct Line {
+	code: Vec<u8>,
+	name: String,
+	parts: Vec<Part>,
+}
+
+fn parse_line(line: &str) -> Option<Line> {
 	let mut words = line.split_whitespace();
 
 	let codeword = words.next().unwrap();
@@ -49,29 +80,47 @@ fn parse_line(line: &str) -> Option<(Vec<u8>, String, Vec<Part>)> {
 			parts.push(word.parse().ok()?);
 		};
 	}
-	Some((code, name, parts))
+	Some(Line { code, name, parts })
 }
 
 pub fn parse_spec(text: &str) -> Spec {
-	let mut names = TrieBuilder::new();
-	let mut ops = TrieBuilder::new();
+	let mut names = BTreeMap::new();
+	let mut ops = BTreeMap::new();
 	for line0 in text.lines() {
 		let line = line0.split('#').next().unwrap().trim();
 		if line.is_empty() {
 			continue;
 		}
 
-		let (code, name, op) = parse_line(line).unwrap_or_else(|| {
+		let line = parse_line(line).unwrap_or_else(|| {
 			panic!("Failed to parse spec: {line0}");
 		});
-
-		if !name.is_empty() {
-			names.insert(code.clone(), name);
+		assert!(!ops.contains_key(&line.code), "Duplicate code in spec: {}", hex::encode(&line.code));
+		if !line.name.is_empty() {
+			names.insert(line.code.clone(), line.name);
 		}
-		ops.insert(code, op);
+		ops.insert(line.code, line.parts);
 	}
+
 	Spec {
-		names: names.build(),
-		ops: ops.build(),
+		names,
+		ops: build_ops(ops),
 	}
+}
+
+fn build_ops(ops: BTreeMap<Vec<u8>, Vec<Part>>) -> [Option<Op>; 256] {
+	let mut out = std::array::from_fn(|_| None);
+	for (k, v) in ops {
+		assert!(!k.is_empty(), "Empty code in spec");
+		let mut op = out[k[0] as usize].get_or_insert_with(Op::default);
+		for byte in k.iter().skip(1) {
+			if op.child_keys.last().is_none_or(|last| last < byte) {
+				op.child_keys.push(*byte);
+				op.children.push(Op::default());
+			}
+			op = op.children.last_mut().unwrap();
+		}
+		op.parts = v;
+	}
+	out
 }

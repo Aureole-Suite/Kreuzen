@@ -255,18 +255,16 @@ pub struct OpName<'a> {
 
 impl std::fmt::Display for OpName<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let mut inc = spec::SPEC.names.inc_search();
-		let _ = inc.query_until(self.code);
-		let prefix = match inc.value() {
-			Some(name) => {
-				write!(f, "{name}")?;
-				inc.prefix_len()
-			},
-			None => {
-				write!(f, "op")?;
-				0
+		let mut prefix = 0;
+		for i in 0..self.code.len() {
+			if let Some(s) = spec::SPEC.names.get(&self.code[..i]) {
+				f.write_str(s)?;
+				prefix = i;
 			}
-		};
+		}
+		if prefix == 0 {
+			write!(f, "op")?;
+		}
 		for byte in &self.code[prefix..] {
 			write!(f, "{byte:02X}")?;
 		}
@@ -366,40 +364,20 @@ fn read_op2(f: &mut Reader) -> Result<Op, OpError> {
 	f.check_u8(0)?;
 	op.unk = f.u8()?;
 
-	match spec::SPEC.names.exact_match(&op.code).map(|v| v.as_ref()) {
-		Some("goto") => {
-			op.push(Arg::Label(f.u32()?));
-			return Ok(op);
-		}
-		Some("if") => {
-			op.push(expr(f).context(ExprSnafu)?);
-			op.push(Arg::Label(f.u32()?));
-			return Ok(op);
-		}
-		Some("switch") => {
-			op.push(expr(f).context(ExprSnafu)?);
-			let n = f.u8()?;
-			for _ in 0..n {
-				op.push(f.i32()?);
-				op.push(Arg::Label(f.u32()?));
-			}
-			op.push(Arg::Label(f.u32()?));
-			return Ok(op);
-		}
-		_ => {}
-	}
+	let Some(mut spec) = spec::SPEC.ops[code as usize].as_ref() else {
+		return UnknownOpSnafu { op }.fail();
+	};
 
-	let mut inc = spec::SPEC.ops.inc_search();
 	loop {
-		let Some(ans) = inc.query(&code) else {
-			return UnknownOpSnafu { op }.fail();
-		};
-		if let Some(spec) = inc.value() {
-			read_parts(&mut op, f, spec)?;
-		}
-		if ans.is_prefix() {
+		read_parts(&mut op, f, &spec.parts)?;
+		if spec.has_children() {
 			code = f.u8()?;
 			op.code.push(code);
+			if let Some(next) = spec.child(code) {
+				spec = next;
+			} else {
+				return UnknownOpSnafu { op }.fail();
+			}
 		} else {
 			break;
 		}
@@ -433,6 +411,17 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 		Ndyn => {
 			for _ in 0..f.u8()? {
 				op.push(call_arg(f)?);
+			}
+		}
+
+		Label => {
+			op.push(Arg::Label(f.u32()?));
+		}
+		Switch => {
+			let n = f.u8()?;
+			for _ in 0..n {
+				op.push(f.i32()?);
+				op.push(Arg::Label(f.u32()?));
 			}
 		}
 

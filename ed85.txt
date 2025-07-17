@@ -1,9 +1,9 @@
 01   'return'
 02   'call' u8 str ndyn
-03   'goto'
+03   'goto' label
 04   'fastcall'
-05   'if'
-06   'switch'
+05   'if' expr label
+06   'switch' expr switch label
 07   u8 dyn
 08   u8 expr
 0A   u8 expr
@@ -417,8 +417,6 @@
 4902 u8
 4903
 4904 u16
-4904 u16
-4905 u16
 4905 u16
 4906 u16
 4907
@@ -456,7 +454,6 @@
 50   dyn str f32 u8
 51   f32 f32 f32 f32 f32 u16 f32 f32 f32 f32
 52   u8 u16
-53   u8 u8
 53   u8 u8
 540A u8
 540B u16
@@ -809,8 +806,6 @@
 8D   u16 f32 f32 f32 f32
 8E   u16 u16 u16 u16 u16 u16 u16 u16
 8F
-8F
-90   str u32
 90   str u32
 9100 u16 u32
 9101 u16 u32
@@ -909,7 +904,6 @@ A2   u16 str f32 f32
 A3   u16 u16
 A4   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 A6   u16 f32 f32 f32
-A8   u32
 A8   u32
 A9   u8
 AA   u8 u8
