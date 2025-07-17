@@ -2,7 +2,7 @@
 use gospel::read::{Reader, Le as _};
 use snafu::ResultExt as _;
 
-mod func;
+pub mod func;
 
 #[extend::ext]
 impl<'a> Reader<'a> {
