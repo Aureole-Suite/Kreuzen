@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, ops::Deref, sync::{LazyLock, Mutex}};
 use gospel::read::Le as _;
 use arrayvec::ArrayVec;
-use snafu::{OptionExt as _, ResultExt as _};
+use snafu::ResultExt as _;
 
 use crate::{ReaderaExt as _, VReader};
 
@@ -19,6 +19,9 @@ pub enum FunctionError {
 		source: OpError,
 	}
 }
+
+pub mod expr;
+pub mod dial;
 
 mod spec;
 use spec::Spec;
@@ -48,11 +51,11 @@ pub fn read_func(mut f: VReader, end: usize, name: &str) -> Result<(), FunctionE
 						let k = format!("op {}", hex::encode_upper(&op.code));
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
-					if let Some(ExprError::UnknownExpr { code, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
+					if let Some(expr::ExprError::UnknownExpr { code, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
 						let k = format!("expr {code:02X}");
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
-					if let Some(DialogueError::BadControl { byte, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
+					if let Some(dial::DialogueError::BadControl { byte, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
 						let k = format!("dial {byte:02X}");
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
@@ -83,11 +86,11 @@ pub enum Arg {
 	I16(i16),
 	I32(i32),
 	F32(f32),
-	Expr(Expr),
+	Expr(expr::Expr),
 	#[from(skip)]
 	Label(u32),
 	CallArg(CallArg),
-	Dialogue(Dialogue),
+	Dialogue(dial::Dialogue),
 }
 
 impl Op {
@@ -170,11 +173,11 @@ pub enum OpError {
 	UnknownOp { op: Op },
 	#[snafu(display("failed to read expr"))]
 	Expr {
-		source: ExprError,
+		source: expr::ExprError,
 	},
 	#[snafu(display("failed to read dialogue"))]
 	Dialogue {
-		source: DialogueError,
+		source: dial::DialogueError,
 	},
 }
 
@@ -252,8 +255,8 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 		I32 => op.push(f.i32()?),
 		F32 => op.push(f.f32()?),
 		Str => op.push(f.str()?),
-		Expr => op.push(expr(f).context(ExprSnafu)?),
-		Text => op.push(dialogue(f).context(DialogueSnafu)?),
+		Expr => op.push(expr::Expr::read(f).context(ExprSnafu)?),
+		Text => op.push(dial::Dialogue::read(f).context(DialogueSnafu)?),
 		Dyn => op.push(call_arg(f)?),
 		Dyn2 => op.push(call_arg2(f)?),
 		Ndyn => {
@@ -438,233 +441,3 @@ fn call_arg2(f: &mut VReader) -> Result<CallArg, OpError> {
 		v => CallArg::Unknown(v),
 	})
 }
-
-#[derive(Debug, snafu::Snafu)]
-pub enum ExprError {
-	#[snafu(display("invalid read (at {location})"), context(false))]
-	Read {
-		source: gospel::read::Error,
-		#[snafu(implicit)]
-		location: snafu::Location,
-	},
-	#[snafu(display("unknown expr {code:02X} {stack:?}"))]
-	UnknownExpr { code: u8, stack: Vec<Expr> },
-	#[snafu(display("failed to read op at {pos:X}"))]
-	ExprOp {
-		pos: usize,
-		#[snafu(source(from(OpError, Box::new)))]
-		source: Box<OpError>,
-	},
-	#[snafu(display("empty stack"))]
-	EmptyStack,
-	#[snafu(display("overfull stack"))]
-	OverfullStack { stack: Vec<Expr> },
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Expr {
-	Int(i32),
-	Op(Op),
-	Flag(u16),
-	Var(u8),
-	Attr(u8),
-	CharAttr(u16, u8),
-	Rand,
-	Global(u8),
-	_24(i32),
-	_25(u16),
-	Bin(BinOp, Box<Expr>, Box<Expr>),
-	Un(UnOp, Box<Expr>),
-	Ass(AssOp, Box<Expr>),
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] // comment to trick rustfmt
-#[derive(num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
-#[repr(u8)]
-pub enum BinOp {
-	Eq = 0x02,      // ==
-	Ne = 0x03,      // !=
-	Lt = 0x04,      // <
-	Gt = 0x05,      // >
-	Le = 0x06,      // <=
-	Ge = 0x07,      // >=
-	BoolAnd = 0x09, // &&
-	BitAnd = 0x0A,  // &
-	BitOr = 0x0B,   // | and ||
-	Add = 0x0C,     // +
-	Sub = 0x0D,     // -
-	BitXor = 0x0F,  // ^
-	Mul = 0x10,     // *
-	Div = 0x11,     // /
-	Mod = 0x12,     // %
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] // comment to trick rustfmt
-#[derive(num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
-#[repr(u8)]
-pub enum UnOp {
-	BoolNot = 0x08, // !
-	Neg = 0x0E,     // -
-	BitNot = 0x1D,  // ~
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] // comment to trick rustfmt
-#[derive(num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
-#[repr(u8)]
-pub enum AssOp {
-	Ass = 0x13,    // =
-	MulAss = 0x14, // *=
-	DivAss = 0x15, // /=
-	ModAss = 0x16, // %=
-	AddAss = 0x17, // +=
-	SubAss = 0x18, // -=
-	AndAss = 0x19, // &=
-	XorAss = 0x1A, // ^=
-	OrAss = 0x1B,  // |=
-}
-
-fn expr(f: &mut VReader) -> Result<Expr, ExprError> {
-	let mut stack = Vec::new();
-	loop {
-		let pos = f.pos();
-		match f.u8()? {
-			0x00 => stack.push(Expr::Int(f.i32()?)),
-			0x01 => break,
-			0x1C => stack.push(Expr::Op(read_op(f).context(ExprOpSnafu { pos })?)),
-			0x1E => stack.push(Expr::Flag(f.u16()?)),
-			0x1F => stack.push(Expr::Var(f.u8()?)),
-			0x20 => stack.push(Expr::Attr(f.u8()?)),
-			0x21 => stack.push(Expr::CharAttr(f.u16()?, f.u8()?)),
-			0x22 => stack.push(Expr::Rand),
-			0x23 => stack.push(Expr::Global(f.u8()?)),
-			0x24 => stack.push(Expr::_24(f.i32()?)),
-			0x25 => stack.push(Expr::_25(f.u16()?)),
-
-			v if let Ok(v) = BinOp::try_from(v) => {
-				let b = stack.pop().context(EmptyStackSnafu)?;
-				let a = stack.pop().context(EmptyStackSnafu)?;
-				stack.push(Expr::Bin(v, Box::new(a), Box::new(b)));
-			}
-			v if let Ok(v) = UnOp::try_from(v) => {
-				let a = stack.pop().context(EmptyStackSnafu)?;
-				stack.push(Expr::Un(v, Box::new(a)));
-			}
-			v if let Ok(v) = AssOp::try_from(v) => {
-				let a = stack.pop().context(EmptyStackSnafu)?;
-				stack.push(Expr::Ass(v, Box::new(a)));
-			}
-
-			code => return UnknownExprSnafu { code, stack }.fail(),
-		}
-	}
-	if stack.len() == 1 {
-		Ok(stack.pop().unwrap())
-	} else {
-		OverfullStackSnafu { stack }.fail()
-	}
-}
-
-#[derive(Debug, snafu::Snafu)]
-pub enum DialogueError {
-	#[snafu(display("invalid read (at {location})"), context(false))]
-	Read {
-		source: gospel::read::Error,
-		#[snafu(implicit)]
-		location: snafu::Location,
-	},
-	#[snafu(display("invalid string: {text:?}"))]
-	String {
-		text: String,
-	},
-	#[snafu(display("unknown dialogue control byte {byte:02X}"))]
-	BadControl {
-		byte: u8,
-	},
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Dialogue(pub Vec<DialoguePart>);
-
-#[derive(Clone, PartialEq)]
-pub enum DialoguePart {
-	String(String),
-	Control(DialogueControl),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum DialogueControl {
-	Line,
-	Page,
-	_03,
-	_06,
-	_07,
-	_08,
-	_09,
-	_0B,
-	_0C,
-	_0F,
-	_10(u16),
-	_11(u32),
-	_12(u32),
-	_13,
-	_16,
-	_17(u16),
-	_19(u16),
-	_1A,
-}
-
-impl std::fmt::Debug for DialoguePart {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::String(s) => s.fmt(f),
-			Self::Control(c) => c.fmt(f),
-		}
-	}
-}
-
-fn dialogue(f: &mut VReader) -> Result<Dialogue, DialogueError> {
-	let mut out = Vec::new();
-	let mut scratch = Vec::new();
-	loop {
-		let byte = f.u8()?;
-		if byte >= 0x20 {
-			scratch.push(byte);
-		} else {
-			if !scratch.is_empty() {
-				match String::from_utf8(scratch) {
-					Ok(text) => out.push(DialoguePart::String(text)),
-					Err(e) => {
-						let text = String::from_utf8_lossy(&e.into_bytes()).into_owned();
-						return StringSnafu { text }.fail();
-					}
-				}
-				scratch = Vec::new();
-			}
-			let c = match byte {
-				0x00 => break,
-				0x01 => DialogueControl::Line,
-				0x02 => DialogueControl::Page,
-				0x03 => DialogueControl::_03,
-				0x06 => DialogueControl::_06,
-				0x07 => DialogueControl::_07,
-				0x08 => DialogueControl::_08,
-				0x09 => DialogueControl::_09,
-				0x0B => DialogueControl::_0B,
-				0x0C => DialogueControl::_0C,
-				0x0F => DialogueControl::_0F,
-				0x10 => DialogueControl::_10(f.u16()?),
-				0x11 => DialogueControl::_11(f.u32()?),
-				0x12 => DialogueControl::_12(f.u32()?),
-				0x13 => DialogueControl::_13,
-				0x16 => DialogueControl::_16,
-				0x17 => DialogueControl::_17(f.u16()?),
-				0x19 => DialogueControl::_19(f.u16()?),
-				0x1A => DialogueControl::_1A,
-				byte => return BadControlSnafu { byte }.fail(),
-			};
-			out.push(DialoguePart::Control(c));
-		}
-	}
-	Ok(Dialogue(out))
-}
-

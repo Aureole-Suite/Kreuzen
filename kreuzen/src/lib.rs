@@ -1,6 +1,6 @@
 #![feature(if_let_guard)]
 use gospel::read::{Reader, Le as _};
-use snafu::{OptionExt as _, ResultExt as _};
+use snafu::ResultExt as _;
 
 mod func;
 
