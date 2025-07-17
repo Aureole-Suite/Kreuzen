@@ -34,6 +34,23 @@
 2902 'MenuShow' u8 u8 u16 u16 u8
 2903 'MenuHide' u8
 2904 'MenuWait' u8 u8 # id, global
+2905 u8 u16 u32
+2906 u8 u16
+2907 u8 u16
+2908 u8 str u32 dyn2 dyn2
+2909 u8 str dyn2
+290A u8
+290B u8 dyn2
+290C u8 u16
+290D u8 f32
+290E u8 f32
+290F u8
+2911 u8 str u16 u8 u8 u32
+2912 u8 str u16 u32
+2913 u8 f32 f32 f32
+2914 u8 f32 f32 f32
+2915 u8 f32 f32 f32
+2916 u8 f32 f32 f32 f32 u8
 2A00 u16 str str u8
 2A01 u16 str str u8
 2A02 u16 str str u8
@@ -562,6 +579,7 @@
 6A01
 6A02 f32 f32 f32 f32 f32 f32 f32
 6C   u16 f32 i32
+6E   u16 f32 f32 f32 f32 u8
 6F00 u16 u32
 6F01 u16 u32
 6F02 u16 u32
@@ -626,6 +644,7 @@
 7400 u32
 7402 u16 f32 u16 u16 str f32
 7403 str u32 u16 u16 str u32
+7404
 7500 'Menu2New' u8 u16 f32 f32
 7501 'Menu2Add' u8 str i32
 7502 'Menu2Show' u8 u8 u16 u16 u8
@@ -646,6 +665,7 @@
 7E06 u16
 7E07 f32 u8
 80   f32
+8402 f32 f32 f32 f32
 8403 u16 str u8
 86   u8 u16 u16 u16 u16 u16 u16 u32 u32 u32 str
 8A00 u16 u16 str str # is there a u8 here or not?
@@ -722,7 +742,25 @@ AD02 u32
 AD03 u8
 AE   str u16
 B004 u8
-B1   u8 u16 f32
+B00A u8
+B00B u8 u8
+B00C u8
+B010 dyn2
+B012 u8
+B019 u8
+B01D u8
+B01E u8
+B021 u8
+B025 u8
+B028 u8
+B02E u8
+B02F u8
+B031 u32
+B036 u32 u8
+B03C u8 u16 u8
+B03D u32
+B03E u32
+B1   u8 u16 u32
 B4
 B5   u16 u8 f32 f32 f32 u16 u16
 BB   u16
@@ -800,6 +838,9 @@ D306 f32 f32 f32
 D900 u8
 D902
 D903 u32
+D904 u16 f32 f32 f32 f32 f32 f32
+D906 f32 f32 f32
+E000
 E002 u8 u16 f32 u32 u32 u8 u8
 E003 u16 f32 f32 f32
 E005 u8
