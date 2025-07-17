@@ -18,7 +18,7 @@
 16   'Sleep' u16
 17   u16 u16
 18   u8 expr
-19   u16
+19   u8 u16
 1A   u8 u8
 1D   'CharCreate' u16 str str str u8 u32 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 1E   u16 u8 str u8 ndyn
@@ -369,7 +369,7 @@
 4100
 4101
 4104 f32 f32 f32 f32 u8
-42   u16 f32 f32 f32 f32 f32 u8 u16
+42   u8 u16 f32 f32 f32 f32 f32 u8 u16
 4300 u16 f32 u16
 4301 u16 f32 u16
 4302 u16 f32 u16
@@ -626,7 +626,7 @@
 6A05 f32 f32 f32 f32 f32 f32 f32
 6A06 dyn dyn dyn dyn dyn dyn f32
 6A07 dyn u8 u16
-6B   u16 u16 u32 u32 u32
+6B   u8 u16 u16 u32 u32 u32
 6C   u16 f32 i32
 6E   u16 f32 f32 f32 f32 u8
 6F00 u16 u32
@@ -746,13 +746,13 @@
 8402 f32 f32 f32 f32
 8403 u16 str u8
 86   u8 u16 u16 u16 u16 u16 u16 u32 u32 u32 str
-8A00 u16 u16 str str # is there a u8 here or not?
+8A00 u16 u16 str str u8
 8A01 u16 u16 str str
 8A02 u16 u16
 8A03 u16 f32 f32 f32 f32 f32 f32 f32 f32 f32
-8A0A u16 str str str
+8A0A u16 str str str u8
 8A0B u16
-8A0C u16 str str str
+8A0C u16 str str str u8
 8A0D str
 8A32 u16 str
 8A33 u16 str
@@ -786,7 +786,7 @@
 9106 u16
 910A u16 u32
 910B u16 u32
-92   u16
+92   u8 u16
 9300 u8
 9301
 93D2 u16
@@ -874,9 +874,8 @@ A6   u16 f32 f32 f32
 A8   u32
 A8   u32
 A9   u8
-AA   u8
+AA   u8 u8
 AC00 u8
-AC01 dyn2 dyn2 dyn2 dyn2
 AC02 u32
 AC03 dyn2
 AC04 dyn2
@@ -1076,7 +1075,8 @@ D903 u32
 D904 u16 f32 f32 f32 f32 f32 f32
 D905
 D906 f32 f32 f32
-DA   u8 u8
+DA00 u8
+DA01
 DB   u8
 DC00 u16 u16 u8
 DE01 u8 u32
