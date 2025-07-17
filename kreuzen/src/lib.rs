@@ -338,7 +338,7 @@ mod spec;
 fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
 	let op = read_op2(f)?;
-	if op.unk != 0xFF && pos + op.unk as usize != f.pos() && !matches!(*op.code, [0x03 | 0x05 | 0x08 | 0x0A | 0x18]) {
+	if op.unk != 0xFF && pos + op.unk as usize != f.pos() && !matches!(*op.code, [0x03 | 0x05 | 0x08 | 0x0A | 0x18 | 0x5B]) {
 		println!("{} + {} == {} != {} for {op:?}", pos, op.unk, pos + op.unk as usize, f.pos());
 		println!("{:#1X}", f.dump().start(pos).len(op.unk as usize));
 	}
@@ -465,6 +465,15 @@ fn read_part(op: &mut Op, f: &mut Reader, part: &spec::Part) -> Result<(), OpErr
 			read_parts(op, f, &[U8, U16, F32, F32, U8])?;
 			if a == 0xFE05 {
 				read_parts(op, f, &[Str])?;
+			}
+		}
+
+		_79 => {
+			let Some(&Arg::U8(a)) = op.args.get(0) else {
+				panic!("79 must have a U8 arg");
+			};
+			if a == 7 {
+				read_parts(op, f, &[U8, U8])?;
 			}
 		}
 

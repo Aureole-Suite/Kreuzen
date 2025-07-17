@@ -8,6 +8,7 @@
 08   u8 expr
 0A   u8 expr
 0C   u8 u8
+0D   u8 u8 expr
 0E   u8 u8 u8
 10   u16
 11   u16
@@ -27,7 +28,15 @@
 21   u8 u8
 22   u16 text
 2301 u16 u16 u8 u8
+2302 u16 u16
 2305 u16 u16 u16 u16 u8
+2306 f32 f32 f32
+2307 f32 f32 f32
+2308 f32 f32 f32
+230A u16 f32 f32 f32
+230B u16 f32 f32 f32
+230C u16 f32 f32 f32
+230D f32 f32 f32 f32 u8
 24   u16 u32 text
 25   u8
 26
@@ -352,9 +361,14 @@
 3B34 dyn2
 3B39 u16
 3B3A u16 dyn2 dyn2 dyn2 dyn2
+3B3B u32
+3B3C u32
+3B3D
 3B3E u16
 3B3F u16
 3B64 u32 f32 f32
+3B96 u16
+3BFA u8
 3BFE u16
 3BFF f32 f32 f32
 3C01 u16 str str
@@ -394,6 +408,8 @@
 4601 u16 u16 u16 f32 f32 f32
 4602 u16 u16 u16
 4603 u16 u16 u16 f32 u8
+4605 u16 u16 u16
+4606 u16 u16 u16
 47   u8 str u16
 4800 u16 u16 u16
 4900 u16
@@ -433,8 +449,9 @@
 4D   u16 u8
 4E   f32 f32 u8 u8
 4F00 u16 u32 u16 u16 u32 u32
+4F01 u16
 4F02 u16 u16 u16 u16
-4F03 u16 u32 u32 u32 u32 u16 u8
+4F03 u16 f32 f32 f32 u32 u16 u8
 4F06 u16 u8 u32
 50   dyn str f32 u8
 51   f32 f32 f32 f32 f32 u16 f32 f32 f32 f32
@@ -542,6 +559,7 @@
 58   u8
 5A00 u16 u16 str u16
 5A01
+5B   u16 u8 expr
 5C   u16 u8 str
 5D   u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u8 u8
 5E00 u16 f32 u16 u16 u16 u32 u16 str f32 f32 f32
@@ -563,8 +581,11 @@
 6600 u16 u16
 6601 u16 u16
 6602 u16 u32
+6603 u16
 6604 u16 u16
+6605 u16
 6606 u16 u16
+6607 u16
 6608 u16 u16 u8
 6609 u16 u16
 660A u16 u16
@@ -576,6 +597,10 @@
 6610 u16 u16
 6611 u16 u16
 6612 u16 u16 u32
+6700 u16 u16
+6701 u16 u16
+6702 u16
+6703 u16
 6800 str u32
 6801 str u32
 6802 str f32 f32 f32
@@ -585,12 +610,14 @@
 6806 str
 6807 str f32 f32 f32 f32 u16 u8
 6808 str f32 f32 f32 u16 u8
+680A str
 680B str u16
 680C str f32 f32 f32
 680D str f32 f32 f32
 680F str u16
 6810 str u16 u8 str f32 f32 f32 f32 f32 f32
 6818 str f32
+6819 str
 681B str f32 f32 f32
 6900 u16 u16 u8 u8 u8
 6901 u16
@@ -708,6 +735,7 @@
 7505 u8 u16 u32
 7506 u8 u16
 7507 u8 u16
+7508 u8
 7509 u8 f32 f32 f32
 750A u8 f32 f32 f32
 750B u8 f32 f32 f32
@@ -720,10 +748,7 @@
 77   u16
 7800 str
 7801 str u8
-7903 u16
-7907 u16 u8 u8
-790A u16
-7915 u16
+79   u8 u16 _79
 7A00 str
 7A01 u16 str
 7A02 u16 str
@@ -743,9 +768,13 @@
 80   f32
 82   u16 f32 f32 u16 f32 f32 f32 f32 u16
 83   u16 u16 u16 u16
+8400 f32 f32 f32 f32
 8402 f32 f32 f32 f32
 8403 u16 str u8
 86   u8 u16 u16 u16 u16 u16 u16 u32 u32 u32 str
+87   u8 u32
+88   u16
+89   u16
 8A00 u16 u16 str str u8
 8A01 u16 u16 str str
 8A02 u16 u16
@@ -758,6 +787,7 @@
 8A33 u16 str
 8AFE u16 str f32
 8AFF u16 str f32
+8B   f32 f32 f32 f32 f32 u8
 8C00 u16
 8C01
 8C02
@@ -777,7 +807,10 @@
 8C13
 8C14 u8
 8D   u16 f32 f32 f32 f32
+8E   u16 u16 u16 u16 u16 u16 u16 u16
 8F
+8F
+90   str u32
 90   str u32
 9100 u16 u32
 9101 u16 u32
@@ -793,7 +826,11 @@
 93D3
 93DC
 93DD
-95   u8 str str u8 u16
+9400 u32
+9403
+9500 str str u8 u16
+9501
+9600 u32
 97   u8 u16 u32
 98   u16 _98
 99   u16 u16
@@ -831,6 +868,7 @@
 9E1414 u8
 9E1415 u16 u8 str
 9E1416 u16 u32
+9E1417
 9E1418 u16
 9E1419 u16 str dyn
 9E141A u16
@@ -925,6 +963,7 @@ B01B
 B01C
 B01D u8
 B01E u8
+B01F
 B020
 B021 u8
 B022
@@ -957,8 +996,11 @@ B040
 B1   u8 u16 u32
 B200 u8 u16
 B201 u8 u8 u8 u16
+B3   f32 f32 f32 f32 u16 u16
 B4
 B5   u16 u8 f32 f32 f32 u16 u16
+B6   u16 u8
+B7   u16
 B900 u32 u16 str str u32
 B901 u32 f32 f32 f32 f32 f32 f32 f32
 B902 u32 f32 f32 f32
@@ -991,6 +1033,9 @@ BC17 u16 dyn2 u32 u32
 BC18 u16 dyn2 u32
 BC19 u16 dyn2 str
 C0   u16 _C0
+C2   u8
+C300 u8 u32 u32 u32
+C301 u8
 C400 u8
 C401 u8
 C402 dyn u16
@@ -1040,6 +1085,11 @@ C802 u16 u32 u16
 C803 u16 u32 f32 f32 f32
 C901 u16
 C902
+C903 u16 u16
+C90A u16 str
+CD00
+CD05
+CD06 u16 u16 u16 u16
 CE00 u8 str str u8
 CE01 u8 u32 u8
 CE02 u8 str f32 f32 f32 f32 u8
@@ -1059,8 +1109,10 @@ CE1F u8 str u32 u8
 CE28 u8 str u8
 CE32 u8 str u32 u8
 CE33 u8 str u32 u8
+CF   u8
 D100 str u16 f32 f32
 D101 str u16
+D300
 D301
 D304 u16 f32 f32 f32 f32 f32 f32
 D306 f32 f32 f32
