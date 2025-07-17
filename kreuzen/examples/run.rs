@@ -28,7 +28,6 @@ enum Error {
 }
 
 fn process_file(path: &Path) -> Result<(), Error> {
-	println!("Processing file: {}", path.display());
 	let data = std::fs::read(path).context(ReadFileSnafu)?;
 	let scp = kreuzen::parse(&data).context(ParseFileSnafu)?;
 	Ok(())

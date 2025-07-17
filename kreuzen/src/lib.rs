@@ -151,6 +151,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 
 	f.check_u32(0xABCDEF00)?;
 	let name = f.str()?;
+	let _span = tracing::trace_span!("file", name = name.as_str()).entered();
 
 	// In most cases, there's an align 4 followed by `00 00 00 FF`. But not always.
 	let mut aligned = 0;
@@ -167,7 +168,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 
 	let ends = table.iter().map(|e| e.start).skip(1).chain([f.len()]);
 	for (entry, end) in table.iter().zip(ends) {
-		let _span = tracing::trace_span!("chunk", name = entry.name.as_str(), start = entry.start, end).entered();
+		let _span = tracing::trace_span!("chunk", name = entry.name.as_str()).entered();
 		match Type::from_name(&entry.name) {
 			Type::Normal | Type::Lambda => {
 				read_func(f.at(entry.start)?, end, &entry.name).context(FunctionSnafu { name: &entry.name })?;
@@ -188,15 +189,15 @@ fn read_func(mut f: Reader, end: usize, name: &str) -> Result<(), FunctionError>
 		let pos = f.pos();
 		match read_op(&mut f).context(OpSnafu { pos }) {
 			Ok(op) => {
-				ops.push(op);
+				ops.push((pos, op));
 			}
 			Err(e) => {
-				println!("function {name} ({start:05X})");
-				for op in &ops[ops.len().saturating_sub(10)..] {
-					println!("{:?}", op);
+				tracing::error!("function {name} ({start:05X})");
+				for (pos, op) in &ops[ops.len().saturating_sub(10)..] {
+					tracing::error!("{pos:X} {op:?}");
 				}
 				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
-					println!("{e}");
+					tracing::error!("{e}");
 					if let Some(OpError::UnknownOp { op }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
 						let k = format!("op {}", hex::encode_upper(&op.code));
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
@@ -210,7 +211,6 @@ fn read_func(mut f: Reader, end: usize, name: &str) -> Result<(), FunctionError>
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
 				}
-				print!("{:#1X}", f.at(pos).unwrap().dump().num_width_as(0xFFFF).end(end));
 				break;
 			}
 		}
@@ -276,9 +276,9 @@ impl std::fmt::Display for OpName<'_> {
 
 impl std::fmt::Debug for Op {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		if self.line != 0 {
-			write!(f, "{}@", self.line)?;
-		}
+		// if self.line != 0 {
+		// 	write!(f, "{}@", self.line)?;
+		// }
 		write!(f, "{}", OpName { code: &self.code })?;
 		if self.unk != 0xFF {
 			write!(f, ":{}", self.unk)?;
@@ -339,8 +339,7 @@ fn read_op(f: &mut Reader) -> Result<Op, OpError> {
 	let pos = f.pos();
 	let op = read_op2(f)?;
 	if op.unk != 0xFF && pos + op.unk as usize != f.pos() && !matches!(*op.code, [0x03 | 0x05 | 0x08 | 0x0A | 0x18 | 0x5B]) {
-		println!("{} + {} == {} != {} for {op:?}", pos, op.unk, pos + op.unk as usize, f.pos());
-		println!("{:#1X}", f.dump().start(pos).len(op.unk as usize));
+		tracing::warn!("{} + {} == {} != {} for {op:?}", pos, op.unk, pos + op.unk as usize, f.pos());
 	}
 	Ok(op)
 }
