@@ -20,14 +20,14 @@ pub enum TableError<E: std::error::Error + 'static> {
 }
 
 fn read_table<T: Debug, E: std::error::Error>(
-	mut f: &mut VReader,
+	f: &mut VReader,
 	mut entry: impl FnMut(&mut VReader) -> Result<ControlFlow<(), T>, E>,
 ) -> Result<Vec<T>, TableError<E>> {
 	let start = f.pos();
 	let mut table = Vec::new();
 	loop {
 		let pos = f.pos();
-		match entry(&mut f).context(EntrySnafu { pos }) {
+		match entry(f).context(EntrySnafu { pos }) {
 			Ok(ControlFlow::Continue(val)) => {
 				tracing::trace!("{pos:X} {val:?}");
 				table.push(val);
@@ -69,7 +69,6 @@ pub enum Effect {
 	_07(u32),
 	_09(u16, String), // charid, BTL_CRAFT00_01
 	_0A(String), // BTL_CRAFT01_02_GS
-	// All tables end with a 00 and a 01 entry, they are not included in the output.
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -132,4 +131,55 @@ pub fn read_effect(f: &mut VReader) -> Result<Vec<Effect>, TableError<EffectErro
 			_ => BadEffectSnafu { effect }.fail(),
 		}
 	})
+}
+
+pub fn read_fc(f: &mut VReader) -> Result<String, gospel::read::Error> {
+	let s = f.str()?;
+	f.check_u8(0x01)?;
+	Ok(s)
+}
+
+
+#[derive(Debug, snafu::Snafu)]
+pub enum BookError {
+	#[snafu(display("invalid read (at {location})"), context(false))]
+	Read {
+		source: gospel::read::Error,
+		#[snafu(implicit)]
+		location: snafu::Location,
+	},
+	#[snafu(display("bad book kind: {kind:04X}"))]
+	BadBook { kind: u16 },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Book {
+	TitlePage(String, [u16; 8], String),
+	Page(String),
+}
+
+pub fn read_book(f: &mut VReader) -> Result<Book, BookError> {
+	let b = match f.u16()? {
+		0 => {
+			let s = f.str()?;
+			Book::Page(s)
+		}
+		1 => {
+			f.check_u16(0)?;
+			let title = f.sstr(16)?;
+			let data = [f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?];
+			let text = f.str()?;
+			Book::TitlePage(title, data, text)
+		}
+		kind => return BadBookSnafu { kind }.fail(),
+	};
+	f.check_u8(0x01)?;
+	Ok(b)
+}
+
+pub fn read_book99(f: &mut VReader) -> Result<u16, BookError> {
+	let n = f.u16()?;
+	f.check_u16(1)?;
+	f.check_u8(0x01)?;
+	Ok(n)
 }

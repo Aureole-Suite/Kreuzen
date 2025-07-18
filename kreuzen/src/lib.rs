@@ -45,15 +45,15 @@ pub enum ReadError {
 		location: snafu::Location,
 	},
 	#[snafu(display("could not read function '{name}'"))]
-	Function {
-		name: String,
-		source: func::FunctionError,
-	},
+	Function { name: String, source: func::FunctionError },
 	#[snafu(display("could not read effect '{name}'"))]
-	Effect {
-		name: String,
-		source: table::TableError<table::EffectError>,
-	},
+	Effect { name: String, source: table::TableError<table::EffectError> },
+	#[snafu(display("could not read fc '{name}'"))]
+	Fc { name: String, source: gospel::read::Error },
+	#[snafu(display("could not read book data '{name}'"))]
+	BookData { name: String, source: table::BookError },
+	#[snafu(display("could not read book metadata '{name}'"))]
+	BookData99 { name: String, source: table::BookError },
 }
 
 #[derive(Clone)]
@@ -75,6 +75,7 @@ enum Type {
 	AddCollision,
 	Btlset,
 	BookData,
+	BookData99,
 	FcAuto,
 	Effect,
 	Empty,
@@ -93,7 +94,11 @@ impl Type {
 		} else if name.starts_with("BTLSET") {
 			Type::Btlset
 		} else if name.starts_with("BookData") {
-			Type::BookData
+			if name.ends_with("_99") {
+				Type::BookData99
+			} else {
+				Type::BookData
+			}
 		} else if name.starts_with("FC_auto") {
 			Type::FcAuto
 		} else if name == "AddCollision" {
@@ -140,6 +145,8 @@ pub struct VReader<'a> {
 	#[deref_mut]
 	reader: Reader<'a>,
 	version: u32,
+	name: &'a str,
+	func: &'a str,
 }
 
 pub fn parse(data: &[u8]) -> Result<(), ReadError> {
@@ -182,23 +189,40 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 		let mut vr = VReader {
 			reader: Reader::new(&data[..end]).at(entry.start)?,
 			version,
+			name: &name,
+			func: &entry.name,
 		};
-		match Type::from_name(&entry.name) {
-			Type::Normal => {
-				func::read_func(&mut vr).context(FunctionSnafu { name: &entry.name })?;
-			}
-			Type::Table => {}
-			Type::StyleName => {}
-			Type::AddCollision => {}
-			Type::Btlset => {}
-			Type::BookData => {}
-			Type::FcAuto => {}
-			Type::Effect => {
-				table::read_effect(&mut vr).context(EffectSnafu { name: &entry.name })?;
-			}
-			Type::Empty => { }
+		if let Err(e) = read_entry(&mut vr) {
+			tracing::error!("{e}\n{:#X}", vr.dump().start(entry.start));
 		}
 	}
 
+	Ok(())
+}
+
+fn read_entry(f: &mut VReader) -> Result<(), ReadError> {
+	match Type::from_name(f.func) {
+		Type::Normal => {
+			func::read_func(f).context(FunctionSnafu { name: f.func })?;
+		}
+		Type::Table => {}
+		Type::StyleName => {}
+		Type::AddCollision => {}
+		Type::Btlset => {}
+		Type::BookData => {
+			// println!("{}:{}", name, entry.name);
+			table::read_book(f).context(BookDataSnafu { name: f.func })?;
+		}
+		Type::BookData99 => {
+			table::read_book99(f).context(BookData99Snafu { name: f.func })?;
+		}
+		Type::FcAuto => {
+			table::read_fc(f).context(FcSnafu { name: f.func })?;
+		}
+		Type::Effect => {
+			table::read_effect(f).context(EffectSnafu { name: f.func })?;
+		}
+		Type::Empty => { }
+	}
 	Ok(())
 }
