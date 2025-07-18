@@ -44,18 +44,27 @@ pub enum ReadError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("could not read function '{name}'"))]
-	Function { name: String, source: func::FunctionError },
-	#[snafu(display("could not read effect '{name}'"))]
-	Effect { name: String, source: table::TableError<table::EffectError> },
-	#[snafu(display("could not read fc '{name}'"))]
-	Fc { name: String, source: gospel::read::Error },
-	#[snafu(display("could not read book data '{name}'"))]
-	BookData { name: String, source: table::BookError },
-	#[snafu(display("could not read book metadata '{name}'"))]
-	BookData99 { name: String, source: table::BookError },
-	#[snafu(display("could not read btlset '{name}'"))]
-	Btlset { name: String, source: table::BtlsetError },
+	#[snafu(display("failed to read entry '{name}'"))]
+	EntrySnafu {
+		name: String,
+		source: EntryError,
+	},
+}
+
+#[derive(Debug, snafu::Snafu)]
+pub enum EntryError {
+	#[snafu(display("could not read function"))]
+	Function { source: func::FunctionError },
+	#[snafu(display("could not read effect"))]
+	Effect { source: table::TableError<table::EffectError> },
+	#[snafu(display("could not read fc"))]
+	Fc { source: gospel::read::Error },
+	#[snafu(display("could not read book data"))]
+	BookData { source: table::BookError },
+	#[snafu(display("could not read book metadata"))]
+	BookData99 { source: table::BookError },
+	#[snafu(display("could not read btlset"))]
+	Btlset { source: table::BtlsetError },
 }
 
 #[derive(Clone)]
@@ -222,17 +231,17 @@ pub enum Item {
 	Unknown
 }
 
-fn read_entry(f: &mut VReader) -> Result<Item, ReadError> {
+fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 	let item = match Type::from_name(f.func) {
-		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu { name: f.func })?),
+		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu)?),
 		Type::Table => Item::Unknown,
 		Type::StyleName => Item::Unknown,
 		Type::AddCollision => Item::Unknown,
-		Type::Btlset => Item::Btlset(table::read_btlset(f).context(BtlsetSnafu { name: f.func })?),
-		Type::BookData => Item::BookPage(table::read_book(f).context(BookDataSnafu { name: f.func })?),
-		Type::BookData99 => Item::BookMetadata(table::read_book99(f).context(BookData99Snafu { name: f.func })?),
-		Type::FcAuto => Item::Fc(table::read_fc(f).context(FcSnafu { name: f.func })?),
-		Type::Effect => Item::Effect(table::read_effect(f).context(EffectSnafu { name: f.func })?),
+		Type::Btlset => Item::Btlset(table::read_btlset(f).context(BtlsetSnafu)?),
+		Type::BookData => Item::BookPage(table::read_book(f).context(BookDataSnafu)?),
+		Type::BookData99 => Item::BookMetadata(table::read_book99(f).context(BookData99Snafu)?),
+		Type::FcAuto => Item::Fc(table::read_fc(f).context(FcSnafu)?),
+		Type::Effect => Item::Effect(table::read_effect(f).context(EffectSnafu)?),
 		Type::Empty => Item::Unknown,
 	};
 	Ok(item)
