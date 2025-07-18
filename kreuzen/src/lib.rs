@@ -241,6 +241,8 @@ pub enum EntryError {
 	#[snafu(display("could not read StyleName"))]
 	StyleName { source: table::StyleNameError },
 
+	#[snafu(display("could not read ActionTable"))]
+	ActionTable { source: gospel::read::Error },
 	#[snafu(display("could not read AddCollision"))]
 	AddCollision { source: gospel::read::Error },
 }
@@ -256,6 +258,7 @@ pub enum Item {
 	Btlset(table::Btlset),
 	StyleName(String),
 
+	ActionTable(Vec<table::Action>),
 	AddCollision(Vec<table::Collision>),
 
 	Unknown,
@@ -272,7 +275,7 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::StyleName => Item::StyleName(table::read_style_name(f).context(StyleNameSnafu)?),
 
 		Type::Empty => Item::Unknown,
-		Type::ActionTable => Item::Unknown,
+		Type::ActionTable => Item::ActionTable(table::read_action_table(f).context(ActionTableSnafu)?),
 		Type::AddCollision => Item::AddCollision(table::read_add_collision(f).context(AddCollisionSnafu)?),
 		Type::AlgoTable => Item::Unknown,
 		Type::AnimeClipTable => Item::Unknown,
