@@ -20,14 +20,12 @@ pub enum TableError<E: std::error::Error + 'static> {
 }
 
 fn read_table<T: Debug, E: std::error::Error>(
-	mut f: VReader,
-	end: usize,
-	name: &str,
+	mut f: &mut VReader,
 	mut entry: impl FnMut(&mut VReader) -> Result<ControlFlow<(), T>, E>,
 ) -> Result<Vec<T>, TableError<E>> {
 	let start = f.pos();
 	let mut table = Vec::new();
-	while !at_end(&mut f, end) {
+	loop {
 		let pos = f.pos();
 		match entry(&mut f).context(EntrySnafu { pos }) {
 			Ok(ControlFlow::Continue(val)) => {
@@ -38,21 +36,16 @@ fn read_table<T: Debug, E: std::error::Error>(
 				break;
 			}
 			Err(e) => {
-				tracing::error!("table {name} ({start:05X})");
 				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
 					tracing::error!("{e}");
 				}
-				print!("{:#X}", f.dump().start(start).end(end));
+				print!("{:#X}", f.dump().start(start));
 				break;
 			}
 		}
 	}
+	f.check_u8(0x01)?;
 	Ok(table)
-}
-
-fn at_end(f: &mut VReader<'_>, end: usize) -> bool {
-	let rest = &f.data()[f.pos()..end];
-	rest.len() <= 3 && rest.iter().all(|&b| b == 0)
 }
 
 #[derive(Debug, snafu::Snafu)]
@@ -87,8 +80,8 @@ pub struct RawEffect {
 	pub str: String,
 }
 
-pub fn read_effect(f: VReader, end: usize, name: &str) -> Result<Vec<Effect>, TableError<EffectError>> {
-	read_table(f, end, name, |f| {
+pub fn read_effect(f: &mut VReader) -> Result<Vec<Effect>, TableError<EffectError>> {
+	read_table(f, |f| {
 		let effect = RawEffect {
 			kind: f.u16()?,
 			charid: f.u16()?,

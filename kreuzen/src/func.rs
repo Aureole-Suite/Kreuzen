@@ -30,18 +30,17 @@ pub static SPEC: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("../
 
 pub static COUNTS: LazyLock<Mutex<BTreeMap<String, usize>>> = LazyLock::new(Default::default);
 
-pub fn read_func(mut f: VReader, end: usize, name: &str) -> Result<(), FunctionError> {
+pub fn read_func(f: &mut VReader) -> Result<(), FunctionError> {
 	let start = f.pos();
 	let mut ops = Vec::new();
-	while !at_end(&mut f, end) {
+	while !at_end(f) {
 		let pos = f.pos();
-		match read_op(&mut f).context(OpSnafu { pos }) {
+		match read_op(f).context(OpSnafu { pos }) {
 			Ok(op) => {
 				tracing::trace!("{pos:X} {op:?}");
 				ops.push((pos, op));
 			}
 			Err(e) => {
-				tracing::error!("function {name} ({start:05X})");
 				for (pos, op) in &ops[ops.len().saturating_sub(10)..] {
 					tracing::error!("{pos:X} {op:?}");
 				}
@@ -60,7 +59,7 @@ pub fn read_func(mut f: VReader, end: usize, name: &str) -> Result<(), FunctionE
 						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
 					}
 				}
-				print!("{:#X}", f.dump().start(start).end(end));
+				print!("{:#X}", f.dump().start(start));
 				break;
 			}
 		}
@@ -396,9 +395,8 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 	Ok(())
 }
 
-fn at_end(f: &mut VReader<'_>, end: usize) -> bool {
-	let rest = &f.data()[f.pos()..end];
-	rest.len() <= 3 && rest.iter().all(|&b| b == 0)
+fn at_end(f: &VReader<'_>) -> bool {
+	f.remaining().len() <= 3 && f.remaining().iter().all(|&b| b == 0)
 }
 
 #[derive(Debug, Clone, PartialEq)]

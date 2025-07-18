@@ -179,13 +179,13 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	let ends = table.iter().map(|e| e.start).skip(1).chain([f.len()]);
 	for (entry, end) in table.iter().zip(ends) {
 		let _span = tracing::error_span!("chunk", name = entry.name.as_str()).entered();
-		let vr = VReader {
-			reader: f.at(entry.start)?,
+		let mut vr = VReader {
+			reader: Reader::new(&data[..end]).at(entry.start)?,
 			version,
 		};
 		match Type::from_name(&entry.name) {
 			Type::Normal => {
-				// func::read_func(vr, end, &entry.name).context(FunctionSnafu { name: &entry.name })?;
+				func::read_func(&mut vr).context(FunctionSnafu { name: &entry.name })?;
 			}
 			Type::Table => {}
 			Type::StyleName => {}
@@ -194,7 +194,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 			Type::BookData => {}
 			Type::FcAuto => {}
 			Type::Effect => {
-				table::read_effect(vr, end, &entry.name).context(EffectSnafu { name: &entry.name })?;
+				table::read_effect(&mut vr).context(EffectSnafu { name: &entry.name })?;
 			}
 			Type::Empty => { }
 		}
