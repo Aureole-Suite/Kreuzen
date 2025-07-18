@@ -948,6 +948,10 @@ A6   u16 f32 f32 f32
 A8   u32
 A9   u8
 AA   u8 u8
+AB00 u16 u8 _AB01
+AB01
+AB02 _AB02
+AB03 f32 f32 f32
 AC00 u8
 AC01 dyn2 # SSD says dyn2×4 here but why
 AC02 u32

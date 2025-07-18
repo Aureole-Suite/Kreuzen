@@ -367,6 +367,25 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 			}
 		}
 
+		_AB01 => {
+			let slice = f.slice(50)?;
+			let nonzero = slice.iter().rposition(|&b| b != 0).map_or(0, |i| i + 1);
+			for &i in &slice[..nonzero] {
+				op.push(i);
+			}
+		}
+
+		_AB02 => {
+			let n = f.u8()?;
+			for i in 0..50 {
+				if i < n {
+					op.push(f.u16()?);
+				} else {
+					f.check_u16(0)?;
+				}
+			}
+		}
+
 		_C0 => {
 			let Some(&Arg::U16(a)) = op.args.get(0) else {
 				panic!("C0 must have a U16 arg");

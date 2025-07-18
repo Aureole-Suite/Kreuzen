@@ -78,11 +78,13 @@ enum Type {
 
 impl Type {
 	fn from_name(name: &str) -> Self {
-		if name.starts_with("_")
-		&& !name.starts_with("_a0_")
-		&& !name.starts_with("_a1_")
-		&& !name.starts_with("_a2_")
-		&& !name.starts_with("_Lambda") {
+		if name.starts_with("_a0_")
+		|| name.starts_with("_a1_")
+		|| name.starts_with("_a2_")
+		|| name.starts_with("_Lambda")
+		|| name == "Npc_Table" {
+			Type::Normal
+		} else if name.starts_with("_") {
 			Type::Effect
 		} else if name.is_empty() {
 			Type::Empty
