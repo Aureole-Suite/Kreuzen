@@ -23,7 +23,7 @@ pub enum ExprError {
 	OverfullStack { stack: Vec<Expr> },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Expr {
 	Int(i32),
 	Op(super::Op),
@@ -38,6 +38,26 @@ pub enum Expr {
 	Bin(BinOp, Box<Expr>, Box<Expr>),
 	Un(UnOp, Box<Expr>),
 	Ass(AssOp, Box<Expr>),
+}
+
+impl std::fmt::Debug for Expr {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Int(a) => a.fmt(f),
+			Self::Op(a) => a.fmt(f),
+			Self::Flag(a) => f.debug_tuple("Flag").field(a).finish(),
+			Self::Var(a) => f.debug_tuple("Var").field(a).finish(),
+			Self::Attr(a) => f.debug_tuple("Attr").field(a).finish(),
+			Self::CharAttr(a, arg1) => f.debug_tuple("CharAttr").field(a).field(arg1).finish(),
+			Self::Rand => write!(f, "Rand"),
+			Self::Global(a) => f.debug_tuple("Global").field(a).finish(),
+			Self::_24(a) => f.debug_tuple("_24").field(a).finish(),
+			Self::_25(a) => f.debug_tuple("_25").field(a).finish(),
+			Self::Bin(op, a, b) => f.debug_tuple(format!("{op:?}").as_str()).field(a).field(b).finish(),
+			Self::Un(op, a) => f.debug_tuple(format!("{op:?}").as_str()).field(a).finish(),
+			Self::Ass(op, a) => f.debug_tuple(format!("{op:?}").as_str()).field(a).finish(),
+		}
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] // comment to trick rustfmt
