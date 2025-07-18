@@ -251,6 +251,8 @@ pub enum EntryError {
 	AddCollision { source: gospel::read::Error },
 	#[snafu(display("could not read AlgoTable"))]
 	AlgoTable { source: gospel::read::Error },
+	#[snafu(display("could not read AnimeClipTable"))]
+	AnimeClipTable { source: table::AnimeClipError },
 }
 
 
@@ -267,6 +269,7 @@ pub enum Item {
 	ActionTable(Vec<table::Action>),
 	AddCollision(Vec<table::Collision>),
 	AlgoTable(Vec<table::Algo>),
+	AnimeClipTable(Vec<table::AnimeClip>),
 
 	Unknown,
 }
@@ -293,7 +296,7 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::ActionTable => Item::ActionTable(table::read_action_table(f).context(ActionTableSnafu)?),
 		Type::AddCollision => Item::AddCollision(table::read_add_collision(f).context(AddCollisionSnafu)?),
 		Type::AlgoTable => Item::AlgoTable(table::read_algo_table(f).context(AlgoTableSnafu)?),
-		Type::AnimeClipTable => return Ok(Item::Unknown),
+		Type::AnimeClipTable => Item::AnimeClipTable(table::read_anime_clip_table(f).context(AnimeClipTableSnafu)?),
 		Type::BreakTable => return Ok(Item::Unknown),
 		Type::FieldFollowData => return Ok(Item::Unknown),
 		Type::FieldMonsterData => return Ok(Item::Unknown),
