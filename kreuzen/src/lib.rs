@@ -263,6 +263,10 @@ pub enum EntryError {
 	PartTable { source: table::part_table::ReadError },
 	#[snafu(display("could not read ReactionTable"), context(false))]
 	ReactionTable { source: table::reaction_table::ReadError },
+	#[snafu(display("could not read SummonTable"), context(false))]
+	SummonTable { source: table::summon_table::ReadError },
+	#[snafu(display("could not read WeaponAttTable"), context(false))]
+	WeaponAttTable { source: table::weapon_att_table::ReadError },
 }
 
 #[derive(Debug, Clone)]
@@ -284,6 +288,8 @@ pub enum Item {
 	FieldMonsterData(table::FieldMonsterData),
 	PartTable(Vec<table::Part>),
 	ReactionTable(Vec<table::Reaction>),
+	SummonTable(Vec<table::Summon>),
+	WeaponAttTable(table::WeaponAtt),
 
 	Unknown,
 }
@@ -317,8 +323,8 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::FieldMonsterData => Item::FieldMonsterData(table::field_monster_data::read(f)?),
 		Type::PartTable => Item::PartTable(table::part_table::read(f)?),
 		Type::ReactionTable => Item::ReactionTable(table::reaction_table::read(f)?),
-		Type::SummonTable => return Ok(Item::Unknown),
-		Type::WeaponAttTable => return Ok(Item::Unknown),
+		Type::SummonTable => Item::SummonTable(table::summon_table::read(f)?),
+		Type::WeaponAttTable => Item::WeaponAttTable(table::weapon_att_table::read(f)?),
 	};
 
 	ensure!(f.remaining().is_empty(), TrailingDataSnafu { n: f.remaining().len() });
