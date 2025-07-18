@@ -98,14 +98,21 @@ pub struct OpMeta {
 	pub width: u8,
 }
 
+impl OpMeta {
+	fn fmt<'a, 'b>(&self, f: &'a mut std::fmt::Formatter<'b>) -> Result<&'a mut std::fmt::Formatter<'b>, std::fmt::Error> {
+		write!(f, "{self:?}:")?;
+		Ok(f)
+	}
+}
+
 impl std::fmt::Debug for OpMeta {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{}", self.line)?;
 		if self.width != 0xFF {
 			write!(f, "~")?;
 		}
 		Ok(())
-    }
+	}
 }
 
 impl Default for OpMeta {
@@ -114,13 +121,25 @@ impl Default for OpMeta {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum FlatOp {
 	Op(Op),
 	Label(Label),
 	Goto(OpMeta, Label),
 	If(OpMeta, expr::Expr, Label),
 	Switch(OpMeta, expr::Expr, Vec<(i32, Label)>, Label),
+}
+
+impl std::fmt::Debug for FlatOp {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Op(arg0) => arg0.fmt(f),
+			Self::Label(arg0) => f.debug_tuple("Label").field(arg0).finish(),
+			Self::Goto(arg0, arg1) => arg0.fmt(f)?.debug_tuple("Goto").field(arg1).finish(),
+			Self::If(arg0, arg1, arg2) => arg0.fmt(f)?.debug_tuple("If").field(arg1).field(arg2).finish(),
+			Self::Switch(arg0, arg1, arg2, arg3) => arg0.fmt(f)?.debug_tuple("Switch").field(arg1).field(arg2).field(arg3).finish(),
+		}
+	}
 }
 
 impl FlatOp {
@@ -188,6 +207,7 @@ impl std::fmt::Display for OpName<'_> {
 
 impl std::fmt::Debug for Op {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		self.meta.fmt(f)?;
 		write!(f, "{}", OpName { code: &self.code })?;
 		write!(f, "(")?;
 		for (i, arg) in self.args.iter().enumerate() {

@@ -52,24 +52,27 @@ impl std::fmt::Debug for Stmt {
 		match self {
 			Self::Op(o) => o.fmt(f),
 			Self::If(m, e, then, els) => {
+				m.fmt(f)?;
 				let mut tup = f.debug_tuple("If");
-				tup.field(m);
 				tup.field(e);
 				tup.field(then);
+				tup.finish()?;
 				if let Some((m2, els)) = els {
-					tup.field(m2);
+					f.write_str(" ")?;
+					m2.fmt(f)?;
+					f.write_str("else ")?;
 					if let [stmt@Stmt::If(..)] = els.as_slice() {
-						tup.field(stmt);
+						stmt.fmt(f)?;
 					} else {
-						tup.field(els);
+						els.fmt(f)?;
 					}
 				}
-				tup.finish()
+				Ok(())
 			},
-			Self::While(arg0, arg1, arg2) => f.debug_tuple("While").field(arg0).field(arg1).field(arg2).finish(),
-			Self::Break(arg0) => f.debug_tuple("Break").field(arg0).finish(),
-			Self::Continue(arg0) => f.debug_tuple("Continue").field(arg0).finish(),
-			Self::Switch(arg0, arg1, arg2) => f.debug_tuple("Switch").field(arg0).field(arg1).field(arg2).finish(),
+			Self::While(arg0, arg1, arg2) => arg0.fmt(f)?.debug_tuple("While").field(arg1).field(arg2).finish(),
+			Self::Break(arg0) => arg0.fmt(f)?.debug_tuple("Break").finish(),
+			Self::Continue(arg0) => arg0.fmt(f)?.debug_tuple("Continue").finish(),
+			Self::Switch(arg0, arg1, arg2) => arg0.fmt(f)?.debug_tuple("Switch").field(arg1).field(arg2).finish(),
 		}
 	}
 }
