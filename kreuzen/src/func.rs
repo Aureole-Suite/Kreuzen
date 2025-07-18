@@ -38,11 +38,44 @@ pub fn read_func(f: &mut VReader) -> Result<(), FunctionError> {
 	Ok(())
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Label(pub u32);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OpMeta {
+	pub line: u16,
+	pub width: u8,
+}
+
+impl Default for OpMeta {
+	fn default() -> Self {
+		OpMeta { line: 0, width: 0xFF }
+	}
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum FlatOp {
+	Op(Op),
+	Goto(OpMeta, Label),
+	If(OpMeta, expr::Expr, Label),
+	Switch(OpMeta, expr::Expr, Vec<(i32, Label)>, Label),
+}
+
+impl FlatOp {
+	pub fn meta(&self) -> OpMeta {
+		match self {
+			FlatOp::Op(op) => op.meta,
+			FlatOp::Goto(meta, _) => *meta,
+			FlatOp::If(meta, _, _) => *meta,
+			FlatOp::Switch(meta, _, _, _) => *meta,
+		}
+	}
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Op {
 	pub code: ArrayVec<u8, 4>,
-	pub line: u16,
-	pub unk: u8,
+	pub meta: OpMeta,
 	pub args: Vec<Arg>
 }
 
@@ -57,8 +90,6 @@ pub enum Arg {
 	I32(i32),
 	F32(f32),
 	Expr(expr::Expr),
-	#[from(skip)]
-	Label(u32),
 	CallArg(CallArg),
 	Dialogue(dial::Dialogue),
 }
@@ -94,13 +125,7 @@ impl std::fmt::Display for OpName<'_> {
 
 impl std::fmt::Debug for Op {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		// if self.line != 0 {
-		// 	write!(f, "{}@", self.line)?;
-		// }
 		write!(f, "{}", OpName { code: &self.code })?;
-		if self.unk != 0xFF {
-			write!(f, ":{}", self.unk)?;
-		}
 		write!(f, "(")?;
 		for (i, arg) in self.args.iter().enumerate() {
 			if i > 0 {
@@ -124,7 +149,6 @@ impl std::fmt::Debug for Arg {
 			Arg::I32(v) => write!(f, "{v}"),
 			Arg::F32(v) => write!(f, "{v:?}"),
 			Arg::Expr(e) => write!(f, "{e:?}"),
-			Arg::Label(l) => write!(f, "=> {l:08X}"),
 			Arg::CallArg(ca) => write!(f, "{ca:?}"),
 			Arg::Dialogue(d) => write!(f, "{d:?}"),
 		}
@@ -139,51 +163,77 @@ pub enum OpError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("unknown op {} ({} bytes)", hex::encode_upper(&op.code), op.unk))]
+	#[snafu(display("unknown op {} ({} bytes)", hex::encode_upper(&op.code), op.meta.width))]
 	UnknownOp { op: Op },
-	#[snafu(display("failed to read expr"))]
-	Expr {
-		source: expr::ExprError,
-	},
-	#[snafu(display("failed to read dialogue"))]
-	Dialogue {
-		source: dial::DialogueError,
-	},
+	#[snafu(display("failed to read expr"), context(false))]
+	Expr { source: expr::ExprError },
+	#[snafu(display("failed to read dialogue"), context(false))]
+	Dialogue { source: dial::DialogueError },
+	#[snafu(display("control flow nested inside expr"))]
+	BadNesting,
 }
 
-fn read_op(f: &mut VReader) -> Result<Op, OpError> {
+fn read_op(f: &mut VReader) -> Result<FlatOp, OpError> {
 	let pos = f.pos();
 	let op = read_op2(f)?;
-	if op.unk != 0xFF
-	&& pos + op.unk as usize != f.pos()
-	&& !op.args.iter().any(|a| matches!(a, Arg::Expr(_) | Arg::Label(_)))
+	if let FlatOp::Op(op) = &op
+		&& op.meta.width != 0xFF
+		&& pos + op.meta.width as usize != f.pos()
+		&& !op.args.iter().any(|a| matches!(a, Arg::Expr(_)))
 	{
-		tracing::warn!("expected length {}, got {} on {op:?}", op.unk, f.pos() - pos);
+		tracing::warn!("expected length {}, got {} on {op:?}", op.meta.width, f.pos() - pos);
 	}
 	Ok(op)
 }
 
-fn read_op2(f: &mut VReader) -> Result<Op, OpError> {
+fn read_op2(f: &mut VReader) -> Result<FlatOp, OpError> {
 	let mut code = f.u8()?;
 	let mut op = Op {
 		code: ArrayVec::new(),
-		line: 0,
-		unk: 0xFF,
+		meta: OpMeta::default(),
 		args: Vec::new(),
 	};
 	op.code.push(code);
-	if code == 0x00 || code == 0x01 {
-		return Ok(op);
-	}
-	if code == 0x04 {
-		op.push(f.u8()?);
-		op.push(f.str()?);
-		return Ok(op);
+
+	let name = SPEC.names.get(op.code.as_slice()).map(|s| s.as_str());
+
+	match name {
+		Some("return") => {
+			return Ok(FlatOp::Op(op));
+		}
+		Some("fastcall") => {
+			op.push(f.u8()?);
+			op.push(f.str()?);
+			return Ok(FlatOp::Op(op));
+		}
+		_ => {}
 	}
 
-	op.line = f.u16()?;
+	op.meta.line = f.u16()?;
 	f.check_u8(0)?;
-	op.unk = f.u8()?;
+	op.meta.width = f.u8()?;
+
+	match name {
+		Some("if") => {
+			let expr = expr::Expr::read(f)?;
+			let label = Label(f.u32()?);
+			return Ok(FlatOp::If(op.meta, expr, label));
+		}
+		Some("goto") => {
+			let label = Label(f.u32()?);
+			return Ok(FlatOp::Goto(op.meta, label));
+		}
+		Some("switch") => {
+			let expr = expr::Expr::read(f)?;
+			let mut cases = Vec::new();
+			for _ in 0..f.u8()? {
+				cases.push((f.i32()?, Label(f.u32()?)));
+			}
+			let default = Label(f.u32()?);
+			return Ok(FlatOp::Switch(op.meta, expr, cases, default));
+		}
+		_ => {}
+	}
 
 	let Some(mut spec) = SPEC.ops[code as usize].as_ref() else {
 		return UnknownOpSnafu { op }.fail();
@@ -204,7 +254,14 @@ fn read_op2(f: &mut VReader) -> Result<Op, OpError> {
 		}
 	}
 
-	Ok(op)
+	Ok(FlatOp::Op(op))
+}
+
+fn read_raw_op(f: &mut VReader) -> Result<Op, OpError> {
+	match read_op2(f)? {
+		FlatOp::Op(op) => Ok(op),
+		_ => BadNestingSnafu.fail(),
+	}
 }
 
 fn read_parts(op: &mut Op, f: &mut VReader, part: &[spec::Part]) -> Result<(), OpError> {
@@ -225,24 +282,13 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 		I32 => op.push(f.i32()?),
 		F32 => op.push(f.f32()?),
 		Str => op.push(f.str()?),
-		Expr => op.push(expr::Expr::read(f).context(ExprSnafu)?),
-		Text => op.push(dial::Dialogue::read(f).context(DialogueSnafu)?),
+		Expr => op.push(expr::Expr::read(f)?),
+		Text => op.push(dial::Dialogue::read(f)?),
 		Dyn => op.push(call_arg(f)?),
 		Dyn2 => op.push(call_arg2(f)?),
 		Ndyn => {
 			for _ in 0..f.u8()? {
 				op.push(call_arg(f)?);
-			}
-		}
-
-		Label => {
-			op.push(Arg::Label(f.u32()?));
-		}
-		Switch => {
-			let n = f.u8()?;
-			for _ in 0..n {
-				op.push(f.i32()?);
-				op.push(Arg::Label(f.u32()?));
 			}
 		}
 

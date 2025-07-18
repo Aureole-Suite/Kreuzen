@@ -16,9 +16,6 @@ pub enum Part {
 	Dyn2,
 	Ndyn,
 
-	Label,
-	Switch,
-
 	_3E,
 	_3F,
 	_40,

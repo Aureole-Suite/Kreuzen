@@ -1,9 +1,9 @@
 01   'return'
 02   'call' u8 str ndyn
-03   'goto' label
+03   'goto'
 04   'fastcall'
-05   'if' expr label
-06   'switch' expr switch label
+05   'if'
+06   'switch'
 07   u8 dyn
 08   u8 expr
 0A   'SetVar' u8 expr

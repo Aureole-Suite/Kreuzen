@@ -113,7 +113,7 @@ impl Expr {
 			match f.u8()? {
 				0x00 => stack.push(Expr::Int(f.i32()?)),
 				0x01 => break,
-				0x1C => stack.push(Expr::Op(super::read_op(f).context(ExprOpSnafu { pos })?)),
+				0x1C => stack.push(Expr::Op(super::read_raw_op(f).context(ExprOpSnafu { pos })?)),
 				0x1E => stack.push(Expr::Flag(f.u16()?)),
 				0x1F => stack.push(Expr::Var(f.u8()?)),
 				0x20 => stack.push(Expr::Attr(f.u8()?)),
