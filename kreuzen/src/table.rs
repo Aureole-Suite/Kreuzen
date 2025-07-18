@@ -18,6 +18,7 @@ pub mod break_table;
 pub mod field_follow_data;
 pub mod field_monster_data;
 pub mod part_table;
+pub mod reaction_table;
 
 pub use effect::Effect;
 pub use book::Book;
@@ -29,3 +30,4 @@ pub use anime_clip_table::AnimeClip;
 pub use field_follow_data::FieldFollowData;
 pub use field_monster_data::FieldMonsterData;
 pub use part_table::Part;
+pub use reaction_table::Reaction;
