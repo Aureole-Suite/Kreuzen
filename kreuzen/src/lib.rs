@@ -1,6 +1,6 @@
 #![feature(if_let_guard, split_as_slice)]
 use gospel::read::{Reader, Le as _};
-use snafu::ResultExt as _;
+use snafu::{ensure, ResultExt as _};
 
 pub mod func;
 pub mod table;
@@ -215,7 +215,6 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
 					tracing::error!("{e}");
 				}
-				
 			}
 		}
 	}
@@ -226,6 +225,11 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 
 #[derive(Debug, snafu::Snafu)]
 pub enum EntryError {
+	#[snafu(display("no terminator"))]
+	BadTerminator,
+	#[snafu(display("{n} bytes of trailing data"))]
+	TrailingData { n: usize },
+
 	#[snafu(display("could not read function"))]
 	Function { source: func::FunctionError },
 	#[snafu(display("could not read effect"))]
@@ -265,6 +269,14 @@ pub enum Item {
 }
 
 fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
+	let mut data = f.reader.data();
+	while data.last() == Some(&0) {
+		data = &data[..data.len() - 1]; // Remove trailing zeroes
+	}
+	ensure!(data.last() == Some(&1), BadTerminatorSnafu);
+	data = &data[..data.len() - 1];
+	ensure!(data.len() >= f.reader.pos(), BadTerminatorSnafu);
+	f.reader = Reader::new(data).at(f.reader.pos()).unwrap();
 	let item = match Type::from_name(f.func) {
 		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu)?),
 		Type::Effect => Item::Effect(table::read_effect(f).context(EffectSnafu)?),
@@ -274,18 +286,19 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::Btlset => Item::Btlset(table::read_btlset(f).context(BtlsetSnafu)?),
 		Type::StyleName => Item::StyleName(table::read_style_name(f).context(StyleNameSnafu)?),
 
-		Type::Empty => Item::Unknown,
+		Type::Empty => return Ok(Item::Unknown),
 		Type::ActionTable => Item::ActionTable(table::read_action_table(f).context(ActionTableSnafu)?),
 		Type::AddCollision => Item::AddCollision(table::read_add_collision(f).context(AddCollisionSnafu)?),
-		Type::AlgoTable => Item::Unknown,
-		Type::AnimeClipTable => Item::Unknown,
-		Type::BreakTable => Item::Unknown,
-		Type::FieldFollowData => Item::Unknown,
-		Type::FieldMonsterData => Item::Unknown,
-		Type::PartTable => Item::Unknown,
-		Type::ReactionTable => Item::Unknown,
-		Type::SummonTable => Item::Unknown,
-		Type::WeaponAttTable => Item::Unknown,
+		Type::AlgoTable => return Ok(Item::Unknown),
+		Type::AnimeClipTable => return Ok(Item::Unknown),
+		Type::BreakTable => return Ok(Item::Unknown),
+		Type::FieldFollowData => return Ok(Item::Unknown),
+		Type::FieldMonsterData => return Ok(Item::Unknown),
+		Type::PartTable => return Ok(Item::Unknown),
+		Type::ReactionTable => return Ok(Item::Unknown),
+		Type::SummonTable => return Ok(Item::Unknown),
+		Type::WeaponAttTable => return Ok(Item::Unknown),
 	};
+	ensure!(f.remaining().is_empty(), TrailingDataSnafu { n: f.remaining().len() });
 	Ok(item)
 }

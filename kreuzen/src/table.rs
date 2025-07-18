@@ -37,7 +37,7 @@ pub struct RawEffect {
 
 pub fn read_effect(f: &mut VReader) -> Result<Vec<Effect>, EffectError> {
 	let mut table = Vec::new();
-	loop {
+	while !f.remaining().is_empty() {
 		let effect = RawEffect {
 			kind: f.u16()?,
 			charid: f.u16()?,
@@ -88,13 +88,11 @@ pub fn read_effect(f: &mut VReader) -> Result<Vec<Effect>, EffectError> {
 			_ => return BadEffectSnafu { effect }.fail(),
 		})
 	}
-	f.check_u8(0x01)?;
 	Ok(table)
 }
 
 pub fn read_fc(f: &mut VReader) -> Result<String, gospel::read::Error> {
 	let s = f.str()?;
-	f.check_u8(0x01)?;
 	Ok(s)
 }
 
@@ -132,14 +130,12 @@ pub fn read_book(f: &mut VReader) -> Result<Book, BookError> {
 		}
 		kind => return BadBookSnafu { kind }.fail(),
 	};
-	f.check_u8(0x01)?;
 	Ok(b)
 }
 
 pub fn read_book99(f: &mut VReader) -> Result<u16, BookError> {
 	let n = f.u16()?;
 	f.check_u16(1)?;
-	f.check_u8(0x01)?;
 	Ok(n)
 }
 
@@ -201,7 +197,6 @@ pub fn read_btlset(f: &mut VReader) -> Result<Btlset, BtlsetError> {
 		variants.push(BtlVariant { num, monsters });
 	}
 	f.check(&[0; 0x18])?;
-	f.check_u8(0x01)?;
 	Ok(Btlset { field, bounds, unk1, unk2, unk3, variants })
 }
 
@@ -219,7 +214,6 @@ pub fn read_add_collision(f: &mut VReader) -> Result<Vec<Collision>, gospel::rea
 			b: [f.f32()?, f.f32()?, f.f32()?, f.f32()?, f.f32()?],
 		});
 	}
-	f.check_u8(0x01)?;
 	Ok(out)
 }
 
@@ -239,7 +233,6 @@ pub fn read_style_name(f: &mut VReader) -> Result<String, StyleNameError> {
 	let a = f.sstr(64)?;
 	let b = f.sstr(64)?;
 	ensure!(a == b, StyleMismatchSnafu { a, b });
-	f.check_u8(0x01)?;
 	Ok(a)
 }
 
@@ -283,9 +276,8 @@ impl Action {
 
 pub fn read_action_table(f: &mut VReader) -> Result<Vec<Action>, gospel::read::Error> {
 	let mut table = Vec::new();
-	loop {
+	while !f.remaining().is_empty() {
 		let id = f.u16()?;
-		if id == 1 { break; }
 		let u1 = (f.u8()?, f.u8()?);
 		let target = (f.u8()?, f.u8()?, f.u16()?);
 		let u2 = (f.f32()?, f.f32()?, f.f32()?);
