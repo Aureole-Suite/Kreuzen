@@ -65,29 +65,37 @@ impl std::fmt::Debug for Entry {
 
 enum Type {
 	Normal,
-	Table, // TODO separate each table
 	StyleName,
-	AddCollision,
 	Btlset,
 	BookData,
 	BookData99,
 	FcAuto,
 	Effect,
+
 	Empty,
+	ActionTable,
+	AddCollision,
+	AlgoTable,
+	AnimeClipTable,
+	BreakTable,
+	FieldFollowData,
+	FieldMonsterData,
+	PartTable,
+	ReactionTable,
+	SummonTable,
+	WeaponAttTable,
 }
+
 
 impl Type {
 	fn from_name(name: &str) -> Self {
 		if name.starts_with("_a0_")
 		|| name.starts_with("_a1_")
 		|| name.starts_with("_a2_")
-		|| name.starts_with("_Lambda")
-		|| name == "Npc_Table" {
+		|| name.starts_with("_Lambda") {
 			Type::Normal
 		} else if name.starts_with("_") {
 			Type::Effect
-		} else if name.is_empty() {
-			Type::Empty
 		} else if name.starts_with("BTLSET") {
 			Type::Btlset
 		} else if name.starts_with("BookData") {
@@ -98,14 +106,24 @@ impl Type {
 			}
 		} else if name.starts_with("FC_auto") {
 			Type::FcAuto
-		} else if name == "AddCollision" {
-			Type::AddCollision
 		} else if name.starts_with("StyleName") {
 			Type::StyleName
-		} else if name.ends_with("Table") || name.ends_with("Data") {
-			Type::Table
 		} else {
-			Type::Normal
+			match name {
+				"" => Type::Empty,
+				"AddCollision" => Type::AddCollision,
+				"ActionTable" => Type::ActionTable,
+				"AlgoTable" => Type::AlgoTable,
+				"AnimeClipTable" => Type::AnimeClipTable,
+				"BreakTable" => Type::BreakTable,
+				"FieldFollowData" => Type::FieldFollowData,
+				"FieldMonsterData" => Type::FieldMonsterData,
+				"PartTable" => Type::PartTable,
+				"ReactionTable" => Type::ReactionTable,
+				"SummonTable" => Type::SummonTable,
+				"WeaponAttTable" => Type::WeaponAttTable,
+				_ => Type::Normal, // Default to normal if no match
+			}
 		}
 	}
 }
@@ -235,23 +253,35 @@ pub enum Item {
 	BookPage(table::Book),
 	BookMetadata(u16),
 	Btlset(table::Btlset),
-	AddCollision(Vec<table::Collision>),
 	StyleName(String),
+
+	AddCollision(Vec<table::Collision>),
+
 	Unknown,
 }
 
 fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 	let item = match Type::from_name(f.func) {
 		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu)?),
-		Type::Table => Item::Unknown,
-		Type::StyleName => Item::StyleName(table::read_style_name(f).context(StyleNameSnafu)?),
-		Type::AddCollision => Item::AddCollision(table::read_add_collision(f).context(AddCollisionSnafu)?),
-		Type::Btlset => Item::Btlset(table::read_btlset(f).context(BtlsetSnafu)?),
+		Type::Effect => Item::Effect(table::read_effect(f).context(EffectSnafu)?),
+		Type::FcAuto => Item::Fc(table::read_fc(f).context(FcSnafu)?),
 		Type::BookData => Item::BookPage(table::read_book(f).context(BookDataSnafu)?),
 		Type::BookData99 => Item::BookMetadata(table::read_book99(f).context(BookData99Snafu)?),
-		Type::FcAuto => Item::Fc(table::read_fc(f).context(FcSnafu)?),
-		Type::Effect => Item::Effect(table::read_effect(f).context(EffectSnafu)?),
+		Type::Btlset => Item::Btlset(table::read_btlset(f).context(BtlsetSnafu)?),
+		Type::StyleName => Item::StyleName(table::read_style_name(f).context(StyleNameSnafu)?),
+
 		Type::Empty => Item::Unknown,
+		Type::ActionTable => Item::Unknown,
+		Type::AddCollision => Item::AddCollision(table::read_add_collision(f).context(AddCollisionSnafu)?),
+		Type::AlgoTable => Item::Unknown,
+		Type::AnimeClipTable => Item::Unknown,
+		Type::BreakTable => Item::Unknown,
+		Type::FieldFollowData => Item::Unknown,
+		Type::FieldMonsterData => Item::Unknown,
+		Type::PartTable => Item::Unknown,
+		Type::ReactionTable => Item::Unknown,
+		Type::SummonTable => Item::Unknown,
+		Type::WeaponAttTable => Item::Unknown,
 	};
 	Ok(item)
 }
