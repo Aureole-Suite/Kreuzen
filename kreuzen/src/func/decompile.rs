@@ -40,10 +40,10 @@ pub enum DecompileError {
 #[derive(Clone, PartialEq)]
 pub enum Stmt {
 	Op(Op),
-	If(OpMeta, Expr, Vec<Stmt>, Option<Vec<Stmt>>),
+	If(OpMeta, Expr, Vec<Stmt>, Option<(OpMeta, Vec<Stmt>)>),
 	While(OpMeta, Expr, Vec<Stmt>),
-	Break,
-	Continue,
+	Break(OpMeta),
+	Continue(OpMeta),
 	Switch(OpMeta, Expr, Vec<(Case, Vec<Stmt>)>),
 }
 
@@ -56,7 +56,8 @@ impl std::fmt::Debug for Stmt {
 				tup.field(m);
 				tup.field(e);
 				tup.field(then);
-				if let Some(els) = els {
+				if let Some((m2, els)) = els {
+					tup.field(m2);
 					if let [stmt@Stmt::If(..)] = els.as_slice() {
 						tup.field(stmt);
 					} else {
@@ -66,8 +67,8 @@ impl std::fmt::Debug for Stmt {
 				tup.finish()
 			},
 			Self::While(arg0, arg1, arg2) => f.debug_tuple("While").field(arg0).field(arg1).field(arg2).finish(),
-			Self::Break => write!(f, "Break"),
-			Self::Continue => write!(f, "Continue"),
+			Self::Break(arg0) => f.debug_tuple("Break").field(arg0).finish(),
+			Self::Continue(arg0) => f.debug_tuple("Continue").field(arg0).finish(),
 			Self::Switch(arg0, arg1, arg2) => f.debug_tuple("Switch").field(arg0).field(arg1).field(arg2).finish(),
 		}
 	}
@@ -158,16 +159,16 @@ impl<'a> Ctx<'a> {
 	}
 
 	#[track_caller]
-	fn goto_before(&self, label: Label) -> Result<Option<Label>, DecompileError> {
+	fn goto_before(&self, label: Label) -> Result<Option<(OpMeta, Label)>, DecompileError> {
 		let pos = self.lookup(label)?;
 		if pos > 0 && let FlatOp::Goto(meta, cont) = self.gctx.stmts[pos - 1] {
-			Ok(Some(cont))
+			Ok(Some((meta, cont)))
 		} else {
 			Ok(None)
 		}
 	}
 
-	fn block(&mut self, what: &'static str, goto_allowed: GotoAllowed) -> Result<(Vec<Stmt>, Option<Label>), DecompileError> {
+	fn block(&mut self, what: &'static str, goto_allowed: GotoAllowed) -> Result<(Vec<Stmt>, Option<(OpMeta, Label)>), DecompileError> {
 		let start = self.pos;
 		let end = self.end;
 		block(self, goto_allowed).context(decompile::Block { what, start, end })
@@ -181,7 +182,7 @@ enum GotoAllowed {
 	No,
 }
 
-fn block(ctx: &mut Ctx, goto_allowed: GotoAllowed) -> Result<(Vec<Stmt>, Option<Label>), DecompileError> {
+fn block(ctx: &mut Ctx, goto_allowed: GotoAllowed) -> Result<(Vec<Stmt>, Option<(OpMeta, Label)>), DecompileError> {
 	let mut stmts = Vec::new();
 	while let Some(stmt) = ctx.next() {
 		match stmt {
@@ -207,11 +208,11 @@ fn block(ctx: &mut Ctx, goto_allowed: GotoAllowed) -> Result<(Vec<Stmt>, Option<
 					GotoAllowed::No => false,
 				};
 				if Some(*l) == ctx.brk {
-					stmts.push(Stmt::Break)
+					stmts.push(Stmt::Break(*m))
 				} else if Some(*l) == ctx.cont {
-					stmts.push(Stmt::Continue)
+					stmts.push(Stmt::Continue(*m))
 				} else if ok {
-					return Ok((stmts, Some(*l)))
+					return Ok((stmts, Some((*m, *l))))
 				} else {
 					return decompile::UnexpectedJump { label: *l }.fail()
 				}
@@ -228,23 +229,23 @@ fn parse_if(
 	e: Expr,
 	label: Label,
 ) -> Result<(), DecompileError> {
-	if let Some(cont) = ctx.goto_before(label)?
+	if let Some((m, cont)) = ctx.goto_before(label)?
 			&& ctx.pos >= 2
 			&& ctx.gctx.lookup(cont)? == ctx.pos - 2 {
 		let mut sub = ctx.sub(label)?;
 		sub.brk = Some(label);
 		sub.cont = Some(cont);
 		let (mut body, _) = sub.block("while body", GotoAllowed::No)?;
-		assert_eq!(body.pop(), Some(Stmt::Continue));
+		assert_eq!(body.pop(), Some(Stmt::Continue(m)));
 		stmts.push(Stmt::While(l, e, body));
 		return Ok(())
 	}
 
 	let (body, goto) = ctx.sub(label)?.block("if body", GotoAllowed::Yes)?;
 
-	if let Some(goto) = goto {
+	if let Some((m, goto)) = goto {
 		let (no, _) = ctx.sub(goto)?.block("else body", GotoAllowed::No)?;
-		stmts.push(Stmt::If(l, e, body, Some(no)));
+		stmts.push(Stmt::If(l, e, body, Some((m, no))));
 	} else {
 		stmts.push(Stmt::If(l, e, body, None));
 	};
@@ -269,7 +270,7 @@ fn parse_switch(
 	let mut brk = None;
 	let mut brk_pos = 0;
 	for (_, l) in &cases {
-		if let Some(goto) = ctx.goto_before(*l)?
+		if let Some((_, goto)) = ctx.goto_before(*l)?
 			&& let goto_pos = ctx.lookup(goto)?
 			&& goto_pos >= ctx.lookup(*l)?
 			&& goto_pos > brk_pos
@@ -284,8 +285,11 @@ fn parse_switch(
 	let mut pre = ctx.sub(cases.first().unwrap().1)?;
 	while pre.pos != pre.end {
 		let (mut body, jump) = pre.block("switch pre-body", GotoAllowed::Anywhere)?;
-		snafu::ensure!(jump == Some(default), decompile::UnsortedSwitch);
-		body.push(Stmt::Break);
+		let Some((m, jump)) = jump else {
+			return decompile::UnsortedSwitch.fail();
+		};
+		snafu::ensure!(jump == default, decompile::UnsortedSwitch);
+		body.push(Stmt::Break(m));
 		cases2.push((Case::None, body));
 	}
 
@@ -313,10 +317,10 @@ fn parse_switch(
 	let prev_brk = ctx.brk.take();
 	let (mut body, goto) = ctx.block("switch last body", GotoAllowed::Anywhere)?;
 	ctx.brk = prev_brk;
-	if let Some(goto) = goto {
+	if let Some((m, goto)) = goto {
 		if ctx.gctx.lookup(goto)? == ctx.pos {
 			// finally found a break, but it's useless
-			body.push(Stmt::Break);
+			body.push(Stmt::Break(m));
 			cases2.push((last.0, body));
 			stmts.push(Stmt::Switch(l, e, cases2));
 			return Ok(());
