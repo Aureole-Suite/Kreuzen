@@ -291,7 +291,7 @@ pub enum Item {
 	SummonTable(Vec<table::Summon>),
 	WeaponAttTable(table::WeaponAtt),
 
-	Unknown,
+	Empty,
 }
 
 fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
@@ -313,7 +313,13 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::Btlset => Item::Btlset(table::btlset::read(f)?),
 		Type::StyleName => Item::StyleName(table::style_name::read(f)?),
 
-		Type::Empty => return Ok(Item::Unknown),
+		Type::Empty => {
+			if !f.remaining().is_empty() {
+				Item::Btlset(table::btlset::read(f)?)
+			} else {
+				Item::Empty
+			}
+		},
 		Type::ActionTable => Item::ActionTable(table::action_table::read(f)?),
 		Type::AddCollision => Item::AddCollision(table::add_collision::read(f)?),
 		Type::AlgoTable => Item::AlgoTable(table::algo_table::read(f)?),
