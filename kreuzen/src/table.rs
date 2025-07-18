@@ -16,6 +16,8 @@ pub mod add_collision;
 pub mod algo_table;
 pub mod anime_clip_table;
 pub mod break_table;
+pub mod field_follow_data;
+pub mod field_monster_data;
 
 pub use effect::Effect;
 pub use book::Book;
@@ -24,3 +26,5 @@ pub use action_table::Action;
 pub use add_collision::Collision;
 pub use algo_table::Algo;
 pub use anime_clip_table::AnimeClip;
+pub use field_follow_data::FieldFollowData;
+pub use field_monster_data::FieldMonsterData;

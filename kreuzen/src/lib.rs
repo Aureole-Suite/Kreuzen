@@ -255,6 +255,10 @@ pub enum EntryError {
 	AnimeClipTable { source: table::anime_clip_table::ReadError },
 	#[snafu(display("could not read BreakTable"), context(false))]
 	BreakTable { source: table::break_table::ReadError },
+	#[snafu(display("could not read FieldFollowData"), context(false))]
+	FieldFollowData { source: table::field_follow_data::ReadError },
+	#[snafu(display("could not read FieldMonsterData"), context(false))]
+	FieldMonsterData { source: table::field_monster_data::ReadError },
 }
 
 
@@ -273,6 +277,8 @@ pub enum Item {
 	AlgoTable(Vec<table::Algo>),
 	AnimeClipTable(Vec<table::AnimeClip>),
 	BreakTable(Vec<(u16, u16)>),
+	FieldFollowData(table::FieldFollowData),
+	FieldMonsterData(table::FieldMonsterData),
 
 	Unknown,
 }
@@ -302,8 +308,8 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::AlgoTable => Item::AlgoTable(table::algo_table::read(f)?),
 		Type::AnimeClipTable => Item::AnimeClipTable(table::anime_clip_table::read(f)?),
 		Type::BreakTable => Item::BreakTable(table::break_table::read(f)?),
-		Type::FieldFollowData => return Ok(Item::Unknown),
-		Type::FieldMonsterData => return Ok(Item::Unknown),
+		Type::FieldFollowData => Item::FieldFollowData(table::field_follow_data::read(f)?),
+		Type::FieldMonsterData => Item::FieldMonsterData(table::field_monster_data::read(f)?),
 		Type::PartTable => return Ok(Item::Unknown),
 		Type::ReactionTable => return Ok(Item::Unknown),
 		Type::SummonTable => return Ok(Item::Unknown),
