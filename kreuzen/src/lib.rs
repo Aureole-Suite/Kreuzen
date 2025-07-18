@@ -51,22 +51,6 @@ pub enum ReadError {
 	},
 }
 
-#[derive(Debug, snafu::Snafu)]
-pub enum EntryError {
-	#[snafu(display("could not read function"))]
-	Function { source: func::FunctionError },
-	#[snafu(display("could not read effect"))]
-	Effect { source: table::TableError<table::EffectError> },
-	#[snafu(display("could not read fc"))]
-	Fc { source: gospel::read::Error },
-	#[snafu(display("could not read book data"))]
-	BookData { source: table::BookError },
-	#[snafu(display("could not read book metadata"))]
-	BookData99 { source: table::BookError },
-	#[snafu(display("could not read btlset"))]
-	Btlset { source: table::BtlsetError },
-}
-
 #[derive(Clone)]
 struct Entry {
 	name: String,
@@ -220,14 +204,34 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	Ok(())
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum EntryError {
+	#[snafu(display("could not read function"))]
+	Function { source: func::FunctionError },
+	#[snafu(display("could not read effect"))]
+	Effect { source: table::TableError<table::EffectError> },
+	#[snafu(display("could not read fc"))]
+	Fc { source: gospel::read::Error },
+	#[snafu(display("could not read book data"))]
+	BookData { source: table::BookError },
+	#[snafu(display("could not read book metadata"))]
+	BookData99 { source: table::BookError },
+	#[snafu(display("could not read btlset"))]
+	Btlset { source: table::BtlsetError },
+	#[snafu(display("could not read addcollision"))]
+	AddCollision { source: gospel::read::Error },
+}
+
+
 #[derive(Debug, Clone)]
 pub enum Item {
 	Func(()),
+	Effect(Vec<table::Effect>),
+	Fc(String),
 	BookPage(table::Book),
 	BookMetadata(u16),
-	Fc(String),
-	Effect(Vec<table::Effect>),
 	Btlset(table::Btlset),
+	AddCollision(Vec<table::Collision>),
 	Unknown
 }
 
@@ -236,7 +240,7 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu)?),
 		Type::Table => Item::Unknown,
 		Type::StyleName => Item::Unknown,
-		Type::AddCollision => Item::Unknown,
+		Type::AddCollision => Item::AddCollision(table::read_add_collision(f).context(AddCollisionSnafu)?),
 		Type::Btlset => Item::Btlset(table::read_btlset(f).context(BtlsetSnafu)?),
 		Type::BookData => Item::BookPage(table::read_book(f).context(BookDataSnafu)?),
 		Type::BookData99 => Item::BookMetadata(table::read_book99(f).context(BookData99Snafu)?),

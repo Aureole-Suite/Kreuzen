@@ -246,3 +246,21 @@ pub fn read_btlset(f: &mut VReader) -> Result<Btlset, BtlsetError> {
 	f.check_u8(0x01)?;
 	Ok(Btlset { field, bounds, unk1, unk2, unk3, variants })
 }
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Collision {
+	pub a: u32,
+	pub b: [f32; 5],
+}
+
+pub fn read_add_collision(f: &mut VReader) -> Result<Vec<Collision>, gospel::read::Error> {
+	let mut out = Vec::new();
+	for _ in 0..f.u8()? {
+		out.push(Collision {
+			a: f.u32()?,
+			b: [f.f32()?, f.f32()?, f.f32()?, f.f32()?, f.f32()?],
+		});
+	}
+	f.check_u8(0x01)?;
+	Ok(out)
+}
