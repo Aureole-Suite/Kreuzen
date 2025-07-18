@@ -229,7 +229,7 @@ pub enum EntryError {
 	#[snafu(display("could not read function"))]
 	Function { source: func::FunctionError },
 	#[snafu(display("could not read effect"))]
-	Effect { source: table::TableError<table::EffectError> },
+	Effect { source: table::EffectError },
 	#[snafu(display("could not read FcAuto"))]
 	Fc { source: gospel::read::Error },
 	#[snafu(display("could not read BookData"))]

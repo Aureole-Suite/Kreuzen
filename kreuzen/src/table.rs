@@ -1,53 +1,8 @@
-use std::{fmt::Debug, ops::ControlFlow};
 use arrayvec::ArrayVec;
 use gospel::read::Le as _;
-use snafu::{ensure, ResultExt as _};
+use snafu::ensure;
 
 use crate::{ReaderaExt as _, VReader};
-
-#[derive(Debug, snafu::Snafu)]
-pub enum TableError<E: std::error::Error + 'static> {
-	#[snafu(display("invalid read (at {location})"), context(false))]
-	Read {
-		source: gospel::read::Error,
-		#[snafu(implicit)]
-		location: snafu::Location,
-	},
-	#[snafu(display("failed to read entry at {pos:X}"))]
-	Entry {
-		pos: usize,
-		source: E,
-	}
-}
-
-fn read_table<T: Debug, E: std::error::Error>(
-	f: &mut VReader,
-	mut entry: impl FnMut(&mut VReader) -> Result<ControlFlow<(), T>, E>,
-) -> Result<Vec<T>, TableError<E>> {
-	let start = f.pos();
-	let mut table = Vec::new();
-	loop {
-		let pos = f.pos();
-		match entry(f).context(EntrySnafu { pos }) {
-			Ok(ControlFlow::Continue(val)) => {
-				tracing::trace!("{pos:X} {val:?}");
-				table.push(val);
-			}
-			Ok(ControlFlow::Break(())) => {
-				break;
-			}
-			Err(e) => {
-				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
-					tracing::error!("{e}");
-				}
-				print!("{:#X}", f.dump().start(start));
-				break;
-			}
-		}
-	}
-	f.check_u8(0x01)?;
-	Ok(table)
-}
 
 #[derive(Debug, snafu::Snafu)]
 pub enum EffectError {
@@ -80,58 +35,61 @@ pub struct RawEffect {
 	pub str: String,
 }
 
-pub fn read_effect(f: &mut VReader) -> Result<Vec<Effect>, TableError<EffectError>> {
-	read_table(f, |f| {
+pub fn read_effect(f: &mut VReader) -> Result<Vec<Effect>, EffectError> {
+	let mut table = Vec::new();
+	loop {
 		let effect = RawEffect {
 			kind: f.u16()?,
 			charid: f.u16()?,
 			u32: f.u32()?,
 			str: f.sstr(32)?,
 		};
-		match effect.kind {
+		table.push(match effect.kind {
 			0 => {
 				ensure!(effect.charid == 0xFFFF, BadEffectSnafu { effect });
 				ensure!(effect.str.is_empty(), BadEffectSnafu { effect });
 				ensure!(effect.u32 == 0, BadEffectSnafu { effect });
-				Ok(ControlFlow::Break(()))
+				break;
 			}
 			2 => {
 				ensure!(effect.charid == 0xFFFF, BadEffectSnafu { effect });
 				ensure!(effect.u32 == 0, BadEffectSnafu { effect });
-				Ok(ControlFlow::Continue(Effect::_02(effect.str)))
+				Effect::_02(effect.str)
 			}
 			3 => {
 				ensure!(effect.charid == 0xFFFF, BadEffectSnafu { effect });
 				ensure!(effect.u32 == 0, BadEffectSnafu { effect });
-				Ok(ControlFlow::Continue(Effect::_03(effect.str)))
+				Effect::_03(effect.str)
 			}
 			4 => {
 				ensure!(effect.charid == 0xFFFF, BadEffectSnafu { effect });
 				ensure!(effect.str.is_empty(), BadEffectSnafu { effect });
-				Ok(ControlFlow::Continue(Effect::_04(effect.u32)))
+				Effect::_04(effect.u32)
 			}
 			5 => {
 				ensure!(effect.charid == 0xFFFF, BadEffectSnafu { effect });
 				ensure!(effect.str.is_empty(), BadEffectSnafu { effect });
-				Ok(ControlFlow::Continue(Effect::_05(effect.u32)))
+				Effect::_05(effect.u32)
 			}
 			7 => {
 				ensure!(effect.charid == 0xFFFF, BadEffectSnafu { effect });
 				ensure!(effect.str.is_empty(), BadEffectSnafu { effect });
-				Ok(ControlFlow::Continue(Effect::_07(effect.u32)))
+				Effect::_07(effect.u32)
 			}
 			9 => {
 				ensure!(effect.u32 == 0, BadEffectSnafu { effect });
-				Ok(ControlFlow::Continue(Effect::_09(effect.charid, effect.str)))
+				Effect::_09(effect.charid, effect.str)
 			}
 			10 => {
 				ensure!(effect.charid == 0xFFFF, BadEffectSnafu { effect });
 				ensure!(effect.u32 == 0, BadEffectSnafu { effect });
-				Ok(ControlFlow::Continue(Effect::_0A(effect.str)))
+				Effect::_0A(effect.str)
 			}
-			_ => BadEffectSnafu { effect }.fail(),
-		}
-	})
+			_ => return BadEffectSnafu { effect }.fail(),
+		})
+	}
+	f.check_u8(0x01)?;
+	Ok(table)
 }
 
 pub fn read_fc(f: &mut VReader) -> Result<String, gospel::read::Error> {
