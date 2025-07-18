@@ -253,6 +253,8 @@ pub enum EntryError {
 	AlgoTable { source: gospel::read::Error },
 	#[snafu(display("could not read AnimeClipTable"))]
 	AnimeClipTable { source: table::AnimeClipError },
+	#[snafu(display("could not read BreakTable"))]
+	BreakTable { source: gospel::read::Error },
 }
 
 
@@ -270,6 +272,7 @@ pub enum Item {
 	AddCollision(Vec<table::Collision>),
 	AlgoTable(Vec<table::Algo>),
 	AnimeClipTable(Vec<table::AnimeClip>),
+	BreakTable(Vec<(u16, u16)>),
 
 	Unknown,
 }
@@ -283,6 +286,7 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 	data = &data[..data.len() - 1];
 	ensure!(data.len() >= f.reader.pos(), BadTerminatorSnafu);
 	f.reader = Reader::new(data).at(f.reader.pos()).unwrap();
+
 	let item = match Type::from_name(f.func) {
 		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu)?),
 		Type::Effect => Item::Effect(table::read_effect(f).context(EffectSnafu)?),
@@ -297,7 +301,7 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::AddCollision => Item::AddCollision(table::read_add_collision(f).context(AddCollisionSnafu)?),
 		Type::AlgoTable => Item::AlgoTable(table::read_algo_table(f).context(AlgoTableSnafu)?),
 		Type::AnimeClipTable => Item::AnimeClipTable(table::read_anime_clip_table(f).context(AnimeClipTableSnafu)?),
-		Type::BreakTable => return Ok(Item::Unknown),
+		Type::BreakTable => Item::BreakTable(table::read_break_table(f).context(BreakTableSnafu)?),
 		Type::FieldFollowData => return Ok(Item::Unknown),
 		Type::FieldMonsterData => return Ok(Item::Unknown),
 		Type::PartTable => return Ok(Item::Unknown),
@@ -305,6 +309,7 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::SummonTable => return Ok(Item::Unknown),
 		Type::WeaponAttTable => return Ok(Item::Unknown),
 	};
+
 	ensure!(f.remaining().is_empty(), TrailingDataSnafu { n: f.remaining().len() });
 	Ok(item)
 }

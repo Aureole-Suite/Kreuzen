@@ -380,3 +380,17 @@ pub fn read_anime_clip_table(f: &mut VReader) -> Result<Vec<AnimeClip>, AnimeCli
 	f.check_u16(0)?;
 	Ok(table)
 }
+
+pub fn read_break_table(f: &mut VReader) -> Result<Vec<(u16, u16)>, gospel::read::Error> {
+	let mut table = Vec::new();
+	loop {
+		let id = f.u16()?;
+		if id == 0xFFFF {
+			break;
+		}
+		let value = f.u16()?;
+		table.push((id, value));
+	}
+	f.check_u16(1)?;
+	Ok(table)
+}
