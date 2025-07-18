@@ -37,7 +37,7 @@ pub enum DecompileError {
 	},
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Stmt {
 	Op(Op),
 	If(OpMeta, Expr, Vec<Stmt>, Option<Vec<Stmt>>),
@@ -47,8 +47,34 @@ pub enum Stmt {
 	Switch(OpMeta, Expr, Vec<(Case, Vec<Stmt>)>),
 }
 
+impl std::fmt::Debug for Stmt {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Op(o) => o.fmt(f),
+			Self::If(m, e, then, els) => {
+				let mut tup = f.debug_tuple("If");
+				tup.field(m);
+				tup.field(e);
+				tup.field(then);
+				if let Some(els) = els {
+					if let [stmt@Stmt::If(..)] = els.as_slice() {
+						tup.field(stmt);
+					} else {
+						tup.field(els);
+					}
+				}
+				tup.finish()
+			},
+			Self::While(arg0, arg1, arg2) => f.debug_tuple("While").field(arg0).field(arg1).field(arg2).finish(),
+			Self::Break => write!(f, "Break"),
+			Self::Continue => write!(f, "Continue"),
+			Self::Switch(arg0, arg1, arg2) => f.debug_tuple("Switch").field(arg0).field(arg1).field(arg2).finish(),
+		}
+	}
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum Case {
+pub enum Case {
 	Default,
 	Case(i32),
 	// There's a freaky switch in c0400:ronald_setting that has a switch with bodies but no cases.
