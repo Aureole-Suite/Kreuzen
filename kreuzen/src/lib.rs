@@ -230,18 +230,19 @@ pub enum EntryError {
 	Function { source: func::FunctionError },
 	#[snafu(display("could not read effect"))]
 	Effect { source: table::TableError<table::EffectError> },
-	#[snafu(display("could not read fc"))]
+	#[snafu(display("could not read FcAuto"))]
 	Fc { source: gospel::read::Error },
-	#[snafu(display("could not read book data"))]
+	#[snafu(display("could not read BookData"))]
 	BookData { source: table::BookError },
-	#[snafu(display("could not read book metadata"))]
+	#[snafu(display("could not read book BookData99"))]
 	BookData99 { source: table::BookError },
-	#[snafu(display("could not read btlset"))]
+	#[snafu(display("could not read BTLSET"))]
 	Btlset { source: table::BtlsetError },
-	#[snafu(display("could not read addcollision"))]
-	AddCollision { source: gospel::read::Error },
-	#[snafu(display("could not read stylename"))]
+	#[snafu(display("could not read StyleName"))]
 	StyleName { source: table::StyleNameError },
+
+	#[snafu(display("could not read AddCollision"))]
+	AddCollision { source: gospel::read::Error },
 }
 
 
