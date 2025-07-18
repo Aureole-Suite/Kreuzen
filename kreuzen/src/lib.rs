@@ -233,28 +233,28 @@ pub enum EntryError {
 	#[snafu(display("could not read function"))]
 	Function { source: func::FunctionError },
 	#[snafu(display("could not read effect"))]
-	Effect { source: table::EffectError },
+	Effect { source: table::effect::ReadError },
 	#[snafu(display("could not read FcAuto"))]
-	Fc { source: gospel::read::Error },
+	FcAuto { source: table::fc_auto::ReadError },
 	#[snafu(display("could not read BookData"))]
-	BookData { source: table::BookError },
+	BookData { source: table::book::ReadError },
 	#[snafu(display("could not read book BookData99"))]
-	BookData99 { source: table::BookError },
+	BookData99 { source: table::book99::ReadError },
 	#[snafu(display("could not read BTLSET"))]
-	Btlset { source: table::BtlsetError },
+	Btlset { source: table::btlset::ReadError },
 	#[snafu(display("could not read StyleName"))]
-	StyleName { source: table::StyleNameError },
+	StyleName { source: table::style_name::ReadError },
 
 	#[snafu(display("could not read ActionTable"))]
-	ActionTable { source: gospel::read::Error },
+	ActionTable { source: table::action_table::ReadError },
 	#[snafu(display("could not read AddCollision"))]
-	AddCollision { source: gospel::read::Error },
+	AddCollision { source: table::add_collision::ReadError },
 	#[snafu(display("could not read AlgoTable"))]
-	AlgoTable { source: gospel::read::Error },
+	AlgoTable { source: table::algo_table::ReadError },
 	#[snafu(display("could not read AnimeClipTable"))]
-	AnimeClipTable { source: table::AnimeClipError },
+	AnimeClipTable { source: table::anime_clip_table::ReadError },
 	#[snafu(display("could not read BreakTable"))]
-	BreakTable { source: gospel::read::Error },
+	BreakTable { source: table::break_table::ReadError },
 }
 
 
@@ -289,19 +289,19 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 
 	let item = match Type::from_name(f.func) {
 		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu)?),
-		Type::Effect => Item::Effect(table::read_effect(f).context(EffectSnafu)?),
-		Type::FcAuto => Item::Fc(table::read_fc(f).context(FcSnafu)?),
-		Type::BookData => Item::BookPage(table::read_book(f).context(BookDataSnafu)?),
-		Type::BookData99 => Item::BookMetadata(table::read_book99(f).context(BookData99Snafu)?),
-		Type::Btlset => Item::Btlset(table::read_btlset(f).context(BtlsetSnafu)?),
-		Type::StyleName => Item::StyleName(table::read_style_name(f).context(StyleNameSnafu)?),
+		Type::Effect => Item::Effect(table::effect::read(f).context(EffectSnafu)?),
+		Type::FcAuto => Item::Fc(table::fc_auto::read(f).context(FcAutoSnafu)?),
+		Type::BookData => Item::BookPage(table::book::read(f).context(BookDataSnafu)?),
+		Type::BookData99 => Item::BookMetadata(table::book99::read(f).context(BookData99Snafu)?),
+		Type::Btlset => Item::Btlset(table::btlset::read(f).context(BtlsetSnafu)?),
+		Type::StyleName => Item::StyleName(table::style_name::read(f).context(StyleNameSnafu)?),
 
 		Type::Empty => return Ok(Item::Unknown),
-		Type::ActionTable => Item::ActionTable(table::read_action_table(f).context(ActionTableSnafu)?),
-		Type::AddCollision => Item::AddCollision(table::read_add_collision(f).context(AddCollisionSnafu)?),
-		Type::AlgoTable => Item::AlgoTable(table::read_algo_table(f).context(AlgoTableSnafu)?),
-		Type::AnimeClipTable => Item::AnimeClipTable(table::read_anime_clip_table(f).context(AnimeClipTableSnafu)?),
-		Type::BreakTable => Item::BreakTable(table::read_break_table(f).context(BreakTableSnafu)?),
+		Type::ActionTable => Item::ActionTable(table::action_table::read(f).context(ActionTableSnafu)?),
+		Type::AddCollision => Item::AddCollision(table::add_collision::read(f).context(AddCollisionSnafu)?),
+		Type::AlgoTable => Item::AlgoTable(table::algo_table::read(f).context(AlgoTableSnafu)?),
+		Type::AnimeClipTable => Item::AnimeClipTable(table::anime_clip_table::read(f).context(AnimeClipTableSnafu)?),
+		Type::BreakTable => Item::BreakTable(table::break_table::read(f).context(BreakTableSnafu)?),
 		Type::FieldFollowData => return Ok(Item::Unknown),
 		Type::FieldMonsterData => return Ok(Item::Unknown),
 		Type::PartTable => return Ok(Item::Unknown),
