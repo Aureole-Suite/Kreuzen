@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use snafu::ResultExt;
 
@@ -10,13 +10,6 @@ fn main() {
 		if let Err(err) = process_file(path) {
 			println!("Error processing file '{}'\n{}", path.display(), snafu::Report::from_error(err));
 		}
-	}
-
-	println!();
-	let mut counts = kreuzen::func::COUNTS.lock().unwrap().iter().map(|(i, v)| (i.clone(), *v)).collect::<Vec<_>>();
-	counts.sort_by_key(|(_, count)| *count);
-	for (k, v) in counts {
-		println!("{k}: {v}");
 	}
 }
 

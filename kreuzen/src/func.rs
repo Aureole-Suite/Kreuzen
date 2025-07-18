@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ops::Deref, sync::{LazyLock, Mutex}};
+use std::sync::LazyLock;
 use gospel::read::Le as _;
 use arrayvec::ArrayVec;
 use snafu::ResultExt as _;
@@ -28,41 +28,12 @@ use spec::Spec;
 
 pub static SPEC: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("../../ed85.txt")));
 
-pub static COUNTS: LazyLock<Mutex<BTreeMap<String, usize>>> = LazyLock::new(Default::default);
-
 pub fn read_func(f: &mut VReader) -> Result<(), FunctionError> {
-	let start = f.pos();
 	let mut ops = Vec::new();
 	while !at_end(f) {
 		let pos = f.pos();
-		match read_op(f).context(OpSnafu { pos }) {
-			Ok(op) => {
-				tracing::trace!("{pos:X} {op:?}");
-				ops.push((pos, op));
-			}
-			Err(e) => {
-				for (pos, op) in &ops[ops.len().saturating_sub(10)..] {
-					tracing::error!("{pos:X} {op:?}");
-				}
-				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
-					tracing::error!("{e}");
-					if let Some(OpError::UnknownOp { op }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
-						let k = format!("op {}", hex::encode_upper(&op.code));
-						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
-					}
-					if let Some(expr::ExprError::UnknownExpr { code, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
-						let k = format!("expr {code:02X}");
-						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
-					}
-					if let Some(dial::DialogueError::BadControl { byte, .. }) = e.downcast_ref().or_else(|| e.downcast_ref().map(Box::deref)) {
-						let k = format!("dial {byte:02X}");
-						*COUNTS.lock().unwrap().entry(k).or_default() += 1;
-					}
-				}
-				print!("{:#X}", f.dump().start(start));
-				break;
-			}
-		}
+		let op = read_op(f).context(OpSnafu { pos })?;
+		ops.push((pos, op))
 	}
 	Ok(())
 }
