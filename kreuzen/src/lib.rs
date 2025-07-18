@@ -183,6 +183,7 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	assert_eq!(f.pos(), asm_end);
 	f.align_zeroed(4)?;
 
+	let mut items = Vec::new();
 	let ends = table.iter().map(|e| e.start).skip(1).chain([f.len()]);
 	for (entry, end) in table.iter().zip(ends) {
 		let _span = tracing::error_span!("chunk", name = entry.name.as_str()).entered();
@@ -192,37 +193,40 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 			name: &name,
 			func: &entry.name,
 		};
-		if let Err(e) = read_entry(&mut vr) {
-			tracing::error!("{e}\n{:#X}", vr.dump().start(entry.start));
+		match read_entry(&mut vr) {
+			Ok(v) => items.push((entry.name.clone(), v)),
+			Err(e) => {
+				tracing::error!("{e}\n{:#X}", vr.dump().start(entry.start));
+			}
 		}
 	}
+	tracing::trace!("{:#?}", items);
 
 	Ok(())
 }
 
-fn read_entry(f: &mut VReader) -> Result<(), ReadError> {
-	match Type::from_name(f.func) {
-		Type::Normal => {
-			func::read_func(f).context(FunctionSnafu { name: f.func })?;
-		}
-		Type::Table => {}
-		Type::StyleName => {}
-		Type::AddCollision => {}
-		Type::Btlset => {}
-		Type::BookData => {
-			// println!("{}:{}", name, entry.name);
-			table::read_book(f).context(BookDataSnafu { name: f.func })?;
-		}
-		Type::BookData99 => {
-			table::read_book99(f).context(BookData99Snafu { name: f.func })?;
-		}
-		Type::FcAuto => {
-			table::read_fc(f).context(FcSnafu { name: f.func })?;
-		}
-		Type::Effect => {
-			table::read_effect(f).context(EffectSnafu { name: f.func })?;
-		}
-		Type::Empty => { }
-	}
-	Ok(())
+#[derive(Debug, Clone)]
+pub enum Item {
+	Func(()),
+	BookPage(table::Book),
+	BookMetadata(u16),
+	Fc(String),
+	Effect(Vec<table::Effect>),
+	Unknown
+}
+
+fn read_entry(f: &mut VReader) -> Result<Item, ReadError> {
+	let item = match Type::from_name(f.func) {
+		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu { name: f.func })?),
+		Type::Table => Item::Unknown,
+		Type::StyleName => Item::Unknown,
+		Type::AddCollision => Item::Unknown,
+		Type::Btlset => Item::Unknown,
+		Type::BookData => Item::BookPage(table::read_book(f).context(BookDataSnafu { name: f.func })?),
+		Type::BookData99 => Item::BookMetadata(table::read_book99(f).context(BookData99Snafu { name: f.func })?),
+		Type::FcAuto => Item::Fc(table::read_fc(f).context(FcSnafu { name: f.func })?),
+		Type::Effect => Item::Effect(table::read_effect(f).context(EffectSnafu { name: f.func })?),
+		Type::Empty => Item::Unknown,
+	};
+	Ok(item)
 }

@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use snafu::ResultExt;
 
 fn main() {
+	unsafe { compact_debug::enable(true) };
 	tracing_subscriber::fmt::init();
 	for arg in glob::glob("scripts/**/*.dat").unwrap() {
 		let path = arg.as_ref().unwrap();
