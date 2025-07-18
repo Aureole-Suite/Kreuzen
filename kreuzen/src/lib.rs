@@ -1,32 +1,38 @@
-#![feature(if_let_guard)]
+#![feature(if_let_guard, split_as_slice)]
 use gospel::read::{Reader, Le as _};
 use snafu::ResultExt as _;
 
 pub mod func;
+pub mod table;
 
 #[extend::ext]
 impl<'a> Reader<'a> {
 	fn str(&mut self) -> Result<String, gospel::read::Error> {
 		let pos = self.pos();
 		let cstr = self.cstr()?;
-		cstr.to_str().map_err(|e| gospel::read::Error::Other {
+		let s = cstr.to_str().map_err(|e| gospel::read::Error::Other {
 			pos,
 			source: Box::new(e),
-		}).map(String::from)
+		})?;
+		Ok(String::from(s))
 	}
 
-	fn ccstr(&mut self) -> Result<&'a [u8], gospel::read::Error> {
-		let pos = self.remaining().windows(2).position(|w| w == [0, 0]);
-		if let Some(pos) = pos {
-			let s = self.slice(pos)?;
-			self.check_u16(0).expect("already checked");
-			Ok(s)
-		} else {
-			Err(gospel::read::Error::Other {
-				pos: self.pos(),
-				source: "not found".into(),
-			})
+	fn sstr(&mut self, s: usize) -> Result<String, gospel::read::Error> {
+		let pos = self.pos();
+		let str = self.slice(s)?;
+		let mut iter = str.split(|b| *b == 0);
+		let cstr = iter.next().unwrap();
+		let s = std::str::from_utf8(cstr).map_err(|e| gospel::read::Error::Other {
+			pos,
+			source: Box::new(e),
+		})?;
+		if !iter.as_slice().iter().all(|&b| b == 0) {
+			return Err(gospel::read::Error::Other {
+				pos,
+				source: format!("nonzero padding on sized string: {:?}", String::from_utf8_lossy(str)).into(),
+			});
 		}
+		Ok(String::from(s))
 	}
 }
 
@@ -42,6 +48,11 @@ pub enum ReadError {
 	Function {
 		name: String,
 		source: func::FunctionError,
+	},
+	#[snafu(display("could not read effect '{name}'"))]
+	Effect {
+		name: String,
+		source: table::TableError<table::EffectError>,
 	},
 }
 
@@ -65,14 +76,18 @@ enum Type {
 	Btlset,
 	BookData,
 	FcAuto,
-	Underscore,
+	Effect,
 	Empty,
 }
 
 impl Type {
 	fn from_name(name: &str) -> Self {
-		if name.starts_with("_") && !name.starts_with("_a0_") && !name.starts_with("_Lambda") {
-			Type::Underscore
+		if name.starts_with("_")
+		&& !name.starts_with("_a0_")
+		&& !name.starts_with("_a1_")
+		&& !name.starts_with("_a2_")
+		&& !name.starts_with("_Lambda") {
+			Type::Effect
 		} else if name.is_empty() {
 			Type::Empty
 		} else if name.starts_with("BTLSET") {
@@ -170,9 +185,18 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 		};
 		match Type::from_name(&entry.name) {
 			Type::Normal => {
-				func::read_func(vr, end, &entry.name).context(FunctionSnafu { name: &entry.name })?;
+				// func::read_func(vr, end, &entry.name).context(FunctionSnafu { name: &entry.name })?;
 			}
-			_ => {}
+			Type::Table => {}
+			Type::StyleName => {}
+			Type::AddCollision => {}
+			Type::Btlset => {}
+			Type::BookData => {}
+			Type::FcAuto => {}
+			Type::Effect => {
+				table::read_effect(vr, end, &entry.name).context(EffectSnafu { name: &entry.name })?;
+			}
+			Type::Empty => { }
 		}
 	}
 
