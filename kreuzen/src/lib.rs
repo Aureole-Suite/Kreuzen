@@ -54,6 +54,8 @@ pub enum ReadError {
 	BookData { name: String, source: table::BookError },
 	#[snafu(display("could not read book metadata '{name}'"))]
 	BookData99 { name: String, source: table::BookError },
+	#[snafu(display("could not read btlset '{name}'"))]
+	Btlset { name: String, source: table::BtlsetError },
 }
 
 #[derive(Clone)]
@@ -197,6 +199,10 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 			Ok(v) => items.push((entry.name.clone(), v)),
 			Err(e) => {
 				tracing::error!("{e}\n{:#X}", vr.dump().start(entry.start));
+				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
+					tracing::error!("{e}");
+				}
+				
 			}
 		}
 	}
@@ -212,6 +218,7 @@ pub enum Item {
 	BookMetadata(u16),
 	Fc(String),
 	Effect(Vec<table::Effect>),
+	Btlset(table::Btlset),
 	Unknown
 }
 
@@ -221,7 +228,7 @@ fn read_entry(f: &mut VReader) -> Result<Item, ReadError> {
 		Type::Table => Item::Unknown,
 		Type::StyleName => Item::Unknown,
 		Type::AddCollision => Item::Unknown,
-		Type::Btlset => Item::Unknown,
+		Type::Btlset => Item::Btlset(table::read_btlset(f).context(BtlsetSnafu { name: f.func })?),
 		Type::BookData => Item::BookPage(table::read_book(f).context(BookDataSnafu { name: f.func })?),
 		Type::BookData99 => Item::BookMetadata(table::read_book99(f).context(BookData99Snafu { name: f.func })?),
 		Type::FcAuto => Item::Fc(table::read_fc(f).context(FcSnafu { name: f.func })?),
