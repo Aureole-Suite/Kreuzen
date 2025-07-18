@@ -1,6 +1,6 @@
 #![feature(if_let_guard, split_as_slice)]
 use gospel::read::{Reader, Le as _};
-use snafu::{ensure, ResultExt as _};
+use snafu::ensure;
 
 pub mod func;
 pub mod table;
@@ -230,30 +230,30 @@ pub enum EntryError {
 	#[snafu(display("{n} bytes of trailing data"))]
 	TrailingData { n: usize },
 
-	#[snafu(display("could not read function"))]
+	#[snafu(display("could not read function"), context(false))]
 	Function { source: func::FunctionError },
-	#[snafu(display("could not read effect"))]
+	#[snafu(display("could not read effect"), context(false))]
 	Effect { source: table::effect::ReadError },
-	#[snafu(display("could not read FcAuto"))]
+	#[snafu(display("could not read FcAuto"), context(false))]
 	FcAuto { source: table::fc_auto::ReadError },
-	#[snafu(display("could not read BookData"))]
+	#[snafu(display("could not read BookData"), context(false))]
 	BookData { source: table::book::ReadError },
-	#[snafu(display("could not read book BookData99"))]
+	#[snafu(display("could not read book BookData99"), context(false))]
 	BookData99 { source: table::book99::ReadError },
-	#[snafu(display("could not read BTLSET"))]
+	#[snafu(display("could not read BTLSET"), context(false))]
 	Btlset { source: table::btlset::ReadError },
-	#[snafu(display("could not read StyleName"))]
+	#[snafu(display("could not read StyleName"), context(false))]
 	StyleName { source: table::style_name::ReadError },
 
-	#[snafu(display("could not read ActionTable"))]
+	#[snafu(display("could not read ActionTable"), context(false))]
 	ActionTable { source: table::action_table::ReadError },
-	#[snafu(display("could not read AddCollision"))]
+	#[snafu(display("could not read AddCollision"), context(false))]
 	AddCollision { source: table::add_collision::ReadError },
-	#[snafu(display("could not read AlgoTable"))]
+	#[snafu(display("could not read AlgoTable"), context(false))]
 	AlgoTable { source: table::algo_table::ReadError },
-	#[snafu(display("could not read AnimeClipTable"))]
+	#[snafu(display("could not read AnimeClipTable"), context(false))]
 	AnimeClipTable { source: table::anime_clip_table::ReadError },
-	#[snafu(display("could not read BreakTable"))]
+	#[snafu(display("could not read BreakTable"), context(false))]
 	BreakTable { source: table::break_table::ReadError },
 }
 
@@ -288,20 +288,20 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 	f.reader = Reader::new(data).at(f.reader.pos()).unwrap();
 
 	let item = match Type::from_name(f.func) {
-		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu)?),
-		Type::Effect => Item::Effect(table::effect::read(f).context(EffectSnafu)?),
-		Type::FcAuto => Item::Fc(table::fc_auto::read(f).context(FcAutoSnafu)?),
-		Type::BookData => Item::BookPage(table::book::read(f).context(BookDataSnafu)?),
-		Type::BookData99 => Item::BookMetadata(table::book99::read(f).context(BookData99Snafu)?),
-		Type::Btlset => Item::Btlset(table::btlset::read(f).context(BtlsetSnafu)?),
-		Type::StyleName => Item::StyleName(table::style_name::read(f).context(StyleNameSnafu)?),
+		Type::Normal => Item::Func(func::read_func(f)?),
+		Type::Effect => Item::Effect(table::effect::read(f)?),
+		Type::FcAuto => Item::Fc(table::fc_auto::read(f)?),
+		Type::BookData => Item::BookPage(table::book::read(f)?),
+		Type::BookData99 => Item::BookMetadata(table::book99::read(f)?),
+		Type::Btlset => Item::Btlset(table::btlset::read(f)?),
+		Type::StyleName => Item::StyleName(table::style_name::read(f)?),
 
 		Type::Empty => return Ok(Item::Unknown),
-		Type::ActionTable => Item::ActionTable(table::action_table::read(f).context(ActionTableSnafu)?),
-		Type::AddCollision => Item::AddCollision(table::add_collision::read(f).context(AddCollisionSnafu)?),
-		Type::AlgoTable => Item::AlgoTable(table::algo_table::read(f).context(AlgoTableSnafu)?),
-		Type::AnimeClipTable => Item::AnimeClipTable(table::anime_clip_table::read(f).context(AnimeClipTableSnafu)?),
-		Type::BreakTable => Item::BreakTable(table::break_table::read(f).context(BreakTableSnafu)?),
+		Type::ActionTable => Item::ActionTable(table::action_table::read(f)?),
+		Type::AddCollision => Item::AddCollision(table::add_collision::read(f)?),
+		Type::AlgoTable => Item::AlgoTable(table::algo_table::read(f)?),
+		Type::AnimeClipTable => Item::AnimeClipTable(table::anime_clip_table::read(f)?),
+		Type::BreakTable => Item::BreakTable(table::break_table::read(f)?),
 		Type::FieldFollowData => return Ok(Item::Unknown),
 		Type::FieldMonsterData => return Ok(Item::Unknown),
 		Type::PartTable => return Ok(Item::Unknown),
