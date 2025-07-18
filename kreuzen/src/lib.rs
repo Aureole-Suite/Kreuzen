@@ -259,6 +259,8 @@ pub enum EntryError {
 	FieldFollowData { source: table::field_follow_data::ReadError },
 	#[snafu(display("could not read FieldMonsterData"), context(false))]
 	FieldMonsterData { source: table::field_monster_data::ReadError },
+	#[snafu(display("could not read PartTable"), context(false))]
+	PartTable { source: table::part_table::ReadError },
 }
 
 
@@ -279,6 +281,7 @@ pub enum Item {
 	BreakTable(Vec<(u16, u16)>),
 	FieldFollowData(table::FieldFollowData),
 	FieldMonsterData(table::FieldMonsterData),
+	PartTable(Vec<table::Part>),
 
 	Unknown,
 }
@@ -310,7 +313,7 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 		Type::BreakTable => Item::BreakTable(table::break_table::read(f)?),
 		Type::FieldFollowData => Item::FieldFollowData(table::field_follow_data::read(f)?),
 		Type::FieldMonsterData => Item::FieldMonsterData(table::field_monster_data::read(f)?),
-		Type::PartTable => return Ok(Item::Unknown),
+		Type::PartTable => Item::PartTable(table::part_table::read(f)?),
 		Type::ReactionTable => return Ok(Item::Unknown),
 		Type::SummonTable => return Ok(Item::Unknown),
 		Type::WeaponAttTable => return Ok(Item::Unknown),
