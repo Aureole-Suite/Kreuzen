@@ -111,7 +111,7 @@ pub enum BookError {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Book {
-	TitlePage(String, [u16; 8], String),
+	TitlePage(String, [u16; 10], String),
 	Page(String),
 }
 
@@ -124,7 +124,7 @@ pub fn read_book(f: &mut VReader) -> Result<Book, BookError> {
 		1 => {
 			f.check_u16(0)?;
 			let title = f.sstr(16)?;
-			let data = [f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?];
+			let data = [f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?];
 			let text = f.str()?;
 			Book::TitlePage(title, data, text)
 		}
