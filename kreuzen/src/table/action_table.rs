@@ -1,3 +1,5 @@
+use arrayvec::ArrayVec;
+
 use super::*;
 
 #[derive(Debug, snafu::Snafu)]

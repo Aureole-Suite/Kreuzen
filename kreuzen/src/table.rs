@@ -1,4 +1,3 @@
-use arrayvec::ArrayVec;
 use gospel::read::Le as _;
 use snafu::ensure;
 
