@@ -264,3 +264,23 @@ pub fn read_add_collision(f: &mut VReader) -> Result<Vec<Collision>, gospel::rea
 	f.check_u8(0x01)?;
 	Ok(out)
 }
+
+#[derive(Debug, snafu::Snafu)]
+pub enum StyleNameError {
+	#[snafu(display("invalid read (at {location})"), context(false))]
+	Read {
+		source: gospel::read::Error,
+		#[snafu(implicit)]
+		location: snafu::Location,
+	},
+	#[snafu(display("style name mismatch: {a:?} != {b:?}"))]
+	StyleMismatch { a: String, b: String },
+}
+
+pub fn read_style_name(f: &mut VReader) -> Result<String, StyleNameError> {
+	let a = f.sstr(64)?;
+	let b = f.sstr(64)?;
+	ensure!(a == b, StyleMismatchSnafu { a, b });
+	f.check_u8(0x01)?;
+	Ok(a)
+}

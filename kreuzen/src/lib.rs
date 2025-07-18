@@ -220,6 +220,8 @@ pub enum EntryError {
 	Btlset { source: table::BtlsetError },
 	#[snafu(display("could not read addcollision"))]
 	AddCollision { source: gospel::read::Error },
+	#[snafu(display("could not read stylename"))]
+	StyleName { source: table::StyleNameError },
 }
 
 
@@ -232,14 +234,15 @@ pub enum Item {
 	BookMetadata(u16),
 	Btlset(table::Btlset),
 	AddCollision(Vec<table::Collision>),
-	Unknown
+	StyleName(String),
+	Unknown,
 }
 
 fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 	let item = match Type::from_name(f.func) {
 		Type::Normal => Item::Func(func::read_func(f).context(FunctionSnafu)?),
 		Type::Table => Item::Unknown,
-		Type::StyleName => Item::Unknown,
+		Type::StyleName => Item::StyleName(table::read_style_name(f).context(StyleNameSnafu)?),
 		Type::AddCollision => Item::AddCollision(table::read_add_collision(f).context(AddCollisionSnafu)?),
 		Type::Btlset => Item::Btlset(table::read_btlset(f).context(BtlsetSnafu)?),
 		Type::BookData => Item::BookPage(table::read_book(f).context(BookDataSnafu)?),
