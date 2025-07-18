@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::{collections::BTreeSet, sync::LazyLock};
 use gospel::read::Le as _;
 use arrayvec::ArrayVec;
 use snafu::ResultExt as _;
@@ -13,38 +13,99 @@ pub enum FunctionError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("failed to read op at {pos:X}"))]
+	#[snafu(display("failed to read op at {pos}"))]
 	Op {
-		pos: usize,
+		pos: Label,
 		source: OpError,
-	}
+	},
+	#[snafu(display("missing labels: {labels:?}"))]
+	MissingLabels { labels: BTreeSet<Label> },
+	#[snafu(display("failed to decompile function"), context(false))]
+	Decompile { source: decompile::DecompileError },
 }
 
 pub mod expr;
 pub mod dial;
+pub mod decompile;
+
+pub use expr::Expr;
+pub use dial::Dialogue;
+pub use decompile::Stmt;
 
 mod spec;
 use spec::Spec;
 
 pub static SPEC: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("../../ed85.txt")));
 
-pub fn read_func(f: &mut VReader) -> Result<(), FunctionError> {
+pub fn read_func(f: &mut VReader) -> Result<Vec<Stmt>, FunctionError> {
 	let mut ops = Vec::new();
 	while !at_end(f) {
-		let pos = f.pos();
+		let pos = Label(f.pos() as u32);
 		let op = read_op(f).context(OpSnafu { pos })?;
 		ops.push((pos, op))
 	}
-	Ok(())
+	
+	let mut labels = BTreeSet::new();
+	for (_, op) in &ops {
+		match op {
+			FlatOp::Op(_) => {}
+			FlatOp::Label(_) => unreachable!(),
+			FlatOp::Goto(_, l) | FlatOp::If(_, _, l) => {
+				labels.insert(*l);
+			}
+			FlatOp::Switch(_, _, ls, l) => {
+				for (_, l) in ls {
+					labels.insert(*l);
+				}
+				labels.insert(*l);
+			}
+		}
+	}
+	let mut ops2 = Vec::with_capacity(ops.len() + labels.len());
+	for (pos, op) in ops {
+		if labels.remove(&pos) {
+			ops2.push(FlatOp::Label(pos));
+		}
+		ops2.push(op);
+	}
+	let endl = Label(f.pos() as u32);
+	if labels.remove(&endl) {
+		ops2.push(FlatOp::Label(endl));
+	}
+	snafu::ensure!(labels.is_empty(), MissingLabelsSnafu { labels });
+	let decomp = decompile::decompile(&ops2)?;
+	Ok(decomp)
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Label(pub u32);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+impl std::fmt::Debug for Label {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "@{:X}", self.0)
+	}
+}
+
+impl std::fmt::Display for Label {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "@{:X}", self.0)
+	}
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct OpMeta {
 	pub line: u16,
 	pub width: u8,
+}
+
+impl std::fmt::Debug for OpMeta {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.line)?;
+		if self.width != 0xFF {
+			write!(f, "~")?;
+		}
+		Ok(())
+    }
 }
 
 impl Default for OpMeta {
@@ -56,6 +117,7 @@ impl Default for OpMeta {
 #[derive(Debug, Clone, PartialEq)]
 pub enum FlatOp {
 	Op(Op),
+	Label(Label),
 	Goto(OpMeta, Label),
 	If(OpMeta, expr::Expr, Label),
 	Switch(OpMeta, expr::Expr, Vec<(i32, Label)>, Label),
@@ -65,6 +127,7 @@ impl FlatOp {
 	pub fn meta(&self) -> OpMeta {
 		match self {
 			FlatOp::Op(op) => op.meta,
+			FlatOp::Label(_) => OpMeta::default(),
 			FlatOp::Goto(meta, _) => *meta,
 			FlatOp::If(meta, _, _) => *meta,
 			FlatOp::Switch(meta, _, _, _) => *meta,

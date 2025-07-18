@@ -271,7 +271,7 @@ pub enum EntryError {
 
 #[derive(Debug, Clone)]
 pub enum Item {
-	Func(()),
+	Func(Vec<func::Stmt>),
 	Effect(Vec<table::Effect>),
 	Fc(String),
 	BookPage(table::Book),
