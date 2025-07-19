@@ -171,6 +171,7 @@ pub enum Arg {
 	I16(i16),
 	I32(i32),
 	F32(f32),
+	Char(crate::Char),
 	Expr(expr::Expr),
 	CallArg(CallArg),
 	Dialogue(dial::Dialogue),
@@ -231,6 +232,7 @@ impl std::fmt::Debug for Arg {
 			Arg::I16(v) => write!(f, "{v}"),
 			Arg::I32(v) => write!(f, "{v}"),
 			Arg::F32(v) => write!(f, "{v:?}"),
+			Arg::Char(c) => write!(f, "{c:?}"),
 			Arg::Expr(e) => write!(f, "{e:?}"),
 			Arg::CallArg(ca) => write!(f, "{ca:?}"),
 			Arg::Dialogue(d) => write!(f, "{d:?}"),
@@ -365,6 +367,7 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 		I32 => op.push(f.i32()?),
 		F32 => op.push(f.f32()?),
 		Str => op.push(f.str()?),
+		Char => op.push(crate::Char(f.u16()?)),
 		Expr => op.push(expr::Expr::read(f)?),
 		Text => op.push(dial::Dialogue::read(f)?),
 		Dyn => op.push(call_arg(f)?),
@@ -376,8 +379,8 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 		}
 
 		_3E => {
-			let Some(&Arg::U16(a)) = op.args.get(1) else {
-				panic!("3E must have a U16 arg");
+			let Some(&Arg::Char(crate::Char(a))) = op.args.get(1) else {
+				panic!("3E must have a char arg");
 			};
 			if a == 0xFE12 {
 				read_parts(op, f, &[U8])?;
@@ -385,7 +388,7 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 				read_parts(op, f, &[F32])?;
 			}
 
-			if op.args[1..] == [Arg::U16(65535), Arg::F32(5.0), Arg::U8(0)] {
+			if op.args[1..] == [Arg::Char(crate::Char(65535)), Arg::F32(5.0), Arg::U8(0)] {
 				f.check(&[0, 0, 0])?;
 			}
 		}
@@ -397,8 +400,8 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 		}
 
 		_40 => {
-			let Some(&Arg::U16(a)) = op.args.get(1) else {
-				panic!("40 must have a U16 arg");
+			let Some(&Arg::Char(crate::Char(a))) = op.args.get(1) else {
+				panic!("40 must have a char arg");
 			};
 			if a == 0xFE15 {
 				read_parts(op, f, &[Dyn, Dyn, Dyn, Dyn])?;
@@ -449,7 +452,7 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 				1001 => read_parts(op, f, &[F32, U8])?,
 				2000 => read_parts(op, f, &[U8, F32, U8])?,
 				3000 => read_parts(op, f, &[F32, F32, U16, F32])?,
-				4000 => read_parts(op, f, &[U16, F32, U16, U8])?,
+				4000 => read_parts(op, f, &[Char, F32, U16, U8])?,
 				4001 => read_parts(op, f, &[Str, F32, U16, U8])?,
 				4002 => read_parts(op, f, &[U16])?,
 				5000 => read_parts(op, f, &[F32])?,

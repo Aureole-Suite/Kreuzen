@@ -21,9 +21,9 @@
 18   u8 expr
 19   u8 u16
 1A   u8 u8
-1D   'CharCreate' u16 str str str u8 u32 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
-1E   u16 u8 str u8 ndyn
-1F   u16 u8
+1D   'CharCreate' char str str str u8 u32 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
+1E   'Fork' char u8 str u8 ndyn
+1F   'ForkWait' char u8 # Or ForkKill? Unclear
 20   u8 dyn dyn dyn dyn u8 # These dyns are usually FF, but with a float
 21   u8 u8
 22   u16 text
@@ -66,93 +66,93 @@
 2914 u8 f32 f32 f32
 2915 u8 f32 f32 f32
 2916 u8 f32 f32 f32 f32 u8
-2A00 u16 str str u8
-2A01 u16 str str u8
-2A02 u16 str str u8
-2A03 u16 str str u8
-2A04 u16 str str str
-2A05 u16 str str
+2A00 char str str u8
+2A01 char str str u8
+2A02 char str str u8
+2A03 char str str u8
+2A04 char str str str
+2A05 char str str
 2B00 u32 u8 u8 i32 u8 i32 u8 i32 u8 i32 u8
 2B01 u32 u8 u8 u16 u16 u16 u16
-2C   u16 str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
-2D   u16 u32 u8
-2E00 u16 u8
-2E01 u16 u8 f32 f32 u8
-2E02 u16 u8 u8
-2E03 u16 u8 u8
-2E04 u16 u8 u32
-2E05 u16 u8 u32
-2F00 u16 str str
-2F01 u16 str str
-2F02 u16 str str
-2F04 u16 str str
-2F05 u16 str str
-2F06 u16 u32
-2F07 u16 u32
-2F08 u16 u8 str str str str str str str str str str str str str str str str
-2F09 u16 u8
-2F0A u16 str str
-2F0B u16 str str
-2F0C u16 str str
-2F0D u16
-2F0E u16 u32 str str
-2F0F u16 u8
-2F10 u16 str
-30   u8 u16 str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+2C   char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
+2D   char u32 u8
+2E00 char u8
+2E01 char u8 f32 f32 u8
+2E02 char u8 u8
+2E03 char u8 u8
+2E04 char u8 u32
+2E05 char u8 u32
+2F00 char str str
+2F01 char str str
+2F02 char str str
+2F04 char str str
+2F05 char str str
+2F06 char u32
+2F07 char u32
+2F08 char u8 str str str str str str str str str str str str str str str str
+2F09 char u8
+2F0A char str str
+2F0B char str str
+2F0C char str str
+2F0D char
+2F0E char u32 str str
+2F0F char u8
+2F10 char str
+30   u8 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3100 str
 3101 str
 3102 str
 3103 str
-320A u16 u8 str u32
-320B u16 u8
-320C u16 dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8
-320D u16 u8 u8
-320E u16 u8 u8
-320F u16 u16 u8
-3210 u16 u16 u8
-3211 u16 u8
-3212 u16 u16
-3213 u16 u8 u16
-3214 u16 u8 f32 f32 f32 f32 u16 u8
-3215 u16 u8 f32 f32 f32 f32 u16 u8
+320A char u8 str u32
+320B char u8
+320C char dyn char u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8
+320D char u8 u8
+320E char u8 u8
+320F char u16 u8
+3210 char u16 u8
+3211 char u8
+3212 char u16
+3213 char u8 u16
+3214 char u8 f32 f32 f32 f32 u16 u8
+3215 char u8 f32 f32 f32 f32 u16 u8
 3216 str str
-3217 u16 u8 f32
+3217 char u8 f32
 3218 u16 u8 u16
 3219 u16 u8 f32 f32
 321A str
-321B u16
+321B char
 321C u32 str u32
 321D u32
-321E u16 u8 u32
+321E char u8 f32
 321F u16 u16
-3221 u16 u16 u8
+3221 char u16 u8
 3222 u16 u32 str
 3223
-3224 u16 dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
-3300 u16 u16 u8 u8
-3301 u16 dyn2 dyn2 u8
-3302 u8 u16
-3303 u16
+3224 char dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
+3300 char char u8 u8
+3301 char dyn2 dyn2 u8
+3302 u8 char
+3303 char
 3304 u8
 3305 u8 str
 3306 u8
 3307 u8 str
 3308 u8
-3309 u16
-330A u16 u16
-330B u16 u32
+3309 char
+330A char char
+330B char u32
 330C u16 u32
-330D u16
-330E u16 u16 u32
-330F u16 u16
-3310 u16
+330D char
+330E 'CharSetTarget' char u16 char u16
+330F 'CharGetTarget' char u16
+3310 char
 3311 u16 u8
 331200 str u16 f32 f32
 331201
 331202
-3313 u16 u16 u16 u32 u32 u32
-3314 u16
-3315 u16 f32 f32 f32 f32 f32
+3313 char u16 char u32 u32 u32
+3314 char
+3315 char f32 f32 f32 f32 f32
 3316 u8
 3317 u16 u32
 3318
@@ -173,30 +173,30 @@
 332A u16
 332C
 332D
-332E u16
-332F u16
-3330 u16 u16
-3331 u16
+332E char
+332F char
+3330 char char
+3331 char
 3332
 3333 u16 str str
 3334 u8
 3335 u8 u16 f32 f32 f32 str
 3336 u16 f32 f32 f32 f32
-3337 u16 u16 f32 f32 f32 f32 u8 u8
+3337 char char f32 f32 f32 f32 u8 u8
 3338
 3339
-333A u16 f32
-333B u16 f32 f32 f32 f32
-333C u16 u16 f32 u16
-333D u16 u16 f32 f32 f32 f32 f32 u8
-333E u16 u16 f32 f32 f32 f32 u8 u8
-333F u16
+333A char f32
+333B char f32 f32 f32 f32
+333C char char f32 u16
+333D char char f32 f32 f32 f32 f32 u8
+333E char char f32 f32 f32 f32 u8 u8
+333F char
 3340 u16 u8
-3341 u16 u16 f32 f32
-3342 u16 u8 f32 f32 f32 u8 u8
+3341 char char f32 f32
+3342 char u8 f32 f32 f32 u8 u8
 3346 f32 f32 f32
 3347
-3348 u16 u16
+3348 char u16
 3349 u16
 334A f32
 334B u16 u8
@@ -208,10 +208,10 @@
 3356 u8
 335A u16 u32
 335B u8 u32
-335C u8
+335C 'BattleGetCount' u8 # 10 is number of players
 335E u16
-3361 u16 u8 u8 u32 u8
-3362 u16 u8
+3361 'CharSetStat' char u8 u8 u32 u8
+3362 'CharGetStat' char u8 # 0 is hp, 27 and 28 are charids for target
 3363 u16
 3364 str
 3365 u16
@@ -226,9 +226,9 @@
 3373 u16
 3374 u16
 3376
-3377 u16
+3377 char
 3378 u16 u16
-337B u16 u16
+337B char char
 337D u8
 337E f32 u16 u8
 337F
@@ -249,8 +249,8 @@
 3392 f32 f32
 3394 u16 u16 u16
 3397
-3398 u16
-339E u16 str
+3398 char
+339E char str
 33A6
 33A7 u8
 33A8 u32
@@ -258,8 +258,8 @@
 33AA
 33AB
 33AD
-33AE u16
-33AF u16
+33AE char
+33AF char
 33B0
 33B1
 33B2
@@ -267,7 +267,7 @@
 33B4 u16 dyn2 dyn2 dyn2 dyn2
 33B5 u8
 33B6 f32 f32
-33B7 u8 u16 u32 u32 u32 u8
+33B7 u8 char u32 u32 u32 u8
 33B8 u16 u8 u8
 33BA dyn2 str
 33BB dyn2 dyn2
@@ -275,13 +275,13 @@
 33BD
 33BE
 33BF u16
-33C0 u16 u8 u8
+33C0 char u8 u8
 33C1 u32
-33C2 u16 u16
+33C2 char char
 33C3
 33C4 str str
-33C5 u16 u32 u32 u32 u32 u32
-33C6 u16
+33C5 char u32 u32 u32 u32 u32
+33C6 char
 33C7 u32
 33C8 u32
 33C9 u16 dyn2 dyn2 dyn2
@@ -296,15 +296,20 @@
 33D401
 33D402 u8
 33D403 u8
-33D404 u16
-33D405 u16 u8
+33D404 'GetCastedValiantArtElement' char
+33D405 char u8
 33D5 u8 u16 u16
 34   u8 f32 f32 f32 f32 u16
-35   u8 u16 u32
+3500 'CharFlagSet' char u32 # might be reverse
+3501 'CharFlagUnset' char u32
+3502 'CharFlagGet' char u32
+350A 'CharFlag2Set' char u32
+350B 'CharFlag2Unset' char u32
+350C 'CharFlag2Get' char u32
 3600
 3601
 3602 u8 f32 f32 f32 u16
-3603 u8 u16 str f32 f32 f32 u16
+3603 u8 char str f32 f32 f32 u16
 3604 u8 f32 f32 f32 u16 u8
 3605 u8 f32 u16
 3606 u8 u16 u8
@@ -320,8 +325,8 @@
 3610
 3611 u8 f32 f32 f32 u16 u8
 3612 u16
-3613 u16 str u8 f32 f32 f32 u16 u8
-3614 u8 u16 str f32 f32 f32 u16
+3613 char str u8 f32 f32 f32 u16 u8
+3614 u8 char str f32 f32 f32 u16
 3615 u8 f32 u32 u8
 3616 u8 f32 u16
 3617 u16
@@ -342,9 +347,9 @@
 362D u16
 362E u8
 362F u8
-37   u16 f32 f32 f32 f32
-38   u16 u8 u8 str
-39   u16 u8 str f32 f32 u32
+37   char f32 f32 f32 f32
+38   char u8 u8 str
+39   char u8 str f32 f32 u32
 3A00 u16 f32 u16 f32 u8
 3A01 u16 u8
 3A02 u8
@@ -355,17 +360,17 @@
 3A07
 3A08 u16 u8
 3A09 u8
-3B00 dyn2 dyn2 dyn2 f32 dyn2 u16 u16 f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 u16 u16 u16 f32
+3B00 dyn2 dyn2 dyn2 f32 dyn2 u16 char f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 char u16 u16 f32
 3B01 dyn2 dyn2 u16
 3B03 dyn2 f32 u16
 3B04 dyn2 f32 u16 u8
 3B05 u32
-3B32 dyn2 dyn2 dyn2 f32 dyn2 u16 u16 f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 u16 u16 u16 f32
+3B32 dyn2 dyn2 dyn2 f32 dyn2 u16 char f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 char u16 u16 f32
 3B33 dyn2 dyn2 u16
 3B34 dyn2
 3B37 u32
-3B39 u16
-3B3A u16 dyn2 dyn2 dyn2 dyn2
+3B39 char
+3B3A char dyn2 dyn2 dyn2 dyn2
 3B3B u32
 3B3C u32
 3B3D
@@ -377,14 +382,14 @@
 3BFE u16
 3BFF f32 f32 f32
 3C01 u16 str str
-3C03 u16 str str str str str
+3C03 char str str str str str
 3C04 u16 str
 3C05 u16 str str str str str
-3D   u16 f32 f32 u8
-3E   u16 u16 f32 u8 _3E
-3F   u16 _3F
-40   u16 u16 _40
-41   u16
+3D   char f32 f32 u8
+3E   char char f32 u8 _3E
+3F   char _3F
+40   char char _40
+41   char
 4100
 4101
 4104 f32 f32 f32 f32 u8
@@ -412,15 +417,15 @@
 43FE u16
 43FF u16 u16
 44   u16 u8 f32 u16 f32
-45   u16 f32 f32 f32 u16 u16
-4600 u16 u16 u16
+45   char f32 f32 f32 u16 u16
+4600 char u16 u16
 4601 u16 u16 u16 f32 f32 f32
 4602 u16 u16 u16
-4603 u16 u16 u16 f32 u8
+4603 char u16 u16 f32 u8
 4604 u16 u16 u16
 4605 u16 u16 u16
-4606 u16 u16 u16
-4607 u16 u16 u16
+4606 char u16 u16
+4607 char u16 u16
 47   u8 str u16
 4800 u16 u16 u16
 4900 u16
@@ -435,7 +440,7 @@
 4909 u16
 490A u16
 490B u16
-490C u16 u16
+490C char u16
 490D u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 490E u8
 490F u8
@@ -453,9 +458,9 @@
 491E u16
 491F u32
 4A   u8 f32 f32 f32 f32 u32 u8
-4B   u16 f32 f32 f32 f32 u16 u8
-4C   u16 f32 f32 f32 u16 u8
-4D   u16 u8
+4B   char f32 f32 f32 f32 u16 u8
+4C   char f32 f32 f32 u16 u8
+4D   char u8
 4E   f32 f32 u8 _4E
 4F00 u16 u32 u16 u16 u32 u32
 4F01 u16
@@ -467,7 +472,7 @@
 52   u8 u16
 53   u8 u8
 540A u8
-540B u16
+540B char
 540D str str u16 u16
 540E u8
 540F
@@ -486,7 +491,7 @@
 5421 u16 f32
 5422 u16
 5423 u16 u16 u16 f32
-5424 u16
+5424 char
 5425
 5426 u8 u32 u32 str
 5427
@@ -508,7 +513,7 @@
 5437 u16 u8 u8 u8
 5438 u8 u32
 5439 u16
-543A u16 u16 f32 f32 f32 f32 u8
+543A char char f32 f32 f32 f32 u8
 543B u8 u16 u16 u16 u8 f32 f32
 543E u8 str u32
 543F
@@ -519,7 +524,7 @@
 5444 f32 f32 f32
 5445 f32
 5446 f32
-5447 u8 u16
+5447 u8 char
 5448 u16 f32
 5449 u16 u16
 544A u16 u16
@@ -574,9 +579,9 @@
 5B   u16 u8 expr
 5C   u16 u8 str
 5D   u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u8 u8
-5E00 u16 f32 u16 u16 u16 u32 u16 str f32 f32 f32
+5E00 u16 f32 u16 u16 u16 f32 char str f32 f32 f32
 5E01 u16
-60   u16 u8 str
+60   char u8 str
 6100 str u8 u16 f32 f32 f32 f32 f32 f32 f32 u16
 6101 u16
 6102
@@ -667,7 +672,7 @@
 6A06 dyn dyn dyn dyn dyn dyn f32
 6A07 dyn u8 u16
 6B   u8 u16 u16 u32 u32 u32
-6C   u16 f32 _6C
+6C   char f32 _6C
 6E   u16 f32 f32 f32 f32 u8
 6F00 u16 u32
 6F01 u16 u32
@@ -703,22 +708,22 @@
 6F1F u16 u32
 6F20 u16 u8
 6F21 u16 u32
-7000 u16 u16 u8 u8
-7001 u16 u8
-7002 u16 u16
-7003 u16 u16 u8 u8 u8
-7004 u16 u8 u8
-7005 u16 u16 u8 u8
-7006 u16 u8 u8 u8 u8
-7007 u16 u8
-7008 u16 u16 u16
-7009 u16 u8 u8
-700A u16 u32 u32
-700B u16 u8
-700C u16 u8 u8
-700D u16
-700E u16 u16 u16
-700F u16 u16 u16
+7000 char u16 u8 u8
+7001 char u8
+7002 char u16
+7003 char u16 u8 u8 u8
+7004 char u8 u8
+7005 char u16 u8 u8
+7006 char u8 u8 u8 u8
+7007 char u8
+7008 char u16 u16
+7009 char u8 u8
+700A char u32 u32
+700B char u8
+700C char u8 u8
+700D char
+700E char u16 u16
+700F char u16 u16
 71   u8 u16 u16
 72   u16 # fall through
 7201 u16 u8
@@ -760,14 +765,14 @@
 750E u8 u8
 750F u8 u8
 7510 u8 u32
-76   u16 str str u8 u8 f32 f32 f32 f32
-77   u16
+76   char str str u8 u8 f32 f32 f32 f32
+77   char
 7800 str
 7801 str u8
 79   u8 u16 _79
 7A00 str
-7A01 u16 str
-7A02 u16 str
+7A01 'CharIsModel' char str
+7A02 char str
 7A03 str
 7B01 str u8 u8 u8
 7B02
@@ -802,10 +807,10 @@
 8A0B u16
 8A0C u16 str str str u8
 8A0D str
-8A32 u16 str
-8A33 u16 str
-8AFE u16 str f32
-8AFF u16 str f32
+8A32 char str
+8A33 char str
+8AFE char str f32
+8AFF char str f32
 8B   f32 f32 f32 f32 f32 u8
 8C00 u16
 8C01
@@ -826,7 +831,7 @@
 8C12
 8C13
 8C14 u8
-8D   u16 f32 f32 f32 f32
+8D   char f32 f32 f32 f32
 8E   u16 u16 u16 u16 u16 u16 u16 u16
 8F
 90   str u32
@@ -908,19 +913,19 @@
 9E37 u8
 9E38 u16 u8 str
 9E39
-9E3A u16 u16 f32 f32 f32 f32 f32 f32 f32 f32
-9E3B u16 u8
+9E3A char u16 f32 f32 f32 f32 f32 f32 f32 f32
+9E3B char u8
 9E3C u32 u16
 9E3D u32 u16
 9E3E u16
 9E3F u16
 9E40
-9E41 u16 u16 u32 u16
-9E42 u16 u32
-9E43 u16 u32
-9E44 u16 u16
-9E45 u16 u16
-9E46 u16 u32 u16
+9E41 char u16 u32 u16
+9E42 char u32
+9E43 char u32
+9E44 char u16
+9E45 char u16
+9E46 char i32 u16
 9E47
 9E48 u8
 9E49 u8
@@ -945,7 +950,7 @@ A3   u16 u16
 A4   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 A500 u16 u16 f32 u8
 A6   u16 f32 f32 f32
-A8   u32
+A8   f32
 A9   u8
 AA   u8 u8
 AB00 u16 u8 _AB01
@@ -1140,15 +1145,15 @@ CE01 u8 u32 u8
 CE02 u8 str f32 f32 f32 f32 u8
 CE03 u8 u8
 CE04 u8 u16 u32 u32 u32 u32 u8
-CE05 u8 u16 str u8
+CE05 u8 char str u8
 CE06 u8 u8
 CE07 u8 u8
 CE08 u8 u8
 CE09 u8 u32 u32 u8 u8
 CE0A u8 str u8
 CE0B u8 u32 u8
-CE14 u8 u16 str u8
-CE15 u8 u16 u32 u8
+CE14 u8 char str u8
+CE15 u8 char u32 u8
 CE1E u8 str str u8
 CE1F u8 str u32 u8
 CE28 u8 str u8
@@ -1164,12 +1169,12 @@ D000 u16 str str str str f32 f32 f32
 D01E str str str str f32 f32 f32
 D100 str u16 f32 f32
 D101 str u16
-D2   u16 _D2
+D2   u16 _D2 # is this a char?
 D300 f32 f32 f32 f32 u16 u8 u8 u8
 D301
 D4   u8 u8
 D501 u8 u16
-D6   u16 dyn dyn dyn dyn
+D6   char dyn dyn dyn dyn
 D7   u8 u32
 D8   u8 u8
 D900 u8

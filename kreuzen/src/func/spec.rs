@@ -10,6 +10,7 @@ pub enum Part {
 	I32,
 	F32,
 	Str,
+	Char,
 	Expr,
 	Text,
 	Dyn,

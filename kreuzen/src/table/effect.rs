@@ -19,7 +19,7 @@ pub enum Effect {
 	_04(u32),
 	_05(u32),
 	_07(u32),
-	_09(u16, String), // charid, BTL_CRAFT00_01
+	_09(crate::Char, String), // charid, BTL_CRAFT00_01
 	_0A(String), // BTL_CRAFT01_02_GS
 }
 
@@ -74,7 +74,7 @@ pub fn read(f: &mut VReader) -> Result<Vec<Effect>, ReadError> {
 			}
 			9 => {
 				ensure!(effect.u32 == 0, BadEffectSnafu { effect });
-				Effect::_09(effect.charid, effect.str)
+				Effect::_09(crate::Char(effect.charid), effect.str)
 			}
 			10 => {
 				ensure!(effect.charid == 0xFFFF, BadEffectSnafu { effect });
