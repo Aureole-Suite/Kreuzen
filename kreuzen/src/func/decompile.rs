@@ -291,13 +291,9 @@ fn parse_switch(
 	let mut cases2 = Vec::with_capacity(cases.len());
 
 	let mut pre = ctx.sub(cases.first().unwrap().1)?;
-	while pre.pos != pre.end {
-		let (mut body, jump) = pre.block("switch pre-body", GotoAllowed::Anywhere)?;
-		let Some((m, jump)) = jump else {
-			return decompile::UnsortedSwitch.fail();
-		};
-		snafu::ensure!(jump == default, decompile::UnsortedSwitch);
-		body.push(Stmt::Break(m));
+	pre.brk = brk;
+	if pre.pos != pre.end {
+		let (body, _) = pre.block("switch pre-body", GotoAllowed::No)?;
 		cases2.push((Case::None, body));
 	}
 
