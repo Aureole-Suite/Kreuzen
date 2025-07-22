@@ -503,13 +503,13 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &spec::Part) -> Result<(), OpEr
 		}
 
 		_D2 => {
-			let Some(&Arg::U16(a)) = op.args.get(0) else {
-				panic!("C0 must have a U16 arg");
+			let Some(&Arg::I16(a)) = op.args.get(0) else {
+				panic!("C0 must have a I16 arg");
 			};
 			match a {
 				0 => read_parts(op, f, &[U8])?,
 				3 => read_parts(op, f, &[U8, U8, U32])?,
-				0xFFFE | 0xFFFF => read_parts(op, f, &[Dyn])?,
+				-2 | -1 => read_parts(op, f, &[Dyn])?,
 				_ => {}
 			}
 		}
