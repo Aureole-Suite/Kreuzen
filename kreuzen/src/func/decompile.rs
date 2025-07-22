@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use snafu::{OptionExt as _, ResultExt as _};
 
@@ -24,6 +24,8 @@ pub enum DecompileError {
 	},
 	#[snafu(display("unsorted switch"))]
 	UnsortedSwitch,
+	#[snafu(display("ambiguous switch end: {labels:?}"))]
+	AmbiguousSwitchEnd { labels: BTreeSet<Label> },
 	#[snafu(display("unexpected jump to {label:?}"))]
 	UnexpectedJump { label: Label },
 
@@ -270,18 +272,21 @@ fn parse_switch(
 	let mut cases = cases.iter().map(|(k, l)| (Case::Case(*k), *l)).collect::<Vec<_>>();
 	cases.insert(default_index, (Case::Default, default));
 
-	let mut brk = None;
-	let mut brk_pos = 0;
-	for (_, l) in &cases {
-		if let Some((_, goto)) = ctx.goto_before(*l)?
-			&& let goto_pos = ctx.lookup(goto)?
-			&& goto_pos >= ctx.lookup(*l)?
-			&& goto_pos > brk_pos
-		{
-			brk = Some(goto);
-			brk_pos = goto_pos;
+	let last_pos = pos.last().copied().max(Some(default_pos)).unwrap();
+	let mut unresolved = BTreeSet::new();
+	for stmt in &ctx.gctx.stmts[ctx.pos..last_pos] {
+		if let FlatOp::Goto(_, goto) = stmt {
+			if ctx.lookup(*goto)? >= last_pos {
+				unresolved.insert(*goto);
+			}
 		}
 	}
+
+	if unresolved.len() > 1 {
+		return decompile::AmbiguousSwitchEnd { labels: unresolved }.fail();
+	}
+
+	let brk = unresolved.into_iter().next();
 
 	let mut cases2 = Vec::with_capacity(cases.len());
 
