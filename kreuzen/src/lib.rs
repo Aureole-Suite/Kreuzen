@@ -49,6 +49,8 @@ pub enum ReadError {
 		name: String,
 		source: EntryError,
 	},
+	#[snafu(display("cannot handle version {version}"))]
+	BadVersion { version: u32 },
 }
 
 #[derive(Clone)]
@@ -164,7 +166,14 @@ pub struct VReader<'a> {
 	func: &'a str,
 }
 
-pub fn parse(data: &[u8]) -> Result<(), ReadError> {
+#[derive(Debug, Clone, PartialEq)]
+pub struct Scena {
+	pub name: String,
+	pub version: u32,
+	pub items: Vec<(String, Item)>,
+}
+
+pub fn parse(data: &[u8]) -> Result<Scena, ReadError> {
 	let mut f = Reader::new(data);
 	f.check_u32(0x20)?;
 	f.check_u32(0x20)?;
@@ -188,9 +197,8 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 	};
 	let _span = tracing::error_span!("file", name = name.as_str(), version).entered();
 
-	if version == 0 {
-		tracing::warn!("skipping version 0 file");
-		return Ok(());
+	if version != 1 && version != 2 {
+		return Err(ReadError::BadVersion { version });
 	}
 
 	assert_eq!(f.pos(), table_top);
@@ -218,9 +226,8 @@ pub fn parse(data: &[u8]) -> Result<(), ReadError> {
 			}
 		}
 	}
-	tracing::trace!("{:#?}", items);
 
-	Ok(())
+	Ok(Scena { name, version, items })
 }
 
 #[derive(Debug, snafu::Snafu)]
@@ -269,7 +276,7 @@ pub enum EntryError {
 	WeaponAttTable { source: table::weapon_att_table::ReadError },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Item {
 	Func(Vec<func::Stmt>),
 	Effect(Vec<table::Effect>),
