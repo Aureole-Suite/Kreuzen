@@ -20,8 +20,8 @@ pub enum FunctionError {
 	},
 	#[snafu(display("missing labels: {labels:?}"))]
 	MissingLabels { labels: BTreeSet<Label> },
-	#[snafu(display("failed to decompile function"), context(false))]
-	Decompile { source: decompile::DecompileError },
+	#[snafu(display("failed to decompile function:\n{code:#?}"))]
+	Decompile { source: decompile::DecompileError, code: Vec<FlatOp> },
 }
 
 pub mod expr;
@@ -73,7 +73,7 @@ pub fn read_func(f: &mut VReader) -> Result<Vec<Stmt>, FunctionError> {
 		ops2.push(FlatOp::Label(endl));
 	}
 	snafu::ensure!(labels.is_empty(), MissingLabelsSnafu { labels });
-	let decomp = decompile::decompile(&ops2)?;
+	let decomp = decompile::decompile(&ops2).context(DecompileSnafu { code: ops2 })?;
 	Ok(decomp)
 }
 
