@@ -534,7 +534,12 @@ fn write_entry(f: &mut VWriter, item: &Item) -> Result<usize, EntryWriteError> {
 		Item::SummonTable(i) => todo(f, i),
 		Item::WeaponAttTable(i) => todo(f, i),
 	}
-	Ok(4)
+
+	let align = match item {
+		Item::Effect(_) => 16,
+		_ => 4,
+	};
+	Ok(align)
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
