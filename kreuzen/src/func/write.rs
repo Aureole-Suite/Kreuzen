@@ -172,9 +172,12 @@ fn write_raw_op_inner(f: &mut VWriter, op: &Op) -> Result<(), OpWriteErrorKind> 
 	assert!(!op.code.is_empty());
 	let mut n = 0;
 	let mut spec = SPEC.ops[op.code[n] as usize].as_ref();
-	while let Some(specc) = spec && n < op.code.len() {
-		n += 1;
+	while let Some(specc) = spec {
 		write_parts(op, f, &specc.parts, &mut args)?;
+		n += 1;
+		if n == op.code.len() {
+			break;
+		}
 		spec = specc.child(op.code[n]);
 	}
 	snafu::ensure!(n == op.code.len() && spec.is_none(), UnknownOpSnafu);
