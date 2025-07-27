@@ -12,6 +12,12 @@ pub enum ReadError {
 	BadEffect { effect: RawEffect },
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Effect {
 	_02(String), // C_CHRX10
@@ -85,4 +91,27 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Effect>, ReadError> {
 		})
 	}
 	Ok(table)
+}
+
+pub(crate) fn write(f: &mut VWriter, table: &[Effect]) -> Result<(), WriteError> {
+	for effect in table {
+		let (kind, charid, u32, str) = match effect {
+			Effect::_02(s) => (2, 0xFFFF, 0, s.as_str()),
+			Effect::_03(s) => (3, 0xFFFF, 0, s.as_str()),
+			Effect::_04(u) => (4, 0xFFFF, *u, ""),
+			Effect::_05(u) => (5, 0xFFFF, *u, ""),
+			Effect::_07(u) => (7, 0xFFFF, *u, ""),
+			Effect::_09(c, s) => (9, c.0, 0, s.as_str()),
+			Effect::_0A(s) => (10, 0xFFFF, 0, s.as_str()),
+		};
+		f.u16(kind);
+		f.u16(charid);
+		f.u32(u32);
+		f.sstr(32, str)?;
+	}
+	f.u16(0);
+	f.u16(0xFFFF);
+	f.u32(0);
+	f.sstr(32, "")?;
+	Ok(())
 }

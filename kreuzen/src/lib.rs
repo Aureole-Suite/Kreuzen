@@ -400,11 +400,10 @@ pub enum EntryReadError {
 
 #[derive(Debug, snafu::Snafu)]
 pub enum EntryWriteError {
-
 	#[snafu(display("could not write function"), context(false))]
 	Function { source: func::write::WriteError },
-	// #[snafu(display("could not write effect"), context(false))]
-	// Effect { source: table::effect::WriteError },
+	#[snafu(display("could not write effect"), context(false))]
+	Effect { source: table::effect::WriteError },
 	// #[snafu(display("could not write FcAuto"), context(false))]
 	// FcAuto { source: table::fc_auto::WriteError },
 	#[snafu(display("could not write BookData"), context(false))]
@@ -509,27 +508,31 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryReadError> {
 }
 
 fn write_entry(f: &mut VWriter, item: &Item) -> Result<usize, EntryWriteError> {
+	fn todo<T: std::fmt::Debug>(f: &mut VWriter, item: T) {
+		tracing::warn!("TODO: {item:?}");
+		f.delay(|_| None::<[u8; 0]>);
+	}
 	match item {
 		Item::Func(i) => func::write::write(f, i)?,
-		Item::Effect(i) => {},
-		Item::Fc(i) => {},
+		Item::Effect(i) => table::effect::write(f, i)?,
+		Item::Fc(i) => todo(f, i),
 		Item::BookPage(i) => table::book::write(f, i)?,
 		Item::BookMetadata(i) => table::book99::write(f, *i)?,
-		Item::Btlset(i) => {},
-		Item::StyleName(i) => {},
+		Item::Btlset(i) => todo(f, i),
+		Item::StyleName(i) => todo(f, i),
 
-		Item::Empty => {},
-		Item::ActionTable(i) => {},
-		Item::AddCollision(i) => {},
-		Item::AlgoTable(i) => {},
-		Item::AnimeClipTable(i) => {},
-		Item::BreakTable(i) => {},
-		Item::FieldFollowData(i) => {},
-		Item::FieldMonsterData(i) => {},
-		Item::PartTable(i) => {},
-		Item::ReactionTable(i) => {},
-		Item::SummonTable(i) => {},
-		Item::WeaponAttTable(i) => {},
+		Item::Empty => {}
+		Item::ActionTable(i) => todo(f, i),
+		Item::AddCollision(i) => todo(f, i),
+		Item::AlgoTable(i) => todo(f, i),
+		Item::AnimeClipTable(i) => todo(f, i),
+		Item::BreakTable(i) => todo(f, i),
+		Item::FieldFollowData(i) => todo(f, i),
+		Item::FieldMonsterData(i) => todo(f, i),
+		Item::PartTable(i) => todo(f, i),
+		Item::ReactionTable(i) => todo(f, i),
+		Item::SummonTable(i) => todo(f, i),
+		Item::WeaponAttTable(i) => todo(f, i),
 	}
 	Ok(4)
 }
