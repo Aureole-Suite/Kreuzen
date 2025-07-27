@@ -162,8 +162,6 @@ pub struct VReader<'a> {
 	#[deref_mut]
 	reader: Reader<'a>,
 	version: u32,
-	name: &'a str,
-	func: &'a str,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -213,10 +211,8 @@ pub fn parse(data: &[u8]) -> Result<Scena, ReadError> {
 		let mut vr = VReader {
 			reader: Reader::new(&data[..end]).at(entry.start)?,
 			version,
-			name: &name,
-			func: &entry.name,
 		};
-		match read_entry(&mut vr) {
+		match read_entry(&mut vr, &entry.name) {
 			Ok(v) => items.push((entry.name.clone(), v)),
 			Err(e) => {
 				tracing::error!("{e}\n{:#X}", vr.dump().start(entry.start));
@@ -301,7 +297,7 @@ pub enum Item {
 	Empty,
 }
 
-fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
+fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryError> {
 	let mut data = f.reader.data();
 	while data.last() == Some(&0) {
 		data = &data[..data.len() - 1]; // Remove trailing zeroes
@@ -311,7 +307,7 @@ fn read_entry(f: &mut VReader) -> Result<Item, EntryError> {
 	ensure!(data.len() >= f.reader.pos(), BadTerminatorSnafu);
 	f.reader = Reader::new(data).at(f.reader.pos()).unwrap();
 
-	let item = match Type::from_name(f.func) {
+	let item = match Type::from_name(name) {
 		Type::Normal => Item::Func(func::read_func(f)?),
 		Type::Effect => Item::Effect(table::effect::read(f)?),
 		Type::FcAuto => Item::Fc(table::fc_auto::read(f)?),
