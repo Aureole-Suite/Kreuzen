@@ -22,6 +22,7 @@ impl VWriter {
 		self.u8(meta.width); // TODO compute width automatically
 	}
 
+	#[track_caller]
 	fn label(&mut self, label: Label) {
 		let start = self.start;
 		self.label32(start, label);
@@ -81,6 +82,7 @@ fn block(f: &mut VWriter, code: &[Stmt], brk: Option<Label>, cont: Option<Label>
 				block(f, body, Some(brk), Some(cont))?;
 
 				f.goto(&OpMeta::default(), cont);
+				f.place(brk);
 			},
 			Stmt::Break(meta) => {
 				if let Some(label) = brk {
