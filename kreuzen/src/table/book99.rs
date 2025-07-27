@@ -10,8 +10,20 @@ pub enum ReadError {
 	},
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 pub(crate) fn read(f: &mut VReader) -> Result<u16, ReadError> {
 	let n = f.u16()?;
 	f.check_u16(1)?;
 	Ok(n)
+}
+
+pub(crate) fn write(f: &mut VWriter, n: u16) -> Result<(), WriteError> {
+	f.u16(n);
+	f.u16(1);
+	Ok(())
 }

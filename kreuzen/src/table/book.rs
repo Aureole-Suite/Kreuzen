@@ -12,6 +12,12 @@ pub enum ReadError {
 	BadBook { kind: u16 },
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Book {
 	TitlePage(String, [u16; 10], String),
@@ -36,3 +42,21 @@ pub(crate) fn read(f: &mut VReader) -> Result<Book, ReadError> {
 	Ok(b)
 }
 
+pub(crate) fn write(f: &mut VWriter, book: &Book) -> Result<(), WriteError> {
+	match book {
+		Book::Page(text) => {
+			f.u16(0);
+			f.str(text)?;
+		}
+		Book::TitlePage(title, data, text) => {
+			f.u16(1);
+			f.u16(0);
+			f.sstr(16, title)?;
+			for &d in data {
+				f.u16(d);
+			}
+			f.str(text)?;
+		}
+	}
+	Ok(())
+}

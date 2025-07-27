@@ -1,7 +1,9 @@
 use gospel::read::Le as _;
+use gospel::write::Le as _;
 use snafu::ensure;
 
 use crate::{ReaderaExt as _, VReader};
+use crate::{WriterExt as _, VWriter};
 
 pub mod effect;
 pub mod fc_auto;

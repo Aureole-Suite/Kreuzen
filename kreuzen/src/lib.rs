@@ -42,19 +42,27 @@ pub enum ValueError {
 	#[snafu(display("string contains null byte: {string:?}"))]
 	NullByte { string: String },
 	#[snafu(display("usize does not fit in target type: {value}"))]
-	Usize { value: usize }
+	Usize { value: usize },
+	#[snafu(display("string {string:?} exceeds maximum length {len}"))]
+	SstrLen { string: String, len: usize },
 }
 
 #[extend::ext]
 impl Writer {
-	fn str(&mut self, str: &str) -> Result<(), ValueError> {
-		if str.chars().any(|c| c == '\0') {
-			return Err(ValueError::NullByte {
-				string: str.to_owned(),
-			});
-		}
-		self.slice(str.as_bytes());
+	fn str(&mut self, string: &str) -> Result<(), ValueError> {
+		snafu::ensure!(!string.chars().any(|c| c == '\0'), NullByteSnafu { string });
+		self.slice(string.as_bytes());
 		self.u8(0);
+		Ok(())
+	}
+
+	fn sstr(&mut self, len: usize, string: &str) -> Result<(), ValueError> {
+		snafu::ensure!(string.len() <= len, SstrLenSnafu { string, len });
+		snafu::ensure!(!string.chars().any(|c| c == '\0'), NullByteSnafu { string });
+		self.slice(string.as_bytes());
+		for _ in string.len()..len {
+			self.u8(0);
+		}
 		Ok(())
 	}
 
@@ -399,10 +407,10 @@ pub enum EntryWriteError {
 	// Effect { source: table::effect::WriteError },
 	// #[snafu(display("could not write FcAuto"), context(false))]
 	// FcAuto { source: table::fc_auto::WriteError },
-	// #[snafu(display("could not write BookData"), context(false))]
-	// BookData { source: table::book::WriteError },
-	// #[snafu(display("could not write book BookData99"), context(false))]
-	// BookData99 { source: table::book99::WriteError },
+	#[snafu(display("could not write BookData"), context(false))]
+	BookData { source: table::book::WriteError },
+	#[snafu(display("could not write book BookData99"), context(false))]
+	BookData99 { source: table::book99::WriteError },
 	// #[snafu(display("could not write BTLSET"), context(false))]
 	// Btlset { source: table::btlset::WriteError },
 	// #[snafu(display("could not write StyleName"), context(false))]
@@ -503,25 +511,25 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryReadError> {
 fn write_entry(f: &mut VWriter, item: &Item) -> Result<usize, EntryWriteError> {
 	match item {
 		Item::Func(i) => func::write::write(f, i)?,
-		Item::Effect(i) => todo!(),
-		Item::Fc(i) => todo!(),
-		Item::BookPage(i) => todo!(),
-		Item::BookMetadata(i) => todo!(),
-		Item::Btlset(i) => todo!(),
-		Item::StyleName(i) => todo!(),
+		Item::Effect(i) => {},
+		Item::Fc(i) => {},
+		Item::BookPage(i) => table::book::write(f, i)?,
+		Item::BookMetadata(i) => table::book99::write(f, *i)?,
+		Item::Btlset(i) => {},
+		Item::StyleName(i) => {},
 
-		Item::Empty => todo!(),
-		Item::ActionTable(i) => todo!(),
-		Item::AddCollision(i) => todo!(),
-		Item::AlgoTable(i) => todo!(),
-		Item::AnimeClipTable(i) => todo!(),
-		Item::BreakTable(i) => todo!(),
-		Item::FieldFollowData(i) => todo!(),
-		Item::FieldMonsterData(i) => todo!(),
-		Item::PartTable(i) => todo!(),
-		Item::ReactionTable(i) => todo!(),
-		Item::SummonTable(i) => todo!(),
-		Item::WeaponAttTable(i) => todo!(),
+		Item::Empty => {},
+		Item::ActionTable(i) => {},
+		Item::AddCollision(i) => {},
+		Item::AlgoTable(i) => {},
+		Item::AnimeClipTable(i) => {},
+		Item::BreakTable(i) => {},
+		Item::FieldFollowData(i) => {},
+		Item::FieldMonsterData(i) => {},
+		Item::PartTable(i) => {},
+		Item::ReactionTable(i) => {},
+		Item::SummonTable(i) => {},
+		Item::WeaponAttTable(i) => {},
 	}
 	Ok(4)
 }
