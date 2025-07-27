@@ -10,13 +10,15 @@ use super::{Arg, CallArg, Case, Op, OpMeta, Stmt, SPEC};
 
 #[extend::ext]
 impl VWriter {
-	fn goto(&mut self, meta: OpMeta, label: Label) {
+	fn goto(&mut self, meta: &OpMeta, label: Label) {
 		self.u8(0x03);
+		self.meta(meta);
 		self.label(label)
 	}
 
 	fn meta(&mut self, meta: &OpMeta) {
 		self.u16(meta.line);
+		self.u8(0);
 		self.u8(meta.width); // TODO compute width automatically
 	}
 
@@ -59,7 +61,7 @@ fn block(f: &mut VWriter, code: &[Stmt], brk: Option<Label>, cont: Option<Label>
 				block(f, thn, brk, cont)?;
 				if let Some((em, els)) = els {
 					let l2 = Label::new();
-					f.goto(*em, l2);
+					f.goto(em, l2);
 					f.place(l);
 					block(f, els, brk, cont)?;
 					f.place(l2);
@@ -78,18 +80,18 @@ fn block(f: &mut VWriter, code: &[Stmt], brk: Option<Label>, cont: Option<Label>
 
 				block(f, body, Some(brk), Some(cont))?;
 
-				f.goto(OpMeta::default(), cont);
+				f.goto(&OpMeta::default(), cont);
 			},
 			Stmt::Break(meta) => {
 				if let Some(label) = brk {
-					f.goto(*meta, label);
+					f.goto(meta, label);
 				} else {
 					return UnexpectedBreakSnafu { meta: *meta }.fail();
 				}
 			}
 			Stmt::Continue(meta) => {
 				if let Some(label) = cont {
-					f.goto(*meta, label);
+					f.goto(meta, label);
 				} else {
 					return UnexpectedContinueSnafu { meta: *meta }.fail();
 				}
@@ -171,12 +173,17 @@ fn write_raw_op_inner(f: &mut VWriter, op: &Op) -> Result<(), OpWriteErrorKind> 
 	assert!(!op.code.is_empty());
 	let mut n = 0;
 	let mut spec = SPEC.ops[op.code[n] as usize].as_ref().context(UnknownOpSnafu)?;
+	f.u8(op.code[n]);
+	if !matches!(op.code[n], 0x01 | 0x04) {
+		f.meta(&op.meta);
+	}
 	loop {
 		write_parts(op, f, &spec.parts, &mut args)?;
 		n += 1;
 		if n == op.code.len() {
 			break;
 		}
+		f.u8(op.code[n]);
 		spec = spec.child(op.code[n]).context(UnknownOpSnafu)?;
 	}
 	snafu::ensure!(!spec.has_children(), UnknownOpSnafu);

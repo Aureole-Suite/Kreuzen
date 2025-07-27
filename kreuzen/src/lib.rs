@@ -329,7 +329,6 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 	assert_eq!(scena.items.len(), labels.len());
 	for (label, (name, item)) in labels.into_iter().zip(&scena.items) {
 		let _span = tracing::error_span!("chunk", name = name.as_str()).entered();
-		f.place(label);
 		let mut vw = VWriter {
 			writer: Writer::new(),
 			start,
@@ -337,7 +336,9 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 		};
 		let align = write_entry(&mut vw, item).context(EntryWriteSnafu { name })?;
 		f.align(align);
+		f.place(label);
 		f += vw.writer;
+		f.u8(0x01);
 	}
 
 	Ok(f.finish()?)
