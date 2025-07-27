@@ -27,7 +27,20 @@ fn run(path: impl AsRef<Path>) {
 
 fn run0(path: &Path) -> Result<(), kreuzen::WriteError> {
 	let data = std::fs::read(path).unwrap();
-	let scena = kreuzen::read(&data).unwrap();
+	let scena = match kreuzen::read(&data) {
+		Ok(scena) => scena,
+		Err(kreuzen::ReadError::BadVersion { version }) => {
+			tracing::warn!(version, "skipping bad version");
+			return Ok(());
+		}
+		Err(e) => {
+			tracing::error!("failed to read!");
+			for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
+				tracing::error!("{e}");
+			}
+			return Ok(());
+		}
+	};
 	let data2 = kreuzen::write(&scena)?;
 	if data != data2 {
 		tracing::warn!("Data mismatch:\n{:#X}{:#X}{scena:#?}\n", Reader::new(&data).dump(), Reader::new(&data2).dump());
