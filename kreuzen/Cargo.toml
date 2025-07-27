@@ -7,7 +7,7 @@ edition = "2024"
 arrayvec = "0.7.6"
 derive_more = { version = "2.0.1", features = ["deref", "deref_mut", "from", "from_str"] }
 extend = "1.2.0"
-gospel = "0.3.1"
+gospel.path = "../../Gospel"
 hex = "0.4.3"
 num_enum = "0.7.4"
 snafu = "0.8.5"

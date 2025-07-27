@@ -1,5 +1,6 @@
 #![feature(let_chains, if_let_guard, split_as_slice)]
 use gospel::read::{Reader, Le as _};
+use gospel::write::{Writer, Le as _};
 use snafu::ensure;
 
 pub mod func;
@@ -37,6 +38,46 @@ impl<'a> Reader<'a> {
 }
 
 #[derive(Debug, snafu::Snafu)]
+pub enum ValueError {
+	#[snafu(display("string contains null byte: {string:?}"))]
+	NullByte { string: String },
+	#[snafu(display("usize does not fit in target type: {value}"))]
+	Usize { value: usize }
+}
+
+#[extend::ext]
+impl Writer {
+	fn str(&mut self, str: &str) -> Result<(), ValueError> {
+		if str.chars().any(|c| c == '\0') {
+			return Err(ValueError::NullByte {
+				string: str.to_owned(),
+			});
+		}
+		self.slice(str.as_bytes());
+		self.u8(0);
+		Ok(())
+	}
+
+	fn usize16(&mut self, value: usize) -> Result<(), ValueError> {
+		if let Ok(v) = u16::try_from(value) {
+			self.u16(v);
+			Ok(())
+		} else {
+			Err(ValueError::Usize { value })
+		}
+	}
+
+	fn usize32(&mut self, value: usize) -> Result<(), ValueError> {
+		if let Ok(v) = u32::try_from(value) {
+			self.u32(v);
+			Ok(())
+		} else {
+			Err(ValueError::Usize { value })
+		}
+	}
+}
+
+#[derive(Debug, snafu::Snafu)]
 pub enum ReadError {
 	#[snafu(display("invalid read (at {location})"), context(false))]
 	Read {
@@ -51,6 +92,14 @@ pub enum ReadError {
 	},
 	#[snafu(display("cannot handle version {version}"))]
 	BadVersion { version: u32 },
+}
+
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Write { source: gospel::write::Error },
+	#[snafu(transparent, context(false))]
+	Value { source: ValueError },
 }
 
 #[derive(Clone)]
@@ -171,7 +220,7 @@ pub struct Scena {
 	pub items: Vec<(String, Item)>,
 }
 
-pub fn parse(data: &[u8]) -> Result<Scena, ReadError> {
+pub fn read(data: &[u8]) -> Result<Scena, ReadError> {
 	let mut f = Reader::new(data);
 	f.check_u32(0x20)?;
 	f.check_u32(0x20)?;
@@ -186,14 +235,13 @@ pub fn parse(data: &[u8]) -> Result<Scena, ReadError> {
 	f.check_u32(0xABCDEF00)?;
 	let name = f.str()?;
 
-	// In most cases, there's an align 4 followed by `00 00 00 FF`. But not always.
 	let mut version = 0;
 	while f.pos() < table_top {
 		f.align_zeroed(4)?;
 		f.check_u32(0xFF000000)?;
 		version += 1;
 	};
-	let _span = tracing::error_span!("file", name = name.as_str(), version).entered();
+	let _span = tracing::error_span!("read", name = name.as_str(), version).entered();
 
 	if version != 1 && version != 2 {
 		return Err(ReadError::BadVersion { version });
@@ -224,6 +272,54 @@ pub fn parse(data: &[u8]) -> Result<Scena, ReadError> {
 	}
 
 	Ok(Scena { name, version, items })
+}
+
+pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
+	let _span = tracing::error_span!("write", name = scena.name.as_str(), version = scena.version).entered();
+
+	let mut f = Writer::new();
+	let start = f.here();
+	f.u32(0x20);
+	f.u32(0x20);
+	let table_top = f.ptr32(start);
+	f.usize32(scena.items.len() * 4)?;
+	let function_name_table_top = f.ptr32(start);
+	f.usize32(scena.items.len())?;
+	let asm_end = f.ptr32(start);
+	f.u32(0xABCDEF00);
+	assert!(f.len() == 0x20);
+
+	f.str(&scena.name)?;
+	for _ in 0..scena.version {
+		f.align(4);
+		f.u32(0xFF000000);
+	}
+
+	let mut labels = Vec::with_capacity(scena.items.len());
+	let mut starts = Writer::new();
+	let mut name_starts = Writer::new();
+	let mut names = Writer::new();
+	for (name, _) in &scena.items {
+		labels.push(starts.ptr32(start));
+		name_starts.label16(start, names.here());
+		names.str(name)?;
+	}
+
+	f.place(table_top);
+	f += starts;
+	f.place(function_name_table_top);
+	f += name_starts;
+	f += names;
+	f.place(asm_end);
+	f.align(4);
+
+	assert_eq!(scena.items.len(), labels.len());
+	for (label, (name, item)) in labels.into_iter().zip(&scena.items) {
+		let _span = tracing::error_span!("chunk", name = name.as_str()).entered();
+		f.place(label);
+	}
+
+	Ok(f.finish()?)
 }
 
 #[derive(Debug, snafu::Snafu)]
