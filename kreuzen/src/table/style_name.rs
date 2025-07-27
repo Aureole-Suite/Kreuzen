@@ -12,7 +12,7 @@ pub enum ReadError {
 	StyleMismatch { a: String, b: String },
 }
 
-pub fn read(f: &mut VReader) -> Result<String, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<String, ReadError> {
 	let a = f.sstr(64)?;
 	let b = f.sstr(64)?;
 	ensure!(a == b, StyleMismatchSnafu { a, b });

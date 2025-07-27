@@ -59,7 +59,7 @@ impl std::fmt::Debug for DialoguePart {
 }
 
 impl Dialogue {
-	pub fn read(f: &mut crate::VReader) -> Result<Dialogue, ReadError> {
+	pub(crate) fn read(f: &mut crate::VReader) -> Result<Dialogue, ReadError> {
 		let mut out = Vec::new();
 		let mut scratch = Vec::new();
 		loop {

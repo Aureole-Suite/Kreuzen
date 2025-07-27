@@ -18,7 +18,7 @@ pub struct WeaponAtt {
 	pub strike: u8,
 }
 
-pub fn read(f: &mut VReader) -> Result<WeaponAtt, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<WeaponAtt, ReadError> {
 	Ok(WeaponAtt {
 		slash: f.u8()?,
 		thrust: f.u8()?,

@@ -22,7 +22,7 @@ pub struct FieldMonsterData {
 	pub h: Option<f32>,
 }
 
-pub fn read(f: &mut VReader) -> Result<FieldMonsterData, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<FieldMonsterData, ReadError> {
 	Ok(FieldMonsterData {
 		a: f.u32()?,
 		b: f.u16()?,

@@ -17,7 +17,7 @@ pub struct Part {
 	pub b: String,
 }
 
-pub fn read(f: &mut VReader) -> Result<Vec<Part>, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Vec<Part>, ReadError> {
 	let mut parts = Vec::new();
 	loop {
 		let id = f.u32()?;

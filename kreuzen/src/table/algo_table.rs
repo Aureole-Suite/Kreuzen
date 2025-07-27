@@ -33,7 +33,7 @@ impl Algo {
 	}
 }
 
-pub fn read(f: &mut VReader) -> Result<Vec<Algo>, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Vec<Algo>, ReadError> {
 	let mut table = Vec::new();
 	while !f.remaining().is_empty() {
 		let id = f.u16()?;

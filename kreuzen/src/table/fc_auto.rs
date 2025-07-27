@@ -10,7 +10,7 @@ pub enum ReadError {
 	},
 }
 
-pub fn read(f: &mut VReader) -> Result<String, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<String, ReadError> {
 	let s = f.str()?;
 	Ok(s)
 }

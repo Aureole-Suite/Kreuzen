@@ -16,7 +16,7 @@ pub struct Collision {
 	pub b: [f32; 5],
 }
 
-pub fn read(f: &mut VReader) -> Result<Vec<Collision>, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Vec<Collision>, ReadError> {
 	let mut out = Vec::new();
 	for _ in 0..f.u8()? {
 		out.push(Collision {

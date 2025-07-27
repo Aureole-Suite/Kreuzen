@@ -19,7 +19,7 @@ pub struct Summon {
 	pub c: String,
 }
 
-pub fn read(f: &mut VReader) -> Result<Vec<Summon>, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Vec<Summon>, ReadError> {
 	let mut table = Vec::new();
 	while !f.remaining().is_empty() {
 		let kind = f.u16()?;

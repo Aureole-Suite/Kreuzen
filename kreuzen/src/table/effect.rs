@@ -31,7 +31,7 @@ pub struct RawEffect {
 	pub str: String,
 }
 
-pub fn read(f: &mut VReader) -> Result<Vec<Effect>, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Vec<Effect>, ReadError> {
 	let mut table = Vec::new();
 	while !f.remaining().is_empty() {
 		let effect = RawEffect {

@@ -106,7 +106,7 @@ pub enum AssOp {
 }
 
 impl Expr {
-	pub fn read(f: &mut crate::VReader) -> Result<Expr, ReadError> {
+	pub(crate) fn read(f: &mut crate::VReader) -> Result<Expr, ReadError> {
 		let mut stack = Vec::new();
 		loop {
 			let pos = f.pos();

@@ -28,7 +28,7 @@ pub struct BtlVariant {
 	pub monsters: ArrayVec<(String, u8), 8>,
 }
 
-pub fn read(f: &mut VReader) -> Result<Btlset, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Btlset, ReadError> {
 	let field = f.sstr(16)?;
 	let bounds = [f.f32()?, f.f32()?, f.f32()?, f.f32()?, f.f32()?, f.f32()?];
 	let unk1 = (f.u32()?, f.u32()?, f.u16()?, f.u16()?);

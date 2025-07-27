@@ -18,7 +18,7 @@ pub enum Book {
 	Page(String),
 }
 
-pub fn read(f: &mut VReader) -> Result<Book, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Book, ReadError> {
 	let b = match f.u16()? {
 		0 => {
 			let s = f.str()?;

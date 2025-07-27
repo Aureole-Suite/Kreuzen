@@ -1,8 +1,8 @@
 use std::sync::LazyLock;
 use arrayvec::ArrayVec;
 
-mod read;
-pub use read::{read, ReadError, OpReadError};
+pub mod read;
+pub use read::ReadError;
 
 pub mod expr;
 pub mod dial;

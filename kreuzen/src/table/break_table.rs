@@ -10,7 +10,7 @@ pub enum ReadError {
 	},
 }
 
-pub fn read(f: &mut VReader) -> Result<Vec<(u16, u16)>, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Vec<(u16, u16)>, ReadError> {
 	let mut table = Vec::new();
 	loop {
 		let id = f.u16()?;

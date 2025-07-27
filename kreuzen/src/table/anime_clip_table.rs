@@ -19,7 +19,7 @@ pub struct AnimeClip {
 	pub b: String,
 }
 
-pub fn read(f: &mut VReader) -> Result<Vec<AnimeClip>, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Vec<AnimeClip>, ReadError> {
 	let mut table = Vec::new();
 	loop {
 		let kind = f.u32()?;

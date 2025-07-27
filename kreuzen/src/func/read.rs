@@ -30,7 +30,7 @@ pub enum ReadError {
 	Decompile { source: decompile::DecompileError, code: Vec<FlatOp> },
 }
 
-pub fn read(f: &mut VReader) -> Result<Vec<Stmt>, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Vec<Stmt>, ReadError> {
 	let mut ops = Vec::new();
 	while !at_end(f) {
 		let pos = Label(f.pos() as u32);

@@ -19,7 +19,7 @@ pub struct FieldFollowData {
 	pub e: f32,
 }
 
-pub fn read(f: &mut VReader) -> Result<FieldFollowData, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<FieldFollowData, ReadError> {
 	Ok(FieldFollowData {
 		a: f.f32()?,
 		b: f.f32()?,

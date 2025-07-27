@@ -50,7 +50,7 @@ impl Action {
 	}
 }
 
-pub fn read(f: &mut VReader) -> Result<Vec<Action>, ReadError> {
+pub(crate) fn read(f: &mut VReader) -> Result<Vec<Action>, ReadError> {
 	let mut table = Vec::new();
 	while !f.remaining().is_empty() {
 		let id = f.u16()?;
