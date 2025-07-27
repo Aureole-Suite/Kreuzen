@@ -148,21 +148,11 @@ fn read_op2(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 
 	let name = SPEC.names.get(op.code.as_slice()).map(|s| s.as_str());
 
-	match name {
-		Some("return") => {
-			return Ok(FlatOp::Op(op));
-		}
-		Some("fastcall") => {
-			op.push(f.u8()?);
-			op.push(f.str()?);
-			return Ok(FlatOp::Op(op));
-		}
-		_ => {}
+	if !matches!(code, 0x01 | 0x04) {
+		op.meta.line = f.u16()?;
+		f.check_u8(0)?;
+		op.meta.width = f.u8()?;
 	}
-
-	op.meta.line = f.u16()?;
-	f.check_u8(0)?;
-	op.meta.width = f.u8()?;
 
 	match name {
 		Some("if") => {
@@ -259,7 +249,7 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 		Part::_D2 => read_parts(op, f, super::spec::op_d2(next!(op, 0, I16)))?,
 
 		Part::_3E => {
-			let a = next!(op, 0, Char).0;
+			let a = next!(op, 1, Char).0;
 			if a == 0xFE12 {
 				read_parts(op, f, &[U8])?;
 			} else if a == 0xFE13 {

@@ -238,7 +238,7 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 			Part::_D2 => write_parts(op, f, super::spec::op_d2(next!(op, 0, I16)), args)?,
 
 			Part::_3E => {
-				let a = next!(op, 0, Char).0;
+				let a = next!(op, 1, Char).0;
 				if a == 0xFE12 {
 					write_parts(op, f, &[U8], args)?;
 				} else if a == 0xFE13 {

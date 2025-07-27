@@ -1,7 +1,7 @@
 01   'return'
 02   'call' u8 str ndyn
 03   'goto'
-04   'fastcall'
+04   'fastcall' u8 str
 05   'if'
 06   'switch'
 07   u8 dyn
@@ -1046,8 +1046,7 @@ B03C u8 char u8
 B03D u32
 B03E u32
 B040
-B101 char u32
-B103 char u32
+B1   u8 char u32
 B200 u8 char
 B201 u8 u8 u8 char
 B3   f32 f32 f32 f32 u16 u16

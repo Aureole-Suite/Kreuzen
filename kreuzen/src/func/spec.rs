@@ -139,7 +139,7 @@ pub(crate) fn op_40(a: crate::Char) -> &'static [Part] {
 		0xFE02..= 0xFE04 => &[F32, F32, F32, F32, F32, U8, U16, F32, F32, U8],
 		0xFE05           => &[F32, F32, F32, F32,      U8, U16, F32, F32, U8, Str],
 		0xFE15           => &[Dyn, Dyn, Dyn, Dyn,      U8, U16, F32, F32, U8],
-		_                => &[                         U8, U16, F32, F32, U8],
+		_                => &[F32, F32, F32, F32,      U8, U16, F32, F32, U8],
 	}
 }
 
