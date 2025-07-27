@@ -1,6 +1,5 @@
-use gospel::write::Le as _;
-use gospel::write::Label;
-use snafu::{ensure, ResultExt as _};
+use gospel::write::{Label, Le as _};
+use snafu::{ensure, OptionExt as _, ResultExt as _};
 
 use crate::{WriterExt, VWriter};
 
@@ -171,16 +170,16 @@ fn write_raw_op_inner(f: &mut VWriter, op: &Op) -> Result<(), OpWriteErrorKind> 
 	let mut args = op.args.iter();
 	assert!(!op.code.is_empty());
 	let mut n = 0;
-	let mut spec = SPEC.ops[op.code[n] as usize].as_ref();
-	while let Some(specc) = spec {
-		write_parts(op, f, &specc.parts, &mut args)?;
+	let mut spec = SPEC.ops[op.code[n] as usize].as_ref().context(UnknownOpSnafu)?;
+	loop {
+		write_parts(op, f, &spec.parts, &mut args)?;
 		n += 1;
 		if n == op.code.len() {
 			break;
 		}
-		spec = specc.child(op.code[n]);
+		spec = spec.child(op.code[n]).context(UnknownOpSnafu)?;
 	}
-	snafu::ensure!(n == op.code.len() && spec.is_none(), UnknownOpSnafu);
+	snafu::ensure!(!spec.has_children(), UnknownOpSnafu);
 	snafu::ensure!(args.as_slice().is_empty(), TooManyArgsSnafu { remaining: args.as_slice().len() });
 	Ok(())
 }

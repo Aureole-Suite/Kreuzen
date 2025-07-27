@@ -19,7 +19,9 @@ fn run(path: impl AsRef<Path>) {
 	let path = path.as_ref();
 	let _span = tracing::error_span!("run", path = %path.display()).entered();
 	if let Err(e) = run0(path) {
-		tracing::error!("{e:#}");
+		for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
+			tracing::error!("{e}");
+		}
 	};
 }
 
