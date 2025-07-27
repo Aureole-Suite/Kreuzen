@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use snafu::{OptionExt as _, ResultExt as _};
 
-use super::{Op, OpMeta, Expr, FlatOp, Label};
+use super::{OpMeta, Expr, FlatOp, Label, Stmt, Case};
 
 #[derive(Debug, snafu::Snafu)]
 #[snafu(module(decompile), context(suffix(false)))]
@@ -37,54 +37,6 @@ pub enum DecompileError {
 		#[snafu(source(from(DecompileError, Box::new)))]
 		source: Box<DecompileError>,
 	},
-}
-
-#[derive(Clone, PartialEq)]
-pub enum Stmt {
-	Op(Op),
-	If(OpMeta, Expr, Vec<Stmt>, Option<(OpMeta, Vec<Stmt>)>),
-	While(OpMeta, Expr, Vec<Stmt>),
-	Break(OpMeta),
-	Continue(OpMeta),
-	Switch(OpMeta, Expr, Vec<(Case, Vec<Stmt>)>),
-}
-
-impl std::fmt::Debug for Stmt {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::Op(o) => o.fmt(f),
-			Self::If(m, e, then, els) => {
-				m.fmt(f)?;
-				let mut tup = f.debug_tuple("If");
-				tup.field(e);
-				tup.field(then);
-				tup.finish()?;
-				if let Some((m2, els)) = els {
-					f.write_str(" ")?;
-					m2.fmt(f)?;
-					f.write_str("else ")?;
-					if let [stmt@Stmt::If(..)] = els.as_slice() {
-						stmt.fmt(f)?;
-					} else {
-						els.fmt(f)?;
-					}
-				}
-				Ok(())
-			},
-			Self::While(arg0, arg1, arg2) => arg0.fmt(f)?.debug_tuple("While").field(arg1).field(arg2).finish(),
-			Self::Break(arg0) => arg0.fmt(f)?.debug_tuple("Break").finish(),
-			Self::Continue(arg0) => arg0.fmt(f)?.debug_tuple("Continue").finish(),
-			Self::Switch(arg0, arg1, arg2) => arg0.fmt(f)?.debug_tuple("Switch").field(arg1).field(arg2).finish(),
-		}
-	}
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Case {
-	Default,
-	Case(i32),
-	// There's a freaky switch in c0400:ronald_setting that has a switch with bodies but no cases.
-	None,
 }
 
 pub fn decompile(stmts: &[FlatOp]) -> Result<Vec<Stmt>, DecompileError> {
@@ -342,3 +294,4 @@ fn parse_switch(
 
 	Ok(())
 }
+

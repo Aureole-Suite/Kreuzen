@@ -2,7 +2,7 @@ use gospel::read::Le as _;
 use snafu::{OptionExt as _, ResultExt as _};
 
 #[derive(Debug, snafu::Snafu)]
-pub enum ExprError {
+pub enum ReadError {
 	#[snafu(display("invalid read (at {location})"), context(false))]
 	Read {
 		source: gospel::read::Error,
@@ -14,8 +14,8 @@ pub enum ExprError {
 	#[snafu(display("failed to read op at {pos:X}"))]
 	ExprOp {
 		pos: usize,
-		#[snafu(source(from(super::OpError, Box::new)))]
-		source: Box<super::OpError>,
+		#[snafu(source(from(super::read::OpReadError, Box::new)))]
+		source: Box<super::read::OpReadError>,
 	},
 	#[snafu(display("empty stack"))]
 	EmptyStack,
@@ -106,14 +106,14 @@ pub enum AssOp {
 }
 
 impl Expr {
-	pub fn read(f: &mut super::VReader) -> Result<Expr, ExprError> {
+	pub fn read(f: &mut crate::VReader) -> Result<Expr, ReadError> {
 		let mut stack = Vec::new();
 		loop {
 			let pos = f.pos();
 			match f.u8()? {
 				0x00 => stack.push(Expr::Int(f.i32()?)),
 				0x01 => break,
-				0x1C => stack.push(Expr::Op(super::read_raw_op(f).context(ExprOpSnafu { pos })?)),
+				0x1C => stack.push(Expr::Op(super::read::read_raw_op(f).context(ExprOpSnafu { pos })?)),
 				0x1E => stack.push(Expr::Flag(f.u16()?)),
 				0x1F => stack.push(Expr::Var(f.u8()?)),
 				0x20 => stack.push(Expr::Attr(f.u8()?)),

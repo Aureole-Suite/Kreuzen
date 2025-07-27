@@ -1,7 +1,7 @@
 use gospel::read::Le as _;
 
 #[derive(Debug, snafu::Snafu)]
-pub enum DialogueError {
+pub enum ReadError {
 	#[snafu(display("invalid read (at {location})"), context(false))]
 	Read {
 		source: gospel::read::Error,
@@ -59,7 +59,7 @@ impl std::fmt::Debug for DialoguePart {
 }
 
 impl Dialogue {
-	pub fn read(f: &mut super::VReader) -> Result<Dialogue, DialogueError> {
+	pub fn read(f: &mut crate::VReader) -> Result<Dialogue, ReadError> {
 		let mut out = Vec::new();
 		let mut scratch = Vec::new();
 		loop {

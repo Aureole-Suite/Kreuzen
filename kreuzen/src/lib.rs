@@ -86,9 +86,9 @@ pub enum ReadError {
 		location: snafu::Location,
 	},
 	#[snafu(display("failed to read entry '{name}'"))]
-	EntrySnafu {
+	EntryRead {
 		name: String,
-		source: EntryError,
+		source: EntryReadError,
 	},
 	#[snafu(display("cannot handle version {version}"))]
 	BadVersion { version: u32 },
@@ -206,7 +206,7 @@ fn read_table(f: &mut Reader, n: usize) -> Result<Vec<Entry>, ReadError> {
 }
 
 #[derive(Debug, Clone, derive_more::Deref, derive_more::DerefMut)]
-pub struct VReader<'a> {
+struct VReader<'a> {
 	#[deref]
 	#[deref_mut]
 	reader: Reader<'a>,
@@ -311,7 +311,6 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 	f += name_starts;
 	f += names;
 	f.place(asm_end);
-	f.align(4);
 
 	assert_eq!(scena.items.len(), labels.len());
 	for (label, (name, item)) in labels.into_iter().zip(&scena.items) {
@@ -323,14 +322,14 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 }
 
 #[derive(Debug, snafu::Snafu)]
-pub enum EntryError {
+pub enum EntryReadError {
 	#[snafu(display("no terminator"))]
 	BadTerminator,
 	#[snafu(display("{n} bytes of trailing data"))]
 	TrailingData { n: usize },
 
 	#[snafu(display("could not read function"), context(false))]
-	Function { source: func::FunctionError },
+	Function { source: func::ReadError },
 	#[snafu(display("could not read effect"), context(false))]
 	Effect { source: table::effect::ReadError },
 	#[snafu(display("could not read FcAuto"), context(false))]
@@ -393,7 +392,7 @@ pub enum Item {
 	Empty,
 }
 
-fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryError> {
+fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryReadError> {
 	let mut data = f.reader.data();
 	while data.last() == Some(&0) {
 		data = &data[..data.len() - 1]; // Remove trailing zeroes
@@ -404,7 +403,7 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryError> {
 	f.reader = Reader::new(data).at(f.reader.pos()).unwrap();
 
 	let item = match Type::from_name(name) {
-		Type::Normal => Item::Func(func::read_func(f)?),
+		Type::Normal => Item::Func(func::read(f)?),
 		Type::Effect => Item::Effect(table::effect::read(f)?),
 		Type::FcAuto => Item::Fc(table::fc_auto::read(f)?),
 		Type::BookData => Item::BookPage(table::book::read(f)?),
