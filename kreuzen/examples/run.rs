@@ -29,7 +29,7 @@ enum Error {
 fn process_file(path: &Path, relpath: &Path) -> Result<(), Error> {
 	tracing::info!("Processing file: {}", relpath.display());
 	let data = std::fs::read(path).context(ReadFileSnafu)?;
-	let scena = kreuzen::parse(&data).context(ParseFileSnafu)?;
+	let scena = kreuzen::read(&data).context(ParseFileSnafu)?;
 	let outdir = Path::new("out");
 	let outpath = outdir.join(relpath);
 	std::fs::create_dir_all(outpath.parent().unwrap()).unwrap();

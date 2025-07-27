@@ -1,7 +1,7 @@
 #![feature(let_chains, if_let_guard, split_as_slice)]
 use gospel::read::{Reader, Le as _};
-use gospel::write::{Writer, Le as _};
-use snafu::ensure;
+use gospel::write::{Writer, Label, Le as _};
+use snafu::{ensure, ResultExt as _};
 
 pub mod func;
 pub mod table;
@@ -100,6 +100,11 @@ pub enum WriteError {
 	Write { source: gospel::write::Error },
 	#[snafu(transparent, context(false))]
 	Value { source: ValueError },
+	#[snafu(display("failed to write entry '{name}'"))]
+	EntryWrite {
+		name: String,
+		source: EntryWriteError,
+	},
 }
 
 #[derive(Clone)]
@@ -213,6 +218,15 @@ struct VReader<'a> {
 	version: u32,
 }
 
+#[derive(derive_more::Deref, derive_more::DerefMut)]
+struct VWriter {
+	#[deref]
+	#[deref_mut]
+	writer: Writer,
+	start: Label,
+	version: u32,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scena {
 	pub name: String,
@@ -316,6 +330,14 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 	for (label, (name, item)) in labels.into_iter().zip(&scena.items) {
 		let _span = tracing::error_span!("chunk", name = name.as_str()).entered();
 		f.place(label);
+		let mut vw = VWriter {
+			writer: Writer::new(),
+			start,
+			version: scena.version,
+		};
+		let align = write_entry(&mut vw, item).context(EntryWriteSnafu { name })?;
+		f.align(align);
+		f += vw.writer;
 	}
 
 	Ok(f.finish()?)
@@ -329,7 +351,7 @@ pub enum EntryReadError {
 	TrailingData { n: usize },
 
 	#[snafu(display("could not read function"), context(false))]
-	Function { source: func::ReadError },
+	Function { source: func::read::ReadError },
 	#[snafu(display("could not read effect"), context(false))]
 	Effect { source: table::effect::ReadError },
 	#[snafu(display("could not read FcAuto"), context(false))]
@@ -365,6 +387,48 @@ pub enum EntryReadError {
 	SummonTable { source: table::summon_table::ReadError },
 	#[snafu(display("could not read WeaponAttTable"), context(false))]
 	WeaponAttTable { source: table::weapon_att_table::ReadError },
+}
+
+#[derive(Debug, snafu::Snafu)]
+pub enum EntryWriteError {
+
+	#[snafu(display("could not write function"), context(false))]
+	Function { source: func::write::WriteError },
+	// #[snafu(display("could not write effect"), context(false))]
+	// Effect { source: table::effect::WriteError },
+	// #[snafu(display("could not write FcAuto"), context(false))]
+	// FcAuto { source: table::fc_auto::WriteError },
+	// #[snafu(display("could not write BookData"), context(false))]
+	// BookData { source: table::book::WriteError },
+	// #[snafu(display("could not write book BookData99"), context(false))]
+	// BookData99 { source: table::book99::WriteError },
+	// #[snafu(display("could not write BTLSET"), context(false))]
+	// Btlset { source: table::btlset::WriteError },
+	// #[snafu(display("could not write StyleName"), context(false))]
+	// StyleName { source: table::style_name::WriteError },
+
+	// #[snafu(display("could not write ActionTable"), context(false))]
+	// ActionTable { source: table::action_table::WriteError },
+	// #[snafu(display("could not write AddCollision"), context(false))]
+	// AddCollision { source: table::add_collision::WriteError },
+	// #[snafu(display("could not write AlgoTable"), context(false))]
+	// AlgoTable { source: table::algo_table::WriteError },
+	// #[snafu(display("could not write AnimeClipTable"), context(false))]
+	// AnimeClipTable { source: table::anime_clip_table::WriteError },
+	// #[snafu(display("could not write BreakTable"), context(false))]
+	// BreakTable { source: table::break_table::WriteError },
+	// #[snafu(display("could not write FieldFollowData"), context(false))]
+	// FieldFollowData { source: table::field_follow_data::WriteError },
+	// #[snafu(display("could not write FieldMonsterData"), context(false))]
+	// FieldMonsterData { source: table::field_monster_data::WriteError },
+	// #[snafu(display("could not write PartTable"), context(false))]
+	// PartTable { source: table::part_table::WriteError },
+	// #[snafu(display("could not write ReactionTable"), context(false))]
+	// ReactionTable { source: table::reaction_table::WriteError },
+	// #[snafu(display("could not write SummonTable"), context(false))]
+	// SummonTable { source: table::summon_table::WriteError },
+	// #[snafu(display("could not write WeaponAttTable"), context(false))]
+	// WeaponAttTable { source: table::weapon_att_table::WriteError },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -403,7 +467,7 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryReadError> {
 	f.reader = Reader::new(data).at(f.reader.pos()).unwrap();
 
 	let item = match Type::from_name(name) {
-		Type::Normal => Item::Func(func::read(f)?),
+		Type::Normal => Item::Func(func::read::read(f)?),
 		Type::Effect => Item::Effect(table::effect::read(f)?),
 		Type::FcAuto => Item::Fc(table::fc_auto::read(f)?),
 		Type::BookData => Item::BookPage(table::book::read(f)?),
@@ -433,6 +497,32 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryReadError> {
 
 	ensure!(f.remaining().is_empty(), TrailingDataSnafu { n: f.remaining().len() });
 	Ok(item)
+}
+
+fn write_entry(f: &mut VWriter, item: &Item) -> Result<usize, EntryWriteError> {
+	match item {
+		Item::Func(i) => func::write::write(f, i)?,
+		Item::Effect(i) => todo!(),
+		Item::Fc(i) => todo!(),
+		Item::BookPage(i) => todo!(),
+		Item::BookMetadata(i) => todo!(),
+		Item::Btlset(i) => todo!(),
+		Item::StyleName(i) => todo!(),
+
+		Item::Empty => todo!(),
+		Item::ActionTable(i) => todo!(),
+		Item::AddCollision(i) => todo!(),
+		Item::AlgoTable(i) => todo!(),
+		Item::AnimeClipTable(i) => todo!(),
+		Item::BreakTable(i) => todo!(),
+		Item::FieldFollowData(i) => todo!(),
+		Item::FieldMonsterData(i) => todo!(),
+		Item::PartTable(i) => todo!(),
+		Item::ReactionTable(i) => todo!(),
+		Item::SummonTable(i) => todo!(),
+		Item::WeaponAttTable(i) => todo!(),
+	}
+	Ok(4)
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

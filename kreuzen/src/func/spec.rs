@@ -132,3 +132,64 @@ fn build_ops(ops: BTreeMap<Vec<u8>, Vec<Part>>) -> [Option<Op>; 256] {
 	}
 	out
 }
+
+pub(crate) fn op_40(a: crate::Char) -> &'static [Part] {
+	use Part::*;
+	match a.0 {
+		0xFE02..= 0xFE04 => &[F32, F32, F32, F32, F32, U8, U16, F32, F32, U8],
+		0xFE05           => &[F32, F32, F32, F32,      U8, U16, F32, F32, U8, Str],
+		0xFE15           => &[Dyn, Dyn, Dyn, Dyn,      U8, U16, F32, F32, U8],
+		_                => &[                         U8, U16, F32, F32, U8],
+	}
+}
+
+pub(crate) fn op_98(a: u16) -> &'static [Part] {
+	use Part::*;
+	match a {
+		1 => &[F32],
+		2 => &[F32],
+		6 => &[F32],
+		7 => &[F32],
+		3 => &[U16, U8],
+		1000 => &[F32, U8],
+		1001 => &[F32, U8],
+		2000 => &[U8, F32, U8],
+		3000 => &[F32, F32, U16, F32],
+		4000 => &[Char, F32, U16, U8],
+		4001 => &[Str, F32, U16, U8],
+		4002 => &[U16],
+		5000 => &[F32],
+		5001 => &[F32],
+		5002 => &[F32],
+		6000 => &[F32],
+		6001 => &[F32],
+		6500 => &[F32],
+		7000 => &[U8],
+		7001 => &[U8],
+		8000 => &[Str, U8],
+		9000 => &[F32],
+		10000 => &[F32, F32, F32, F32, F32, F32, F32, F32],
+		_ => &[],
+	}
+}
+
+pub(crate) fn op_c0(a: u16) -> &'static [Part] {
+	use Part::*;
+	match a {
+		1 => &[F32],
+		3 => &[Str, F32, F32, F32, F32, F32, F32],
+		4 => &[Str, U8],
+		1000 | 1001 | 1003 => &[U16, U16],
+		_ => &[],
+	}
+}
+
+pub(crate) fn op_d2(a: i16) -> &'static [Part] {
+	use Part::*;
+	match a {
+		0 => &[U8],
+		3 => &[U8, U8, U32],
+		-2 | -1 => &[Dyn],
+		_ => &[],
+	}
+}

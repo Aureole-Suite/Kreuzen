@@ -71,7 +71,7 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Stmt>, ReadError> {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Label(pub u32);
+pub struct Label(u32);
 
 impl std::fmt::Debug for Label {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -102,18 +102,6 @@ impl std::fmt::Debug for FlatOp {
 			Self::Goto(arg0, arg1) => arg0.fmt(f)?.debug_tuple("Goto").field(arg1).finish(),
 			Self::If(arg0, arg1, arg2) => arg0.fmt(f)?.debug_tuple("If").field(arg1).field(arg2).finish(),
 			Self::Switch(arg0, arg1, arg2, arg3) => arg0.fmt(f)?.debug_tuple("Switch").field(arg1).field(arg2).field(arg3).finish(),
-		}
-	}
-}
-
-impl FlatOp {
-	pub fn meta(&self) -> OpMeta {
-		match self {
-			FlatOp::Op(op) => op.meta,
-			FlatOp::Label(_) => OpMeta::default(),
-			FlatOp::Goto(meta, _) => *meta,
-			FlatOp::If(meta, _, _) => *meta,
-			FlatOp::Switch(meta, _, _, _) => *meta,
 		}
 	}
 }
@@ -234,6 +222,15 @@ fn read_parts(op: &mut Op, f: &mut VReader, part: &[Part]) -> Result<(), OpReadE
 	Ok(())
 }
 
+macro_rules! next {
+	($op:expr, $n:expr, $ty:ident) => {
+		match $op.args.get($n) {
+			Some(Arg::$ty(arg)) => *arg,
+			_ => panic!("{op:?}: expected arg {n} to be type {ty}", op=$op, n=$n, ty=stringify!($ty)),
+		}
+	};
+}
+
 fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadError> {
 	use super::spec::Part::*;
 	match part {
@@ -256,139 +253,57 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 			}
 		}
 
-		_3E => {
-			let Some(&Arg::Char(crate::Char(a))) = op.args.get(1) else {
-				panic!("3E must have a char arg");
-			};
+		Part::_40 => read_parts(op, f, super::spec::op_40(next!(op, 1, Char)))?,
+		Part::_98 => read_parts(op, f, super::spec::op_98(next!(op, 0, U16)))?,
+		Part::_C0 => read_parts(op, f, super::spec::op_c0(next!(op, 0, U16)))?,
+		Part::_D2 => read_parts(op, f, super::spec::op_d2(next!(op, 0, I16)))?,
+
+		Part::_3E => {
+			let a = next!(op, 0, Char).0;
 			if a == 0xFE12 {
 				read_parts(op, f, &[U8])?;
 			} else if a == 0xFE13 {
 				read_parts(op, f, &[F32])?;
 			}
-
 			if op.args[1..] == [Arg::Char(crate::Char(65535)), Arg::F32(5.0), Arg::U8(0)] {
 				f.check(&[0, 0, 0])?;
 			}
 		}
-
-		_3F => {
+		Part::_3F => {
 			if f.version != 2 {
 				read_parts(op, f, &[U32])?;
 			}
 		}
-
-		_40 => {
-			let Some(&Arg::Char(crate::Char(a))) = op.args.get(1) else {
-				panic!("40 must have a char arg");
-			};
-			if a == 0xFE15 {
-				read_parts(op, f, &[Dyn, Dyn, Dyn, Dyn])?;
-			} else {
-				read_parts(op, f, &[F32, F32, F32, F32])?;
-				if matches!(a, 0xFE02 | 0xFE03 | 0xFE04) {
-					read_parts(op, f, &[F32])?;
-				}
-			}
-			read_parts(op, f, &[U8, U16, F32, F32, U8])?;
-			if a == 0xFE05 {
-				read_parts(op, f, &[Str])?;
-			}
-		}
-
-		_4E => {
+		Part::_4E => {
 			if f.version != 2 {
 				read_parts(op, f, &[U8])?;
 			}
 		}
-
-		_6C => {
+		Part::_6C => {
 			if f.version != 2 {
 				read_parts(op, f, &[I32])?;
 			}
 		}
-
-		_79 => {
-			let Some(&Arg::U8(a)) = op.args.get(0) else {
-				panic!("79 must have a U8 arg");
-			};
+		Part::_79 => {
+			let a = next!(op, 0, U8);
 			if a == 7 {
 				read_parts(op, f, &[U8, U8])?;
 			}
 		}
-
-		_98 => {
-			let Some(&Arg::U16(a)) = op.args.get(0) else {
-				panic!("98 must have a U16 arg");
-			};
-			match a {
-				1 => read_parts(op, f, &[F32])?,
-				2 => read_parts(op, f, &[F32])?,
-				6 => read_parts(op, f, &[F32])?,
-				7 => read_parts(op, f, &[F32])?,
-				3 => read_parts(op, f, &[U16, U8])?,
-				1000 => read_parts(op, f, &[F32, U8])?,
-				1001 => read_parts(op, f, &[F32, U8])?,
-				2000 => read_parts(op, f, &[U8, F32, U8])?,
-				3000 => read_parts(op, f, &[F32, F32, U16, F32])?,
-				4000 => read_parts(op, f, &[Char, F32, U16, U8])?,
-				4001 => read_parts(op, f, &[Str, F32, U16, U8])?,
-				4002 => read_parts(op, f, &[U16])?,
-				5000 => read_parts(op, f, &[F32])?,
-				5001 => read_parts(op, f, &[F32])?,
-				5002 => read_parts(op, f, &[F32])?,
-				6000 => read_parts(op, f, &[F32])?,
-				6001 => read_parts(op, f, &[F32])?,
-				6500 => read_parts(op, f, &[F32])?,
-				7000 => read_parts(op, f, &[U8])?,
-				7001 => read_parts(op, f, &[U8])?,
-				8000 => read_parts(op, f, &[Str, U8])?,
-				9000 => read_parts(op, f, &[F32])?,
-				10000 => read_parts(op, f, &[F32, F32, F32, F32, F32, F32, F32, F32])?,
-				_ => {}
-			}
-		}
-
-		_AB01 => {
+		Part::_AB01 => {
 			let slice = f.slice(50)?;
 			let nonzero = slice.iter().rposition(|&b| b != 0).map_or(0, |i| i + 1);
 			for &i in &slice[..nonzero] {
 				op.push(i);
 			}
 		}
-
-		_AB02 => {
+		Part::_AB02 => {
 			let n = f.u8()?;
-			for i in 0..50 {
-				if i < n {
-					op.push(f.u16()?);
-				} else {
-					f.check_u16(0)?;
-				}
+			for _ in 0..n {
+				op.push(f.u16()?);
 			}
-		}
-
-		_C0 => {
-			let Some(&Arg::U16(a)) = op.args.get(0) else {
-				panic!("C0 must have a U16 arg");
-			};
-			match a {
-				1 => read_parts(op, f, &[F32])?,
-				3 => read_parts(op, f, &[Str, F32, F32, F32, F32, F32, F32])?,
-				4 => read_parts(op, f, &[Str, U8])?,
-				1000 | 1001 | 1003 => read_parts(op, f, &[U16, U16])?,
-				_ => {}
-			}
-		}
-
-		_D2 => {
-			let Some(&Arg::I16(a)) = op.args.get(0) else {
-				panic!("C0 must have a I16 arg");
-			};
-			match a {
-				0 => read_parts(op, f, &[U8])?,
-				3 => read_parts(op, f, &[U8, U8, U32])?,
-				-2 | -1 => read_parts(op, f, &[Dyn])?,
-				_ => {}
+			for _ in n..50 {
+				f.check_u16(0)?;
 			}
 		}
 	}

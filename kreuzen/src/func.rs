@@ -2,8 +2,7 @@ use std::sync::LazyLock;
 use arrayvec::ArrayVec;
 
 pub mod read;
-pub use read::ReadError;
-
+pub mod write;
 pub mod expr;
 pub mod dial;
 

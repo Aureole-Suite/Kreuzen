@@ -125,7 +125,7 @@ impl<'a> Ctx<'a> {
 		}
 	}
 
-	fn block(&mut self, what: &'static str, goto_allowed: GotoAllowed) -> Result<(Vec<Stmt>, Option<(OpMeta, Label)>), DecompileError> {
+	fn block(&mut self, what: &'static str, goto_allowed: GotoAllowed) -> Result<BlockValue, DecompileError> {
 		let start = self.pos;
 		let end = self.end;
 		block(self, goto_allowed).context(decompile::Block { what, start, end })
@@ -139,7 +139,9 @@ enum GotoAllowed {
 	No,
 }
 
-fn block(ctx: &mut Ctx, goto_allowed: GotoAllowed) -> Result<(Vec<Stmt>, Option<(OpMeta, Label)>), DecompileError> {
+type BlockValue = (Vec<Stmt>, Option<(OpMeta, Label)>);
+
+fn block(ctx: &mut Ctx, goto_allowed: GotoAllowed) -> Result<BlockValue, DecompileError> {
 	let mut stmts = Vec::new();
 	while let Some(stmt) = ctx.next() {
 		match stmt {

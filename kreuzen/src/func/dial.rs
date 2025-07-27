@@ -1,4 +1,4 @@
-use gospel::read::Le as _;
+use gospel::{read::Le as _, write::Le as _};
 
 #[derive(Debug, snafu::Snafu)]
 pub enum ReadError {
@@ -16,6 +16,13 @@ pub enum ReadError {
 	BadControl {
 		byte: u8,
 	},
+}
+
+#[derive(Debug)]
+struct Private;
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[allow(private_interfaces)] #[doc(hidden)] Never { never: Private },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -103,5 +110,35 @@ impl Dialogue {
 			}
 		}
 		Ok(Dialogue(out))
+	}
+
+	pub(crate) fn write(&self, f: &mut crate::VWriter) -> Result<(), WriteError> {
+		for part in &self.0 {
+			match part {
+				DialoguePart::String(s) => f.slice(s.as_bytes()),
+				DialoguePart::Control(c) => match c {
+					DialogueControl::Line => f.u8(0x01),
+					DialogueControl::Page => f.u8(0x02),
+					DialogueControl::_03 => f.u8(0x03),
+					DialogueControl::_06 => f.u8(0x06),
+					DialogueControl::_07 => f.u8(0x07),
+					DialogueControl::_08 => f.u8(0x08),
+					DialogueControl::_09 => f.u8(0x09),
+					DialogueControl::_0B => f.u8(0x0B),
+					DialogueControl::_0C => f.u8(0x0C),
+					DialogueControl::_0F => f.u8(0x0F),
+					DialogueControl::_10(v) => { f.u8(0x10); f.u16(*v); },
+					DialogueControl::_11(v) => { f.u8(0x11); f.u32(*v); },
+					DialogueControl::_12(v) => { f.u8(0x12); f.u32(*v); },
+					DialogueControl::_13 => f.u8(0x13),
+					DialogueControl::_16 => f.u8(0x16),
+					DialogueControl::_17(v) => { f.u8(0x17); f.u16(*v); },
+					DialogueControl::_19(v) => { f.u8(0x19); f.u16(*v); },
+					DialogueControl::_1A => f.u8(0x1A),
+				},
+			}
+		}
+		f.u8(0x00);
+		Ok(())
 	}
 }
