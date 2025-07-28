@@ -115,18 +115,6 @@ pub enum WriteError {
 	},
 }
 
-#[derive(Clone)]
-struct Entry {
-	name: String,
-	start: usize,
-}
-
-impl std::fmt::Debug for Entry {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}@{}", self.name, self.start)
-	}
-}
-
 enum Type {
 	Normal,
 	StyleName,
@@ -193,7 +181,7 @@ impl Type {
 }
 
 // This function corresponds to the /asm/ files. Cursed.
-fn read_table(f: &mut Reader, n: usize) -> Result<Vec<Entry>, ReadError> {
+fn read_table(f: &mut Reader, n: usize) -> Result<Vec<(String, usize)>, ReadError> {
 	let mut starts = Vec::with_capacity(n);
 	for _ in 0..n {
 		starts.push(f.u32()? as usize);
@@ -210,10 +198,7 @@ fn read_table(f: &mut Reader, n: usize) -> Result<Vec<Entry>, ReadError> {
 	}
 	let mut entries = Vec::with_capacity(n);
 	for i in 0..n {
-		entries.push(Entry {
-			name: names[i].to_owned(),
-			start: starts[i],
-		});
+		entries.push((names[i].to_owned(), starts[i]));
 	}
 	Ok(entries)
 }
@@ -239,7 +224,7 @@ struct VWriter {
 pub struct Scena {
 	pub name: String,
 	pub version: u32,
-	pub items: Vec<(String, Item)>,
+	pub entries: Vec<(String, Entry)>,
 }
 
 pub fn read(data: &[u8]) -> Result<Scena, ReadError> {
@@ -274,18 +259,18 @@ pub fn read(data: &[u8]) -> Result<Scena, ReadError> {
 	assert_eq!(f.pos(), asm_end);
 	f.align_zeroed(4)?;
 
-	let mut items = Vec::new();
-	let ends = table.iter().map(|e| e.start).skip(1).chain([f.len()]);
-	for (entry, end) in table.iter().zip(ends) {
-		let _span = tracing::error_span!("chunk", name = entry.name.as_str()).entered();
+	let mut entries = Vec::new();
+	let ends = table.iter().map(|e| e.1).skip(1).chain([f.len()]);
+	for (&(ref name, start), end) in table.iter().zip(ends) {
+		let _span = tracing::error_span!("chunk", name = name.as_str()).entered();
 		let mut vr = VReader {
-			reader: Reader::new(&data[..end]).at(entry.start)?,
+			reader: Reader::new(&data[..end]).at(start)?,
 			version,
 		};
-		match read_entry(&mut vr, &entry.name) {
-			Ok(v) => items.push((entry.name.clone(), v)),
+		match read_entry(&mut vr, name) {
+			Ok(v) => entries.push((name.clone(), v)),
 			Err(e) => {
-				tracing::error!("{e}\n{:#X}", vr.dump().start(entry.start));
+				tracing::error!("{e}\n{:#X}", vr.dump().start(start));
 				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
 					tracing::error!("{e}");
 				}
@@ -293,7 +278,7 @@ pub fn read(data: &[u8]) -> Result<Scena, ReadError> {
 		}
 	}
 
-	Ok(Scena { name, version, items })
+	Ok(Scena { name, version, entries })
 }
 
 pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
@@ -304,9 +289,9 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 	f.u32(0x20);
 	f.u32(0x20);
 	let table_top = f.ptr32(start);
-	f.usize32(scena.items.len() * 4)?;
+	f.usize32(scena.entries.len() * 4)?;
 	let function_name_table_top = f.ptr32(start);
-	f.usize32(scena.items.len())?;
+	f.usize32(scena.entries.len())?;
 	let asm_end = f.ptr32(start);
 	f.u32(0xABCDEF00);
 	assert!(f.len() == 0x20);
@@ -317,11 +302,11 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 		f.u32(0xFF000000);
 	}
 
-	let mut labels = Vec::with_capacity(scena.items.len());
+	let mut labels = Vec::with_capacity(scena.entries.len());
 	let mut starts = Writer::new();
 	let mut name_starts = Writer::new();
 	let mut names = Writer::new();
-	for (name, _) in &scena.items {
+	for (name, _) in &scena.entries {
 		labels.push(starts.ptr32(start));
 		name_starts.label16(start, names.here());
 		names.str(name)?;
@@ -334,15 +319,15 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 	f += names;
 	f.place(asm_end);
 
-	assert_eq!(scena.items.len(), labels.len());
-	for (label, (name, item)) in labels.into_iter().zip(&scena.items) {
+	assert_eq!(scena.entries.len(), labels.len());
+	for (label, (name, entry)) in labels.into_iter().zip(&scena.entries) {
 		let _span = tracing::error_span!("chunk", name = name.as_str()).entered();
 		let mut vw = VWriter {
 			writer: Writer::new(),
 			start,
 			version: scena.version,
 		};
-		let align = write_entry(&mut vw, item).context(EntryWriteSnafu { name })?;
+		let align = write_entry(&mut vw, entry).context(EntryWriteSnafu { name })?;
 		f.align(align);
 		f.place(label);
 		f += vw.writer;
@@ -353,7 +338,7 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Item {
+pub enum Entry {
 	Func(Vec<func::Stmt>),
 	Effect(Vec<table::Effect>),
 	Fc(String),
@@ -423,7 +408,7 @@ pub enum EntryReadError {
 	WeaponAttTable { source: table::weapon_att_table::ReadError },
 }
 
-fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryReadError> {
+fn read_entry(f: &mut VReader, name: &str) -> Result<Entry, EntryReadError> {
 	let mut data = f.reader.data();
 	while data.last() == Some(&0) {
 		data = &data[..data.len() - 1]; // Remove trailing zeroes
@@ -434,32 +419,32 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryReadError> {
 	f.reader = Reader::new(data).at(f.reader.pos()).unwrap();
 
 	let item = match Type::from_name(name) {
-		Type::Normal => Item::Func(func::read::read(f)?),
-		Type::Effect => Item::Effect(table::effect::read(f)?),
-		Type::FcAuto => Item::Fc(table::fc_auto::read(f)?),
-		Type::BookData => Item::BookPage(table::book::read(f)?),
-		Type::BookData99 => Item::BookMetadata(table::book99::read(f)?),
-		Type::Btlset => Item::Btlset(table::btlset::read(f)?),
-		Type::StyleName => Item::StyleName(table::style_name::read(f)?),
+		Type::Normal => Entry::Func(func::read::read(f)?),
+		Type::Effect => Entry::Effect(table::effect::read(f)?),
+		Type::FcAuto => Entry::Fc(table::fc_auto::read(f)?),
+		Type::BookData => Entry::BookPage(table::book::read(f)?),
+		Type::BookData99 => Entry::BookMetadata(table::book99::read(f)?),
+		Type::Btlset => Entry::Btlset(table::btlset::read(f)?),
+		Type::StyleName => Entry::StyleName(table::style_name::read(f)?),
 
 		Type::Empty => {
 			if !f.remaining().is_empty() {
-				Item::Btlset(table::btlset::read(f)?)
+				Entry::Btlset(table::btlset::read(f)?)
 			} else {
-				Item::Empty
+				Entry::Empty
 			}
 		},
-		Type::ActionTable => Item::ActionTable(table::action_table::read(f)?),
-		Type::AddCollision => Item::AddCollision(table::add_collision::read(f)?),
-		Type::AlgoTable => Item::AlgoTable(table::algo_table::read(f)?),
-		Type::AnimeClipTable => Item::AnimeClipTable(table::anime_clip_table::read(f)?),
-		Type::BreakTable => Item::BreakTable(table::break_table::read(f)?),
-		Type::FieldFollowData => Item::FieldFollowData(table::field_follow_data::read(f)?),
-		Type::FieldMonsterData => Item::FieldMonsterData(table::field_monster_data::read(f)?),
-		Type::PartTable => Item::PartTable(table::part_table::read(f)?),
-		Type::ReactionTable => Item::ReactionTable(table::reaction_table::read(f)?),
-		Type::SummonTable => Item::SummonTable(table::summon_table::read(f)?),
-		Type::WeaponAttTable => Item::WeaponAttTable(table::weapon_att_table::read(f)?),
+		Type::ActionTable => Entry::ActionTable(table::action_table::read(f)?),
+		Type::AddCollision => Entry::AddCollision(table::add_collision::read(f)?),
+		Type::AlgoTable => Entry::AlgoTable(table::algo_table::read(f)?),
+		Type::AnimeClipTable => Entry::AnimeClipTable(table::anime_clip_table::read(f)?),
+		Type::BreakTable => Entry::BreakTable(table::break_table::read(f)?),
+		Type::FieldFollowData => Entry::FieldFollowData(table::field_follow_data::read(f)?),
+		Type::FieldMonsterData => Entry::FieldMonsterData(table::field_monster_data::read(f)?),
+		Type::PartTable => Entry::PartTable(table::part_table::read(f)?),
+		Type::ReactionTable => Entry::ReactionTable(table::reaction_table::read(f)?),
+		Type::SummonTable => Entry::SummonTable(table::summon_table::read(f)?),
+		Type::WeaponAttTable => Entry::WeaponAttTable(table::weapon_att_table::read(f)?),
 	};
 
 	ensure!(f.remaining().is_empty(), TrailingDataSnafu { n: f.remaining().len() });
@@ -507,33 +492,33 @@ pub enum EntryWriteError {
 	WeaponAttTable { source: table::weapon_att_table::WriteError },
 }
 
-fn write_entry(f: &mut VWriter, item: &Item) -> Result<usize, EntryWriteError> {
+fn write_entry(f: &mut VWriter, item: &Entry) -> Result<usize, EntryWriteError> {
 	match item {
-		Item::Func(i) => func::write::write(f, i)?,
-		Item::Effect(i) => table::effect::write(f, i)?,
-		Item::Fc(i) => table::fc_auto::write(f, i)?,
-		Item::BookPage(i) => table::book::write(f, i)?,
-		Item::BookMetadata(i) => table::book99::write(f, *i)?,
-		Item::Btlset(i) => table::btlset::write(f, i)?,
-		Item::StyleName(i) => table::style_name::write(f, i)?,
+		Entry::Func(i) => func::write::write(f, i)?,
+		Entry::Effect(i) => table::effect::write(f, i)?,
+		Entry::Fc(i) => table::fc_auto::write(f, i)?,
+		Entry::BookPage(i) => table::book::write(f, i)?,
+		Entry::BookMetadata(i) => table::book99::write(f, *i)?,
+		Entry::Btlset(i) => table::btlset::write(f, i)?,
+		Entry::StyleName(i) => table::style_name::write(f, i)?,
 
-		Item::Empty => {}
-		Item::ActionTable(i) => table::action_table::write(f, i)?,
-		Item::AddCollision(i) => table::add_collision::write(f, i)?,
-		Item::AlgoTable(i) => table::algo_table::write(f, i)?,
-		Item::AnimeClipTable(i) => table::anime_clip_table::write(f, i)?,
-		Item::BreakTable(i) => table::break_table::write(f, i)?,
-		Item::FieldFollowData(i) => table::field_follow_data::write(f, i)?,
-		Item::FieldMonsterData(i) => table::field_monster_data::write(f, i)?,
-		Item::PartTable(i) => table::part_table::write(f, i)?,
-		Item::ReactionTable(i) => table::reaction_table::write(f, i)?,
-		Item::SummonTable(i) => table::summon_table::write(f, i)?,
-		Item::WeaponAttTable(i) => table::weapon_att_table::write(f, i)?,
+		Entry::Empty => {}
+		Entry::ActionTable(i) => table::action_table::write(f, i)?,
+		Entry::AddCollision(i) => table::add_collision::write(f, i)?,
+		Entry::AlgoTable(i) => table::algo_table::write(f, i)?,
+		Entry::AnimeClipTable(i) => table::anime_clip_table::write(f, i)?,
+		Entry::BreakTable(i) => table::break_table::write(f, i)?,
+		Entry::FieldFollowData(i) => table::field_follow_data::write(f, i)?,
+		Entry::FieldMonsterData(i) => table::field_monster_data::write(f, i)?,
+		Entry::PartTable(i) => table::part_table::write(f, i)?,
+		Entry::ReactionTable(i) => table::reaction_table::write(f, i)?,
+		Entry::SummonTable(i) => table::summon_table::write(f, i)?,
+		Entry::WeaponAttTable(i) => table::weapon_att_table::write(f, i)?,
 	}
 
 	let align = match item {
-		Item::Effect(_) => 16,
-		Item::Fc(_) => 16,
+		Entry::Effect(_) => 16,
+		Entry::Fc(_) => 16,
 		_ => 4,
 	};
 	Ok(align)
