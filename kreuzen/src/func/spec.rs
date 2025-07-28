@@ -13,6 +13,7 @@ pub enum Part {
 
 	Char,
 	Item,
+	Magic,
 	Flag,
 	Global,
 	Var,

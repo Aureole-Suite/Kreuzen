@@ -221,6 +221,7 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 
 			Char => f.u16(next!(args, Char).0),
 			Item => f.u16(next!(args, Item).0),
+			Magic => f.u16(next!(args, Magic).0),
 			Flag => f.u16(next!(args, Flag).0),
 			Global => f.u8(next!(args, Global).0),
 			Var => f.u8(next!(args, Var).0),
@@ -305,7 +306,7 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 
 fn write_dyn(f: &mut VWriter, arg: &Dyn) -> Result<(), OpWriteErrorKind> {
 	match *arg {
-		Dyn::_11(v) => { f.u8(0x11); f.u32(v); f.u8(0); }
+		Dyn::Var(v) => { f.u8(0x11); f.u8(v.0); f.u32(0); }
 		Dyn::_33(v) => { f.u8(0x33); f.u32(v); f.u8(0); }
 		Dyn::_44(v) => { f.u8(0x44); f.u32(v); f.u8(0); }
 		Dyn::_55(v) => { f.u8(0x55); f.u32(v); f.u8(0); }

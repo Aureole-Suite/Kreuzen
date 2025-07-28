@@ -5,8 +5,8 @@
 05   'if'
 06   'switch'
 07   'Debug' u8 dyn
-08   'SetAttr' u8 expr
-0A   'SetVar' u8 expr
+08   'SetAttr' attr expr
+0A   'SetVar' var expr
 0C   u8 u8 # Related to expr _25
 0D   u8 u8 expr
 0E   u8 u8 u8
@@ -438,7 +438,7 @@
 4700 str u16
 4701 str u16
 4800 char u16 u16 # set char attributes; 0 = level, 30 = cp
-4900 u16
+4900 char
 4901 u16
 4902 u8
 4903
@@ -451,7 +451,6 @@
 490A 'CharExists' char
 490B u16
 490C char char
-490D u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 490E u8
 490F u8
 4910
@@ -609,13 +608,13 @@
 6501 str u16
 6502 str f32
 6503 str f32
-6600 char u16 # magic id
-6601 char u16
+6600 'CharCraftAdd' char magic # 0 for "all at current level"
+6601 'CharCraftRemove' char magic
 6602 char u32
-6603 char
-6604 char u16
+6603 'CharCraftClear' char
+6604 'CharSetSbreak' char magic
 6605 char
-6606 'CharHasCraft' char u16 # magic id
+6606 'CharCraftHas' char magic
 6607 char
 6608 char u16 u8
 6609 char u16
@@ -652,7 +651,7 @@
 681B str f32 f32 f32
 6900 char char u8 u8 u8
 6901 u16
-6902 u16 char u16
+6902 'LinkSetLevel' char char u16
 6903 u16 u16 u16
 6904 u16
 6905 char char u16
@@ -672,7 +671,7 @@
 6917 u16
 6918 u16 u16 u16 u8 u8 u8
 6919 u8
-691A dyn u16
+691A dyn char
 691B u16
 691C u32
 691D u16
@@ -697,7 +696,7 @@
 6F07 'SepithAdd' item u32
 6F0A item u32
 6F0C 'MiraGet' u16 u32
-6F0E item u32
+6F0E 'ItemsetAdd' u16 u32
 6F14 'ItemUnlock' item u32 # only used in debug script
 6F15 'ItemLock' item u32
 6F16 'ItemIsLocked' char u32
@@ -705,29 +704,26 @@
 6F18 u16 u32
 6F19 u16 u32
 6F1A u16 u32
-6F1B u16
-6F1C u32 u32 u8 u8
+6F1B 'InventorySwitch' u16
+6F1C 'InventoryMerge' u32 u32 u8 u8
 6F1D dyn
 6F1E dyn dyn u8 u8
 6F1F u16 u32
 6F20 u16 u8
 6F21 u16 u32
-7000 char item u8 u8
-7001 char u8
-7002 char u16
-7003 char item u8 u8 u8
-7004 char u8 u8
-7005 char u16 u8 u8
-7006 char u8 u8 u8 u8
+7000 'CharEquipItem' char item u8 u8
+7001 'CharUnequipItem' char u8
+7003 'CharEquipQuartz' char item u8 u8 u8
+7004 'CharUnequipQuartz' char u8 u8
+7005 char item u8 u8 # "is anyone wearing sub mq", according to comments
+7006 'CharSetSlotLevel' char u8 u8 u8 u8
 7007 char u8
-7008 item u16 u16
-7009 char u8 u8
-700A char u32 u32
+7008 'MqSetLevel' item u16 u16
+700A 'MqSetExp' char u32 u32
 700B char u8
 700C char u8 u8
-700D char
-700E char item item
-700F char item u16
+700E 'CharEquipSubMq' char item item
+700F 'CharEquipMq' char item u16
 71   u8 u16 u16
 72   u16 # fall through
 7201 u16 u8
@@ -860,7 +856,7 @@
 9700 u16 flags32
 9702 u16 flags32
 98   u16 _98
-99   u16 u16
+99   'HelpUnlock' u16 u16
 9A   u16 f32 f32 f32 u16
 9B00 u16
 9B02

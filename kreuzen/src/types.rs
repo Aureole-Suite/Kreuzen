@@ -113,6 +113,8 @@ impl Char {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Item(pub u16);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
+pub struct Magic(pub u16);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Flag(pub u16);
