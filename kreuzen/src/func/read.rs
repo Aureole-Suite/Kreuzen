@@ -7,7 +7,7 @@ use snafu::ResultExt;
 use crate::{ReaderaExt, VReader};
 
 use super::spec::Part;
-use super::{Arg, CallArg, Case, Dialogue, Expr, Op, OpMeta, Stmt, SPEC};
+use super::{Arg, Dyn, Case, Dialogue, Expr, Op, OpMeta, Stmt, SPEC};
 
 mod decompile;
 
@@ -245,11 +245,11 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 
 		Expr => op.push(self::Expr::read(f)?),
 		Text => op.push(self::Dialogue::read(f)?),
-		Dyn => op.push(call_arg(f)?),
-		Dyn2 => op.push(call_arg2(f)?),
+		Dyn => op.push(read_dyn(f)?),
+		Dyn2 => op.push(read_dyn2(f)?),
 		Ndyn => {
 			for _ in 0..f.u8()? {
-				op.push(call_arg(f)?);
+				op.push(read_dyn(f)?);
 			}
 		}
 
@@ -314,30 +314,30 @@ fn at_end(f: &VReader<'_>) -> bool {
 	f.remaining().len() <= 3 && f.remaining().iter().all(|&b| b == 0)
 }
 
-fn call_arg(f: &mut VReader) -> Result<CallArg, OpReadError> {
+fn read_dyn(f: &mut VReader) -> Result<Dyn, OpReadError> {
 	Ok(match f.u8()? {
-		0x11 => CallArg::_11(f.u32()?, f.u8()?),
-		0x22 => CallArg::_22(f.f32()?, f.f32()?),
-		0x33 => CallArg::_33(f.f32()?, f.u8()?),
-		0x44 => CallArg::_44(f.f32()?, f.u8()?, String::new()),
-		0x55 => CallArg::_55(f.u32()?, f.u8()?),
-		0xDD => CallArg::_DD(String::new(), f.str()?),
-		0xEE => CallArg::_EE(f.f32()?, f.u8()?),
-		0xFF => CallArg::_FF(f.i32()?, f.u8()?),
-		v => CallArg::Unknown(v),
+		0x11 => Dyn::_11(f.u32()?, f.u8()?),
+		0x22 => Dyn::_22(f.f32()?, f.f32()?),
+		0x33 => Dyn::_33(f.f32()?, f.u8()?),
+		0x44 => Dyn::_44(f.f32()?, f.u8()?, String::new()),
+		0x55 => Dyn::_55(f.u32()?, f.u8()?),
+		0xDD => Dyn::_DD(String::new(), f.str()?),
+		0xEE => Dyn::_EE(f.f32()?, f.u8()?),
+		0xFF => Dyn::_FF(f.i32()?, f.u8()?),
+		v => Dyn::Unknown(v),
 	})
 }
 
-fn call_arg2(f: &mut VReader) -> Result<CallArg, OpReadError> {
+fn read_dyn2(f: &mut VReader) -> Result<Dyn, OpReadError> {
 	Ok(match f.u8()? {
-		0x11 => CallArg::_11(f.u32()?, f.u8()?),
-		0x22 => CallArg::_22(f.f32()?, f.f32()?),
-		0x33 => CallArg::_33(f.f32()?, f.u8()?),
-		0x44 => CallArg::_44(f.f32()?, f.u8()?, f.str()?),
-		0x55 => CallArg::_55(f.u32()?, f.u8()?),
-		0xDD => CallArg::_DD(f.str()?, f.str()?),
-		0xEE => CallArg::_EE(f.f32()?, f.u8()?),
-		0xFF => CallArg::_FF(f.i32()?, f.u8()?),
-		v => CallArg::Unknown(v),
+		0x11 => Dyn::_11(f.u32()?, f.u8()?),
+		0x22 => Dyn::_22(f.f32()?, f.f32()?),
+		0x33 => Dyn::_33(f.f32()?, f.u8()?),
+		0x44 => Dyn::_44(f.f32()?, f.u8()?, f.str()?),
+		0x55 => Dyn::_55(f.u32()?, f.u8()?),
+		0xDD => Dyn::_DD(f.str()?, f.str()?),
+		0xEE => Dyn::_EE(f.f32()?, f.u8()?),
+		0xFF => Dyn::_FF(f.i32()?, f.u8()?),
+		v => Dyn::Unknown(v),
 	})
 }

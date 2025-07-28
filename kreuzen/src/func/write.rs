@@ -4,7 +4,7 @@ use snafu::{ensure, OptionExt as _, ResultExt as _};
 use crate::{WriterExt, VWriter};
 
 use super::spec::Part;
-use super::{Arg, CallArg, Case, Op, OpMeta, Stmt, SPEC};
+use super::{Arg, Dyn, Case, Op, OpMeta, Stmt, SPEC};
 
 // TODO unhardcode control flow ops
 
@@ -233,14 +233,14 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 
 			Text => next!(args, Dialogue).write(f)?,
 			Expr => next!(args, Expr).write(f)?,
-			Dyn => write_dyn(f, &next!(args, CallArg))?,
-			Dyn2 => write_dyn2(f, &next!(args, CallArg))?,
+			Dyn => write_dyn(f, &next!(args, Dyn))?,
+			Dyn2 => write_dyn2(f, &next!(args, Dyn))?,
 			Ndyn => {
 				let n = args.as_slice().len();
 				snafu::ensure!(n < 256, TooManyArgsSnafu { remaining: n - 256 });
 				f.u8(n as u8);
 				for _ in 0..n {
-					write_dyn(f, &next!(args, CallArg))?;
+					write_dyn(f, &next!(args, Dyn))?;
 				}
 			}
 
@@ -305,32 +305,32 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 	Ok(())
 }
 
-fn write_dyn(f: &mut VWriter, arg: &CallArg) -> Result<(), OpWriteErrorKind> {
+fn write_dyn(f: &mut VWriter, arg: &Dyn) -> Result<(), OpWriteErrorKind> {
 	match *arg {
-		CallArg::_11(a, b) => { f.u8(0x11); f.u32(a); f.u8(b); }
-		CallArg::_22(a, b) => { f.u8(0x22); f.f32(a); f.f32(b); }
-		CallArg::_33(a, b) => { f.u8(0x33); f.f32(a); f.u8(b); }
-		CallArg::_44(a, b, ref s) => { f.u8(0x44); f.f32(a); f.u8(b); snafu::ensure!(s.is_empty(), ExpectedEmptySnafu { value: s }); }
-		CallArg::_55(a, b) => { f.u8(0x55); f.u32(a); f.u8(b); }
-		CallArg::_DD(ref s1, ref s2) => { f.u8(0xDD); snafu::ensure!(s1.is_empty(), ExpectedEmptySnafu { value: s1 }); f.str(s2)?; }
-		CallArg::_EE(a, b) => { f.u8(0xEE); f.f32(a); f.u8(b); }
-		CallArg::_FF(a, b) => { f.u8(0xFF); f.i32(a); f.u8(b); }
-		CallArg::Unknown(v) => f.u8(v),
+		Dyn::_11(a, b) => { f.u8(0x11); f.u32(a); f.u8(b); }
+		Dyn::_22(a, b) => { f.u8(0x22); f.f32(a); f.f32(b); }
+		Dyn::_33(a, b) => { f.u8(0x33); f.f32(a); f.u8(b); }
+		Dyn::_44(a, b, ref s) => { f.u8(0x44); f.f32(a); f.u8(b); snafu::ensure!(s.is_empty(), ExpectedEmptySnafu { value: s }); }
+		Dyn::_55(a, b) => { f.u8(0x55); f.u32(a); f.u8(b); }
+		Dyn::_DD(ref s1, ref s2) => { f.u8(0xDD); snafu::ensure!(s1.is_empty(), ExpectedEmptySnafu { value: s1 }); f.str(s2)?; }
+		Dyn::_EE(a, b) => { f.u8(0xEE); f.f32(a); f.u8(b); }
+		Dyn::_FF(a, b) => { f.u8(0xFF); f.i32(a); f.u8(b); }
+		Dyn::Unknown(v) => f.u8(v),
 	}
 	Ok(())
 }
 
-fn write_dyn2(f: &mut VWriter, arg: &CallArg) -> Result<(), OpWriteErrorKind> {
+fn write_dyn2(f: &mut VWriter, arg: &Dyn) -> Result<(), OpWriteErrorKind> {
 	match *arg {
-		CallArg::_11(a, b) => { f.u8(0x11); f.u32(a); f.u8(b); }
-		CallArg::_22(a, b) => { f.u8(0x22); f.f32(a); f.f32(b); }
-		CallArg::_33(a, b) => { f.u8(0x33); f.f32(a); f.u8(b); }
-		CallArg::_44(a, b, ref s) => { f.u8(0x44); f.f32(a); f.u8(b); f.str(s)?; }
-		CallArg::_55(a, b) => { f.u8(0x55); f.u32(a); f.u8(b); }
-		CallArg::_DD(ref s1, ref s2) => { f.u8(0xDD); f.str(s1)?; f.str(s2)?; }
-		CallArg::_EE(a, b) => { f.u8(0xEE); f.f32(a); f.u8(b); }
-		CallArg::_FF(a, b) => { f.u8(0xFF); f.i32(a); f.u8(b); }
-		CallArg::Unknown(v) => f.u8(v),
+		Dyn::_11(a, b) => { f.u8(0x11); f.u32(a); f.u8(b); }
+		Dyn::_22(a, b) => { f.u8(0x22); f.f32(a); f.f32(b); }
+		Dyn::_33(a, b) => { f.u8(0x33); f.f32(a); f.u8(b); }
+		Dyn::_44(a, b, ref s) => { f.u8(0x44); f.f32(a); f.u8(b); f.str(s)?; }
+		Dyn::_55(a, b) => { f.u8(0x55); f.u32(a); f.u8(b); }
+		Dyn::_DD(ref s1, ref s2) => { f.u8(0xDD); f.str(s1)?; f.str(s2)?; }
+		Dyn::_EE(a, b) => { f.u8(0xEE); f.f32(a); f.u8(b); }
+		Dyn::_FF(a, b) => { f.u8(0xFF); f.i32(a); f.u8(b); }
+		Dyn::Unknown(v) => f.u8(v),
 	}
 	Ok(())
 }

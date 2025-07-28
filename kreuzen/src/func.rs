@@ -120,7 +120,7 @@ pub enum Arg {
 	Flags32(crate::types::Flags32),
 
 	Expr(expr::Expr),
-	CallArg(CallArg),
+	Dyn(Dyn),
 	Dialogue(dial::Dialogue),
 }
 
@@ -145,7 +145,7 @@ impl std::fmt::Debug for Arg {
 			Arg::Flags16(v) => v.fmt(f),
 			Arg::Flags32(v) => v.fmt(f),
 			Arg::Expr(v) => v.fmt(f),
-			Arg::CallArg(v) => v.fmt(f),
+			Arg::Dyn(v) => v.fmt(f),
 			Arg::Dialogue(v) => v.fmt(f),
 		}
 	}
@@ -198,7 +198,7 @@ impl std::fmt::Debug for Op {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum CallArg {
+pub enum Dyn {
 	_11(u32, u8),
 	_22(f32, f32),
 	_33(f32, u8),
