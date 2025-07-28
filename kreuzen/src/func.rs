@@ -199,13 +199,11 @@ impl std::fmt::Debug for Op {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Dyn {
-	_11(u32, u8),
-	_22(f32, f32),
-	_33(f32, u8),
-	_44(u32, u8),
-	_55(u32, u8),
+	_11(u32),
+	_33(u32),
+	_44(u32),
+	_55(u32),
 	_DD(String),
-	_EE(f32, u8),
-	_FF(i32, u8),
-	Unknown(u8),
+	_EE(f32),
+	_FF(i32),
 }

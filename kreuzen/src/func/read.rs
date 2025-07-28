@@ -122,6 +122,8 @@ pub enum OpReadError {
 	Dialogue { source: super::dial::ReadError },
 	#[snafu(display("control flow nested inside expr"))]
 	BadNesting,
+	#[snafu(display("unknown dyn code {code:02X}"))]
+	BadDyn { code: u8 },
 }
 
 fn read_op(f: &mut VReader) -> Result<FlatOp, OpReadError> {
@@ -316,13 +318,13 @@ fn at_end(f: &VReader<'_>) -> bool {
 
 fn read_dyn(f: &mut VReader) -> Result<Dyn, OpReadError> {
 	Ok(match f.u8()? {
-		0x11 => Dyn::_11(f.u32()?, f.u8()?),
-		0x33 => Dyn::_33(f.f32()?, f.u8()?),
-		0x44 => Dyn::_44(f.u32()?, f.u8()?),
-		0x55 => Dyn::_55(f.u32()?, f.u8()?),
-		0xDD => Dyn::_DD(f.str()?),
-		0xEE => Dyn::_EE(f.f32()?, f.u8()?),
-		0xFF => Dyn::_FF(f.i32()?, f.u8()?),
-		v => Dyn::Unknown(v),
+		0x11 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_11(v) }
+		0x33 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_33(v) }
+		0x44 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_44(v) }
+		0x55 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_55(v) }
+		0xDD => { let v = f.str()?; Dyn::_DD(v) }
+		0xEE => { let v = f.f32()?; f.check_u8(0)?; Dyn::_EE(v) }
+		0xFF => { let v = f.i32()?; f.check_u8(0)?; Dyn::_FF(v) }
+		code => return BadDynSnafu { code }.fail(),
 	})
 }

@@ -305,15 +305,13 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 
 fn write_dyn(f: &mut VWriter, arg: &Dyn) -> Result<(), OpWriteErrorKind> {
 	match *arg {
-		Dyn::_11(a, b) => { f.u8(0x11); f.u32(a); f.u8(b); }
-		Dyn::_22(a, b) => { f.u8(0x22); f.f32(a); f.f32(b); }
-		Dyn::_33(a, b) => { f.u8(0x33); f.f32(a); f.u8(b); }
-		Dyn::_44(a, b) => { f.u8(0x44); f.u32(a); f.u8(b); }
-		Dyn::_55(a, b) => { f.u8(0x55); f.u32(a); f.u8(b); }
-		Dyn::_DD(ref s) => { f.u8(0xDD); f.str(s)?; }
-		Dyn::_EE(a, b) => { f.u8(0xEE); f.f32(a); f.u8(b); }
-		Dyn::_FF(a, b) => { f.u8(0xFF); f.i32(a); f.u8(b); }
-		Dyn::Unknown(v) => f.u8(v),
+		Dyn::_11(v) => { f.u8(0x11); f.u32(v); f.u8(0); }
+		Dyn::_33(v) => { f.u8(0x33); f.u32(v); f.u8(0); }
+		Dyn::_44(v) => { f.u8(0x44); f.u32(v); f.u8(0); }
+		Dyn::_55(v) => { f.u8(0x55); f.u32(v); f.u8(0); }
+		Dyn::_DD(ref v) => { f.u8(0xDD); f.str(v)?; }
+		Dyn::_EE(v) => { f.u8(0xEE); f.f32(v); f.u8(0); }
+		Dyn::_FF(v) => { f.u8(0xFF); f.i32(v); f.u8(0); }
 	}
 	Ok(())
 }
