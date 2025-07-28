@@ -688,30 +688,19 @@
 6B   u8 u16 u16 f32 f32 f32 # i32 in chr067
 6C   char f32 _6C
 6E   u16 f32 f32 f32 f32 u8
-6F   'Item'
-6F00 'Add' item u32
-6F01 'Remove' item u32
-6F02 'Has' item u32
-6F03 'Clear' u16 u32
-6F04 u16 u32
-6F05 u16 u32
-6F06 u16 u32
-6F07 u16 u32
-6F08 u16 u32
-6F09 u16 u32
-6F0A u16 u32
-6F0B u16 u32
-6F0C u16 u32
-6F0D u16 u32
-6F0E u16 u32
-6F0F u16 u32
-6F10 u16 u32
-6F11 u16 u32
-6F12 u16 u32
-6F13 u16 u32
-6F14 u16 u32
-6F15 u16 u32
-6F16 u16 u32
+6F00 'ItemAdd' item u32
+6F01 'ItemRemove' item u32
+6F02 'ItemHas' item u32
+6F03 'ItemClear' u16 u32
+6F04 'MiraAdd' u16 u32
+6F05 'MiraRemove' u16 u32
+6F07 'SepithAdd' item u32
+6F0A item u32
+6F0C 'MiraGet' u16 u32
+6F0E item u32
+6F14 'ItemUnlock' item u32 # only used in debug script
+6F15 'ItemLock' item u32
+6F16 'ItemIsLocked' char u32
 6F17 u16 u32
 6F18 u16 u32
 6F19 u16 u32
@@ -851,27 +840,25 @@
 8E   u16 u16 u16 u16 u16 u16 u16 u16
 8F
 90   str u32
-9100 u16 u32
-9101 u16 u32
+9100 'NoteCharSet' char flags32
+9101 'NoteCharUnset' char flags32
 9102 str u8
-9105 u16 u32
-9106 u16
-910A u16 u32
-910B u16 u32
-92   u8 u16
+9105 'NoteFishSet' item flags32
+9106 u16 # something with fish
+92   global u16
 9300 u8
 9301
 93D2 u16
 93D3
 93DC
 93DD
-9400 u32
 9403
 9500 str str u8 u16
 9501
 9600 u32
 9601
-97   u8 u16 u32
+9700 u16 flags32
+9702 u16 flags32
 98   u16 _98
 99   u16 u16
 9A   u16 f32 f32 f32 u16
@@ -1089,9 +1076,9 @@ BC0D u16 dyn2 f32
 BC0E u16 dyn2 dyn2 u16 u16
 BC0F u16 dyn2 u16 f32 str
 BC10 u16 dyn2 u32 u32 u16
-BC11 u16 dyn2 str u32 u32
-BC12 u16 dyn2 str u32 u32
-BC13 u16 dyn2 str u32 u32
+BC11 u16 dyn2 str f32 f32
+BC12 u16 dyn2 str f32 f32
+BC13 u16 dyn2 str f32 f32
 BC14 u16 dyn2 u32
 BC15 u16 dyn2 u32
 BC16 u16 dyn2 u32
@@ -1105,8 +1092,8 @@ C300 u8 u32 u32 u32
 C301 u8
 C400 u8
 C401 u8
-C402 dyn u16
-C403 u16
+C402 dyn char # the dyn contains the same value as the u8 above
+C403 char
 C404 u8 dyn f32 f32 f32 f32
 C405 u8 u8
 C406 dyn u8
