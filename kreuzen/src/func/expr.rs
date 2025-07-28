@@ -42,8 +42,8 @@ pub enum Expr {
 	CharAttr(crate::Char, u8),
 	Rand,
 	Global(u8),
-	_24(i32),
-	_25(u16),
+	SystemFlags(u32),
+	_25(u16), // related to ops 0C..=0E
 	Bin(BinOp, Box<Expr>, Box<Expr>),
 	Un(UnOp, Box<Expr>),
 	Ass(AssOp, Box<Expr>),
@@ -60,7 +60,7 @@ impl std::fmt::Debug for Expr {
 			Self::CharAttr(a, arg1) => f.debug_tuple("CharAttr").field(a).field(arg1).finish(),
 			Self::Rand => write!(f, "Rand"),
 			Self::Global(a) => f.debug_tuple("Global").field(a).finish(),
-			Self::_24(a) => f.debug_tuple("_24").field(a).finish(),
+			Self::SystemFlags(a) => f.debug_tuple("SystemFlags").field(a).finish(),
 			Self::_25(a) => f.debug_tuple("_25").field(a).finish(),
 			Self::Bin(op, a, b) => f.debug_tuple(format!("{op:?}").as_str()).field(a).field(b).finish(),
 			Self::Un(op, a) => f.debug_tuple(format!("{op:?}").as_str()).field(a).finish(),
@@ -129,7 +129,7 @@ impl Expr {
 				0x21 => stack.push(Expr::CharAttr(crate::Char(f.u16()?), f.u8()?)),
 				0x22 => stack.push(Expr::Rand),
 				0x23 => stack.push(Expr::Global(f.u8()?)),
-				0x24 => stack.push(Expr::_24(f.i32()?)),
+				0x24 => stack.push(Expr::SystemFlags(f.u32()?)),
 				0x25 => stack.push(Expr::_25(f.u16()?)),
 
 				v if let Ok(v) = BinOp::try_from(v) => {
@@ -172,7 +172,7 @@ impl Expr {
 			Expr::CharAttr(char, i) => { f.u8(0x21); f.u16(char.0); f.u8(*i); }
 			Expr::Rand => { f.u8(0x22); }
 			Expr::Global(i) => { f.u8(0x23); f.u8(*i); },
-			Expr::_24(i) => { f.u8(0x24); f.i32(*i); }
+			Expr::SystemFlags(i) => { f.u8(0x24); f.u32(*i); }
 			Expr::_25(i) => { f.u8(0x25); f.u16(*i); }
 			Expr::Bin(op, a, b) => { a.write0(f)?; b.write0(f)?; f.u8(*op as u8); }
 			Expr::Un(op, a) => { a.write0(f)?; f.u8(*op as u8); }

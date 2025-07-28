@@ -4,33 +4,35 @@
 04   'fastcall' u8 str
 05   'if'
 06   'switch'
-07   u8 dyn
-08   u8 expr
+07   'Debug' u8 dyn
+08   'SetAttr' u8 expr
 0A   'SetVar' u8 expr
-0C   u8 u8
+0C   u8 u8 # Related to expr _25
 0D   u8 u8 expr
 0E   u8 u8 u8
 10   'FlagSet' u16
 11   'FlagUnset' u16
-12   u16
-13   u32
-14   u32
-15   u32
+12   'FlagToggle' u16
+13   'SystemFlagsSet' u32
+14   'SystemFlagsUnset' u32
+15   'SystemFlagsToggle' u32
 16   'Sleep' u16
 17   u16 u16
-18   u8 expr
-19   u8 u16
+18   'GlobalSet' u8 expr
+1900 'SystemSaveFlagSet' u16
+1901 'SystemSaveFlagUnset' u16
+1902 'SystemSaveFlagGet' u16
 1A   u8 u8
 1D   'CharCreate' char str str str u8 u32 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 1E   'Fork' char u8 str u8 ndyn
 1F   'ForkWait' char u8 # Or ForkKill? Unclear
 20   u8 dyn dyn dyn dyn u8 # These dyns are usually FF, but with a float
 21   u8 u8
-22   char text
+22   'TextShow' char text
 2300 u16 u16 u16 u16 u8
 2301 u16 u16 u8 u8
 2302 u16 u16
-2305 i16 i16 i16 i16 u8
+2305 'TextSetPos' i16 i16 i16 i16 u8
 2306 f32 f32 f32
 2307 f32 f32 f32
 2308 f32 f32 f32
@@ -38,13 +40,13 @@
 230B u16 f32 f32 f32
 230C u16 f32 f32 f32
 230D f32 f32 f32 f32 u8
-24   char u32 text
-25   u8
-26
+24   'TextTalk' char u32 text
+25   'TextClose' u8
+26   'TextWait'
 27   'TextSetName' str char
 28   dyn dyn u8
 29   'Menu'
-2900 'New' u8 u16 f32 f32
+2900 'New' u8 u16 f32 u32
 2901 'Add' u8 str i32
 2902 'Show' u8 u8 i16 i16 u8
 2903 'Hide' u8
@@ -577,10 +579,10 @@
 5473 char u16 u32 u32 u32 u32 u32 u32 u32
 5474 char u16 u32 u32 u32 u32 u32 u32 u32
 5479 char u16 u32 u32 u32 u32 u32 u32 u32
-55   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 u8 str str
-56   u8 u8 u8 f32 f32 f32 f32 f32
-57   u8 u8
-58   u8
+55   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 u8 str str
+56   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
+57   'VisWait' u8 u8
+58   'VisHide' u8
 5A00 u16 u16 str u16
 5A01
 5B   char u8 expr
@@ -681,10 +683,11 @@
 6B   u8 u16 u16 u32 u32 u32
 6C   char f32 _6C
 6E   u16 f32 f32 f32 f32 u8
-6F00 u16 u32
-6F01 u16 u32
-6F02 u16 u32
-6F03 u16 u32
+6F   'Item'
+6F00 'Add' u16 u32
+6F01 'Remove' u16 u32
+6F02 'Has' u16 u32
+6F03 'Clear' u16 u32
 6F04 u16 u32
 6F05 u16 u32
 6F06 u16 u32
@@ -730,7 +733,7 @@
 700C char u8 u8
 700D char
 700E char u16 u16
-700F char char u16
+700F char u16 u16
 71   u8 u16 u16
 72   u16 # fall through
 7201 u16 u8
@@ -756,7 +759,7 @@
 7404
 7416
 75   'Menu2'
-7500 'New' u8 u16 f32 f32
+7500 'New' u8 u16 f32 u32
 7501 'Add' u8 str i32
 7502 'Show' u8 u8 i16 i16 u8
 7503 'Hide' u8

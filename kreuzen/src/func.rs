@@ -135,6 +135,8 @@ impl std::fmt::Display for OpName<'_> {
 		}
 		if prefix == 0 {
 			write!(f, "op")?;
+		} else if prefix < self.code.len() {
+			write!(f, "_")?;
 		}
 		for byte in &self.code[prefix..] {
 			write!(f, "{byte:02X}")?;
