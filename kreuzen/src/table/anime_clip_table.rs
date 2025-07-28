@@ -12,6 +12,12 @@ pub enum ReadError {
 	BadKind { kind: u32, a: String, b: String },
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnimeClip {
 	pub kind: u32,
@@ -36,4 +42,15 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<AnimeClip>, ReadError> {
 	}
 	f.check_u16(0)?;
 	Ok(table)
+}
+
+pub(crate) fn write(f: &mut VWriter, table: &[AnimeClip]) -> Result<(), WriteError> {
+	for clip in table {
+		f.u32(1 << clip.kind);
+		f.sstr(32, &clip.a)?;
+		f.sstr(32, &clip.b)?;
+	}
+	f.u32(0);
+	f.u16(0);
+	Ok(())
 }

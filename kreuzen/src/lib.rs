@@ -415,14 +415,14 @@ pub enum EntryWriteError {
 	// #[snafu(display("could not write StyleName"), context(false))]
 	// StyleName { source: table::style_name::WriteError },
 
-	// #[snafu(display("could not write ActionTable"), context(false))]
-	// ActionTable { source: table::action_table::WriteError },
+	#[snafu(display("could not write ActionTable"), context(false))]
+	ActionTable { source: table::action_table::WriteError },
 	// #[snafu(display("could not write AddCollision"), context(false))]
 	// AddCollision { source: table::add_collision::WriteError },
-	// #[snafu(display("could not write AlgoTable"), context(false))]
-	// AlgoTable { source: table::algo_table::WriteError },
-	// #[snafu(display("could not write AnimeClipTable"), context(false))]
-	// AnimeClipTable { source: table::anime_clip_table::WriteError },
+	#[snafu(display("could not write AlgoTable"), context(false))]
+	AlgoTable { source: table::algo_table::WriteError },
+	#[snafu(display("could not write AnimeClipTable"), context(false))]
+	AnimeClipTable { source: table::anime_clip_table::WriteError },
 	// #[snafu(display("could not write BreakTable"), context(false))]
 	// BreakTable { source: table::break_table::WriteError },
 	// #[snafu(display("could not write FieldFollowData"), context(false))]
@@ -522,10 +522,10 @@ fn write_entry(f: &mut VWriter, item: &Item) -> Result<usize, EntryWriteError> {
 		Item::StyleName(i) => todo(f, i),
 
 		Item::Empty => {}
-		Item::ActionTable(i) => todo(f, i),
+		Item::ActionTable(i) => table::action_table::write(f, i)?,
 		Item::AddCollision(i) => todo(f, i),
-		Item::AlgoTable(i) => todo(f, i),
-		Item::AnimeClipTable(i) => todo(f, i),
+		Item::AlgoTable(i) => table::algo_table::write(f, i)?,
+		Item::AnimeClipTable(i) => table::anime_clip_table::write(f, i)?,
 		Item::BreakTable(i) => todo(f, i),
 		Item::FieldFollowData(i) => todo(f, i),
 		Item::FieldMonsterData(i) => todo(f, i),

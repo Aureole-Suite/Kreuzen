@@ -12,6 +12,12 @@ pub enum ReadError {
 	},
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 // There's always an Action::dummy() in each table, but in one case it's not the last entry.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Action {
@@ -76,4 +82,43 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Action>, ReadError> {
 		table.push(Action { id, u1, target, u2, time, effects, u3, flags, ani, name });
 	}
 	Ok(table)
+}
+
+pub(crate) fn write(f: &mut VWriter, table: &[Action]) -> Result<(), WriteError> {
+	for action in table {
+		f.u16(action.id);
+		f.u8(action.u1.0);
+		f.u8(action.u1.1);
+		f.u8(action.target.0);
+		f.u8(action.target.1);
+		f.u16(action.target.2);
+		f.f32(action.u2.0);
+		f.f32(action.u2.1);
+		f.f32(action.u2.2);
+		f.u16(action.time.0);
+		f.u16(action.time.1);
+		for &(effect_id, ..) in &action.effects {
+			f.u16(effect_id);
+		}
+		for _ in action.effects.len()..5 {
+			f.u16(0);
+		}
+		f.u16(0);
+		for &(.., u32_1, u32_2, u32_3) in &action.effects {
+			f.u32(u32_1);
+			f.u32(u32_2);
+			f.u32(u32_3);
+		}
+		for _ in action.effects.len()..5 {
+			f.u32(0);
+			f.u32(0);
+			f.u32(0);
+		}
+		f.u16(action.u3.0);
+		f.u16(action.u3.1);
+		f.sstr(16, &action.flags)?;
+		f.sstr(32, &action.ani)?;
+		f.sstr(64, &action.name)?;
+	}
+	Ok(())
 }

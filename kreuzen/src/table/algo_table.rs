@@ -10,6 +10,12 @@ pub enum ReadError {
 	},
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Algo {
 	pub id: u16,
@@ -49,4 +55,22 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Algo>, ReadError> {
 		table.push(Algo { id, chance, use_limit, target_priority, cond, no_move });
 	}
 	Ok(table)
+}
+
+pub(crate) fn write(f: &mut VWriter, table: &[Algo]) -> Result<(), WriteError> {
+	for algo in table {
+		f.u16(algo.id);
+		f.u8(algo.cond.0);
+		f.u8(algo.chance);
+		f.u8(algo.use_limit);
+		f.u8(algo.target_priority);
+		f.u16(0);
+		f.u32(algo.cond.1);
+		f.u32(algo.cond.2);
+		f.u32(algo.cond.3);
+		f.u32(algo.no_move);
+		f.u32(algo.use_limit as u32);
+		f.u32(0);
+	}
+	Ok(())
 }
