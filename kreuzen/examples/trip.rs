@@ -44,8 +44,7 @@ fn run0(path: &Path) -> Result<(), kreuzen::WriteError> {
 	let data2 = kreuzen::write(&scena)?;
 	if data != data2 {
 		tracing::warn!("Data mismatch:\n{:#X}{:#X}{scena:#?}\n", Reader::new(&data).dump(), Reader::new(&data2).dump());
-	} else {
-		tracing::info!("Data matches");
+		let scena2 = kreuzen::read(&data2).unwrap();
 	}
 	Ok(())
 }

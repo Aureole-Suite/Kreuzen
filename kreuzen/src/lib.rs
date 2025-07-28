@@ -410,8 +410,8 @@ pub enum EntryWriteError {
 	BookData { source: table::book::WriteError },
 	#[snafu(display("could not write book BookData99"), context(false))]
 	BookData99 { source: table::book99::WriteError },
-	// #[snafu(display("could not write BTLSET"), context(false))]
-	// Btlset { source: table::btlset::WriteError },
+	#[snafu(display("could not write BTLSET"), context(false))]
+	Btlset { source: table::btlset::WriteError },
 	// #[snafu(display("could not write StyleName"), context(false))]
 	// StyleName { source: table::style_name::WriteError },
 
@@ -518,7 +518,7 @@ fn write_entry(f: &mut VWriter, item: &Item) -> Result<usize, EntryWriteError> {
 		Item::Fc(i) => todo(f, i),
 		Item::BookPage(i) => table::book::write(f, i)?,
 		Item::BookMetadata(i) => table::book99::write(f, *i)?,
-		Item::Btlset(i) => todo(f, i),
+		Item::Btlset(i) => table::btlset::write(f, i)?,
 		Item::StyleName(i) => todo(f, i),
 
 		Item::Empty => {}

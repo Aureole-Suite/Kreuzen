@@ -12,6 +12,12 @@ pub enum ReadError {
 	},
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Btlset {
 	pub field: String,
@@ -61,4 +67,37 @@ pub(crate) fn read(f: &mut VReader) -> Result<Btlset, ReadError> {
 	}
 	f.check(&[0; 0x18])?;
 	Ok(Btlset { field, bounds, unk1, unk2, unk3, variants })
+}
+
+pub(crate) fn write(f: &mut VWriter, btlset: &Btlset) -> Result<(), WriteError> {
+	f.sstr(16, &btlset.field)?;
+	for &bound in &btlset.bounds {
+		f.f32(bound);
+	}
+	f.u32(btlset.unk1.0);
+	f.u32(btlset.unk1.1);
+	f.u16(btlset.unk1.2);
+	f.u16(btlset.unk1.3);
+	f.u32(0);
+	f.u32(btlset.unk2);
+	f.sstr(32, &btlset.unk3)?;
+	for variant in &btlset.variants {
+		f.u32(variant.num);
+		for (name, _) in &variant.monsters {
+			f.sstr(16, name)?;
+		}
+		for _ in variant.monsters.len()..8 {
+			f.sstr(16, "")?;
+		}
+		for (_, prob) in &variant.monsters {
+			f.u8(*prob);
+		}
+		for _ in variant.monsters.len()..8 {
+			f.u8(0);
+		}
+		f.slice(&[0; 8]);
+	}
+	f.u32(0xFFFFFFFF); // end of variants
+	f.slice(&[0; 0x18]);
+	Ok(())
 }
