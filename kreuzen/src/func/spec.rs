@@ -10,7 +10,17 @@ pub enum Part {
 	I32,
 	F32,
 	Str,
+
 	Char,
+	Item,
+	Flag,
+	Global,
+	Var,
+	Attr,
+	CharAttr,
+	Flags16,
+	Flags32,
+
 	Expr,
 	Text,
 	Dyn,
@@ -133,7 +143,7 @@ fn build_ops(ops: BTreeMap<Vec<u8>, Vec<Part>>) -> [Option<Op>; 256] {
 	out
 }
 
-pub(crate) fn op_40(a: crate::Char) -> &'static [Part] {
+pub(crate) fn op_40(a: crate::types::Char) -> &'static [Part] {
 	use Part::*;
 	match a.0 {
 		0xFE02..= 0xFE04 => &[F32, F32, F32, F32, F32, U8, U16, F32, F32, U8],

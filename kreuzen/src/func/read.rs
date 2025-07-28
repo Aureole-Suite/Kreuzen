@@ -232,7 +232,17 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 		I32 => op.push(f.i32()?),
 		F32 => op.push(f.f32()?),
 		Str => op.push(f.str()?),
-		Char => op.push(crate::Char(f.u16()?)),
+
+		Char => op.push(Arg::Char(f.u16()?.into())),
+		Item => op.push(Arg::Item(f.u16()?.into())),
+		Flag => op.push(Arg::Flag(f.u16()?.into())),
+		Global => op.push(Arg::Global(f.u8()?.into())),
+		Var => op.push(Arg::Var(f.u8()?.into())),
+		Attr => op.push(Arg::Attr(f.u8()?.into())),
+		CharAttr => op.push(Arg::CharAttr((f.u16()?.into(), f.u8()?).into())),
+		Flags16 => op.push(Arg::Flags16(f.u16()?.into())),
+		Flags32 => op.push(Arg::Flags32(f.u32()?.into())),
+
 		Expr => op.push(self::Expr::read(f)?),
 		Text => op.push(self::Dialogue::read(f)?),
 		Dyn => op.push(call_arg(f)?),
@@ -255,7 +265,7 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 			} else if a == 0xFE13 {
 				read_parts(op, f, &[F32])?;
 			}
-			if op.args[1..] == [Arg::Char(crate::Char(65535)), Arg::F32(5.0), Arg::U8(0)] {
+			if op.args[1..] == [Arg::Char(0xFFFF.into()), Arg::F32(5.0), Arg::U8(0)] {
 				f.check(&[0, 0, 0])?;
 			}
 		}

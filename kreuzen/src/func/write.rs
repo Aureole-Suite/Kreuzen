@@ -220,7 +220,17 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 			I32 => f.i32(next!(args, I32)),
 			F32 => f.f32(next!(args, F32)),
 			Str => f.str(&next!(args, Str))?,
+
 			Char => f.u16(next!(args, Char).0),
+			Item => f.u16(next!(args, Item).0),
+			Flag => f.u16(next!(args, Flag).0),
+			Global => f.u8(next!(args, Global).0),
+			Var => f.u8(next!(args, Var).0),
+			Attr => f.u8(next!(args, Attr).0),
+			CharAttr => { let c = next!(args, CharAttr); f.u16(c.0.0); f.u8(c.1); }
+			Flags16 => f.u16(next!(args, Flags16).0),
+			Flags32 => f.u32(next!(args, Flags32).0),
+
 			Text => next!(args, Dialogue).write(f)?,
 			Expr => next!(args, Expr).write(f)?,
 			Dyn => write_dyn(f, &next!(args, CallArg))?,
@@ -247,7 +257,7 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 					write_parts(op, f, &[F32], args)?;
 				}
 
-				if op.args[1..4] == [Arg::Char(crate::Char(65535)), Arg::F32(5.0), Arg::U8(0)] {
+				if op.args[1..4] == [Arg::Char(0xFFFF.into()), Arg::F32(5.0), Arg::U8(0)] {
 					f.slice(&[0, 0, 0]);
 				}
 			}

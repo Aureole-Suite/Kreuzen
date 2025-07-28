@@ -5,6 +5,7 @@ use snafu::{ensure, ResultExt as _};
 
 pub mod func;
 pub mod table;
+pub mod types;
 
 #[extend::ext]
 impl<'a> Reader<'a> {
@@ -522,41 +523,4 @@ fn write_entry(f: &mut VWriter, item: &Entry) -> Result<usize, EntryWriteError> 
 		_ => 4,
 	};
 	Ok(align)
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Char(pub u16);
-impl std::fmt::Debug for Char {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self.0 {
-			0xF016 => write!(f, "field"),
-			0xF028 => write!(f, "burst0"),
-			0xF029 => write!(f, "burst1"),
-			0xF02A => write!(f, "burst2"),
-			0xF02B => write!(f, "burst3"),
-			0xF02C => write!(f, "skit0"),
-			0xF02D => write!(f, "skit1"),
-			0xF093 => write!(f, "kisin0"),
-			0xF094 => write!(f, "kisin1"),
-			0xF095 => write!(f, "kisin2"),
-
-			0xFD00 => write!(f, "battle0"),
-			0xFD01 => write!(f, "battle1"),
-			0xFD02 => write!(f, "battle2"),
-			0xFD03 => write!(f, "battle3"),
-			0xFD04 => write!(f, "battle4"),
-			0xFD05 => write!(f, "battle5"),
-			0xFD06 => write!(f, "battle6"),
-			0xFD07 => write!(f, "battle7"),
-
-			// FE12 and FE13 are special cased in op3E
-			// FE02..=FE05 and FE15 are special cased in OP40
-
-			0xFFFB => write!(f, "target"),
-			0xFFFE => write!(f, "self"),
-			0xFFFF => write!(f, "null"),
-
-			c => write!(f, "ch{c}"),
-		}
-	}
 }

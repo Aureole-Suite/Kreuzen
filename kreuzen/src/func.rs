@@ -108,10 +108,47 @@ pub enum Arg {
 	I16(i16),
 	I32(i32),
 	F32(f32),
-	Char(crate::Char),
+
+	Char(crate::types::Char),
+	Item(crate::types::Item),
+	Flag(crate::types::Flag),
+	Global(crate::types::Global),
+	Var(crate::types::Var),
+	Attr(crate::types::Attr),
+	CharAttr(crate::types::CharAttr),
+	Flags16(crate::types::Flags16),
+	Flags32(crate::types::Flags32),
+
 	Expr(expr::Expr),
 	CallArg(CallArg),
 	Dialogue(dial::Dialogue),
+}
+
+impl std::fmt::Debug for Arg {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Arg::Str(v) => v.fmt(f),
+			Arg::U8(v) => v.fmt(f),
+			Arg::U16(v) => v.fmt(f),
+			Arg::U32(v) => v.fmt(f),
+			Arg::I8(v) => v.fmt(f),
+			Arg::I16(v) => v.fmt(f),
+			Arg::I32(v) => v.fmt(f),
+			Arg::F32(v) => v.fmt(f),
+			Arg::Char(v) => v.fmt(f),
+			Arg::Item(v) => v.fmt(f),
+			Arg::Flag(v) => v.fmt(f),
+			Arg::Global(v) => v.fmt(f),
+			Arg::Var(v) => v.fmt(f),
+			Arg::Attr(v) => v.fmt(f),
+			Arg::CharAttr(v) => v.fmt(f),
+			Arg::Flags16(v) => v.fmt(f),
+			Arg::Flags32(v) => v.fmt(f),
+			Arg::Expr(v) => v.fmt(f),
+			Arg::CallArg(v) => v.fmt(f),
+			Arg::Dialogue(v) => v.fmt(f),
+		}
+	}
 }
 
 impl Op {
@@ -157,25 +194,6 @@ impl std::fmt::Debug for Op {
 			arg.fmt(f)?;
 		}
 		write!(f, ")")
-	}
-}
-
-impl std::fmt::Debug for Arg {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Arg::Str(s) => write!(f, "{s:?}"),
-			Arg::U8(v) => write!(f, "{v}"),
-			Arg::U16(v) => write!(f, "{v}"),
-			Arg::U32(v) => write!(f, "{v}"),
-			Arg::I8(v) => write!(f, "{v}"),
-			Arg::I16(v) => write!(f, "{v}"),
-			Arg::I32(v) => write!(f, "{v}"),
-			Arg::F32(v) => write!(f, "{v:?}"),
-			Arg::Char(c) => write!(f, "{c:?}"),
-			Arg::Expr(e) => write!(f, "{e:?}"),
-			Arg::CallArg(ca) => write!(f, "{ca:?}"),
-			Arg::Dialogue(d) => write!(f, "{d:?}"),
-		}
 	}
 }
 
