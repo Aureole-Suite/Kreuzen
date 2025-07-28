@@ -54,7 +54,7 @@ pub struct Op {
 pub enum Stmt {
 	Op(Op),
 	If(OpMeta, Expr, Vec<Stmt>, Option<(OpMeta, Vec<Stmt>)>),
-	While(OpMeta, Expr, Vec<Stmt>),
+	While(OpMeta, Expr, Vec<Stmt>, OpMeta),
 	Break(OpMeta),
 	Continue(OpMeta),
 	Switch(OpMeta, Expr, Vec<(Case, Vec<Stmt>)>),
@@ -90,7 +90,7 @@ impl std::fmt::Debug for Stmt {
 				}
 				Ok(())
 			},
-			Self::While(arg0, arg1, arg2) => arg0.fmt(f)?.debug_tuple("While").field(arg1).field(arg2).finish(),
+			Self::While(arg0, arg1, arg2, arg3) => arg0.fmt(f)?.debug_tuple("While").field(arg1).field(arg2).field(arg3).finish(),
 			Self::Break(arg0) => arg0.fmt(f)?.debug_tuple("Break").finish(),
 			Self::Continue(arg0) => arg0.fmt(f)?.debug_tuple("Continue").finish(),
 			Self::Switch(arg0, arg1, arg2) => arg0.fmt(f)?.debug_tuple("Switch").field(arg1).field(arg2).finish(),

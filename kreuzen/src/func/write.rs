@@ -71,7 +71,7 @@ fn block(f: &mut VWriter, code: &[Stmt], brk: Option<Label>, cont: Option<Label>
 				}
 			}
 
-			Stmt::While(meta, expr, body) => {
+			Stmt::While(meta, expr, body, meta2) => {
 				let [cont, brk] = Label::many();
 				f.place(cont);
 				f.u8(0x05);
@@ -81,7 +81,7 @@ fn block(f: &mut VWriter, code: &[Stmt], brk: Option<Label>, cont: Option<Label>
 
 				block(f, body, Some(brk), Some(cont))?;
 
-				f.goto(&OpMeta::default(), cont);
+				f.goto(meta2, cont);
 				f.place(brk);
 			},
 			Stmt::Break(meta) => {

@@ -196,7 +196,7 @@ fn parse_if(
 		sub.cont = Some(cont);
 		let (mut body, _) = sub.block("while body", GotoAllowed::No)?;
 		assert_eq!(body.pop(), Some(Stmt::Continue(m)));
-		stmts.push(Stmt::While(l, e, body));
+		stmts.push(Stmt::While(l, e, body, m));
 		return Ok(())
 	}
 
