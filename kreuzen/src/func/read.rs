@@ -323,9 +323,17 @@ fn read_dyn(f: &mut VReader) -> Result<Dyn, OpReadError> {
 		0x33 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_33(v) }
 		0x44 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_44(v) }
 		0x55 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_55(v) }
-		0xDD => { let v = f.str()?; Dyn::_DD(v) }
-		0xEE => { let v = f.f32()?; f.check_u8(0)?; Dyn::_EE(v) }
-		0xFF => { let v = f.i32()?; f.check_u8(0)?; Dyn::_FF(v) }
+		0xDD => { let v = f.str()?; Dyn::Str(v) }
+		0xEE => { let v = f.f32()?; f.check_u8(0)?; Dyn::F32(v) }
+		0xFF => {
+			let v = f.i32()?;
+			f.check_u8(0)?;
+			if v.abs() > 0x1000000 {
+				Dyn::I32lol(f32::from_bits(v as u32))
+			} else {
+				Dyn::I32(v)
+			}
+		}
 		code => return BadDynSnafu { code }.fail(),
 	})
 }

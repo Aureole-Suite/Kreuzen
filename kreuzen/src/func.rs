@@ -205,9 +205,10 @@ pub enum Dyn {
 	_33(u32),
 	_44(u32),
 	_55(u32),
-	_DD(String),
-	_EE(f32),
-	_FF(i32),
+	Str(String),
+	F32(f32),
+	I32(i32),
+	I32lol(f32),
 }
 
 impl std::fmt::Debug for Dyn {
@@ -217,9 +218,10 @@ impl std::fmt::Debug for Dyn {
 			Self::_33(arg0) => f.debug_tuple("Dyn33").field(arg0).finish(),
 			Self::_44(arg0) => f.debug_tuple("Dyn44").field(arg0).finish(),
 			Self::_55(arg0) => f.debug_tuple("Dyn55").field(arg0).finish(),
-			Self::_DD(arg0) => f.debug_tuple("DynDD").field(arg0).finish(),
-			Self::_EE(arg0) => f.debug_tuple("DynEE").field(arg0).finish(),
-			Self::_FF(arg0) => f.debug_tuple("DynFF").field(arg0).finish(),
+			Self::Str(arg0) => { write!(f, "str ")?; arg0.fmt(f) },
+			Self::F32(arg0) => { write!(f, "f32 ")?; arg0.fmt(f) },
+			Self::I32(arg0) => { write!(f, "i32 ")?; arg0.fmt(f) },
+			Self::I32lol(arg0) => { write!(f, "f32_ ")?; arg0.fmt(f) },
 		}
 	}
 }

@@ -310,9 +310,10 @@ fn write_dyn(f: &mut VWriter, arg: &Dyn) -> Result<(), OpWriteErrorKind> {
 		Dyn::_33(v) => { f.u8(0x33); f.u32(v); f.u8(0); }
 		Dyn::_44(v) => { f.u8(0x44); f.u32(v); f.u8(0); }
 		Dyn::_55(v) => { f.u8(0x55); f.u32(v); f.u8(0); }
-		Dyn::_DD(ref v) => { f.u8(0xDD); f.str(v)?; }
-		Dyn::_EE(v) => { f.u8(0xEE); f.f32(v); f.u8(0); }
-		Dyn::_FF(v) => { f.u8(0xFF); f.i32(v); f.u8(0); }
+		Dyn::Str(ref v) => { f.u8(0xDD); f.str(v)?; }
+		Dyn::F32(v) => { f.u8(0xEE); f.f32(v); f.u8(0); }
+		Dyn::I32(v) => { f.u8(0xFF); f.i32(v); f.u8(0); }
+		Dyn::I32lol(v) => { f.u8(0xFF); f.f32(v); f.u8(0); }
 	}
 	Ok(())
 }

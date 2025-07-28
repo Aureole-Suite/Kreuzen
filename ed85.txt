@@ -18,7 +18,7 @@
 15   'SystemFlagsToggle' flags32
 16   'Sleep' u16
 17   u16 u16
-18   'GlobalSet' u8 expr
+18   'SetGlobal' u8 expr
 1900 'SystemSaveFlagSet' flags16
 1901 'SystemSaveFlagUnset' flags16
 1902 'SystemSaveFlagGet' flags16
@@ -102,13 +102,10 @@
 2F0F char u8
 2F10 char str
 30   u8 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
-3100 str
-3101 str
-3102 str
-3103 str
+31   u8 str
 320A char u8 str u32
 320B char u8
-320C char dyn char u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8
+320C char dyn char flags32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8
 320D char u8 u8
 320E char u8 u8
 320F char u16 u8
@@ -132,10 +129,10 @@
 3222 char u32 str
 3223
 3224 char dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
-3300 char char u8 u8
-3301 char dyn2 dyn2 u8
-3302 u8 char
-3303 char
+3300 'BtlDamage' char char u8 u8
+3301 'BtlDamageAni' char dyn2 dyn2 u8
+3302 'BtlInitTarget' var char
+3303 'BtlNextTarget' char
 3304 u8
 3305 u8 str
 3306 u8
@@ -482,24 +479,20 @@
 53   u8 u8
 540A u8
 540B char
-540D 'TboxNew' str str flag item
-540E u8
-540F
+540D 'MapPlaceTbox' str str flag item
+540E 'MapTboxOpen' u8
+540F 'MapTboxClose'
 5412
-5413
-5414 str str u16 u16 u16 u16 u16 u16
-5415 str
-5417 u8 u32
-5418 u16 u8
-5419 str str
-541A u16
-541B
-541C str u8 u16
-541F
+5414 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16 u16
+5417 'MapEffSet' u8 u32
+5418 char u8 # something with ladder
+5419 'MapPlaceHealObj' str str
+541A char # something with field attacks
+541B # sometimes at end of battle or something?
+541F 'MapDistanceToEnemy'
 5420
-5421 u16 f32
-5422 u16
-5423 u16 u16 u16 f32
+5421 char f32
+5423 u16 char u16 f32 # related to field follower
 5424 char
 5425
 5426 u8 u32 u32 str
@@ -512,7 +505,7 @@
 542E
 542F
 5430 dyn2
-543100 u16 u16 f32 f32 u8 u8 u16
+543100 u16 char f32 f32 u8 u8 u16
 543101 u16
 543102 u16
 543103
@@ -724,7 +717,8 @@
 700C char u8 u8
 700E 'CharEquipSubMq' char item item
 700F 'CharEquipMq' char item u16
-71   u8 u16 u16
+7100 'FlagSetRange' flag flag
+7101 'FlagUnsetRange' flag flag
 72   u16 # fall through
 7201 u16 u8
 7202 u16 u8
@@ -745,7 +739,7 @@
 7400 u32
 7401
 7402 u16 f32 u16 u16 str f32
-7403 str u32 u16 u16 str u32
+7403 str f32 u16 u16 str f32
 7404
 7416
 75   'Menu2'
@@ -796,7 +790,7 @@
 8401 f32 f32 f32 f32
 8402 f32 f32 f32 f32
 8403 u16 str u8
-86   u8 u16 u16 u16 u16 u16 u16 u32 u32 u32 str
+86   u8 u16 u16 u16 flag u16 u16 f32 f32 f32 str
 87   u8 u32
 88   u16
 89   u16
@@ -1079,7 +1073,7 @@ BC14 u16 dyn2 u32
 BC15 u16 dyn2 u32
 BC16 u16 dyn2 u32
 BC17 u16 dyn2 f32 f32
-BC18 u16 dyn2 u32
+BC18 u16 dyn2 f32
 BC19 u16 dyn2 str
 BE   char u8 f32 f32
 C0   u16 _C0
@@ -1193,7 +1187,7 @@ DE03 u8 u8 u8
 DF   u32 u8
 E000
 E001
-E002 u8 u16 f32 u32 u32 u8 u8
+E002 u8 u16 f32 f32 f32 u8 u8
 E003 u16 f32 f32 f32
 E004
 E005 u8
