@@ -157,12 +157,15 @@ impl Expr {
 	}
 
 	pub(crate) fn write(&self, f: &mut crate::VWriter) -> Result<(), WriteError> {
+		self.write0(f)?;
+		f.u8(0x01);
+		Ok(())
+	}
+
+	fn write0(&self, f: &mut crate::VWriter) -> Result<(), WriteError> {
 		match self {
 			Expr::Int(i) => { f.u8(0x00); f.i32(*i); }
-			Expr::Op(op) => {
-				f.u8(0x1C);
-				super::write::write_raw_op(f, op)?;
-			}
+			Expr::Op(op) => { f.u8(0x1C); super::write::write_raw_op(f, op)?; }
 			Expr::Flag(i) => { f.u8(0x1E); f.u16(*i); }
 			Expr::Var(i) => { f.u8(0x1F); f.u8(*i); }
 			Expr::Attr(i) => { f.u8(0x20); f.u8(*i); }
@@ -171,11 +174,10 @@ impl Expr {
 			Expr::Global(i) => { f.u8(0x23); f.u8(*i); },
 			Expr::_24(i) => { f.u8(0x24); f.i32(*i); }
 			Expr::_25(i) => { f.u8(0x25); f.u16(*i); }
-			Expr::Bin(op, a, b) => { b.write(f)?; a.write(f)?; f.u8(*op as u8); }
-			Expr::Un(op, a) => { a.write(f)?; f.u8(*op as u8); }
-			Expr::Ass(op, a) => { a.write(f)?; f.u8(*op as u8); }
+			Expr::Bin(op, a, b) => { a.write0(f)?; b.write0(f)?; f.u8(*op as u8); }
+			Expr::Un(op, a) => { a.write0(f)?; f.u8(*op as u8); }
+			Expr::Ass(op, a) => { a.write0(f)?; f.u8(*op as u8); }
 		}
-		f.u8(0x01);
 		Ok(())
 	}
 }
