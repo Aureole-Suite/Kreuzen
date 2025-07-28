@@ -12,9 +12,21 @@ pub enum ReadError {
 	StyleMismatch { a: String, b: String },
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 pub(crate) fn read(f: &mut VReader) -> Result<String, ReadError> {
 	let a = f.sstr(64)?;
 	let b = f.sstr(64)?;
 	ensure!(a == b, StyleMismatchSnafu { a, b });
 	Ok(a)
+}
+
+pub(crate) fn write(f: &mut VWriter, s: &str) -> Result<(), WriteError> {
+	f.sstr(64, s)?;
+	f.sstr(64, s)?;
+	Ok(())
 }

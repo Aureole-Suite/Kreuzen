@@ -10,6 +10,12 @@ pub enum ReadError {
 	},
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Part {
 	pub id: u32,
@@ -30,4 +36,15 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Part>, ReadError> {
 	}
 	f.check(&[0; 64])?;
 	Ok(parts)
+}
+
+pub(crate) fn write(f: &mut VWriter, parts: &[Part]) -> Result<(), WriteError> {
+	for part in parts {
+		f.u32(part.id);
+		f.sstr(32, &part.a)?;
+		f.sstr(32, &part.b)?;
+	}
+	f.u32(0xFFFF);
+	f.slice(&[0; 64]);
+	Ok(())
 }

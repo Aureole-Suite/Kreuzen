@@ -12,6 +12,12 @@ pub enum ReadError {
 	BadKind { kind: u32 },
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Reaction {
 	_0 {
@@ -55,3 +61,31 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Reaction>, ReadError> {
 	Ok(table)
 }
 
+pub(crate) fn write(f: &mut VWriter, table: &[Reaction]) -> Result<(), WriteError> {
+	for r in table {
+		match r {
+			Reaction::_0 { id, u2 } => {
+				f.u16(*id);
+				f.u16(u2[0].0);
+				f.u16(u2[1].0);
+				f.u16(u2[2].0);
+				for &(_, f1, f2, f3, f4) in u2 {
+					f.f32(f1);
+					f.f32(f2);
+					f.f32(f3);
+					f.f32(f4);
+				}
+				f.u32(0);
+			}
+			Reaction::_1 { id, u1 } => {
+				f.u16(*id);
+				f.u16(*u1);
+				f.slice(&[0; 52]);
+				f.u32(1);
+			}
+		}
+	}
+	f.u16(0xFFFF);
+	f.slice(&[0; 58]);
+	Ok(())
+}

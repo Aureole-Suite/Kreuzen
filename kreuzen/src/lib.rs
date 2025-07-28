@@ -352,6 +352,31 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 	Ok(f.finish()?)
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Item {
+	Func(Vec<func::Stmt>),
+	Effect(Vec<table::Effect>),
+	Fc(String),
+	BookPage(table::Book),
+	BookMetadata(u16),
+	Btlset(table::Btlset),
+	StyleName(String),
+
+	ActionTable(Vec<table::Action>),
+	AddCollision(Vec<table::Collision>),
+	AlgoTable(Vec<table::Algo>),
+	AnimeClipTable(Vec<table::AnimeClip>),
+	BreakTable(Vec<(u16, u16)>),
+	FieldFollowData(table::FieldFollowData),
+	FieldMonsterData(table::FieldMonsterData),
+	PartTable(Vec<table::Part>),
+	ReactionTable(Vec<table::Reaction>),
+	SummonTable(Vec<table::Summon>),
+	WeaponAttTable(table::WeaponAtt),
+
+	Empty,
+}
+
 #[derive(Debug, snafu::Snafu)]
 pub enum EntryReadError {
 	#[snafu(display("no terminator"))]
@@ -398,72 +423,6 @@ pub enum EntryReadError {
 	WeaponAttTable { source: table::weapon_att_table::ReadError },
 }
 
-#[derive(Debug, snafu::Snafu)]
-pub enum EntryWriteError {
-	#[snafu(display("could not write function"), context(false))]
-	Function { source: func::write::WriteError },
-	#[snafu(display("could not write effect"), context(false))]
-	Effect { source: table::effect::WriteError },
-	// #[snafu(display("could not write FcAuto"), context(false))]
-	// FcAuto { source: table::fc_auto::WriteError },
-	#[snafu(display("could not write BookData"), context(false))]
-	BookData { source: table::book::WriteError },
-	#[snafu(display("could not write book BookData99"), context(false))]
-	BookData99 { source: table::book99::WriteError },
-	#[snafu(display("could not write BTLSET"), context(false))]
-	Btlset { source: table::btlset::WriteError },
-	// #[snafu(display("could not write StyleName"), context(false))]
-	// StyleName { source: table::style_name::WriteError },
-
-	#[snafu(display("could not write ActionTable"), context(false))]
-	ActionTable { source: table::action_table::WriteError },
-	// #[snafu(display("could not write AddCollision"), context(false))]
-	// AddCollision { source: table::add_collision::WriteError },
-	#[snafu(display("could not write AlgoTable"), context(false))]
-	AlgoTable { source: table::algo_table::WriteError },
-	#[snafu(display("could not write AnimeClipTable"), context(false))]
-	AnimeClipTable { source: table::anime_clip_table::WriteError },
-	// #[snafu(display("could not write BreakTable"), context(false))]
-	// BreakTable { source: table::break_table::WriteError },
-	// #[snafu(display("could not write FieldFollowData"), context(false))]
-	// FieldFollowData { source: table::field_follow_data::WriteError },
-	// #[snafu(display("could not write FieldMonsterData"), context(false))]
-	// FieldMonsterData { source: table::field_monster_data::WriteError },
-	// #[snafu(display("could not write PartTable"), context(false))]
-	// PartTable { source: table::part_table::WriteError },
-	// #[snafu(display("could not write ReactionTable"), context(false))]
-	// ReactionTable { source: table::reaction_table::WriteError },
-	// #[snafu(display("could not write SummonTable"), context(false))]
-	// SummonTable { source: table::summon_table::WriteError },
-	// #[snafu(display("could not write WeaponAttTable"), context(false))]
-	// WeaponAttTable { source: table::weapon_att_table::WriteError },
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Item {
-	Func(Vec<func::Stmt>),
-	Effect(Vec<table::Effect>),
-	Fc(String),
-	BookPage(table::Book),
-	BookMetadata(u16),
-	Btlset(table::Btlset),
-	StyleName(String),
-
-	ActionTable(Vec<table::Action>),
-	AddCollision(Vec<table::Collision>),
-	AlgoTable(Vec<table::Algo>),
-	AnimeClipTable(Vec<table::AnimeClip>),
-	BreakTable(Vec<(u16, u16)>),
-	FieldFollowData(table::FieldFollowData),
-	FieldMonsterData(table::FieldMonsterData),
-	PartTable(Vec<table::Part>),
-	ReactionTable(Vec<table::Reaction>),
-	SummonTable(Vec<table::Summon>),
-	WeaponAttTable(table::WeaponAtt),
-
-	Empty,
-}
-
 fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryReadError> {
 	let mut data = f.reader.data();
 	while data.last() == Some(&0) {
@@ -507,36 +466,74 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Item, EntryReadError> {
 	Ok(item)
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum EntryWriteError {
+	#[snafu(display("could not write function"), context(false))]
+	Function { source: func::write::WriteError },
+	#[snafu(display("could not write effect"), context(false))]
+	Effect { source: table::effect::WriteError },
+	#[snafu(display("could not write FcAuto"), context(false))]
+	FcAuto { source: table::fc_auto::WriteError },
+	#[snafu(display("could not write BookData"), context(false))]
+	BookData { source: table::book::WriteError },
+	#[snafu(display("could not write book BookData99"), context(false))]
+	BookData99 { source: table::book99::WriteError },
+	#[snafu(display("could not write BTLSET"), context(false))]
+	Btlset { source: table::btlset::WriteError },
+	#[snafu(display("could not write StyleName"), context(false))]
+	StyleName { source: table::style_name::WriteError },
+
+	#[snafu(display("could not write ActionTable"), context(false))]
+	ActionTable { source: table::action_table::WriteError },
+	#[snafu(display("could not write AddCollision"), context(false))]
+	AddCollision { source: table::add_collision::WriteError },
+	#[snafu(display("could not write AlgoTable"), context(false))]
+	AlgoTable { source: table::algo_table::WriteError },
+	#[snafu(display("could not write AnimeClipTable"), context(false))]
+	AnimeClipTable { source: table::anime_clip_table::WriteError },
+	#[snafu(display("could not write BreakTable"), context(false))]
+	BreakTable { source: table::break_table::WriteError },
+	#[snafu(display("could not write FieldFollowData"), context(false))]
+	FieldFollowData { source: table::field_follow_data::WriteError },
+	#[snafu(display("could not write FieldMonsterData"), context(false))]
+	FieldMonsterData { source: table::field_monster_data::WriteError },
+	#[snafu(display("could not write PartTable"), context(false))]
+	PartTable { source: table::part_table::WriteError },
+	#[snafu(display("could not write ReactionTable"), context(false))]
+	ReactionTable { source: table::reaction_table::WriteError },
+	#[snafu(display("could not write SummonTable"), context(false))]
+	SummonTable { source: table::summon_table::WriteError },
+	#[snafu(display("could not write WeaponAttTable"), context(false))]
+	WeaponAttTable { source: table::weapon_att_table::WriteError },
+}
+
 fn write_entry(f: &mut VWriter, item: &Item) -> Result<usize, EntryWriteError> {
-	fn todo<T: std::fmt::Debug>(f: &mut VWriter, item: T) {
-		tracing::warn!("TODO: {item:?}");
-		f.delay(|_| None::<[u8; 0]>);
-	}
 	match item {
 		Item::Func(i) => func::write::write(f, i)?,
 		Item::Effect(i) => table::effect::write(f, i)?,
-		Item::Fc(i) => todo(f, i),
+		Item::Fc(i) => table::fc_auto::write(f, i)?,
 		Item::BookPage(i) => table::book::write(f, i)?,
 		Item::BookMetadata(i) => table::book99::write(f, *i)?,
 		Item::Btlset(i) => table::btlset::write(f, i)?,
-		Item::StyleName(i) => todo(f, i),
+		Item::StyleName(i) => table::style_name::write(f, i)?,
 
 		Item::Empty => {}
 		Item::ActionTable(i) => table::action_table::write(f, i)?,
-		Item::AddCollision(i) => todo(f, i),
+		Item::AddCollision(i) => table::add_collision::write(f, i)?,
 		Item::AlgoTable(i) => table::algo_table::write(f, i)?,
 		Item::AnimeClipTable(i) => table::anime_clip_table::write(f, i)?,
-		Item::BreakTable(i) => todo(f, i),
-		Item::FieldFollowData(i) => todo(f, i),
-		Item::FieldMonsterData(i) => todo(f, i),
-		Item::PartTable(i) => todo(f, i),
-		Item::ReactionTable(i) => todo(f, i),
-		Item::SummonTable(i) => todo(f, i),
-		Item::WeaponAttTable(i) => todo(f, i),
+		Item::BreakTable(i) => table::break_table::write(f, i)?,
+		Item::FieldFollowData(i) => table::field_follow_data::write(f, i)?,
+		Item::FieldMonsterData(i) => table::field_monster_data::write(f, i)?,
+		Item::PartTable(i) => table::part_table::write(f, i)?,
+		Item::ReactionTable(i) => table::reaction_table::write(f, i)?,
+		Item::SummonTable(i) => table::summon_table::write(f, i)?,
+		Item::WeaponAttTable(i) => table::weapon_att_table::write(f, i)?,
 	}
 
 	let align = match item {
 		Item::Effect(_) => 16,
+		Item::Fc(_) => 16,
 		_ => 4,
 	};
 	Ok(align)

@@ -10,6 +10,12 @@ pub enum ReadError {
 	},
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Collision {
 	pub a: u32,
@@ -27,3 +33,14 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Collision>, ReadError> {
 	Ok(out)
 }
 
+
+pub(crate) fn write(f: &mut VWriter, data: &[Collision]) -> Result<(), WriteError> {
+	f.u8(data.len() as u8);
+	for collision in data {
+		f.u32(collision.a);
+		for &value in &collision.b {
+			f.f32(value);
+		}
+	}
+	Ok(())
+}

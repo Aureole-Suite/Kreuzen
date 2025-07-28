@@ -12,6 +12,12 @@ pub enum ReadError {
 	BadKind { kind: u16, b: u16, c: String },
 }
 
+#[derive(Debug, snafu::Snafu)]
+pub enum WriteError {
+	#[snafu(transparent, context(false))]
+	Value { source: crate::ValueError },
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Summon {
 	pub kind: u16,
@@ -38,3 +44,14 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Summon>, ReadError> {
 	Ok(table)
 }
 
+pub(crate) fn write(f: &mut VWriter, table: &[Summon]) -> Result<(), WriteError> {
+	for s in table {
+		let kind = 1 << s.kind;
+		f.u16(kind);
+		f.u16(s.b);
+		f.sstr(32, &s.c)?;
+	}
+	f.u16(0xFFFF);
+	f.slice(&[0; 34]);
+	Ok(())
+}
