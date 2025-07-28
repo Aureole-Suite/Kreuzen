@@ -246,7 +246,7 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 		Expr => op.push(self::Expr::read(f)?),
 		Text => op.push(self::Dialogue::read(f)?),
 		Dyn => op.push(read_dyn(f)?),
-		Dyn2 => op.push(read_dyn2(f)?),
+		Dyn2 => op.push(read_dyn(f)?),
 		Ndyn => {
 			for _ in 0..f.u8()? {
 				op.push(read_dyn(f)?);
@@ -317,25 +317,10 @@ fn at_end(f: &VReader<'_>) -> bool {
 fn read_dyn(f: &mut VReader) -> Result<Dyn, OpReadError> {
 	Ok(match f.u8()? {
 		0x11 => Dyn::_11(f.u32()?, f.u8()?),
-		0x22 => Dyn::_22(f.f32()?, f.f32()?),
 		0x33 => Dyn::_33(f.f32()?, f.u8()?),
-		0x44 => Dyn::_44(f.f32()?, f.u8()?, String::new()),
+		0x44 => Dyn::_44(f.u32()?, f.u8()?),
 		0x55 => Dyn::_55(f.u32()?, f.u8()?),
-		0xDD => Dyn::_DD(String::new(), f.str()?),
-		0xEE => Dyn::_EE(f.f32()?, f.u8()?),
-		0xFF => Dyn::_FF(f.i32()?, f.u8()?),
-		v => Dyn::Unknown(v),
-	})
-}
-
-fn read_dyn2(f: &mut VReader) -> Result<Dyn, OpReadError> {
-	Ok(match f.u8()? {
-		0x11 => Dyn::_11(f.u32()?, f.u8()?),
-		0x22 => Dyn::_22(f.f32()?, f.f32()?),
-		0x33 => Dyn::_33(f.f32()?, f.u8()?),
-		0x44 => Dyn::_44(f.f32()?, f.u8()?, f.str()?),
-		0x55 => Dyn::_55(f.u32()?, f.u8()?),
-		0xDD => Dyn::_DD(f.str()?, f.str()?),
+		0xDD => Dyn::_DD(f.str()?),
 		0xEE => Dyn::_EE(f.f32()?, f.u8()?),
 		0xFF => Dyn::_FF(f.i32()?, f.u8()?),
 		v => Dyn::Unknown(v),

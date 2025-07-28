@@ -157,8 +157,6 @@ pub enum OpWriteErrorKind {
 	TooManyArgs { remaining: usize },
 	#[snafu(display("too few arguments"))]
 	ExpectedArg { what: &'static str },
-	#[snafu(display("expected empty string: {value:?}"))]
-	ExpectedEmpty { value: String },
 
 	#[snafu(transparent, context(false))]
 	Dialogue { source: super::dial::WriteError },
@@ -234,7 +232,7 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 			Text => next!(args, Dialogue).write(f)?,
 			Expr => next!(args, Expr).write(f)?,
 			Dyn => write_dyn(f, &next!(args, Dyn))?,
-			Dyn2 => write_dyn2(f, &next!(args, Dyn))?,
+			Dyn2 => write_dyn(f, &next!(args, Dyn))?,
 			Ndyn => {
 				let n = args.as_slice().len();
 				snafu::ensure!(n < 256, TooManyArgsSnafu { remaining: n - 256 });
@@ -310,24 +308,9 @@ fn write_dyn(f: &mut VWriter, arg: &Dyn) -> Result<(), OpWriteErrorKind> {
 		Dyn::_11(a, b) => { f.u8(0x11); f.u32(a); f.u8(b); }
 		Dyn::_22(a, b) => { f.u8(0x22); f.f32(a); f.f32(b); }
 		Dyn::_33(a, b) => { f.u8(0x33); f.f32(a); f.u8(b); }
-		Dyn::_44(a, b, ref s) => { f.u8(0x44); f.f32(a); f.u8(b); snafu::ensure!(s.is_empty(), ExpectedEmptySnafu { value: s }); }
+		Dyn::_44(a, b) => { f.u8(0x44); f.u32(a); f.u8(b); }
 		Dyn::_55(a, b) => { f.u8(0x55); f.u32(a); f.u8(b); }
-		Dyn::_DD(ref s1, ref s2) => { f.u8(0xDD); snafu::ensure!(s1.is_empty(), ExpectedEmptySnafu { value: s1 }); f.str(s2)?; }
-		Dyn::_EE(a, b) => { f.u8(0xEE); f.f32(a); f.u8(b); }
-		Dyn::_FF(a, b) => { f.u8(0xFF); f.i32(a); f.u8(b); }
-		Dyn::Unknown(v) => f.u8(v),
-	}
-	Ok(())
-}
-
-fn write_dyn2(f: &mut VWriter, arg: &Dyn) -> Result<(), OpWriteErrorKind> {
-	match *arg {
-		Dyn::_11(a, b) => { f.u8(0x11); f.u32(a); f.u8(b); }
-		Dyn::_22(a, b) => { f.u8(0x22); f.f32(a); f.f32(b); }
-		Dyn::_33(a, b) => { f.u8(0x33); f.f32(a); f.u8(b); }
-		Dyn::_44(a, b, ref s) => { f.u8(0x44); f.f32(a); f.u8(b); f.str(s)?; }
-		Dyn::_55(a, b) => { f.u8(0x55); f.u32(a); f.u8(b); }
-		Dyn::_DD(ref s1, ref s2) => { f.u8(0xDD); f.str(s1)?; f.str(s2)?; }
+		Dyn::_DD(ref s) => { f.u8(0xDD); f.str(s)?; }
 		Dyn::_EE(a, b) => { f.u8(0xEE); f.f32(a); f.u8(b); }
 		Dyn::_FF(a, b) => { f.u8(0xFF); f.i32(a); f.u8(b); }
 		Dyn::Unknown(v) => f.u8(v),
