@@ -129,7 +129,7 @@
 3215 'EffSetColor2' char u8 f32 f32 f32 f32 u16 u8
 3216 str str
 3217 char u8 f32
-3218 u16 u8 u16
+3218 char u8 char
 3219 u16 u8 f32 f32
 321A str
 321B char
@@ -283,13 +283,13 @@
 33B703 'BtlStatus2Unset' char flags32 u32 u32 u8
 33B704 'BtlStatusGet' char flags32 u32 u32 u8
 33B705 'BtlStatus2Get' char flags32 u32 u32 u8
-33B8 'BtlCharSetTargetHp' char u8 u8
+33B8 'BtlGoalCharSetHp' char u8 u8
 33BA 'BtlCharIsMonsterDyn' dyn2 str # used to check for allies for combos
 33BB dyn2 dyn2 # possibly to link with allies
-33BC 'BtlTargetTextShow' u8 u8 u8 str str
-33BD 'BtlTargetTextWait'
-33BE
-33BF u16
+33BC 'BtlGoalTextShow' u8 u8 u8 str str
+33BD 'BtlGoalTextWait'
+33BE # in KISIN_ATTACK_BEGIN and AniBtlKisinChangeBoost
+33BF 'BtlCharIsPresent' char
 33C0 char u8 u8
 33C1 u32
 33C2 char char
