@@ -62,9 +62,21 @@ impl std::fmt::Debug for Expr {
 			Self::Global(a) => a.fmt(f),
 			Self::SystemFlags(a) => a.fmt(f),
 			Self::_25(a) => f.debug_tuple("_25").field(a).finish(),
-			Self::Bin(op, a, b) => f.debug_tuple(format!("{op:?}").as_str()).field(a).field(b).finish(),
-			Self::Un(op, a) => f.debug_tuple(format!("{op:?}").as_str()).field(a).finish(),
-			Self::Ass(op, a) => f.debug_tuple(format!("{op:?}").as_str()).field(a).finish(),
+			Self::Bin(op, a, b) => {
+				write!(f, "(")?;
+				a.fmt(f)?;
+				write!(f, " {} ", op.as_str())?;
+				b.fmt(f)?;
+				write!(f, ")")
+			}
+			Self::Un(op, a) => {
+				write!(f, "{}", op.as_str())?;
+				a.fmt(f)
+			}
+			Self::Ass(op, a) => {
+				write!(f, "{} ", op.as_str())?;
+				a.fmt(f)
+			}
 		}
 	}
 }
@@ -81,13 +93,35 @@ pub enum BinOp {
 	Ge = 0x07,      // >=
 	BoolAnd = 0x09, // &&
 	BitAnd = 0x0A,  // &
-	BitOr = 0x0B,   // | and ||
+	Or = 0x0B,      // | and ||
 	Add = 0x0C,     // +
 	Sub = 0x0D,     // -
-	BitXor = 0x0F,  // ^
+	Xor = 0x0F,     // ^
 	Mul = 0x10,     // *
 	Div = 0x11,     // /
 	Mod = 0x12,     // %
+}
+
+impl BinOp {
+	fn as_str(self) -> &'static str {
+		match self {
+			BinOp::Eq => "==",
+			BinOp::Ne => "!=",
+			BinOp::Lt => "<",
+			BinOp::Gt => ">",
+			BinOp::Le => "<=",
+			BinOp::Ge => ">=",
+			BinOp::BoolAnd => "&&",
+			BinOp::BitAnd => "&",
+			BinOp::Or => "||",
+			BinOp::Add => "+",
+			BinOp::Sub => "-",
+			BinOp::Xor => "^",
+			BinOp::Mul => "*",
+			BinOp::Div => "/",
+			BinOp::Mod => "%",
+		}
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] // comment to trick rustfmt
@@ -97,6 +131,16 @@ pub enum UnOp {
 	BoolNot = 0x08, // !
 	Neg = 0x0E,     // -
 	BitNot = 0x1D,  // ~
+}
+
+impl UnOp {
+	fn as_str(self) -> &'static str {
+		match self {
+			UnOp::BoolNot => "!",
+			UnOp::Neg => "-",
+			UnOp::BitNot => "~",
+		}
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] // comment to trick rustfmt
@@ -112,6 +156,22 @@ pub enum AssOp {
 	AndAss = 0x19, // &=
 	XorAss = 0x1A, // ^=
 	OrAss = 0x1B,  // |=
+}
+
+impl AssOp {
+	fn as_str(self) -> &'static str {
+		match self {
+			AssOp::Ass => "=",
+			AssOp::MulAss => "*=",
+			AssOp::DivAss => "/=",
+			AssOp::ModAss => "%=",
+			AssOp::AddAss => "+=",
+			AssOp::SubAss => "-=",
+			AssOp::AndAss => "&=",
+			AssOp::XorAss => "^=",
+			AssOp::OrAss => "|=",
+		}
+	}
 }
 
 impl Expr {
