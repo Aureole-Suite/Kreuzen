@@ -47,11 +47,11 @@
 28   dyn dyn u8
 
 29   'Menu'
-2900 'New' u8 u16 f32 u32
-2901 'Add' u8 str i32
-2902 'Show' u8 u8 i16 i16 u8
-2903 'Hide' u8
-2904 'Wait' u8 u8 # id, global
+2900 'MenuNew' u8 u16 f32 u32
+2901 'MenuAdd' u8 str i32
+2902 'MenuShow' u8 u8 i16 i16 u8
+2903 'MenuHide' u8
+2904 'MenuWait' u8 u8 # id, global
 2905 u8 u16 u32
 2906 u8 u16
 2907 u8 u16
@@ -83,28 +83,28 @@
 2E   'CharAniWait'
 2E00 char u8
 2E03 char u8 u8
-2E04 'Frames' char u8 u32
-2E05 'FrameAbs' char u8 u32
+2E04 'CharAniWaitFrames' char u8 u32
+2E05 'CharAniWaitFrameAbs' char u8 u32
 2F   '_AnimeClip'
-2F00 'AddSymbol' char str str
-2F01 'RemoveSymbol' char str str
-2F02 'LoadAsset' char str str
-2F04 'AddAsset' char str str
-2F05 'RemoveAsset' char str str
-2F06 'LoadByCatalog' char u32
-2F07 'ReleaseByCatalog' char u32
-2F08 'LoadMultiple' char u8 str str str str str str str str str str str str str str str str
+2F00 '_AnimeClipAddSymbol' char str str
+2F01 '_AnimeClipRemoveSymbol' char str str
+2F02 '_AnimeClipLoadAsset' char str str
+2F04 '_AnimeClipAddAsset' char str str
+2F05 '_AnimeClipRemoveAsset' char str str
+2F06 '_AnimeClipLoadByCatalog' char u32
+2F07 '_AnimeClipReleaseByCatalog' char u32
+2F08 '_AnimeClipLoadMultiple' char u8 str str str str str str str str str str str str str str str str
 2F09 char u8
-2F0A 'ChangeSkin' char str str
-2F0B 'LoadFace' char str str
-2F0C 'SetChrPresetFaceModel' char str str
+2F0A '_AnimeClipChangeSkin' char str str
+2F0B '_AnimeClipLoadFace' char str str
+2F0C '_AnimeClipSetChrPresetFaceModel' char str str
 2F0D char
 2F0E char u32 str str
 2F0F char u8
 2F10 char str
 30   'Attachment'
-3000 'Add' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
-3001 'Remove' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3000 'AttachmentAdd' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3001 'AttachmentRemove' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3002 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3003 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3004 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
@@ -114,19 +114,19 @@
 3102 'AssetIsLoaded' str
 
 32   'Eff'
-320A 'Load' char u8 str u32
-320B 'Unload' char u8
-320C 'Play' char dyn char   flags32 dyn  dyn dyn dyn f32  f32  f32  dyn    dyn    dyn    u8
-#           char eff target unk     node x   y   z   rotx roty rotz scalex scaley scalez slot
-320D 'Stop' char u8 u8
+320A 'EffLoad' char u8 str u32
+320B 'EffUnload' char u8
+320C 'EffPlay' char dyn char   flags32 dyn  dyn dyn dyn f32  f32  f32  dyn    dyn    dyn    u8
+#              char eff target unk     node x   y   z   rotx roty rotz scalex scaley scalez slot
+320D 'EffStop' char u8 u8
 320E char u8 u8
 320F char u16 u8
-3210 'Wait' char u16 u8
+3210 'EffWait' char u16 u8
 3211 char u8
 3212 char u16
 3213 char u8 u16
-3214 'SetColor' char u8 f32 f32 f32 f32 u16 u8
-3215 'SetColor2' char u8 f32 f32 f32 f32 u16 u8
+3214 'EffSetColor' char u8 f32 f32 f32 f32 u16 u8
+3215 'EffSetColor2' char u8 f32 f32 f32 f32 u16 u8
 3216 str str
 3217 char u8 f32
 3218 u16 u8 u16
@@ -142,6 +142,7 @@
 3223
 3224 char dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
 
+33   'Btl'
 3300 'BtlDamage' char char u8 u8
 3301 'BtlDamageAni' char dyn2 dyn2 u8
 3302 'BtlTargetIterReset' var char
@@ -151,7 +152,7 @@
 3306 u8
 3307 u8 str
 3308 u8
-3309 '_BtlInitHit' char
+3309 'Btl_InitHit' char
 330A char char
 330B 'BtlCharFlagsSet' char flags32
 330C 'BtlCharFlagSet' char flags32
@@ -196,14 +197,14 @@
 333500 char f32 f32 f32 str
 333501 char f32 f32 f32 str
 333502 char f32 f32 f32 str
-3337 '_BtlCharSetPos' char char f32 f32 f32 f32 u8 u8
-3338 '_BtlMoveToTarget'
+3337 'Btl_CharSetPos' char char f32 f32 f32 f32 u8 u8
+3338 'Btl_MoveToTarget'
 3339 # might be if char can move or something?
 333A 'BtlCharSavePos' char u32 # But where's the loadpos?
 333B char f32 f32 f32 f32
 333C char char f32 u16
 333D char char f32 f32 f32 f32 f32 u8
-333E '_BtlCharSetPosAsync' char char f32 f32 f32 f32 u8 u8
+333E 'Btl_CharSetPosAsync' char char f32 f32 f32 f32 u8 u8
 333F char
 3340 char u8
 3341 'BtlCharTurnToChar' char char f32 f32
@@ -221,11 +222,11 @@
 3356 u8 # used in BtlWinGroup
 335A 'BtlCharSetAtDelay' char u32
 335B u8 u32
-335C 'BattleGetCount' u8 # 10 is number of players
-3361 'CharSetStat' char u8 u8 u32 u8
-3362 'CharGetStat' char u8 # 0 is hp, 27 and 28 are charids for target
+335C 'BtlGetCount' u8 # 10 is number of players
+3361 'BtlCharSetStat' char u8 u8 u32 u8
+3362 'BtlCharGetStat' char u8 # 0 is hp, 27 and 28 are charids for target
 3363 char
-3364 'BattleTextShow' str
+3364 'BtlTextShow' str
 3365 char # in chr045:AniBtlSCraft00_EquipErase
 3366 char # in chr045:AniBtlSCraft00_EquipShow
 3367
@@ -313,7 +314,7 @@
 33D401
 33D402 u8
 33D403 u8
-33D404 'GetCastedValiantArtElement' char
+33D404 'BtlGetCastedValiantArtElement' char
 33D405 char u8
 33D5 u8 u16 u16
 
@@ -546,9 +547,7 @@
 5449 char char
 544A char u16
 544B char
-544C 'CharSetRiderInfo' char u16
-544C00 'Horse'
-544C01 'Bike'
+544C 'CharSetRiderInfo' char u16 u8
 544D u32
 544E u8
 544F00 u8 u16
@@ -756,11 +755,11 @@
 7404
 7416
 75   'Menu2'
-7500 'New' u8 u16 f32 u32
-7501 'Add' u8 str i32
-7502 'Show' u8 u8 i16 i16 u8
-7503 'Hide' u8
-7504 'Wait' u8 u8
+7500 'Menu2New' u8 u16 f32 u32
+7501 'Menu2Add' u8 str i32
+7502 'Menu2Show' u8 u8 i16 i16 u8
+7503 'Menu2Hide' u8
+7504 'Menu2Wait' u8 u8
 7505 u8 u16 u32
 7506 u8 u16
 7507 u8 u16

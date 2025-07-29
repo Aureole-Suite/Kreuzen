@@ -90,7 +90,7 @@ fn parse_line(line: &str) -> Option<Line> {
 	let mut name = String::new();
 	let mut parts = Vec::<Part>::new();
 	for word in words {
-		if word.starts_with('\'') != word.ends_with('\'') {
+		if word.starts_with('\'') != word.ends_with('\'') || word == "''" {
 			panic!("Invalid name in spec: {line}");
 		}
 		if word.starts_with('\'') {
@@ -121,6 +121,8 @@ fn parse_spec(text: &str) -> Spec {
 		ops.insert(line.code, line.parts);
 	}
 
+	validate_names(&names);
+
 	Spec {
 		names,
 		ops: build_ops(ops),
@@ -142,6 +144,18 @@ fn build_ops(ops: BTreeMap<Vec<u8>, Vec<Part>>) -> [Option<Op>; 256] {
 		op.parts = v;
 	}
 	out
+}
+
+fn validate_names(names: &BTreeMap<Vec<u8>, String>) {
+	for (k, v) in names {
+		for i in 0..k.len() {
+			if let Some(prefix) = names.get(&k[..i]) {
+				if !v.starts_with(prefix) {
+					panic!("Name '{v}' does not start with parent '{prefix}'");
+				}
+			}
+		}
+	}
 }
 
 pub(crate) fn op_40(a: crate::types::Char) -> &'static [Part] {
