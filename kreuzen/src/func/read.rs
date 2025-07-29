@@ -293,7 +293,7 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 				read_parts(op, f, &[U8, U8])?;
 			}
 		}
-		Part::_AB01 => {
+		Part::_AB00 => {
 			let slice = f.slice(50)?;
 			let nonzero = slice.iter().rposition(|&b| b != 0).map_or(0, |i| i + 1);
 			for &i in &slice[..nonzero] {

@@ -22,9 +22,11 @@ pub enum WriteError {
 pub struct Btlset {
 	pub field: String,
 	pub bounds: [f32; 6],
-	pub unk1: (u32, u32, u16, u16),
+	pub btl_id: u32,
+	pub unk1: u32,
+	pub bgm: (u16, u16),
 	pub unk2: u32,
-	pub unk3: String,
+	pub script: String,
 	pub variants: Vec<BtlVariant>,
 }
 
@@ -37,10 +39,12 @@ pub struct BtlVariant {
 pub(crate) fn read(f: &mut VReader) -> Result<Btlset, ReadError> {
 	let field = f.sstr(16)?;
 	let bounds = [f.f32()?, f.f32()?, f.f32()?, f.f32()?, f.f32()?, f.f32()?];
-	let unk1 = (f.u32()?, f.u32()?, f.u16()?, f.u16()?);
+	let btl_id = f.u32()?;
+	let unk1 = f.u32()?;
+	let bgm = (f.u16()?, f.u16()?);
 	f.check_u32(0)?;
 	let unk2 = f.u32()?;
-	let unk3 = f.sstr(32)?;
+	let script = f.sstr(32)?;
 	let mut variants = Vec::new();
 	loop {
 		let num = f.u32()?;
@@ -66,7 +70,7 @@ pub(crate) fn read(f: &mut VReader) -> Result<Btlset, ReadError> {
 		variants.push(BtlVariant { num, monsters });
 	}
 	f.check(&[0; 0x18])?;
-	Ok(Btlset { field, bounds, unk1, unk2, unk3, variants })
+	Ok(Btlset { field, bounds, btl_id, unk1, bgm, unk2, script, variants })
 }
 
 pub(crate) fn write(f: &mut VWriter, btlset: &Btlset) -> Result<(), WriteError> {
@@ -74,13 +78,13 @@ pub(crate) fn write(f: &mut VWriter, btlset: &Btlset) -> Result<(), WriteError> 
 	for &bound in &btlset.bounds {
 		f.f32(bound);
 	}
-	f.u32(btlset.unk1.0);
-	f.u32(btlset.unk1.1);
-	f.u16(btlset.unk1.2);
-	f.u16(btlset.unk1.3);
+	f.u32(btlset.btl_id);
+	f.u32(btlset.unk1);
+	f.u16(btlset.bgm.0);
+	f.u16(btlset.bgm.1);
 	f.u32(0);
 	f.u32(btlset.unk2);
-	f.sstr(32, &btlset.unk3)?;
+	f.sstr(32, &btlset.script)?;
 	for variant in &btlset.variants {
 		f.u32(variant.num);
 		for (name, _) in &variant.monsters {

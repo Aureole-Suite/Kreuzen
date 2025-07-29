@@ -45,6 +45,7 @@
 26   'TextWait'
 27   'TextSetName' str char
 28   dyn dyn u8
+
 29   'Menu'
 2900 'New' u8 u16 f32 u32
 2901 'Add' u8 str i32
@@ -69,52 +70,63 @@
 2914 u8 f32 f32 f32
 2915 u8 f32 f32 f32
 2916 u8 f32 f32 f32 f32 u8
+
 2A00 char str str u8
 2A01 char str str u8
 2A02 char str str u8
 2A03 char str str u8
 2A04 char str str str
 2A05 char str str
-2B00 u32 u8 u8 i32 u8 i32 u8 i32 u8 i32 u8
-2B01 u32 u8 u8 u16 u16 u16 u16
-2C   char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
-2D   char u32 u8
+2B00 'Battle' u32 u8 u8 i32 u8 i32 u8 i32 u8 i32 u8 # u32 seems to be index of btlset in function list
+2C   'CharAniPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
+2D   'CharAniWait' char u32 u8
+2E   'CharAniWait'
 2E00 char u8
-2E01 char u8 f32 f32 u8
-2E02 char u8 u8
 2E03 char u8 u8
-2E04 char u8 u32
-2E05 char u8 u32
-2F00 char str str
-2F01 char str str
-2F02 char str str
-2F04 char str str
-2F05 char str str
-2F06 char u32
-2F07 char u32
-2F08 char u8 str str str str str str str str str str str str str str str str
+2E04 'Frames' char u8 u32
+2E05 'FrameAbs' char u8 u32
+2F   '_AnimeClip'
+2F00 'AddSymbol' char str str
+2F01 'RemoveSymbol' char str str
+2F02 'LoadAsset' char str str
+2F04 'AddAsset' char str str
+2F05 'RemoveAsset' char str str
+2F06 'LoadByCatalog' char u32
+2F07 'ReleaseByCatalog' char u32
+2F08 'LoadMultiple' char u8 str str str str str str str str str str str str str str str str
 2F09 char u8
-2F0A char str str
-2F0B char str str
-2F0C char str str
+2F0A 'ChangeSkin' char str str
+2F0B 'LoadFace' char str str
+2F0C 'SetChrPresetFaceModel' char str str
 2F0D char
 2F0E char u32 str str
 2F0F char u8
 2F10 char str
-30   u8 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
-31   u8 str
-320A char u8 str u32
-320B char u8
-320C char dyn char flags32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8
-320D char u8 u8
+30   'Attachment'
+3000 'Add' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3001 'Remove' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3002 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3003 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3004 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3005 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+3100 'AssetLoad' str
+3101 'AssetUnload' str
+3102 'AssetIsLoaded' str
+
+32   'Eff'
+320A 'Load' char u8 str u32
+320B 'Unload' char u8
+320C 'Play' char dyn char   flags32 dyn  dyn dyn dyn f32  f32  f32  dyn    dyn    dyn    u8
+#           char eff target unk     node x   y   z   rotx roty rotz scalex scaley scalez slot
+320D 'Stop' char u8 u8
 320E char u8 u8
 320F char u16 u8
-3210 char u16 u8
+3210 'Wait' char u16 u8
 3211 char u8
 3212 char u16
 3213 char u8 u16
-3214 char u8 f32 f32 f32 f32 u16 u8
-3215 char u8 f32 f32 f32 f32 u16 u8
+3214 'SetColor' char u8 f32 f32 f32 f32 u16 u8
+3215 'SetColor2' char u8 f32 f32 f32 f32 u16 u8
 3216 str str
 3217 char u8 f32
 3218 u16 u8 u16
@@ -129,39 +141,41 @@
 3222 char u32 str
 3223
 3224 char dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
+
 3300 'BtlDamage' char char u8 u8
 3301 'BtlDamageAni' char dyn2 dyn2 u8
-3302 'BtlInitTarget' var char
-3303 'BtlNextTarget' char
-3304 u8
+3302 'BtlTargetIterReset' var char
+3303 'BtlTargetInitNext' char
+3304 'BtlTargetIterInit' u8
 3305 u8 str
 3306 u8
 3307 u8 str
 3308 u8
-3309 char
+3309 '_BtlInitHit' char
 330A char char
-330B char u32
-330C char u32
-330D char
-330E 'CharSetTarget' char u16 char u16
-330F 'CharGetTarget' char u16
+330B 'BtlCharFlagsSet' char flags32
+330C 'BtlCharFlagSet' char flags32
+330D 'BtlCharFlagsGet' char
+330E 'BtlCharSetTarget' char u16 char u16
+330F 'BtlCharGetTarget' char u16
 3310 char
-3311 u16 u8
+3311 char u8
 331200 str u16 f32 f32
 331201
 331202
 3313 char u16 char u32 u32 u32
-3314 char
-3315 char f32 f32 f32 f32 f32
-3316 u8
-3317 char u32
-3318
-3319 u32
-331A u32
-331B
-331E u16 u16 str str
-331f u16
-3320 u16 f32 f32
+3314 'BtlKill' char
+3315 'BtlAfterimageOn' char f32 f32 f32 f32 f32
+3316 'BtlAfterimageOff' u8
+3317 'BtlDummyCreate' char u32
+3318 'BtlDummyDelete'
+3319 'BtlFlagsSet' flags32
+331A 'BtlFlagsUnset' flags32
+331B 'BtlFlagsGet'
+331E 'BtlTempCreate' u16 char str str
+331F 'BtlTempDelete' u16
+# Combat shells: chr009 Millium, chr015 Altina, chr070 Alberich, chr072 George, chr948 Zoa Balor
+3320 'BtlCombatShellCreate' char f32 f32
 3321
 3322
 3323
@@ -169,115 +183,110 @@
 3325
 3326 u8
 3327 f32 f32
-3329
-332A u16
-332C
-332D
+# End combat shells
+332A char
+332D # used in BattleLinkLevelUpCelineVoice
 332E char
 332F char
 3330 char char
-3331 char
-3332
-3333 char str str
+3331 'BtlAfterimageCreate' char
+3332 'BtlAfterimageDelete'
+3333 char str str # also related to afterimages
 3334 u8
-3335 u8 char f32 f32 f32 str
-3336 u16 f32 f32 f32 f32
-3337 char char f32 f32 f32 f32 u8 u8
-3338
-3339
-333A char f32
+333500 char f32 f32 f32 str
+333501 char f32 f32 f32 str
+333502 char f32 f32 f32 str
+3337 '_BtlCharSetPos' char char f32 f32 f32 f32 u8 u8
+3338 '_BtlMoveToTarget'
+3339 # might be if char can move or something?
+333A 'BtlCharSavePos' char u32 # But where's the loadpos?
 333B char f32 f32 f32 f32
 333C char char f32 u16
 333D char char f32 f32 f32 f32 f32 u8
-333E char char f32 f32 f32 f32 u8 u8
+333E '_BtlCharSetPosAsync' char char f32 f32 f32 f32 u8 u8
 333F char
-3340 u16 u8
-3341 char char f32 f32
+3340 char u8
+3341 'BtlCharTurnToChar' char char f32 f32
 3342 char u8 f32 f32 f32 u8 u8
 3346 f32 f32 f32
 3347
 3348 char u16
-3349 char
-334A f32
+3349 char # something with "attack with KeA slot"
+334A f32 # in AniBtlBurstWait
 334B u16 u8
-334C
-3352 char u8
-3353 str
-3354 u16 u8 f32 f32 f32
-3355 u16
-3356 u8
-335A u16 u32
+334C # in AniBtlBraveOrderCancel_Kisin
+3352 char u8 # possibly related to eff
+3354 char u8 f32 f32 f32
+3355 char
+3356 u8 # used in BtlWinGroup
+335A 'BtlCharSetAtDelay' char u32
 335B u8 u32
 335C 'BattleGetCount' u8 # 10 is number of players
-335E u16
 3361 'CharSetStat' char u8 u8 u32 u8
 3362 'CharGetStat' char u8 # 0 is hp, 27 and 28 are charids for target
-3363 u16
-3364 str
-3365 char
-3366 char
+3363 char
+3364 'BattleTextShow' str
+3365 char # in chr045:AniBtlSCraft00_EquipErase
+3366 char # in chr045:AniBtlSCraft00_EquipShow
 3367
 3368
 336B u16
 336C u16
 336E char char f32 f32 f32 f32
-336F
-3370
+336F # in btlcom:AniBtlShowLevelUp
+3370 # in btlcom:AniBtlShowLevelUp
 3373 u16
 3374 u16
 3376
-3377 char
+# Kisin-related
+3377 char # mostly, but not only, kisin
 3378 char u16
 337B char char
 337D u8
-337E f32 u16 u8
-337F
-3380 u8
-3381 u16
-3382 u8 u16 u32
+337E f32 u16 u8 # mostly kisin
+337F # mostly kisin
+# end kisin
+3382 u8 char u32
 3383 char char
-3385
-3386
-3387
-3388
-3389 u16
-338A
+3385 'BtlKisinPt_85'
+3386 'BtlKisinPt_86'
+3387 'BtlIsKisin'
+3388 'BtlKisinPt_88'
+338A # related to 3346..=3348
+# kisin crafts; sometimes near CharCraftHas
 338E char u16
 338F char
-3390 u8
 3391 char u16
-3392 f32 f32
+3392 f32 f32 # also BattleViewMinMax
 3394 char u16 u16
-3397
-3398 char
-339E char str
-33A6
-33A7 u8
-33A8 u32
-33A9 u8 u32
-33AA
-33AB
-33AD
-33AE char
-33AF char
-33B0
-33B1
-33B2
-33B3
+# end kisin crafts
+3398 char # in btlcom:AniBtlReflect
+339E 'BtlCharIsMonster' char str
+33A6 'BtlOrder_A6' # in btlcom:AniBtlBraveOrder00
+33A7 'BtlOrderAnti' u8
+33A8 'BtlOrderCancel' u32
+33A9 'BtlOrderGet' u8 u32 # returns what is possibly a magic
+33AA 'BtlOrder_AA' # in btlcom:AniBtlBraveOrder00
+33AB 'BtlOrder_AB' # in btlcom:AniBtlBraveOrder00
+33AD 'BtlOrderGet2' # in btlcom:AniBtlBraveOrderLoadEffect and AniBtlBraveOrderLoadEndEffect; ranges from 303 to 326
+33AF 'BtlDamageIsWeak' char # used to choose between BTL_WEAKDAMAGE and BTL_DAMAGE
+33B0 # kisin coop craft
+33B1 # kisin coop craft
+33B2 # kisin coop craft
 33B4 char dyn2 dyn2 dyn2 dyn2
-33B5 u8
-33B6 f32 f32
-33B700 char flags32 u32 u32 u8
-33B701 char flags32 u32 u32 u8
-33B702 char flags32 u32 u32 u8
-33B703 char flags32 u32 u32 u8
-33B704 char flags32 u32 u32 u8
-33B705 char flags32 u32 u32 u8
-33B8 char u8 u8
-33BA dyn2 str
-33BB dyn2 dyn2
-33BC u8 u8 u8 str str
-33BD
+33B5 u8 # in btlwin:SetControlCamera
+33B6 f32 f32 # in various BattleViewMinMax
+33B700 'BtlStatusSet' char flags32 u32 u32 u8
+33B701 'BtlStatusUnset' char flags32 u32 u32 u8
+33B702 'BtlStatus2Set' char flags32 u32 u32 u8
+33B703 'BtlStatus2Unset' char flags32 u32 u32 u8
+33B704 'BtlStatusGet' char flags32 u32 u32 u8
+33B705 'BtlStatus2Get' char flags32 u32 u32 u8
+33B8 'BtlCharSetTargetHp' char u8 u8
+33BA 'BtlCharIsMonsterDyn' dyn2 str # used to check for allies for combos
+33BB dyn2 dyn2 # possibly to link with allies
+33BC 'BtlTargetTextShow' u8 u8 u8 str str
+33BD 'BtlTargetTextWait'
 33BE
 33BF u16
 33C0 char u8 u8
@@ -296,7 +305,10 @@
 33CD u32
 33CE
 33D2 u8 u16 u16
-33D3 u32 u8
+33D300 u32
+33D301 u32
+33D302 u32
+33D303 u32
 33D400
 33D401
 33D402 u8
@@ -304,6 +316,7 @@
 33D404 'GetCastedValiantArtElement' char
 33D405 char u8
 33D5 u8 u16 u16
+
 34   u8 f32 f32 f32 f32 u16
 3500 'CharFlagSet' char flags32 # might be reverse
 3501 'CharFlagUnset' char flags32
@@ -387,9 +400,9 @@
 3BFE u16
 3BFF f32 f32 f32
 3C01 char str str
-3C03 char str str str str str
+3C03 'CharFace2' char str str str str str
 3C04 'CharFace' char str
-3C05 char str str str str str
+3C05 'CharFace3' char str str str str str
 3D   char f32 f32 u8
 3E   char char f32 u8 _3E
 3F   char _3F
@@ -446,7 +459,7 @@
 4908 char f32 f32 u8
 4909 u16
 490A 'CharExists' char
-490B u16
+490B char
 490C char char
 490E u8
 490F u8
@@ -612,7 +625,7 @@
 6608 char u16 u8
 6609 char u16
 660A char u16
-660B char u32
+660B 'CharOrderAdd' char u32
 660C char
 660D char u16 u32
 660E char
@@ -766,7 +779,7 @@
 7801 str u8
 79   u8 u16 _79
 7A00 'ScenaIs' str
-7A01 'CharIs' char str
+7A01 'CharIsModel' char str
 7A02 'CharIsAni' char str
 7A03 'ScenaIsPrefix' str
 7B01 str u8 u8 u8
@@ -944,7 +957,7 @@ A6   char f32 f32 f32
 A8   f32
 A9   u8
 AA   u8 u8
-AB00 u16 u8 _AB01
+AB00 char u8 _AB00
 AB01
 AB02 _AB02
 AB03 f32 f32 f32
@@ -1064,7 +1077,7 @@ BC0B u16 dyn2 u32
 BC0C u16 dyn2 str f32 f32
 BC0D u16 dyn2 f32
 BC0E u16 dyn2 dyn2 u16 u16
-BC0F u16 dyn2 u16 f32 str
+BC0F u16 dyn2 u16 u32 str
 BC10 u16 dyn2 u32 u32 u16
 BC11 u16 dyn2 str f32 f32
 BC12 u16 dyn2 str f32 f32

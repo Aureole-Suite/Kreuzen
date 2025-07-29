@@ -281,7 +281,7 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 					write_parts(op, f, &[U8, U8], args)?;
 				}
 			}
-			Part::_AB01 => {
+			Part::_AB00 => {
 				let mut slice = [0; 50];
 				for v in slice.iter_mut().take(args.as_slice().len()) {
 					*v = next!(args, U8);
