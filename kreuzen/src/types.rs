@@ -3,13 +3,19 @@ use derive_more::{From, Into};
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Char(pub u16);
 
-impl std::fmt::Debug for Char {
+struct Tagged<A, B>(A, Option<B>);
+
+impl<A, B> std::fmt::Debug for Tagged<A, B>
+where
+	A: std::fmt::Debug,
+	B: std::fmt::Display,
+{
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		if let Some(name) = self.name() {
-			write!(f, "Char({i}: {name})", i = self.0)
-		} else {
-			write!(f, "Char({i})", i = self.0)
+		write!(f, "{:?}", self.0)?;
+		if let Some(v) = &self.1 {
+			write!(f, ": {v}")?;
 		}
+		Ok(())
 	}
 }
 
@@ -121,6 +127,14 @@ impl Char {
 	}
 }
 
+impl std::fmt::Debug for Char {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_tuple("Char")
+			.field(&Tagged(self.0, self.name()))
+			.finish()
+	}
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Item(pub u16);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
@@ -134,8 +148,26 @@ pub struct Global(pub u8);
 pub struct Var(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Attr(pub u8);
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct CharAttr(pub Char, pub u8);
+
+impl CharAttr {
+	pub fn name(n: u8) -> Option<&'static str> {
+		Some(match n {
+			8 => "id",
+			_ => return None
+		})
+	}
+}
+
+impl std::fmt::Debug for CharAttr {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_tuple("CharAttr")
+			.field(&Tagged(self.0.0, self.0.name()))
+			.field(&Tagged(self.1, CharAttr::name(self.1)))
+			.finish()
+	}
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Flags16(pub u16);
