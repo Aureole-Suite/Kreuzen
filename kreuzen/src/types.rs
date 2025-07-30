@@ -147,6 +147,8 @@ pub struct Global(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Var(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
+pub struct Reg(pub u8);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Attr(pub u8);
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct CharAttr(pub Char, pub u8);

@@ -115,6 +115,7 @@ pub enum Arg {
 	Flag(crate::types::Flag),
 	Global(crate::types::Global),
 	Var(crate::types::Var),
+	Reg(crate::types::Reg),
 	Attr(crate::types::Attr),
 	CharAttr(crate::types::CharAttr),
 	Flags16(crate::types::Flags16),
@@ -142,6 +143,7 @@ impl std::fmt::Debug for Arg {
 			Arg::Flag(v) => v.fmt(f),
 			Arg::Global(v) => v.fmt(f),
 			Arg::Var(v) => v.fmt(f),
+			Arg::Reg(v) => v.fmt(f),
 			Arg::Attr(v) => v.fmt(f),
 			Arg::CharAttr(v) => v.fmt(f),
 			Arg::Flags16(v) => v.fmt(f),
@@ -203,7 +205,7 @@ impl std::fmt::Debug for Op {
 #[derive(Clone, PartialEq)]
 pub enum Dyn {
 	Var(crate::types::Var),
-	_33(u32),
+	Reg(crate::types::Reg),
 	_44(u32),
 	_55(u32),
 	Str(String),
@@ -216,13 +218,13 @@ impl std::fmt::Debug for Dyn {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::Var(arg0) => arg0.fmt(f),
-			Self::_33(arg0) => f.debug_tuple("Dyn33").field(arg0).finish(),
+			Self::Reg(arg0) => arg0.fmt(f),
 			Self::_44(arg0) => f.debug_tuple("Dyn44").field(arg0).finish(),
 			Self::_55(arg0) => f.debug_tuple("Dyn55").field(arg0).finish(),
-			Self::Str(arg0) => { write!(f, "str ")?; arg0.fmt(f) },
-			Self::F32(arg0) => { write!(f, "f32 ")?; arg0.fmt(f) },
-			Self::I32(arg0) => { write!(f, "i32 ")?; arg0.fmt(f) },
-			Self::I32lol(arg0) => { write!(f, "f32_ ")?; arg0.fmt(f) },
+			Self::Str(arg0) => arg0.fmt(f),
+			Self::F32(arg0) => arg0.fmt(f),
+			Self::I32(arg0) => arg0.fmt(f),
+			Self::I32lol(arg0) => { f.write_str("'")?;arg0.fmt(f) },
 		}
 	}
 }

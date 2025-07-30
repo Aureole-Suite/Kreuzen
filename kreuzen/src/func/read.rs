@@ -241,6 +241,7 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 		Flag => op.push(Arg::Flag(f.u16()?.into())),
 		Global => op.push(Arg::Global(f.u8()?.into())),
 		Var => op.push(Arg::Var(f.u8()?.into())),
+		Reg => op.push(Arg::Reg(f.u8()?.into())),
 		Attr => op.push(Arg::Attr(f.u8()?.into())),
 		CharAttr => op.push(Arg::CharAttr((f.u16()?.into(), f.u8()?).into())),
 		Flags16 => op.push(Arg::Flags16(f.u16()?.into())),
@@ -320,7 +321,7 @@ fn at_end(f: &VReader<'_>) -> bool {
 fn read_dyn(f: &mut VReader) -> Result<Dyn, OpReadError> {
 	Ok(match f.u8()? {
 		0x11 => { let v = f.u8()?; f.check_u32(0)?; Dyn::Var(v.into()) }
-		0x33 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_33(v) }
+		0x33 => { let v = f.u8()?; f.check_u32(0)?; Dyn::Reg(v.into()) }
 		0x44 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_44(v) }
 		0x55 => { let v = f.u32()?; f.check_u8(0)?; Dyn::_55(v) }
 		0xDD => { let v = f.str()?; Dyn::Str(v) }

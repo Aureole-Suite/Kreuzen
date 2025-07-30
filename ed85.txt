@@ -7,9 +7,9 @@
 07   'Debug' u8 dyn
 08   'SetAttr' attr expr
 0A   'SetVar' var expr
-0C   u8 u8 # Related to expr _25
-0D   u8 u8 expr
-0E   u8 u8 u8
+0C   'FuncArgDeclare' u8 u8
+0D   'SetReg' u8 reg expr
+0E   'FuncArgLoad' u8 u8 reg
 10   'FlagSet' flag
 11   'FlagUnset' flag
 12   'FlagToggle' flag
