@@ -7,10 +7,10 @@
 07   'Debug' u8 dyn
 08   'SetAttr' attr expr
 0A   'SetVar' var expr
-0C00 'NewIntReg' u8
+0C00 'NewNumReg' u8
 0C01 'NewStrReg' u8
-0D00 'SetIntReg' intreg expr
-0E00 'FetchIntReg' intreg u8
+0D00 'SetNumReg' numreg expr
+0E00 'FetchNumReg' numreg u8
 0E01 'FetchStrReg' strreg u8
 10   'FlagSet' flag
 11   'FlagUnset' flag

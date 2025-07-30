@@ -17,7 +17,7 @@ pub enum Part {
 	Flag,
 	Global,
 	Var,
-	IntReg,
+	NumReg,
 	StrReg,
 	Attr,
 	CharAttr,

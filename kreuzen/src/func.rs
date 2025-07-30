@@ -115,7 +115,7 @@ pub enum Arg {
 	Flag(crate::types::Flag),
 	Global(crate::types::Global),
 	Var(crate::types::Var),
-	IntReg(crate::types::IntReg),
+	NumReg(crate::types::NumReg),
 	StrReg(crate::types::StrReg),
 	Attr(crate::types::Attr),
 	CharAttr(crate::types::CharAttr),
@@ -144,7 +144,7 @@ impl std::fmt::Debug for Arg {
 			Arg::Flag(v) => v.fmt(f),
 			Arg::Global(v) => v.fmt(f),
 			Arg::Var(v) => v.fmt(f),
-			Arg::IntReg(v) => v.fmt(f),
+			Arg::NumReg(v) => v.fmt(f),
 			Arg::StrReg(v) => v.fmt(f),
 			Arg::Attr(v) => v.fmt(f),
 			Arg::CharAttr(v) => v.fmt(f),
@@ -207,7 +207,7 @@ impl std::fmt::Debug for Op {
 #[derive(Clone, PartialEq)]
 pub enum Dyn {
 	Var(crate::types::Var),
-	IntReg(crate::types::IntReg),
+	NumReg(crate::types::NumReg),
 	StrReg(crate::types::StrReg),
 	Global(crate::types::Global),
 	Str(String),
@@ -220,7 +220,7 @@ impl std::fmt::Debug for Dyn {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::Var(arg0) => arg0.fmt(f),
-			Self::IntReg(arg0) => arg0.fmt(f),
+			Self::NumReg(arg0) => arg0.fmt(f),
 			Self::StrReg(arg0) => arg0.fmt(f),
 			Self::Global(arg0) => arg0.fmt(f),
 			Self::Str(arg0) => arg0.fmt(f),
