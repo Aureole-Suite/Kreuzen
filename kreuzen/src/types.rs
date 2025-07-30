@@ -110,6 +110,8 @@ impl Char {
 			// FE12 and FE13 are special cased in op3E
 			// FE02..=FE05 and FE15 are special cased in OP40
 
+			0xFFD8 => "ally_loop",
+
 			0xFFFB => "target",
 			0xFFFE => "self",
 			0xFFFF => "null",

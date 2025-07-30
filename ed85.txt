@@ -145,9 +145,9 @@
 33   'Btl'
 3300 'BtlDamage' char char u8 u8
 3301 'BtlDamageAni' char dyn2 dyn2 u8
-3302 'BtlTargetIterReset' var char
-3303 'BtlTargetInitNext' char
-3304 'BtlTargetIterInit' u8
+3302 'BtlLoopTargetsReset' var char
+3303 'BtlLoopTargetsNext' char
+3304 'BtlLoopTargetsInit' u8
 3305 u8 str
 3306 u8
 3307 u8 str
@@ -291,14 +291,13 @@
 33BE # in KISIN_ATTACK_BEGIN and AniBtlKisinChangeBoost
 33BF 'BtlCharIsPresent' char
 33C0 char u8 u8
-33C1 u32
 33C2 char char
-33C3
+33C3 'BtlItem'
 33C4 str str
 33C5 char u32 u32 u32 u32 u32
 33C6 char
 33C7 u32
-33C8 u32
+33C8 i32
 33C9 char dyn2 dyn2 dyn2
 33CA char
 33CB u8
@@ -306,10 +305,10 @@
 33CD u32
 33CE
 33D2 u8 u16 u16
-33D300 u32
-33D301 u32
-33D302 u32
-33D303 u32
+33D300 'BtlLoopAlliesReset' u32
+33D301 'BtlLoopAlliesInit' u32
+33D302 'BtlLoopAlliesRestart' u32
+33D303 'BtlLoopAlliesNext' u32
 33D400
 33D401
 33D402 u8
@@ -460,7 +459,7 @@
 4908 char f32 f32 u8
 4909 u16
 490A 'CharExists' char
-490B char
+490B 'CharInParty' char
 490C char char
 490E u8
 490F u8
