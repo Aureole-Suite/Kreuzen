@@ -235,7 +235,6 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 			Text => next!(args, Dialogue).write(f)?,
 			Expr => next!(args, Expr).write(f)?,
 			Dyn => write_dyn(f, &next!(args, Dyn))?,
-			Dyn2 => write_dyn(f, &next!(args, Dyn))?,
 			Ndyn => {
 				let n = args.as_slice().len();
 				snafu::ensure!(n < 256, TooManyArgsSnafu { remaining: n - 256 });

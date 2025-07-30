@@ -251,7 +251,6 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 		Expr => op.push(self::Expr::read(f)?),
 		Text => op.push(self::Dialogue::read(f)?),
 		Dyn => op.push(read_dyn(f)?),
-		Dyn2 => op.push(read_dyn(f)?),
 		Ndyn => {
 			for _ in 0..f.u8()? {
 				op.push(read_dyn(f)?);

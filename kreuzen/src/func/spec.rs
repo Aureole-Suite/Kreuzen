@@ -27,7 +27,6 @@ pub enum Part {
 	Expr,
 	Text,
 	Dyn,
-	Dyn2,
 	Ndyn,
 
 	_3E,

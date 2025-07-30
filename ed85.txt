@@ -57,10 +57,10 @@
 2905 u8 u16 u32
 2906 u8 u16
 2907 u8 u16
-2908 u8 str u32 dyn2 dyn2
-2909 u8 str dyn2
+2908 u8 str u32 dyn dyn
+2909 u8 str dyn
 290A u8
-290B u8 dyn2
+290B u8 dyn
 290C u8 u16
 290D u8 f32
 290E u8 f32
@@ -146,7 +146,7 @@
 
 33   'Btl'
 3300 'BtlDamage' char char u8 u8
-3301 'BtlDamageAni' char dyn2 dyn2 u8
+3301 'BtlDamageAni' char dyn dyn u8
 3302 'BtlLoopTargetsReset' var char
 3303 'BtlLoopTargetsNext' char
 3304 'BtlLoopTargetsInit' u8
@@ -276,7 +276,7 @@
 33B0 # kisin coop craft
 33B1 # kisin coop craft
 33B2 # kisin coop craft
-33B4 char dyn2 dyn2 dyn2 dyn2
+33B4 char dyn dyn dyn dyn
 33B5 u8 # in btlwin:SetControlCamera
 33B6 f32 f32 # in various BattleViewMinMax
 33B700 'BtlStatusSet' char flags32 u32 u32 u8
@@ -286,8 +286,8 @@
 33B704 'BtlStatusGet' char flags32 u32 u32 u8
 33B705 'BtlStatus2Get' char flags32 u32 u32 u8
 33B8 'BtlGoalCharSetHp' char u8 u8
-33BA 'BtlCharIsMonsterDyn' dyn2 str # used to check for allies for combos
-33BB dyn2 dyn2 # possibly to link with allies
+33BA 'BtlCharIsMonsterDyn' dyn str # used to check for allies for combos
+33BB dyn dyn # possibly to link with allies
 33BC 'BtlGoalTextShow' u8 u8 u8 str str
 33BD 'BtlGoalTextWait'
 33BE # in KISIN_ATTACK_BEGIN and AniBtlKisinChangeBoost
@@ -300,7 +300,7 @@
 33C6 char
 33C7 u32
 33C8 i32
-33C9 char dyn2 dyn2 dyn2
+33C9 char dyn dyn dyn
 33CA char
 33CB u8
 33CC u16 u16
@@ -380,17 +380,17 @@
 3A07
 3A08 u16 u8
 3A09 u8
-3B00 dyn2 dyn2 dyn2 f32 dyn2 u16 char f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 i16 i16 u16 f32
-3B01 dyn2 dyn2 u16
-3B03 dyn2 f32 u16
-3B04 dyn2 f32 u16 u8
+3B00 dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+3B01 dyn dyn u16
+3B03 dyn f32 u16
+3B04 dyn f32 u16 u8
 3B05 u32
-3B32 dyn2 dyn2 dyn2 f32 dyn2 u16 char f32 f32 f32 dyn2 str dyn2 dyn2 u16 u16 u16 i16 i16 u16 f32
-3B33 dyn2 dyn2 u16
-3B34 dyn2
+3B32 dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+3B33 dyn dyn u16
+3B34 dyn
 3B37 u32
 3B39 char
-3B3A char dyn2 dyn2 dyn2 dyn2
+3B3A char dyn dyn dyn dyn
 3B3B u32
 3B3C u32
 3B3D
@@ -519,7 +519,7 @@
 542D
 542E
 542F
-5430 dyn2
+5430 dyn
 543100 u16 char f32 f32 u8 u8 u16
 543101 u16
 543102 u16
@@ -566,7 +566,7 @@
 5456 u16
 5457 u8
 5458 char str f32 f32 f32 f32 u8
-545A dyn2 dyn2 u8
+545A dyn dyn u8
 545B u32
 545C u32
 545D char u16
@@ -962,25 +962,25 @@ AB01
 AB02 _AB02
 AB03 f32 f32 f32
 AC00 u8
-AC01 dyn2 # SSD says dyn2×4 here but why
+AC01 dyn # SSD says dyn×4 here but why
 AC02 u32
-AC03 dyn2
-AC04 dyn2
-AC05 dyn2
+AC03 dyn
+AC04 dyn
+AC05 dyn
 AC07 u16
 AC08
 AC09 u16
 AC0B u16
-AC0D dyn2
+AC0D dyn
 AC0E
 AC0F u16
 AC10
 AC11
-AC12 dyn2
+AC12 dyn
 AC13 u16
-AC14 dyn2
+AC14 dyn
 AC15 u16
-AC16 dyn2
+AC16 dyn
 AC17 u16
 AD00 u8
 AD01 u8
@@ -1001,7 +1001,7 @@ B00C u8
 B00D
 B00E
 B00F
-B010 dyn2
+B010 dyn
 B011
 B012 u8
 B017
@@ -1062,32 +1062,32 @@ B903 u32
 BA14 u8 u8
 BA15
 BB   char
-BC00 u16 dyn2 u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
-BC01 u16 dyn2 u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
-BC02 u16 dyn2 u8
-BC03 u16 dyn2
-BC04 u16 dyn2 u16 u16
-BC05 u16 dyn2 u16 u16
-BC06 u16 dyn2
-BC07 u16 dyn2 f32 f32 u16 u16
-BC08 u16 dyn2 u32
-BC09 u16 dyn2 f32 f32 f32 f32 f32 f32 u16 u16
-BC0A u16 dyn2 f32 f32
-BC0B u16 dyn2 u32
-BC0C u16 dyn2 str f32 f32
-BC0D u16 dyn2 f32
-BC0E u16 dyn2 dyn2 u16 u16
-BC0F u16 dyn2 u16 u32 str
-BC10 u16 dyn2 u32 u32 u16
-BC11 u16 dyn2 str f32 f32
-BC12 u16 dyn2 str f32 f32
-BC13 u16 dyn2 str f32 f32
-BC14 u16 dyn2 u32
-BC15 u16 dyn2 u32
-BC16 u16 dyn2 u32
-BC17 u16 dyn2 f32 f32
-BC18 u16 dyn2 f32
-BC19 u16 dyn2 str
+BC00 u16 dyn u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
+BC01 u16 dyn u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
+BC02 u16 dyn u8
+BC03 u16 dyn
+BC04 u16 dyn u16 u16
+BC05 u16 dyn u16 u16
+BC06 u16 dyn
+BC07 u16 dyn f32 f32 u16 u16
+BC08 u16 dyn u32
+BC09 u16 dyn f32 f32 f32 f32 f32 f32 u16 u16
+BC0A u16 dyn f32 f32
+BC0B u16 dyn u32
+BC0C u16 dyn str f32 f32
+BC0D u16 dyn f32
+BC0E u16 dyn dyn u16 u16
+BC0F u16 dyn u16 u32 str
+BC10 u16 dyn u32 u32 u16
+BC11 u16 dyn str f32 f32
+BC12 u16 dyn str f32 f32
+BC13 u16 dyn str f32 f32
+BC14 u16 dyn u32
+BC15 u16 dyn u32
+BC16 u16 dyn u32
+BC17 u16 dyn f32 f32
+BC18 u16 dyn f32
+BC19 u16 dyn str
 BE   char u8 f32 f32
 C0   u16 _C0
 C2   u8
