@@ -43,7 +43,7 @@ pub enum Expr {
 	Rand,
 	Global(crate::types::Global),
 	SystemFlags(crate::types::Flags32),
-	Reg(crate::types::Reg),
+	IntReg(crate::types::IntReg),
 	Bin(BinOp, Box<Expr>, Box<Expr>),
 	Un(UnOp, Box<Expr>),
 	Ass(AssOp, Box<Expr>),
@@ -61,7 +61,7 @@ impl std::fmt::Debug for Expr {
 			Self::Rand => write!(f, "Rand"),
 			Self::Global(a) => a.fmt(f),
 			Self::SystemFlags(a) => a.fmt(f),
-			Self::Reg(a) => a.fmt(f),
+			Self::IntReg(a) => a.fmt(f),
 			Self::Bin(op, a, b) => {
 				write!(f, "(")?;
 				a.fmt(f)?;
@@ -191,7 +191,7 @@ impl Expr {
 				0x23 => stack.push(Expr::Global(f.u8()?.into())),
 				0x24 => stack.push(Expr::SystemFlags(f.u32()?.into())),
 				0x25 => {
-					stack.push(Expr::Reg(f.u8()?.into()));
+					stack.push(Expr::IntReg(f.u8()?.into()));
 					f.check_u8(0)?; // Reg is 2 bytes here but 1 in op0E, weird
 				}
 
@@ -236,7 +236,7 @@ impl Expr {
 			Expr::Rand => { f.u8(0x22); }
 			Expr::Global(i) => { f.u8(0x23); f.u8(i.0); },
 			Expr::SystemFlags(i) => { f.u8(0x24); f.u32(i.0); }
-			Expr::Reg(i) => { f.u8(0x25); f.u8(i.0); f.u8(0); }
+			Expr::IntReg(i) => { f.u8(0x25); f.u8(i.0); f.u8(0); }
 			Expr::Bin(op, a, b) => { a.write0(f)?; b.write0(f)?; f.u8(*op as u8); }
 			Expr::Un(op, a) => { a.write0(f)?; f.u8(*op as u8); }
 			Expr::Ass(op, a) => { a.write0(f)?; f.u8(*op as u8); }

@@ -7,9 +7,11 @@
 07   'Debug' u8 dyn
 08   'SetAttr' attr expr
 0A   'SetVar' var expr
-0C   'FuncArgDeclare' u8 u8
-0D   'SetReg' u8 reg expr
-0E   'FuncArgLoad' u8 u8 reg
+0C00 'NewIntReg' u8
+0C01 'NewStrReg' u8
+0D00 'SetIntReg' intreg expr
+0E00 'FetchIntReg' intreg u8
+0E01 'FetchStrReg' strreg u8
 10   'FlagSet' flag
 11   'FlagUnset' flag
 12   'FlagToggle' flag
@@ -18,7 +20,7 @@
 15   'SystemFlagsToggle' flags32
 16   'Sleep' u16
 17   u16 u16
-18   'SetGlobal' u8 expr
+18   'SetGlobal' global expr
 1900 'SystemSaveFlagSet' flags16
 1901 'SystemSaveFlagUnset' flags16
 1902 'SystemSaveFlagGet' flags16
@@ -51,7 +53,7 @@
 2901 'MenuAdd' u8 str i32
 2902 'MenuShow' u8 u8 i16 i16 u8
 2903 'MenuHide' u8
-2904 'MenuWait' u8 u8 # id, global
+2904 'MenuWait' u8 global
 2905 u8 u16 u32
 2906 u8 u16
 2907 u8 u16
@@ -593,7 +595,7 @@
 58   'VisHide' u8
 5A00 u16 u16 str u16
 5A01
-5B   char u8 expr
+5B   'SetCharAttr' charattr expr
 5C   char u8 str
 5D   char str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u8 u8
 5E00 u16 f32 u16 u16 u16 f32 char str f32 f32 f32
@@ -758,7 +760,7 @@
 7501 'Menu2Add' u8 str i32
 7502 'Menu2Show' u8 u8 i16 i16 u8
 7503 'Menu2Hide' u8
-7504 'Menu2Wait' u8 u8
+7504 'Menu2Wait' u8 global
 7505 u8 u16 u32
 7506 u8 u16
 7507 u8 u16
