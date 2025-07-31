@@ -402,7 +402,7 @@
 3B34 dyn
 3B37 u32
 3B39 char
-3B3A char dyn dyn dyn dyn
+3B3A 'SoundPlayRandom' char dyn dyn dyn dyn
 3B3B u32
 3B3C u32
 3B3D

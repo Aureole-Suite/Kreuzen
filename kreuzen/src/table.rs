@@ -5,7 +5,7 @@ use snafu::ensure;
 use crate::{ReaderaExt as _, VReader};
 use crate::{WriterExt as _, VWriter};
 
-pub mod effect;
+pub mod preload;
 pub mod fc_auto;
 pub mod book;
 pub mod book99;
@@ -24,7 +24,7 @@ pub mod reaction_table;
 pub mod summon_table;
 pub mod weapon_att_table;
 
-pub use effect::Effect;
+pub use preload::Preload;
 pub use book::Book;
 pub use btlset::{Btlset, BtlVariant};
 pub use action_table::Action;

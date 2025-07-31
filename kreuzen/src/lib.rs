@@ -123,7 +123,7 @@ enum Type {
 	BookData,
 	BookData99,
 	FcAuto,
-	Effect,
+	Preload,
 
 	Empty,
 	ActionTable,
@@ -142,13 +142,10 @@ enum Type {
 
 impl Type {
 	fn from_name(name: &str) -> Self {
-		if name.starts_with("_a0_")
-		|| name.starts_with("_a1_")
-		|| name.starts_with("_a2_")
-		|| name.starts_with("_Lambda") {
+		if name.starts_with("_a") || name.starts_with("_Lambda") {
 			Type::Normal
 		} else if name.starts_with("_") {
-			Type::Effect
+			Type::Preload
 		} else if name.starts_with("BTLSET") {
 			Type::Btlset
 		} else if name.starts_with("BookData") {
@@ -175,7 +172,7 @@ impl Type {
 				"ReactionTable" => Type::ReactionTable,
 				"SummonTable" => Type::SummonTable,
 				"WeaponAttTable" => Type::WeaponAttTable,
-				_ => Type::Normal, // Default to normal if no match
+				_ => Type::Normal,
 			}
 		}
 	}
@@ -341,7 +338,7 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Entry {
 	Func(Vec<func::Stmt>),
-	Preload(Vec<table::Effect>),
+	Preload(Vec<table::Preload>),
 	Fc(String),
 	BookPage(table::Book),
 	BookMetadata(u16),
@@ -373,7 +370,7 @@ pub enum EntryReadError {
 	#[snafu(display("could not read function"), context(false))]
 	Function { source: func::read::ReadError },
 	#[snafu(display("could not read effect"), context(false))]
-	Effect { source: table::effect::ReadError },
+	Effect { source: table::preload::ReadError },
 	#[snafu(display("could not read FcAuto"), context(false))]
 	FcAuto { source: table::fc_auto::ReadError },
 	#[snafu(display("could not read BookData"), context(false))]
@@ -421,7 +418,7 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Entry, EntryReadError> {
 
 	let item = match Type::from_name(name) {
 		Type::Normal => Entry::Func(func::read::read(f)?),
-		Type::Effect => Entry::Preload(table::effect::read(f)?),
+		Type::Preload => Entry::Preload(table::preload::read(f)?),
 		Type::FcAuto => Entry::Fc(table::fc_auto::read(f)?),
 		Type::BookData => Entry::BookPage(table::book::read(f)?),
 		Type::BookData99 => Entry::BookMetadata(table::book99::read(f)?),
@@ -457,7 +454,7 @@ pub enum EntryWriteError {
 	#[snafu(display("could not write function"), context(false))]
 	Function { source: func::write::WriteError },
 	#[snafu(display("could not write effect"), context(false))]
-	Effect { source: table::effect::WriteError },
+	Effect { source: table::preload::WriteError },
 	#[snafu(display("could not write FcAuto"), context(false))]
 	FcAuto { source: table::fc_auto::WriteError },
 	#[snafu(display("could not write BookData"), context(false))]
@@ -496,7 +493,7 @@ pub enum EntryWriteError {
 fn write_entry(f: &mut VWriter, item: &Entry) -> Result<usize, EntryWriteError> {
 	match item {
 		Entry::Func(i) => func::write::write(f, i)?,
-		Entry::Preload(i) => table::effect::write(f, i)?,
+		Entry::Preload(i) => table::preload::write(f, i)?,
 		Entry::Fc(i) => table::fc_auto::write(f, i)?,
 		Entry::BookPage(i) => table::book::write(f, i)?,
 		Entry::BookMetadata(i) => table::book99::write(f, *i)?,
