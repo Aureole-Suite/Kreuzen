@@ -1,5 +1,4 @@
 use std::sync::LazyLock;
-use arrayvec::ArrayVec;
 
 pub mod read;
 pub mod write;
@@ -45,9 +44,23 @@ impl Default for OpMeta {
 
 #[derive(Clone, PartialEq)]
 pub struct Op {
-	pub code: ArrayVec<u8, 4>,
+	pub name: &'static str,
 	pub meta: OpMeta,
 	pub args: Vec<Arg>
+}
+
+impl std::fmt::Debug for Op {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		self.meta.fmt(f)?;
+		write!(f, "{}(", self.name)?;
+		for (i, arg) in self.args.iter().enumerate() {
+			if i > 0 {
+				write!(f, ", ")?;
+			}
+			arg.fmt(f)?;
+		}
+		write!(f, ")")
+	}
 }
 
 #[derive(Clone, PartialEq)]
@@ -158,53 +171,6 @@ impl std::fmt::Debug for Arg {
 			Arg::Dyn(v) => v.fmt(f),
 			Arg::Dialogue(v) => v.fmt(f),
 		}
-	}
-}
-
-impl Op {
-	pub fn push(&mut self, arg: impl Into<Arg>) {
-		self.args.push(arg.into());
-	}
-}
-
-pub struct OpName<'a> {
-	code: &'a [u8],
-}
-
-impl std::fmt::Display for OpName<'_> {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let mut prefix = 0;
-		for i in (1..=self.code.len()).rev() {
-			if let Some(s) = SPEC.names.get(&self.code[..i]) {
-				f.write_str(s)?;
-				prefix = i;
-				break;
-			}
-		}
-		if prefix == 0 {
-			write!(f, "op")?;
-		} else if prefix < self.code.len() {
-			write!(f, "_")?;
-		}
-		for byte in &self.code[prefix..] {
-			write!(f, "{byte:02X}")?;
-		}
-		Ok(())
-	}
-}
-
-impl std::fmt::Debug for Op {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		self.meta.fmt(f)?;
-		write!(f, "{}", OpName { code: &self.code })?;
-		write!(f, "(")?;
-		for (i, arg) in self.args.iter().enumerate() {
-			if i > 0 {
-				write!(f, ", ")?;
-			}
-			arg.fmt(f)?;
-		}
-		write!(f, ")")
 	}
 }
 

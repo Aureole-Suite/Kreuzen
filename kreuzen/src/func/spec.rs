@@ -1,4 +1,8 @@
-use std::collections::BTreeMap;
+use std::fmt::Write;
+use std::collections::{BTreeMap, BTreeSet};
+
+mod opcode;
+pub use opcode::Opcode;
 
 #[derive(Debug, Clone, PartialEq, Eq, derive_more::FromStr)]
 pub enum Part {
@@ -46,8 +50,9 @@ pub enum Part {
 
 #[derive(Debug)]
 pub struct Spec {
-	pub names: BTreeMap<Vec<u8>, String>,
 	pub ops: [Option<Op>; 256],
+	pub names: BTreeMap<Opcode, String>,
+	pub by_name: BTreeMap<String, Opcode>,
 }
 
 impl Spec {
@@ -59,6 +64,7 @@ impl Spec {
 #[derive(Debug, Clone, Default)]
 pub struct Op {
 	pub parts: Vec<Part>,
+	pub name: String,
 	child_keys: Vec<u8>,
 	children: Vec<Op>,
 }
@@ -79,7 +85,7 @@ impl Op {
 }
 
 struct Line {
-	code: Vec<u8>,
+	code: Opcode,
 	name: String,
 	parts: Vec<Part>,
 }
@@ -87,8 +93,7 @@ struct Line {
 fn parse_line(line: &str) -> Option<Line> {
 	let mut words = line.split_whitespace();
 
-	let codeword = words.next().unwrap();
-	let code = hex::decode(codeword).ok()?;
+	let code = words.next().unwrap().parse().unwrap();
 
 	let mut name = String::new();
 	let mut parts = Vec::<Part>::new();
@@ -117,20 +122,21 @@ fn parse_spec(text: &str) -> Spec {
 		let line = parse_line(line).unwrap_or_else(|| {
 			panic!("Failed to parse spec: {line0}");
 		});
-		assert!(!ops.contains_key(&line.code), "Duplicate code in spec: {}", hex::encode(&line.code));
-		if !line.name.is_empty() {
-			names.insert(line.code.clone(), line.name);
-		}
+		assert!(!ops.contains_key(&line.code), "Duplicate code in spec: {}", &line.code);
+		names.insert(line.code, line.name);
 		ops.insert(line.code, line.parts);
 	}
 
+	let (names, by_name) = build_names(&names);
+
 	Spec {
-		names,
 		ops: build_ops(ops),
+		by_name,
+		names,
 	}
 }
 
-fn build_ops(ops: BTreeMap<Vec<u8>, Vec<Part>>) -> [Option<Op>; 256] {
+fn build_ops(ops: BTreeMap<Opcode, Vec<Part>>) -> [Option<Op>; 256] {
 	let mut out = std::array::from_fn(|_| None);
 	for (k, v) in ops {
 		assert!(!k.is_empty(), "Empty code in spec");
@@ -145,6 +151,56 @@ fn build_ops(ops: BTreeMap<Vec<u8>, Vec<Part>>) -> [Option<Op>; 256] {
 		op.parts = v;
 	}
 	out
+}
+
+fn build_names(inp: &BTreeMap<Opcode, String>) -> (BTreeMap<Opcode, String>, BTreeMap<String, Opcode>) {
+	let mut leaves = BTreeSet::new();
+	for op in inp.keys() {
+		for p in op.prefixes() {
+			leaves.remove(&p);
+		}
+		leaves.insert(*op);
+	}
+	let mut names = BTreeMap::new();
+	let mut by_name = BTreeMap::new();
+	for (&op, opname) in inp {
+		if !leaves.contains(&op) {
+			continue;
+		}
+
+		let mut name;
+		macro_rules! put {
+			($name:expr) => {
+				name = $name;
+				if let Some(prev) = by_name.insert(name.clone(), op) {
+					panic!("Duplicate name in spec: {prev} and {op} are both named {name}");
+				}
+			};
+		}
+
+		let mut s = String::from("op");
+		for b in op {
+			write!(s, "{b:02X}").unwrap();
+		}
+		put!(s);
+
+		for p in op.prefixes() {
+			if let Some(s) = inp.get(&p) && !s.is_empty() {
+				let mut s = s.to_owned();
+				s.push('_');
+				for b in &op[p.len()..] {
+					write!(s, "{b:02X}").unwrap();
+				}
+				put!(s);
+			}
+		}
+		if !opname.is_empty() {
+			put!(opname.clone());
+		}
+
+		names.insert(op, name);
+	}
+	(names, by_name)
 }
 
 pub(crate) fn op_40(a: crate::types::Char) -> &'static [Part] {

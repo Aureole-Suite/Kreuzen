@@ -1,12 +1,11 @@
 use std::collections::BTreeSet;
 
-use arrayvec::ArrayVec;
 use gospel::read::Le as _;
 use snafu::ResultExt;
 
 use crate::{ReaderaExt, VReader};
 
-use super::spec::Part;
+use super::spec::{Opcode, Part};
 use super::{Arg, Dyn, Case, Dialogue, Expr, Op, OpMeta, Stmt, SPEC};
 
 mod decompile;
@@ -114,8 +113,8 @@ pub enum OpReadError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("unknown op {} ({} bytes)", hex::encode_upper(&op.code), op.meta.width))]
-	UnknownOp { op: Op },
+	#[snafu(display("unknown op {} ({} bytes)", opcode, meta.width))]
+	UnknownOp { opcode: Opcode, meta: OpMeta },
 	#[snafu(display("failed to read expr"), context(false))]
 	Expr { source: super::expr::ReadError },
 	#[snafu(display("failed to read dialogue"), context(false))]
@@ -141,30 +140,28 @@ fn read_op(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 
 fn read_op2(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 	let mut code = f.u8()?;
-	let mut op = Op {
-		code: ArrayVec::new(),
-		meta: OpMeta::default(),
-		args: Vec::new(),
-	};
-	op.code.push(code);
+	let mut opcode = Opcode::new(&[code]);
 
-	let name = SPEC.names.get(op.code.as_slice()).map(|s| s.as_str());
+	let name = SPEC.names.get(&opcode).map(|s| s.as_str());
 
-	if !matches!(code, 0x01 | 0x04) {
-		op.meta.line = f.u16()?;
+	let meta = if !matches!(code, 0x01 | 0x04) {
+		let line = f.u16()?;
 		f.check_u8(0)?;
-		op.meta.width = f.u8()?;
-	}
+		let width = f.u8()?;
+		OpMeta { line, width }
+	} else {
+		OpMeta::default()
+	};
 
 	match name {
 		Some("if") => {
 			let expr = Expr::read(f)?;
 			let label = Label(f.u32()?);
-			return Ok(FlatOp::If(op.meta, expr, label));
+			return Ok(FlatOp::If(meta, expr, label));
 		}
 		Some("goto") => {
 			let label = Label(f.u32()?);
-			return Ok(FlatOp::Goto(op.meta, label));
+			return Ok(FlatOp::Goto(meta, label));
 		}
 		Some("switch") => {
 			let expr = Expr::read(f)?;
@@ -173,31 +170,37 @@ fn read_op2(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 				cases.push((f.i32()?, Label(f.u32()?)));
 			}
 			let default = Label(f.u32()?);
-			return Ok(FlatOp::Switch(op.meta, expr, cases, default));
+			return Ok(FlatOp::Switch(meta, expr, cases, default));
 		}
 		_ => {}
 	}
 
 	let Some(mut spec) = SPEC.ops[code as usize].as_ref() else {
-		return UnknownOpSnafu { op }.fail();
+		return UnknownOpSnafu { opcode, meta }.fail();
 	};
 
+	let mut args = Vec::new();
+
 	loop {
-		read_parts(&mut op, f, &spec.parts)?;
+		read_parts(&mut args, f, &spec.parts)?; // TODO better error
 		if spec.has_children() {
 			code = f.u8()?;
-			op.code.push(code);
+			opcode.push(code);
 			if let Some(next) = spec.child(code) {
 				spec = next;
 			} else {
-				return UnknownOpSnafu { op }.fail();
+				return UnknownOpSnafu { opcode, meta }.fail();
 			}
 		} else {
 			break;
 		}
 	}
 
-	Ok(FlatOp::Op(op))
+	Ok(FlatOp::Op(Op {
+		name: SPEC.names.get(&opcode).unwrap(),
+		meta,
+		args
+	}))
 }
 
 pub(crate) fn read_raw_op(f: &mut VReader) -> Result<Op, OpReadError> {
@@ -207,107 +210,106 @@ pub(crate) fn read_raw_op(f: &mut VReader) -> Result<Op, OpReadError> {
 	}
 }
 
-fn read_parts(op: &mut Op, f: &mut VReader, part: &[Part]) -> Result<(), OpReadError> {
+fn read_parts(args: &mut Vec<Arg>, f: &mut VReader, part: &[Part]) -> Result<(), OpReadError> {
 	for p in part {
-		read_part(op, f, p)?;
+		read_part(args, f, p)?;
 	}
 	Ok(())
 }
 
-macro_rules! next {
-	($op:expr, $n:expr, $ty:ident) => {
-		match $op.args.get($n) {
-			Some(Arg::$ty(arg)) => *arg,
-			_ => panic!("{op:?}: expected arg {n} to be type {ty}", op=$op, n=$n, ty=stringify!($ty)),
-		}
-	};
-}
-
-fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadError> {
+fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), OpReadError> {
+	macro_rules! next {
+		($n:expr, $ty:ident) => {
+			match args.get($n) {
+				Some(Arg::$ty(arg)) => *arg,
+				_ => panic!("expected arg {n} to be type {ty}", n=$n, ty=stringify!($ty)),
+			}
+		};
+	}
 	use super::spec::Part::*;
 	match part {
-		U8 => op.push(f.u8()?),
-		U16 => op.push(f.u16()?),
-		U32 => op.push(f.u32()?),
-		I8 => op.push(f.i8()?),
-		I16 => op.push(f.i16()?),
-		I32 => op.push(f.i32()?),
-		F32 => op.push(f.f32()?),
-		Str => op.push(f.str()?),
+		U8 => args.push(f.u8()?.into()),
+		U16 => args.push(f.u16()?.into()),
+		U32 => args.push(f.u32()?.into()),
+		I8 => args.push(f.i8()?.into()),
+		I16 => args.push(f.i16()?.into()),
+		I32 => args.push(f.i32()?.into()),
+		F32 => args.push(f.f32()?.into()),
+		Str => args.push(f.str()?.into()),
 
-		Char => op.push(Arg::Char(f.u16()?.into())),
-		Item => op.push(Arg::Item(f.u16()?.into())),
-		Magic => op.push(Arg::Magic(f.u16()?.into())),
-		Flag => op.push(Arg::Flag(f.u16()?.into())),
-		Global => op.push(Arg::Global(f.u8()?.into())),
-		Var => op.push(Arg::Var(f.u8()?.into())),
-		FuncArg => op.push(Arg::FuncArg(f.u8()?.into())),
-		NumReg => op.push(Arg::NumReg(f.u8()?.into())),
-		StrReg => op.push(Arg::StrReg(f.u8()?.into())),
-		Attr => op.push(Arg::Attr(f.u8()?.into())),
-		CharAttr => op.push(Arg::CharAttr((f.u16()?.into(), f.u8()?).into())),
+		Char => args.push(Arg::Char(f.u16()?.into())),
+		Item => args.push(Arg::Item(f.u16()?.into())),
+		Magic => args.push(Arg::Magic(f.u16()?.into())),
+		Flag => args.push(Arg::Flag(f.u16()?.into())),
+		Global => args.push(Arg::Global(f.u8()?.into())),
+		Var => args.push(Arg::Var(f.u8()?.into())),
+		FuncArg => args.push(Arg::FuncArg(f.u8()?.into())),
+		NumReg => args.push(Arg::NumReg(f.u8()?.into())),
+		StrReg => args.push(Arg::StrReg(f.u8()?.into())),
+		Attr => args.push(Arg::Attr(f.u8()?.into())),
+		CharAttr => args.push(Arg::CharAttr((f.u16()?.into(), f.u8()?).into())),
 
-		Flags8 => op.push(Arg::Flags8(f.u8()?.into())),
-		Flags16 => op.push(Arg::Flags16(f.u16()?.into())),
-		Flags32 => op.push(Arg::Flags32(f.u32()?.into())),
+		Flags8 => args.push(Arg::Flags8(f.u8()?.into())),
+		Flags16 => args.push(Arg::Flags16(f.u16()?.into())),
+		Flags32 => args.push(Arg::Flags32(f.u32()?.into())),
 
-		Expr => op.push(self::Expr::read(f)?),
-		Text => op.push(self::Dialogue::read(f)?),
-		Dyn => op.push(read_dyn(f)?),
+		Expr => args.push(self::Expr::read(f)?.into()),
+		Text => args.push(self::Dialogue::read(f)?.into()),
+		Dyn => args.push(read_dyn(f)?.into()),
 		Ndyn => {
 			for _ in 0..f.u8()? {
-				op.push(read_dyn(f)?);
+				args.push(read_dyn(f)?.into());
 			}
 		}
 
-		Part::_40 => read_parts(op, f, super::spec::op_40(next!(op, 1, Char)))?,
-		Part::_98 => read_parts(op, f, super::spec::op_98(next!(op, 0, U16)))?,
-		Part::_C0 => read_parts(op, f, super::spec::op_c0(next!(op, 0, U16)))?,
-		Part::_D2 => read_parts(op, f, super::spec::op_d2(next!(op, 0, I16)))?,
+		Part::_40 => read_parts(args, f, super::spec::op_40(next!(1, Char)))?,
+		Part::_98 => read_parts(args, f, super::spec::op_98(next!(0, U16)))?,
+		Part::_C0 => read_parts(args, f, super::spec::op_c0(next!(0, U16)))?,
+		Part::_D2 => read_parts(args, f, super::spec::op_d2(next!(0, I16)))?,
 
 		Part::_3E => {
-			let a = next!(op, 1, Char).0;
+			let a = next!(1, Char).0;
 			if a == 0xFE12 {
-				read_parts(op, f, &[U8])?;
+				read_parts(args, f, &[U8])?;
 			} else if a == 0xFE13 {
-				read_parts(op, f, &[F32])?;
+				read_parts(args, f, &[F32])?;
 			}
-			if op.args[1..] == [Arg::Char(0xFFFF.into()), Arg::F32(5.0), Arg::U8(0)] {
+			if args[1..] == [Arg::Char(0xFFFF.into()), Arg::F32(5.0), Arg::U8(0)] {
 				f.check(&[0, 0, 0])?;
 			}
 		}
 		Part::_3F => {
 			if f.version != 2 {
-				read_parts(op, f, &[U32])?;
+				read_parts(args, f, &[U32])?;
 			}
 		}
 		Part::_4E => {
 			if f.version != 2 {
-				read_parts(op, f, &[U8])?;
+				read_parts(args, f, &[U8])?;
 			}
 		}
 		Part::_6C => {
 			if f.version != 2 {
-				read_parts(op, f, &[I32])?;
+				read_parts(args, f, &[I32])?;
 			}
 		}
 		Part::_79 => {
-			let a = next!(op, 0, U8);
+			let a = next!(0, U8);
 			if a == 7 {
-				read_parts(op, f, &[U8, U8])?;
+				read_parts(args, f, &[U8, U8])?;
 			}
 		}
 		Part::_AB00 => {
 			let slice = f.slice(50)?;
 			let nonzero = slice.iter().rposition(|&b| b != 0).map_or(0, |i| i + 1);
 			for &i in &slice[..nonzero] {
-				op.push(i);
+				args.push(i.into());
 			}
 		}
 		Part::_AB02 => {
 			let n = f.u8()?;
 			for _ in 0..n {
-				op.push(f.u16()?);
+				args.push(f.u16()?.into());
 			}
 			for _ in n..50 {
 				f.check_u16(0)?;

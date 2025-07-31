@@ -169,22 +169,22 @@ pub(crate) fn write_raw_op(f: &mut VWriter, op: &Op) -> Result<(), OpWriteError>
 }
 
 fn write_raw_op_inner(f: &mut VWriter, op: &Op) -> Result<(), OpWriteErrorKind> {
+	let code = SPEC.by_name.get(op.name).context(UnknownOpSnafu)?;
 	let mut args = op.args.iter();
-	assert!(!op.code.is_empty());
 	let mut n = 0;
-	let mut spec = SPEC.ops[op.code[n] as usize].as_ref().context(UnknownOpSnafu)?;
-	f.u8(op.code[n]);
-	if !matches!(op.code[n], 0x01 | 0x04) {
+	let mut spec = SPEC.ops[code[n] as usize].as_ref().context(UnknownOpSnafu)?;
+	f.u8(code[n]);
+	if !matches!(code[n], 0x01 | 0x04) {
 		f.meta(&op.meta);
 	}
 	loop {
 		write_parts(op, f, &spec.parts, &mut args)?;
 		n += 1;
-		if n == op.code.len() {
+		if n == code.len() {
 			break;
 		}
-		f.u8(op.code[n]);
-		spec = spec.child(op.code[n]).context(UnknownOpSnafu)?;
+		f.u8(code[n]);
+		spec = spec.child(code[n]).context(UnknownOpSnafu)?;
 	}
 	snafu::ensure!(!spec.has_children(), UnknownOpSnafu);
 	snafu::ensure!(args.as_slice().is_empty(), TooManyArgsSnafu { remaining: args.as_slice().len() });
