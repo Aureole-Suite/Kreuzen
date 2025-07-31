@@ -17,10 +17,12 @@ pub enum Part {
 	Flag,
 	Global,
 	Var,
+	FuncArg,
 	NumReg,
 	StrReg,
 	Attr,
 	CharAttr,
+	Flags8,
 	Flags16,
 	Flags32,
 
@@ -122,8 +124,6 @@ fn parse_spec(text: &str) -> Spec {
 		ops.insert(line.code, line.parts);
 	}
 
-	validate_names(&names);
-
 	Spec {
 		names,
 		ops: build_ops(ops),
@@ -147,25 +147,13 @@ fn build_ops(ops: BTreeMap<Vec<u8>, Vec<Part>>) -> [Option<Op>; 256] {
 	out
 }
 
-fn validate_names(names: &BTreeMap<Vec<u8>, String>) {
-	for (k, v) in names {
-		for i in 0..k.len() {
-			if let Some(prefix) = names.get(&k[..i]) {
-				if !v.starts_with(prefix) {
-					panic!("Name '{v}' does not start with parent '{prefix}'");
-				}
-			}
-		}
-	}
-}
-
 pub(crate) fn op_40(a: crate::types::Char) -> &'static [Part] {
 	use Part::*;
 	match a.0 {
-		0xFE02..= 0xFE04 => &[F32, F32, F32, F32, F32, U8, U16, F32, F32, U8],
-		0xFE05           => &[F32, F32, F32, F32,      U8, U16, F32, F32, U8, Str],
-		0xFE15           => &[Dyn, Dyn, Dyn, Dyn,      U8, U16, F32, F32, U8],
-		_                => &[F32, F32, F32, F32,      U8, U16, F32, F32, U8],
+		0xFE02..= 0xFE04 => &[F32, F32, F32, F32, F32, U8, Flags16, F32, F32, U8],
+		0xFE05           => &[F32, F32, F32, F32,      U8, Flags16, F32, F32, U8, Str],
+		0xFE15           => &[Dyn, Dyn, Dyn, Dyn,      U8, Flags16, F32, F32, U8],
+		_                => &[F32, F32, F32, F32,      U8, Flags16, F32, F32, U8],
 	}
 }
 
@@ -177,7 +165,7 @@ pub(crate) fn op_98(a: u16) -> &'static [Part] {
 		6 => &[F32],
 		7 => &[F32],
 		3 => &[U16, U8],
-		1000 => &[F32, U8],
+		1000 => &[F32, U8], // a0100:TK_Enter2 says this is rotation
 		1001 => &[F32, U8],
 		2000 => &[U8, F32, U8],
 		3000 => &[F32, F32, U16, F32],

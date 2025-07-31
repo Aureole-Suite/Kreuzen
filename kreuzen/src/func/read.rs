@@ -241,10 +241,13 @@ fn read_part(op: &mut Op, f: &mut VReader, part: &Part) -> Result<(), OpReadErro
 		Flag => op.push(Arg::Flag(f.u16()?.into())),
 		Global => op.push(Arg::Global(f.u8()?.into())),
 		Var => op.push(Arg::Var(f.u8()?.into())),
+		FuncArg => op.push(Arg::FuncArg(f.u8()?.into())),
 		NumReg => op.push(Arg::NumReg(f.u8()?.into())),
 		StrReg => op.push(Arg::StrReg(f.u8()?.into())),
 		Attr => op.push(Arg::Attr(f.u8()?.into())),
 		CharAttr => op.push(Arg::CharAttr((f.u16()?.into(), f.u8()?).into())),
+
+		Flags8 => op.push(Arg::Flags8(f.u8()?.into())),
 		Flags16 => op.push(Arg::Flags16(f.u16()?.into())),
 		Flags32 => op.push(Arg::Flags32(f.u32()?.into())),
 

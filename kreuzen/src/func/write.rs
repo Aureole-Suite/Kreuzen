@@ -225,10 +225,12 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 			Flag => f.u16(next!(args, Flag).0),
 			Global => f.u8(next!(args, Global).0),
 			Var => f.u8(next!(args, Var).0),
+			FuncArg => f.u8(next!(args, FuncArg).0),
 			NumReg => f.u8(next!(args, NumReg).0),
 			StrReg => f.u8(next!(args, StrReg).0),
 			Attr => f.u8(next!(args, Attr).0),
 			CharAttr => { let c = next!(args, CharAttr); f.u16(c.0.0); f.u8(c.1); }
+			Flags8 => f.u8(next!(args, Flags8).0),
 			Flags16 => f.u16(next!(args, Flags16).0),
 			Flags32 => f.u32(next!(args, Flags32).0),
 

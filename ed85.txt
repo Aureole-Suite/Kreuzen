@@ -4,14 +4,16 @@
 04   'fastcall' u8 str
 05   'if'
 06   'switch'
-07   'Debug' u8 dyn
+0700 'DebugInt' dyn
+0701 'DebugInt_2' dyn # maybe DebugFloat? Only used in ArgumentTest1
+0702 'DebugStr' dyn
 08   'SetAttr' attr expr
 0A   'SetVar' var expr
 0C00 'NewNumReg' u8
 0C01 'NewStrReg' u8
 0D00 'SetNumReg' numreg expr
-0E00 'FetchNumReg' numreg u8
-0E01 'FetchStrReg' strreg u8
+0E00 'GetNumArgToReg' numreg funcarg
+0E01 'GetStrArgToReg' strreg funcarg
 10   'FlagSet' flag
 11   'FlagUnset' flag
 12   'FlagToggle' flag
@@ -24,10 +26,10 @@
 1900 'SystemSaveFlagSet' flags16
 1901 'SystemSaveFlagUnset' flags16
 1902 'SystemSaveFlagGet' flags16
-1A   u8 u8
-1D   'CharCreate' char str str str u8 u32 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
+1A00 'GetIntArg' funcarg
+1D   'CharCreate' char str str str u8 flags32 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 1E   'Fork' char u8 str u8 ndyn
-1F   'ForkWait' char u8 # Or ForkKill? Unclear
+1F   'ForkKill' char u8
 20   u8 dyn dyn dyn dyn u8 # These dyns are usually FF, but with a float
 21   u8 u8
 22   'TextShow' char text
@@ -38,17 +40,17 @@
 2306 f32 f32 f32
 2307 f32 f32 f32
 2308 f32 f32 f32
-230A u16 f32 f32 f32
-230B u16 f32 f32 f32
-230C u16 f32 f32 f32
+230A char f32 f32 f32
+230B char f32 f32 f32
+230C char f32 f32 f32
 230D f32 f32 f32 f32 u8
 24   'TextTalk' char u32 text
 25   'TextClose' u8
 26   'TextWait'
 27   'TextSetName' str char
-28   dyn dyn u8
+28   'NewScena' dyn dyn u8
 
-29   'Menu'
+29 'Menu'
 2900 'MenuNew' u8 u16 f32 u32
 2901 'MenuAdd' u8 str i32
 2902 'MenuShow' u8 u8 i16 i16 u8
@@ -56,14 +58,14 @@
 2904 'MenuWait' u8 global
 2905 u8 u16 u32
 2906 u8 u16
-2907 u8 u16
-2908 u8 str u32 dyn dyn
+2907 'MenuDisable' u8 u16
+2908 'MenuAddCheckbox' u8 str u32 dyn dyn
 2909 u8 str dyn
 290A u8
 290B u8 dyn
 290C u8 u16
-290D u8 f32
-290E u8 f32
+290D u8 u32
+290E u8 u32
 290F u8
 2910 u8
 2911 u8 str u16 u8 u8 u32
@@ -71,7 +73,7 @@
 2913 u8 f32 f32 f32
 2914 u8 f32 f32 f32
 2915 u8 f32 f32 f32
-2916 u8 f32 f32 f32 f32 u8
+2916 'MenuVr' u8 f32 f32 f32 f32 u8
 
 2A00 char str str u8
 2A01 char str str u8
@@ -80,42 +82,45 @@
 2A04 char str str str
 2A05 char str str
 2B00 'Battle' u32 u8 u8 i32 u8 i32 u8 i32 u8 i32 u8 # u32 seems to be index of btlset in function list
-2C   'CharAniPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
-2D   'CharAniWait' char u32 u8
-2E   'CharAniWait'
+
+2C   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
+2D   'CharAniclipWait' char u32 u8
+2E 'CharAniclipWait'
 2E00 char u8
 2E03 char u8 u8
-2E04 'CharAniWaitFrames' char u8 u32
-2E05 'CharAniWaitFrameAbs' char u8 u32
-2F   '_AnimeClip'
-2F00 '_AnimeClipAddSymbol' char str str
-2F01 '_AnimeClipRemoveSymbol' char str str
-2F02 '_AnimeClipLoadAsset' char str str
-2F04 '_AnimeClipAddAsset' char str str
-2F05 '_AnimeClipRemoveAsset' char str str
-2F06 '_AnimeClipLoadByCatalog' char u32
-2F07 '_AnimeClipReleaseByCatalog' char u32
-2F08 '_AnimeClipLoadMultiple' char u8 str str str str str str str str str str str str str str str str
+2E04 'CharAniclipWaitFrames' char u8 u32
+2E05 'CharAniclipWaitFrameAbs' char u8 u32
+2F 'CharAniclip'
+2F00 'CharAniclipLoad' char str str
+2F01 'CharAniclipUnload' char str str
+2F02 'CharAniclipLoadAsset' char str str
+2F04 'CharAniclipAddAsset' char str str
+2F05 'CharAniclipRemoveAsset' char str str
+2F06 'CharAniclipLoadByCatalog' char flags32
+2F07 'CharAniclipReleaseByCatalog' char flags32
+2F08 'CharAniPreload' char u8 str str str str str str str str str str str str str str str str
 2F09 char u8
-2F0A '_AnimeClipChangeSkin' char str str
-2F0B '_AnimeClipLoadFace' char str str
-2F0C '_AnimeClipSetChrPresetFaceModel' char str str
+2F0A 'CharAniclipChangeSkin' char str str
+2F0B 'CharAniclipLoadFace' char str str
+2F0C 'CharAniclipSetChrPresetFaceModel' char str str
 2F0D char
 2F0E char u32 str str
 2F0F char u8
 2F10 char str
-30   'Attachment'
+
+30 'Attachment'
 3000 'AttachmentAdd' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3001 'AttachmentRemove' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3002 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3003 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3004 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 3005 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
-3100 'AssetLoad' str
-3101 'AssetUnload' str
-3102 'AssetIsLoaded' str
 
-32   'Eff'
+3100 'PkgLoad' str
+3101 'PkgUnload' str
+3102 'PkgIsLoaded' str
+
+32 'Eff'
 320A 'EffLoad' char u8 str u32
 320B 'EffUnload' char u8
 320C 'EffPlay' char dyn char   flags32 dyn  dyn dyn dyn f32  f32  f32  dyn    dyn    dyn    u8
@@ -144,7 +149,7 @@
 3223
 3224 char dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
 
-33   'Btl'
+33 'Btl'
 3300 'BtlDamage' char char u8 u8
 3301 'BtlDamageAni' char dyn dyn u8
 3302 'BtlLoopTargetsReset' var char
@@ -326,30 +331,32 @@
 350A 'CharFlag2Set' char flags32
 350B 'CharFlag2Unset' char flags32
 350C 'CharFlag2Get' char flags32
+
+36 'Cam'
 3600
 3601
-3602 u8 f32 f32 f32 u16
-3603 u8 char str f32 f32 f32 u16
-3604 u8 f32 f32 f32 u16 u8
-3605 u8 f32 u16
+3602 'CamLookAt' u8 f32 f32 f32 u16
+3603 'CamLookAtChar' u8 char str f32 f32 f32 u16
+3604 'CamRotate' u8 f32 f32 f32 u16 u8
+3605 'CamDistance' u8 f32 u16
 3606 u8 u16 u8
-3607 char
+3607 'CamWait' u16 # no idea what the u16 is for, it's usually 191
 3608 u8 u16
-3609 f32 f32 f32
-360A f32 f32 f32 u16 u16 u16 u16 u16 u8
-360B u8 f32 u16
+3609 'CamVibrate' f32 f32 f32
+360A 'CamShake' f32 f32 f32 u16 u16 u16 u16 u16 u8
+360B 'CamFov' u8 f32 u16
 360C u8 f32 f32 f32 u16
 360D u8 u16 str f32 f32 f32 u16
 360E u8 f32 f32 f32 u16
 360F char f32 f32 f32
 3610
 3611 u8 f32 f32 f32 u16 u8
-3612 u16
-3613 char str u8 f32 f32 f32 u16 u8
-3614 u8 char str f32 f32 f32 u16
-3615 u8 f32 u32 u8
-3616 u8 f32 u16
-3617 u16
+3612 flags16
+3613 'CamRotateChar' char str u8 f32 f32 f32 u16 u8
+3614 'CamLookAtChar2' u8 char str f32 f32 f32 u16
+3615 u8 f32 i32 u8
+3616 'CamSetHeight' u8 f32 u16
+3617 flags16
 3618 u8 str f32 f32 f32 u16
 3619 u8 str f32 f32 f32 u16
 361A str u8 f32 f32 f32 u16 u8
@@ -367,25 +374,30 @@
 362D u16
 362E u8
 362F u8
-37   char f32 f32 f32 f32
-38   char u8 u8 str
-39   char u8 str f32 f32 u32
-3A00 u16 f32 u16 f32 u8
-3A01 u16 u8
+
+37   'CharSetPos' char f32 f32 f32 f32
+38   'CharAniPlay' char u8 u8 str
+39   'CharAniLoop' char u8 str f32 f32 u32
+
+3A 'Bgm'
+3A00 'BgmPlay' u16 f32 u16 f32 u8
+3A01 'BgmStop' u16 u8
 3A02 u8
-3A03 f32 u16 u8
-3A04 u16 f32 u16 f32 u8
-3A05 u16 u16
-3A06 u16
+3A03 'BgmVolume' f32 u16 u8
+3A04 'BgmPlay2' u16 f32 u16 f32 u8
+3A05 'BgmReplace' u16 u16
+3A06 'BgmRestore' u16
 3A07
 3A08 u16 u8
 3A09 u8
-3B00 dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
-3B01 dyn dyn u16
-3B03 dyn f32 u16
+
+3B 'Sound'
+3B00 'SoundPlay' dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+3B01 'SoundStop' dyn dyn u16
+3B03 'SoundSetVolume' dyn f32 u16
 3B04 dyn f32 u16 u8
 3B05 u32
-3B32 dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+3B32 'SoundPlayVoice' dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
 3B33 dyn dyn u16
 3B34 dyn
 3B37 u32
@@ -400,12 +412,13 @@
 3B96 u16
 3BFA u8
 3BFE u16
-3BFF f32 f32 f32
-3C01 char str str
-3C03 'CharFace2' char str str str str str
-3C04 'CharFace' char str
-3C05 'CharFace3' char str str str str str
-3D   char f32 f32 u8
+3BFF 'ControllerRumble' f32 f32 f32
+
+3C 'CharFace'
+3C03 char str str str str str
+3C04 char str
+3C05 char str str str str str
+3D   'CharTurnDir' char f32 f32 u8
 3E   char char f32 u8 _3E
 3F   char _3F
 40   char char _40
@@ -415,6 +428,8 @@
 4104 f32 f32 f32 f32 u8
 4200 char f32 f32 f32 f32 f32 u8 u16
 4201 char f32 f32 f32 f32 f32 u8 u16
+
+43 'Fade'
 4300 u16 f32 u16
 4301 u16 f32 u16
 4302 u16 f32 u16
@@ -437,29 +452,33 @@
 436B u16
 43FE u16
 43FF u16 u16
-44   char u8 f32 u16 f32
-45   char f32 f32 f32 u16 u16
+
+44   'CharEmote' char u8 f32 u16 f32
+45   'CharLookDir' char f32 f32 f32 u16 u16
+46   'CharLookChar'
 4600 char char u16
 4601 char char u16 f32 f32 f32
 4602 char char u16
-4603 char char u16 f32 u8
+4603 char char u16 f32 u8 # labeled "move only head" and "move only eyes"
 4604 char char u16
 4605 char char u16
 4606 char char u16
 4607 char char u16
 4700 str u16
 4701 str u16
-4800 char u16 u16 # set char attributes; 0 = level, 30 = cp
-4900 char
-4901 u16
-4902 u8
+4800 'CharAddStat' char u16 i16
+
+49 'Party'
+4900 'PartyAdd' char
+4901 'PartyRemove' char
+4902 'PartyClear' u8
 4903
-4904 char
+4904 'PartyLock' char
 4905 char
 4906 char
 4907
-4908 char f32 f32 u8
-4909 u16
+4908 'PartySetFormation' char f32 f32 u8
+4909 char
 490A 'CharExists' char
 490B 'CharInParty' char
 490C char char
@@ -474,14 +493,15 @@
 4917 u16
 4918
 491B u8
-491C u8
+491C 'SoloActionMode' u8
 491D u8
 491E u16
 491F u32
+
 4A   u8 f32 f32 f32 f32 u32 u8
-4B   char f32 f32 f32 f32 u16 u8
+4B   'CharSetColor' char f32 f32 f32 f32 u16 u8
 4C   char f32 f32 f32 u16 u8
-4D   char u8
+4D   'ForkWait' char u8
 4E   f32 f32 u8 _4E
 4F00 char f32 i16 u16 u32 f32
 4F01 char 
@@ -492,6 +512,7 @@
 51   f32 f32 f32 f32 f32 u16 f32 f32 f32 f32
 52   u8 u16
 53   u8 u8
+
 540A u8
 540B char
 540D 'MapPlaceTbox' str str flag item
@@ -575,9 +596,7 @@
 5461 u16 u16 u16
 5462 str
 5463 str u32 u32 u32
-5464 char u16 u32 u32 u32 u32 u32 u32 u32
 5465 char u16 f32 f32 f32 f32 f32 f32 f32
-5467 char u16 u32 u32 u32 u32 u32 u32 u32
 546B char u16 u32 u32 u32 u32 u32 u32 u32
 546C char u16 u32 u32 u32 u32 u32 u32 u32
 546D char u16 u32 u32 u32 u32 u32 u32 u32
@@ -589,31 +608,37 @@
 5473 char u16 u32 u32 u32 u32 u32 u32 u32
 5474 char u16 u32 u32 u32 u32 u32 u32 u32
 5479 char u16 u32 u32 u32 u32 u32 u32 u32
+
 55   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 u8 str str
 56   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
 57   'VisWait' u8 u8
 58   'VisHide' u8
-5A00 u16 u16 str u16
-5A01
+
+5A00 'NameplateShow' u16 u16 str u16
+5A01 'NameplateWait'
+
 5B   'SetCharAttr' charattr expr
 5C   char u8 str
 5D   char str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u8 u8
-5E00 u16 f32 u16 u16 u16 f32 char str f32 f32 f32
-5E01 u16
+5E00 'BlurOn' u16 f32 u16 u16 u16 f32 char str f32 f32 f32
+5E01 'BlurOff' u16
 60   char u8 str
 6100 str u8 char f32 f32 f32 f32 f32 f32 f32 u16
 6101 u16
 6102
-62   char char
+62   u16 u16
 63   char u8
 6400 f32
 6401 f32
 6402
 6403
+
+65 'Lp'
 6500 str u16
 6501 str u16
-6502 str f32
 6503 str f32
+
+66 'CharCraft'
 6600 'CharCraftAdd' char magic # 0 for "all at current level"
 6601 'CharCraftRemove' char magic
 6602 char u32
@@ -633,6 +658,7 @@
 6610 char u16
 6611 char u16
 6612 char u16 u32
+
 6700 char u16
 6701 char u16
 6702 char
@@ -655,13 +681,15 @@
 6818 str f32
 6819 str
 681B str f32 f32 f32
+
+69 'Link'
 6900 char char u8 u8 u8
 6901 u16
 6902 'LinkSetLevel' char char u16
 6903 u16 u16 u16
 6904 u16
-6905 char char u16
-6906 u16 char u16 u32
+6905 'LinkSetExp' char char u16
+6906 'LinkAddExp' char char u16 u32
 6907 u16
 6908 u16
 6909 u16
@@ -671,16 +699,17 @@
 690D u16 u16
 6912 u16 u16
 6913 u16
-6914 u8 u8
+6914 'LinkAuto' u8 u8
 6915 u16
 6916
 6917 u16
 6918 u16 u16 u16 u8 u8 u8
-6919 u8
-691A dyn char
+6919 'LinkSetPage' u8
+691A 'LinkClearPage' dyn char
 691B u16
 691C u32
 691D u16
+
 6A   char # fall through
 6A00 f32 u8 u16
 6A01
@@ -691,8 +720,10 @@
 6A06 dyn dyn dyn dyn dyn dyn f32
 6A07 dyn u8 u16
 6B   u8 u16 u16 f32 f32 f32 # i32 in chr067
-6C   char f32 _6C
+6C   'CharAniSpeed' char f32 _6C
 6E   u16 f32 f32 f32 f32 u8
+
+6F 'Item'
 6F00 'ItemAdd' item u32
 6F01 'ItemRemove' item u32
 6F02 'ItemHas' item u32
@@ -705,18 +736,20 @@
 6F0E 'ItemsetAdd' u16 u32
 6F14 'ItemUnlock' item u32 # only used in debug script
 6F15 'ItemLock' item u32
-6F16 'ItemIsLocked' char u32
+6F16 'ItemIsLocked' item u32
 6F17 u16 u32
 6F18 u16 u32
 6F19 u16 u32
-6F1A u16 u32
+6F1A 'InventoryClear' u16 u32
 6F1B 'InventorySwitch' u16
 6F1C 'InventoryMerge' u32 u32 u8 u8
 6F1D dyn
 6F1E dyn dyn u8 u8
 6F1F u16 u32
-6F20 u16 u8
+6F20 'ItemsetGetCount' u16 u8
 6F21 u16 u32
+
+70 'CharEquip'
 7000 'CharEquipItem' char item u8 u8
 7001 'CharUnequipItem' char u8
 7003 'CharEquipQuartz' char item u8 u8 u8
@@ -725,37 +758,42 @@
 7006 'CharSetSlotLevel' char u8 u8 u8 u8
 7007 char u8
 7008 'MqSetLevel' item u16 u16
-700A 'MqSetExp' char u32 u32
+700A 'MqSetExp' item u32 u32
 700B char u8
 700C char u8 u8
 700E 'CharEquipSubMq' char item item
 700F 'CharEquipMq' char item u16
+
 7100 'FlagSetRange' flag flag
 7101 'FlagUnsetRange' flag flag
-72   u16 # fall through
-7201 u16 u8
-7202 u16 u8
-7203 u8 u8
-7204 u8 u8
+
+72 'Quest' u16 # fall through
+7201 'QuestTaskSet' u16 u8
+7202 'QuestTaskUnset' u16 u8
+7203 'QuestFlagsSet' flags8 u8
+7204 'QuestFlagsUnset' flags8 u8
 7206 u16
 7207
 7208 dyn
 7209
 720A dyn
 720B dyn u8 u8
+
 73   u16 # fall through
 7300 u8 u8
 7301 u16 u8
 7302 dyn u8 u8
 7304 dyn
-74   u16 # fall through
-7400 u32
-7401
+
+74   'ActiveVoice' u16 # fall through
+7400 'ActiveVoicePlay' u32
+7401 'ActiveVoiceStop'
 7402 u16 f32 u16 u16 str f32
 7403 str f32 u16 u16 str f32
 7404
 7416
-75   'Menu2'
+
+75 'Menu2'
 7500 'Menu2New' u8 u16 f32 u32
 7501 'Menu2Add' u8 str i32
 7502 'Menu2Show' u8 u8 i16 i16 u8
@@ -774,7 +812,7 @@
 750F u8 u8
 7510 u8 u32
 76   char str str u8 u8 f32 f32 f32 f32
-77   char
+77   'CharDelete' char
 7800 str
 7801 str u8
 79   u8 u16 _79
@@ -782,11 +820,11 @@
 7A01 'CharIsModel' char str
 7A02 'CharIsAni' char str
 7A03 'ScenaIsPrefix' str
-7B01 str u8 u8 u8
-7B02
-7B09
+7B01 'MoviePlay' str u8 u8 u8
+7B02 'MovieStop'
+7B09 'MovieWait'
 7C02
-7D   u16 u32 f32
+7D   'ShopShow' u16 u32 f32
 7E00
 7E01
 7E02 u16
@@ -805,8 +843,8 @@
 8403 u16 str u8
 86   u8 u16 u16 u16 flag u16 u16 f32 f32 f32 str
 87   u8 u32
-88   u16
-89   u16
+88   'BondPointsSet' u16
+89   'BondPointsAdd' u16
 8A00 char char str str u8
 8A01 char char str str
 8A02 char char
@@ -820,7 +858,9 @@
 8AFE char str f32
 8AFF char str f32
 8B   f32 f32 f32 f32 f32 u8
-8C00 u16
+
+8C 'Debug'
+8C00 char
 8C01
 8C02
 8C03 u8
@@ -835,19 +875,23 @@
 8C0D u32 u32
 8C0F u32
 8C10 u32 u8
-8C11 str
+8C11 'DebugWarning' str
 8C12
 8C13
 8C14 u8
+
 8D   char f32 f32 f32 f32
-8E   u16 u16 u16 u16 u16 u16 u16 u16
-8F
+8E   'CalendarShow' u16 u16 u16 u16 u16 u16 u16 u16
+8F   'CalendarWait'
 90   str u32
-9100 'NoteCharSet' char flags32
-9101 'NoteCharUnset' char flags32
+
+91 'Note'
+9100 'CharNoteSet' char flags32
+9101 'CharNoteUnset' char flags32
 9102 str u8
-9105 'NoteFishSet' item flags32
+9105 'FishNoteSet' item flags32
 9106 u16 # something with fish
+
 92   global u16
 9300 u8
 9301
@@ -856,15 +900,15 @@
 93DC
 93DD
 9403
-9500 str str u8 u16
-9501
+9500 'BookShow' str str u8 u16
+9501 'BookWait'
 9600 u32
 9601
 9700 u16 flags32
 9702 u16 flags32
 98   u16 _98
 99   'HelpUnlock' u16 u16
-9A   u16 f32 f32 f32 u16
+9A   'MapAmbientLight' u16 f32 f32 f32 u16
 9B00 u16
 9B02
 9B04
@@ -954,8 +998,8 @@ A3   'OrbmentSetCover' char item
 A4   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 A500 char u16 f32 u8
 A6   char f32 f32 f32
-A8   f32
-A9   u8
+A8   flags32
+A9   'NoteGetCount' u8
 AA   u8 u8
 AB00 char u8 _AB00
 AB01
@@ -986,7 +1030,7 @@ AD00 u8
 AD01 u8
 AD02 u32
 AD03 u8
-AE   str u16
+AE   'SetEndFunc' str u16
 AF   u8
 B001
 B002
@@ -1044,10 +1088,10 @@ B03C u8 char u8
 B03D u32
 B03E u32
 B040
-B100 char flags32
-B101 char flags32
-B102 char flags32
-B103 char flags32
+B100 'PartyCharFlagsSet' char flags32
+B101 'PartyCharFlagsUnset' char flags32
+B102 'PartyCharFlagsToggle' char flags32
+B103 'PartyCharFlagsGet' char flags32
 B200 u8 char
 B201 u8 u8 u8 char
 B3   f32 f32 f32 f32 u16 u16
@@ -1090,26 +1134,31 @@ BC18 u16 dyn f32
 BC19 u16 dyn str
 BE   char u8 f32 f32
 C0   u16 _C0
-C2   u8
+C200 'HelpShow'
+C201 'HelpWait'
 C300 u8 u32 u32 u32
 C301 u8
-C400 u8
-C401 u8
-C402 dyn char # the dyn contains the same value as the u8 above
-C403 char
+
+C4 'Team'
+C400 'TeamClear' u8
+C401 'TeamActivate' u8
+C402 'TeamAddChar' dyn char
+C403 'TeamGetChar' char
 C404 u8 dyn f32 f32 f32 f32
 C405 u8 u8
 C406 dyn u8
-C407
+C407 'TeamGetCount'
 C408 u8
 C409 dyn
 C40A u8
-C40B u8 u8
+C40B 'TeamCopy' u8 u8
 C40C u8 u16
-C40D u8 u16
+C40D 'TeamRemoveChar' u8 char
 C40E u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
 C40F u8 u8 u8 u8 u8 u8 u8 u8 u8
 C410 dyn u16
+
+# Pretty sure C5 has to do with team select menu
 C500 u8 u8
 C501
 C502
@@ -1123,16 +1172,19 @@ C509 u8 u8 u8 u8 u8 u8 u8 u8
 C50A u8 u8 u8 u8 u8 u8 u8 u8
 C50B
 C50C u8 u8 u8 u8 u8
-C600 u8
-C601
-C602 u16 u8
-C603 u16 u8
-C604 u16 u32
-C605 u16 u32
-C606 u16
-C607 u16
-C608 u16 u8 u8 u8
-C609 u16
+
+C6 'Bond'
+C600 'BondShow' u8
+C601 'BondWait'
+C602 char u8
+C603 'BondSetLevel' char u8
+C604 'BondSetExp' char u32
+C605 'BondAddExp' char u32
+C606 'BondGetLevel' char
+C607 'BondGetExp' char
+C608 char u8 u8 u8
+C609 char
+
 C700
 C701 u16 u32
 C702
@@ -1182,16 +1234,16 @@ D301
 D4   u8 u8
 D501 u8 u16
 D6   char dyn dyn dyn dyn
-D7   u8 u32
-D8   u8 u8
-D900 u8
-D902
-D903 u32
-D904 u16 f32 f32 f32 f32 f32 f32
+
+D9 'Vr'
+D900 'VrEnable' u8
+D902 'IsVr'
+D904 'VrRotate' u16 f32 f32 f32 f32 f32 f32
 D905
-D906 f32 f32 f32
-DA00 u8
-DA01
+D906 'VrPosition' f32 f32 f32
+
+DA00 'RouteMenuShow' u8
+DA01 'RouteMenuWait'
 DB   u8
 DC00 char u16 u8
 DE01 u8 u32
@@ -1221,6 +1273,6 @@ E302 u16 u8 u16 u16
 E303 u16 u8 u16
 E304
 E305
-E500 u8
-E501 u8 u8
+E500 'Team2Clear' u8
+E501 'Team2Copy' u8 u8
 E6   u16

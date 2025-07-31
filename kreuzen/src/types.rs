@@ -112,6 +112,18 @@ impl Char {
 			0xFD05 => "battle5",
 			0xFD06 => "battle6",
 			0xFD07 => "battle7",
+			0xFD08 => "battle8",
+			0xFD09 => "battle9",
+			0xFD0A => "battle10",
+			0xFD0B => "battle11",
+			0xFD0C => "battle12",
+			0xFD0D => "battle13",
+			0xFD0E => "battle14",
+			0xFD0F => "battle15",
+			0xFD10 => "battle16",
+			0xFD11 => "battle17",
+			0xFD12 => "battle18",
+			0xFD13 => "battle19",
 
 			// FE12 and FE13 are special cased in op3E
 			// FE02..=FE05 and FE15 are special cased in OP40
@@ -147,6 +159,8 @@ pub struct Global(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Var(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
+pub struct FuncArg(pub u8);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct NumReg(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct StrReg(pub u8);
@@ -174,9 +188,17 @@ impl std::fmt::Debug for CharAttr {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
+pub struct Flags8(pub u8);
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Flags16(pub u16);
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, From, Into)]
 pub struct Flags32(pub u32);
+
+impl std::fmt::Debug for Flags8 {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "0x{:02X}", self.0)
+	}
+}
 
 impl std::fmt::Debug for Flags16 {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
