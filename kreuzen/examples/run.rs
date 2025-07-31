@@ -1,6 +1,7 @@
 use std::io::Write;
 use std::path::Path;
 
+use similar_asserts::SimpleDiff;
 use snafu::ResultExt;
 
 fn main() {
@@ -28,7 +29,7 @@ enum Error {
 }
 
 fn process_file(path: &Path, relpath: &Path) -> Result<(), Error> {
-	tracing::info!("Processing file: {}", relpath.display());
+	let _span = tracing::error_span!("process_file", path = %path.display()).entered();
 	let data = std::fs::read(path).context(ReadFileSnafu)?;
 	let scena = kreuzen::read(&data).context(ParseFileSnafu)?;
 	let outpath = Path::new("out").join(relpath);
@@ -37,6 +38,18 @@ fn process_file(path: &Path, relpath: &Path) -> Result<(), Error> {
 	let f = std::fs::File::create(&outpath).unwrap();
 	let mut f = std::io::BufWriter::new(f);
 	write_scena(&mut f, &scena).unwrap();
+
+	let scena2 = kreuzen::sugar::desugar(kreuzen::sugar::resugar(scena.clone()));
+
+	if scena != scena2 {
+		tracing::error!("Sugar did not roundtrip\n{}", SimpleDiff::from_str(
+			&format!("{scena:#?}"),
+			&format!("{scena2:#?}"),
+			"original",
+			"sugared",
+		));
+	}
+
 	Ok(())
 }
 

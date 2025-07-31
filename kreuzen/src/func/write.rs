@@ -135,6 +135,8 @@ fn block(f: &mut VWriter, code: &[Stmt], brk: Option<Label>, cont: Option<Label>
 				}
 				f.place(brk);
 			},
+
+			Stmt::ForkLambda(..) => panic!("can't write ForkLambda, it should have been desugared"),
 		}
 	}
 	Ok(())

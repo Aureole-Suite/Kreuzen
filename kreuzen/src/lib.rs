@@ -7,6 +7,8 @@ pub mod func;
 pub mod table;
 pub mod types;
 
+pub mod sugar;
+
 #[extend::ext]
 impl<'a> Reader<'a> {
 	fn str(&mut self) -> Result<String, gospel::read::Error> {

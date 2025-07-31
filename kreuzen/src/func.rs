@@ -71,6 +71,7 @@ pub enum Stmt {
 	Break(OpMeta),
 	Continue(OpMeta),
 	Switch(OpMeta, Expr, Vec<(Case, Vec<Stmt>)>),
+	ForkLambda(OpMeta, crate::types::Char, u8, Vec<Stmt>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -107,6 +108,7 @@ impl std::fmt::Debug for Stmt {
 			Self::Break(arg0) => arg0.fmt(f)?.debug_tuple("Break").finish(),
 			Self::Continue(arg0) => arg0.fmt(f)?.debug_tuple("Continue").finish(),
 			Self::Switch(arg0, arg1, arg2) => arg0.fmt(f)?.debug_tuple("Switch").field(arg1).field(arg2).finish(),
+			Self::ForkLambda(arg0, arg1, arg2, arg3) => arg0.fmt(f)?.debug_tuple("ForkLambda").field(arg1).field(arg2).field(arg3).finish(),
 		}
 	}
 }
