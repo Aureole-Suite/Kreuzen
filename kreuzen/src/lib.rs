@@ -341,7 +341,7 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Entry {
 	Func(Vec<func::Stmt>),
-	Effect(Vec<table::Effect>),
+	Preload(Vec<table::Effect>),
 	Fc(String),
 	BookPage(table::Book),
 	BookMetadata(u16),
@@ -421,7 +421,7 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Entry, EntryReadError> {
 
 	let item = match Type::from_name(name) {
 		Type::Normal => Entry::Func(func::read::read(f)?),
-		Type::Effect => Entry::Effect(table::effect::read(f)?),
+		Type::Effect => Entry::Preload(table::effect::read(f)?),
 		Type::FcAuto => Entry::Fc(table::fc_auto::read(f)?),
 		Type::BookData => Entry::BookPage(table::book::read(f)?),
 		Type::BookData99 => Entry::BookMetadata(table::book99::read(f)?),
@@ -496,7 +496,7 @@ pub enum EntryWriteError {
 fn write_entry(f: &mut VWriter, item: &Entry) -> Result<usize, EntryWriteError> {
 	match item {
 		Entry::Func(i) => func::write::write(f, i)?,
-		Entry::Effect(i) => table::effect::write(f, i)?,
+		Entry::Preload(i) => table::effect::write(f, i)?,
 		Entry::Fc(i) => table::fc_auto::write(f, i)?,
 		Entry::BookPage(i) => table::book::write(f, i)?,
 		Entry::BookMetadata(i) => table::book99::write(f, *i)?,
@@ -518,7 +518,7 @@ fn write_entry(f: &mut VWriter, item: &Entry) -> Result<usize, EntryWriteError> 
 	}
 
 	let align = match item {
-		Entry::Effect(_) => 16,
+		Entry::Preload(_) => 16,
 		Entry::Fc(_) => 16,
 		_ => 4,
 	};
