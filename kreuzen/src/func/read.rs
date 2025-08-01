@@ -221,17 +221,12 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut VReader, part: &[Part]) -> Result<(),
 }
 
 fn munge(op: &mut Op) {
-	let mut changed = false;
 	for arg in &mut op.args {
 		if let Arg::F32(v) = arg
 			&& *v != 0.0 && !(1e-5..=1e7).contains(&v.abs())
 		{
-			changed = true;
 			*arg = Arg::F32Munged(v.to_bits() as i32);
 		}
-	}
-	if changed {
-		tracing::warn!("munged f32 values in {op:?}");
 	}
 }
 
