@@ -128,6 +128,9 @@ pub enum Arg {
 	// There's way too many cases where the data should be f32 but the data is a i32.
 	#[from(ignore)]
 	F32Munged(i32),
+	// And some cases, especially in dyn, where it should be i32 but the data is a f32.
+	#[from(ignore)]
+	I32Munged(f32),
 
 	Char(crate::types::Char),
 	Item(crate::types::Item),
@@ -145,7 +148,6 @@ pub enum Arg {
 	Flags32(crate::types::Flags32),
 
 	Expr(expr::Expr),
-	Dyn(Dyn),
 	Dialogue(dial::Dialogue),
 }
 
@@ -161,6 +163,7 @@ impl std::fmt::Debug for Arg {
 			Arg::I32(v) => v.fmt(f),
 			Arg::F32(v) => v.fmt(f),
 			Arg::F32Munged(v) => { v.fmt(f)?; f.write_str("'") },
+			Arg::I32Munged(v) => { v.fmt(f)?; f.write_str("'") },
 			Arg::Char(v) => v.fmt(f),
 			Arg::Item(v) => v.fmt(f),
 			Arg::Magic(v) => v.fmt(f),
@@ -176,35 +179,7 @@ impl std::fmt::Debug for Arg {
 			Arg::Flags16(v) => v.fmt(f),
 			Arg::Flags32(v) => v.fmt(f),
 			Arg::Expr(v) => v.fmt(f),
-			Arg::Dyn(v) => v.fmt(f),
 			Arg::Dialogue(v) => v.fmt(f),
-		}
-	}
-}
-
-#[derive(Clone, PartialEq)]
-pub enum Dyn {
-	Var(crate::types::Var),
-	NumReg(crate::types::NumReg),
-	StrReg(crate::types::StrReg),
-	Global(crate::types::Global),
-	Str(String),
-	F32(f32),
-	I32(i32),
-	I32lol(f32),
-}
-
-impl std::fmt::Debug for Dyn {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::Var(arg0) => arg0.fmt(f),
-			Self::NumReg(arg0) => arg0.fmt(f),
-			Self::StrReg(arg0) => arg0.fmt(f),
-			Self::Global(arg0) => arg0.fmt(f),
-			Self::Str(arg0) => arg0.fmt(f),
-			Self::F32(arg0) => arg0.fmt(f),
-			Self::I32(arg0) => arg0.fmt(f),
-			Self::I32lol(arg0) => { f.write_str("'")?;arg0.fmt(f) },
 		}
 	}
 }

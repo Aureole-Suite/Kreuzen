@@ -6,7 +6,7 @@ use snafu::ResultExt;
 use crate::{ReaderaExt, VReader};
 
 use super::spec::{Opcode, Part};
-use super::{Arg, Dyn, Case, Dialogue, Expr, Op, OpMeta, Stmt, SPEC};
+use super::{Arg, Case, Dialogue, Expr, Op, OpMeta, Stmt, SPEC};
 
 mod decompile;
 
@@ -273,10 +273,10 @@ fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), Op
 
 		Expr => args.push(self::Expr::read(f)?.into()),
 		Text => args.push(self::Dialogue::read(f)?.into()),
-		Dyn => args.push(read_dyn(f)?.into()),
+		Dyn => args.push(read_dyn(f)?),
 		Ndyn => {
 			for _ in 0..f.u8()? {
-				args.push(read_dyn(f)?.into());
+				args.push(read_dyn(f)?);
 			}
 		}
 
@@ -349,21 +349,21 @@ fn at_end(f: &VReader<'_>) -> bool {
 	f.remaining().len() <= 3 && f.remaining().iter().all(|&b| b == 0)
 }
 
-fn read_dyn(f: &mut VReader) -> Result<Dyn, OpReadError> {
+fn read_dyn(f: &mut VReader) -> Result<Arg, OpReadError> {
 	Ok(match f.u8()? {
-		0x11 => { let v = f.u8()?; f.check_u32(0)?; Dyn::Var(v.into()) }
-		0x33 => { let v = f.u8()?; f.check_u32(0)?; Dyn::NumReg(v.into()) }
-		0x44 => { let v = f.u8()?; f.check_u32(0)?; Dyn::StrReg(v.into()) }
-		0x55 => { let v = f.u8()?; f.check_u32(0)?; Dyn::Global(v.into()) }
-		0xDD => { let v = f.str()?; Dyn::Str(v) }
-		0xEE => { let v = f.f32()?; f.check_u8(0)?; Dyn::F32(v) }
+		0x11 => { let v = f.u8()?; f.check_u32(0)?; Arg::Var(v.into()) }
+		0x33 => { let v = f.u8()?; f.check_u32(0)?; Arg::NumReg(v.into()) }
+		0x44 => { let v = f.u8()?; f.check_u32(0)?; Arg::StrReg(v.into()) }
+		0x55 => { let v = f.u8()?; f.check_u32(0)?; Arg::Global(v.into()) }
+		0xDD => { let v = f.str()?; Arg::Str(v) }
+		0xEE => { let v = f.f32()?; f.check_u8(0)?; Arg::F32(v) }
 		0xFF => {
 			let v = f.i32()?;
 			f.check_u8(0)?;
 			if v.abs() > 0x1000000 {
-				Dyn::I32lol(f32::from_bits(v as u32))
+				Arg::I32Munged(f32::from_bits(v as u32))
 			} else {
-				Dyn::I32(v)
+				Arg::I32(v)
 			}
 		}
 		code => return BadDynSnafu { code }.fail(),

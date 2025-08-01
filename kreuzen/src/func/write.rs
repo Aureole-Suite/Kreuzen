@@ -4,7 +4,7 @@ use snafu::{ensure, OptionExt as _, ResultExt as _};
 use crate::{WriterExt, VWriter};
 
 use super::spec::Part;
-use super::{Arg, Dyn, Case, Op, OpMeta, Stmt, SPEC};
+use super::{Arg, Case, Op, OpMeta, Stmt, SPEC};
 
 // TODO unhardcode control flow ops
 
@@ -157,8 +157,8 @@ pub enum OpWriteErrorKind {
 	UnknownOp,
 	#[snafu(display("too many arguments: {remaining} remaining"))]
 	TooManyArgs { remaining: usize },
-	#[snafu(display("too few arguments"))]
-	ExpectedArg { what: &'static str },
+	#[snafu(display("expected {what}, got {got:?}"))]
+	ExpectedArg { what: &'static str, got: Option<Arg> },
 
 	#[snafu(transparent, context(false))]
 	Dialogue { source: super::dial::WriteError },
@@ -197,13 +197,13 @@ macro_rules! next {
 	($args:expr, $ty:ident) => {
 		*match $args.next() {
 			Some(Arg::$ty(arg)) => arg,
-			_ => return ExpectedArgSnafu { what: stringify!($ty) }.fail(),
+			v => return ExpectedArgSnafu { what: stringify!($ty), got: v.cloned() }.fail(),
 		}
 	};
 	($args:expr, $n:expr, $ty:ident) => {
 		match $args.args.get($n) {
 			Some(Arg::$ty(arg)) => *arg,
-			_ => return ExpectedArgSnafu { what: stringify!($ty) }.fail(),
+			v => return ExpectedArgSnafu { what: stringify!($ty), got: v.cloned() }.fail(),
 		}
 	};
 }
@@ -245,13 +245,13 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 
 			Text => next!(args, Dialogue).write(f)?,
 			Expr => next!(args, Expr).write(f)?,
-			Dyn => write_dyn(f, &next!(args, Dyn))?,
+			Dyn => write_dyn(f, args.next())?,
 			Ndyn => {
 				let n = args.as_slice().len();
 				snafu::ensure!(n < 256, TooManyArgsSnafu { remaining: n - 256 });
 				f.u8(n as u8);
 				for _ in 0..n {
-					write_dyn(f, &next!(args, Dyn))?;
+					write_dyn(f, args.next())?;
 				}
 			}
 
@@ -325,16 +325,17 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 	Ok(())
 }
 
-fn write_dyn(f: &mut VWriter, arg: &Dyn) -> Result<(), OpWriteErrorKind> {
-	match *arg {
-		Dyn::Var(v) => { f.u8(0x11); f.u8(v.0); f.u32(0); }
-		Dyn::NumReg(v) => { f.u8(0x33); f.u8(v.0); f.u32(0); }
-		Dyn::StrReg(v) => { f.u8(0x44); f.u8(v.0); f.u32(0); }
-		Dyn::Global(v) => { f.u8(0x55); f.u8(v.0); f.u32(0); }
-		Dyn::Str(ref v) => { f.u8(0xDD); f.str(v)?; }
-		Dyn::F32(v) => { f.u8(0xEE); f.f32(v); f.u8(0); }
-		Dyn::I32(v) => { f.u8(0xFF); f.i32(v); f.u8(0); }
-		Dyn::I32lol(v) => { f.u8(0xFF); f.f32(v); f.u8(0); }
+fn write_dyn(f: &mut VWriter, arg: Option<&Arg>) -> Result<(), OpWriteErrorKind> {
+	match arg {
+		Some(Arg::Var(v)) => { f.u8(0x11); f.u8(v.0); f.u32(0); }
+		Some(Arg::NumReg(v)) => { f.u8(0x33); f.u8(v.0); f.u32(0); }
+		Some(Arg::StrReg(v)) => { f.u8(0x44); f.u8(v.0); f.u32(0); }
+		Some(Arg::Global(v)) => { f.u8(0x55); f.u8(v.0); f.u32(0); }
+		Some(Arg::Str(v)) => { f.u8(0xDD); f.str(v)?; }
+		Some(Arg::F32(v)) => { f.u8(0xEE); f.f32(*v); f.u8(0); }
+		Some(Arg::I32(v)) => { f.u8(0xFF); f.i32(*v); f.u8(0); }
+		Some(Arg::I32Munged(v)) => { f.u8(0xFF); f.f32(*v); f.u8(0); }
+		v => return ExpectedArgSnafu { what: "dyn", got: v.cloned() }.fail(),
 	}
 	Ok(())
 }
