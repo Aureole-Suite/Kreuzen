@@ -589,7 +589,7 @@
 5458 char str f32 f32 f32 f32 u8
 545A dyn dyn u8
 545B u32
-545C u32
+545C f32
 545D char u16
 545F char f32 f32 f32
 5460 char f32
@@ -1028,7 +1028,7 @@ AC16 dyn
 AC17 u16
 AD00 u8
 AD01 u8
-AD02 u32
+AD02 f32
 AD03 u8
 AE   'SetEndFunc' str u16
 AF   u8
@@ -1208,7 +1208,7 @@ CE05 u8 char str u8
 CE06 u8 u8
 CE07 u8 u8
 CE08 u8 u8
-CE09 u8 u32 u32 u8 u8
+CE09 u8 f32 f32 u8 u8
 CE0A u8 str u8
 CE0B u8 u32 u8
 CE14 u8 char str u8
@@ -1246,7 +1246,7 @@ DA00 'RouteMenuShow' u8
 DA01 'RouteMenuWait'
 DB   u8
 DC00 char u16 u8
-DE01 u8 u32
+DE01 u8 f32
 DE02
 DE03 u8 u8 u8
 DF   u32 u8

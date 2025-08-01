@@ -124,6 +124,11 @@ pub enum Arg {
 	I32(i32),
 	F32(f32),
 
+
+	// There's way too many cases where the data should be f32 but the data is a i32.
+	#[from(ignore)]
+	F32Munged(i32),
+
 	Char(crate::types::Char),
 	Item(crate::types::Item),
 	Magic(crate::types::Magic),
@@ -155,6 +160,7 @@ impl std::fmt::Debug for Arg {
 			Arg::I16(v) => v.fmt(f),
 			Arg::I32(v) => v.fmt(f),
 			Arg::F32(v) => v.fmt(f),
+			Arg::F32Munged(v) => { v.fmt(f)?; f.write_str("'") },
 			Arg::Char(v) => v.fmt(f),
 			Arg::Item(v) => v.fmt(f),
 			Arg::Magic(v) => v.fmt(f),

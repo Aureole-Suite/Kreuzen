@@ -196,11 +196,14 @@ fn read_op2(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 		}
 	}
 
-	Ok(FlatOp::Op(Op {
+	let mut op = Op {
 		name: SPEC.names.get(&opcode).unwrap(),
 		meta,
 		args
-	}))
+	};
+	munge(&mut op);
+
+	Ok(FlatOp::Op(op))
 }
 
 pub(crate) fn read_raw_op(f: &mut VReader) -> Result<Op, OpReadError> {
@@ -215,6 +218,21 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut VReader, part: &[Part]) -> Result<(),
 		read_part(args, f, p)?;
 	}
 	Ok(())
+}
+
+fn munge(op: &mut Op) {
+	let mut changed = false;
+	for arg in &mut op.args {
+		if let Arg::F32(v) = arg
+			&& *v != 0.0 && !(1e-5..=1e7).contains(&v.abs())
+		{
+			changed = true;
+			*arg = Arg::F32Munged(v.to_bits() as i32);
+		}
+	}
+	if changed {
+		tracing::warn!("munged f32 values in {op:?}");
+	}
 }
 
 fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), OpReadError> {
@@ -266,7 +284,7 @@ fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), Op
 			if f.check_i32(-1).is_ok() {
 				args.push((-1i32).into());
 			} else {
-				args.push(f.f32()?.into());
+				read_parts(args, f, &[F32])?;
 			}
 		}
 

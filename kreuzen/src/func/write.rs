@@ -218,7 +218,14 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 			I8 => f.i8(next!(args, I8)),
 			I16 => f.i16(next!(args, I16)),
 			I32 => f.i32(next!(args, I32)),
-			F32 => f.f32(next!(args, F32)),
+			F32 => {
+				if let Some(Arg::F32Munged(v)) = args.as_slice().first() {
+					args.next();
+					f.f32(f32::from_bits(*v as u32));
+				} else {
+					f.f32(next!(args, F32));
+				}
+			}
 			Str => f.str(&next!(args, Str))?,
 
 			Char => f.u16(next!(args, Char).0),
@@ -253,7 +260,7 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 					args.next();
 					f.i32(-1);
 				} else {
-					f.f32(next!(args, F32));
+					write_parts(op, f, &[F32], args)?;
 				}
 			}
 
