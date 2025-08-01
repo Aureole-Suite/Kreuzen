@@ -262,6 +262,14 @@ fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), Op
 			}
 		}
 
+		Part::F32Opt => {
+			if f.check_i32(-1).is_ok() {
+				args.push((-1i32).into());
+			} else {
+				args.push(f.f32()?.into());
+			}
+		}
+
 		Part::_40 => read_parts(args, f, super::spec::op_40(next!(1, Char)))?,
 		Part::_98 => read_parts(args, f, super::spec::op_98(next!(0, U16)))?,
 		Part::_C0 => read_parts(args, f, super::spec::op_c0(next!(0, U16)))?,

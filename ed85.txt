@@ -211,7 +211,7 @@
 333B char f32 f32 f32 f32
 333C char char f32 u16
 333D char char f32 f32 f32 f32 f32 u8
-333E 'Btl_CharSetPosAsync' char char f32 f32 f32 f32 u8 u8
+333E 'Btl_CharSetPosAsync' char char f32 f32 f32 f32opt u8 u8
 333F char
 3340 char u8
 3341 'BtlCharTurnToChar' char char f32 f32
@@ -377,10 +377,10 @@
 
 37   'CharSetPos' char f32 f32 f32 f32
 38   'CharAniPlay' char u8 u8 str
-39   'CharAniLoop' char u8 str f32 f32 u32
+39   'CharAniLoop' char u8 str f32opt f32 u32
 
 3A 'Bgm'
-3A00 'BgmPlay' u16 f32 u16 f32 u8
+3A00 'BgmPlay' u16 f32 u16 u32 u8
 3A01 'BgmStop' u16 u8
 3A02 u8
 3A03 'BgmVolume' f32 u16 u8
@@ -678,7 +678,7 @@
 680D str f32 f32 f32
 680F str char
 6810 str char u8 str f32 f32 f32 f32 f32 f32
-6818 str f32
+6818 str u32
 6819 str
 681B str f32 f32 f32
 
@@ -717,7 +717,7 @@
 6A03 f32 u8 u16
 6A04 f32 f32 f32 f32 f32 u8 u16
 6A05 f32 f32 f32 f32 f32 f32 f32
-6A06 dyn dyn dyn dyn dyn dyn f32
+6A06 dyn dyn dyn dyn dyn dyn u32
 6A07 dyn u8 u16
 6B   u8 u16 u16 f32 f32 f32 # i32 in chr067
 6C   'CharAniSpeed' char f32 _6C
@@ -993,7 +993,7 @@
 9E5A
 A0
 A1   f32 f32 f32 u16 u16
-A2   char str f32 f32
+A2   char str u32 u32
 A3   'OrbmentSetCover' char item
 A4   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 A500 char u16 f32 u8
@@ -1119,7 +1119,7 @@ BC09 u16 dyn f32 f32 f32 f32 f32 f32 u16 u16
 BC0A u16 dyn f32 f32
 BC0B u16 dyn u32
 BC0C u16 dyn str f32 f32
-BC0D u16 dyn f32
+BC0D u16 dyn u32
 BC0E u16 dyn dyn u16 u16
 BC0F u16 dyn u16 u32 str
 BC10 u16 dyn u32 u32 u16
@@ -1252,7 +1252,7 @@ DE03 u8 u8 u8
 DF   u32 u8
 E000
 E001
-E002 u8 u16 f32 f32 f32 u8 u8
+E002 u8 u16 f32 f32opt f32opt u8 u8
 E003 u16 f32 f32 f32
 E004
 E005 u8

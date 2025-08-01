@@ -248,6 +248,15 @@ fn write_parts(op: &Op, f: &mut VWriter, parts: &[Part], args: &mut std::slice::
 				}
 			}
 
+			Part::F32Opt => {
+				if args.as_slice().first() == Some(&Arg::I32(-1)) {
+					args.next();
+					f.i32(-1);
+				} else {
+					f.f32(next!(args, F32));
+				}
+			}
+
 			Part::_40 => write_parts(op, f, super::spec::op_40(next!(op, 1, Char)), args)?,
 			Part::_98 => write_parts(op, f, super::spec::op_98(next!(op, 0, U16)), args)?,
 			Part::_C0 => write_parts(op, f, super::spec::op_c0(next!(op, 0, U16)), args)?,
