@@ -13,10 +13,10 @@ use spec::Spec;
 
 pub static SPEC: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("../../ed85.txt")));
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct OpMeta {
 	pub line: u16,
-	pub width: u8,
+	pub has_width: bool, // width != 0xFF
 }
 
 impl OpMeta {
@@ -29,16 +29,10 @@ impl OpMeta {
 impl std::fmt::Debug for OpMeta {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{}", self.line)?;
-		if self.width == 0xFF {
+		if !self.has_width {
 			write!(f, "~")?;
 		}
 		Ok(())
-	}
-}
-
-impl Default for OpMeta {
-	fn default() -> Self {
-		OpMeta { line: 0, width: 0xFF }
 	}
 }
 

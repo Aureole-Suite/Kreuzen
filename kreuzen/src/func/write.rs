@@ -20,7 +20,7 @@ impl VWriter {
 	fn fake_meta(&mut self, meta: &OpMeta, width: impl FnOnce() -> u8) {
 		self.u16(meta.line);
 		self.u8(0);
-		self.u8(if meta.width == 0xFF { 0xFF } else { width() });
+		self.u8(if meta.has_width { width() } else { 0xFF });
 	}
 
 	#[track_caller]
@@ -30,12 +30,9 @@ impl VWriter {
 		let label2 = Label::new();
 		self.u16(meta.line);
 		self.u8(0);
-		if meta.width != 0xFF {
+		if meta.has_width {
 			self.delay(move |x| {
 				let v = (x.get(label, label2) + 1).min(255) as u8;
-				if v != meta.width {
-					tracing::warn!("expected width {}, got {} on {}", meta.width, v, meta.line);
-				}
 				Some([v])
 			});
 		} else {

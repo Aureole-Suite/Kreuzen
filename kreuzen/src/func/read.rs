@@ -113,8 +113,8 @@ pub enum OpReadError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("unknown op {} ({} bytes)", opcode, meta.width))]
-	UnknownOp { opcode: Opcode, meta: OpMeta },
+	#[snafu(display("unknown op {} ({} bytes)", opcode, width))]
+	UnknownOp { opcode: Opcode, width: u8 },
 	#[snafu(display("failed to read expr"), context(false))]
 	Expr { source: super::expr::ReadError },
 	#[snafu(display("failed to read dialogue"), context(false))]
@@ -126,32 +126,20 @@ pub enum OpReadError {
 }
 
 fn read_op(f: &mut VReader) -> Result<FlatOp, OpReadError> {
-	let pos = f.pos();
-	let op = read_op2(f)?;
-	if let FlatOp::Op(op) = &op
-		&& op.meta.width != 0xFF
-		&& pos + op.meta.width as usize != f.pos()
-		&& !op.args.iter().any(|a| matches!(a, Arg::Expr(_)))
-	{
-		tracing::warn!("expected length {}, got {} on {op:?}", op.meta.width, f.pos() - pos);
-	}
-	Ok(op)
-}
-
-fn read_op2(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 	let mut code = f.u8()?;
 	let mut opcode = Opcode::new(&[code]);
 
 	let name = SPEC.names.get(&opcode).map(|s| s.as_str());
 
-	let meta = if !matches!(code, 0x01 | 0x04) {
-		let line = f.u16()?;
+	let mut line = 0;
+	let mut width = 0xFF;
+	if !matches!(code, 0x01 | 0x04) {
+		line = f.u16()?;
 		f.check_u8(0)?;
-		let width = f.u8()?;
-		OpMeta { line, width }
-	} else {
-		OpMeta::default()
+		width = f.u8()?;
 	};
+
+	let meta = OpMeta { line, has_width: width != 0xFF };
 
 	match name {
 		Some("if") => {
@@ -176,7 +164,7 @@ fn read_op2(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 	}
 
 	let Some(mut spec) = SPEC.ops[code as usize].as_ref() else {
-		return UnknownOpSnafu { opcode, meta }.fail();
+		return UnknownOpSnafu { opcode, width }.fail();
 	};
 
 	let mut args = Vec::new();
@@ -189,7 +177,7 @@ fn read_op2(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 			if let Some(next) = spec.child(code) {
 				spec = next;
 			} else {
-				return UnknownOpSnafu { opcode, meta }.fail();
+				return UnknownOpSnafu { opcode, width }.fail();
 			}
 		} else {
 			break;
@@ -207,7 +195,7 @@ fn read_op2(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 }
 
 pub(crate) fn read_raw_op(f: &mut VReader) -> Result<Op, OpReadError> {
-	match read_op2(f)? {
+	match read_op(f)? {
 		FlatOp::Op(op) => Ok(op),
 		_ => BadNestingSnafu.fail(),
 	}
