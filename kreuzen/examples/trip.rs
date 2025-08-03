@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use gospel::read::Reader;
+use similar_asserts::SimpleDiff;
 
 fn main() {
 	unsafe { compact_debug::enable(true) };
@@ -43,8 +44,13 @@ fn run0(path: &Path) -> Result<(), kreuzen::WriteError> {
 	};
 	let data2 = kreuzen::write(&scena)?;
 	if data != data2 {
-		tracing::warn!("Data mismatch:\n{:#X}{:#X}{scena:#?}\n", Reader::new(&data).dump(), Reader::new(&data2).dump());
 		let scena2 = kreuzen::read(&data2).unwrap();
+		tracing::error!("Did not roundtrip (version={})\n{}", scena2.version, SimpleDiff::from_str(
+			&format!("{scena:#?}"),
+			&format!("{scena2:#?}"),
+			"original",
+			"tripped",
+		));
 	}
 	Ok(())
 }
