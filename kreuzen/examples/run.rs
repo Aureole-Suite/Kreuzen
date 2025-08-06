@@ -7,14 +7,20 @@ use snafu::ResultExt;
 fn main() {
 	unsafe { compact_debug::enable(true) };
 	tracing_subscriber::fmt::init();
-	let root = Path::new("scripts");
-	for arg in walkdir::WalkDir::new("scripts") {
+	run_all("/home/large/kiseki/reverie/data/scripts/", "out/reverie");
+}
+
+fn run_all(root: &str, out: &str) {
+	let root = Path::new(root);
+	let out = Path::new(out);
+	for arg in walkdir::WalkDir::new(root) {
 		let arg = arg.unwrap();
 		let path = arg.path();
 		if path.extension().is_none_or(|ext| ext != "dat") {
 			continue;
 		}
-		if let Err(err) = process_file(path, path.strip_prefix(root).unwrap()) {
+		let out = out.join(path.strip_prefix(root).unwrap());
+		if let Err(err) = process_file(path, &out) {
 			println!("Error processing file '{}'\n{}", path.display(), snafu::Report::from_error(err));
 		}
 	}
@@ -28,14 +34,13 @@ enum Error {
 	ParseFile { source: kreuzen::ReadError },
 }
 
-fn process_file(path: &Path, relpath: &Path) -> Result<(), Error> {
+fn process_file(path: &Path, outpath: &Path) -> Result<(), Error> {
 	let _span = tracing::error_span!("process_file", path = %path.display()).entered();
 	let data = std::fs::read(path).context(ReadFileSnafu)?;
 	let scena = kreuzen::read(&data).context(ParseFileSnafu)?;
-	let outpath = Path::new("out").join(relpath);
 	std::fs::create_dir_all(outpath.parent().unwrap()).unwrap();
 
-	let f = std::fs::File::create(&outpath).unwrap();
+	let f = std::fs::File::create(outpath).unwrap();
 	let mut f = std::io::BufWriter::new(f);
 	write_scena(&mut f, &scena).unwrap();
 
