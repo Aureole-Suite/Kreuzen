@@ -4,8 +4,8 @@ use snafu::{ensure, OptionExt as _, ResultExt as _};
 use crate::func::Expr;
 use crate::{WriterExt, VWriter};
 
-use super::spec::Part;
-use super::{Arg, Case, Op, OpMeta, Stmt, SPEC};
+use crate::spec::Part;
+use super::{Arg, Case, Op, OpMeta, Stmt};
 
 // TODO unhardcode control flow ops
 
@@ -207,10 +207,10 @@ pub(crate) fn write_raw_op(f: &mut VWriter, op: &Op) -> Result<(), OpWriteError>
 }
 
 fn write_raw_op_inner(f: &mut VWriter, op: &Op) -> Result<(), OpWriteErrorKind> {
-	let code = SPEC.by_name.get(op.name).context(UnknownOpSnafu)?;
+	let code = f.spec.by_name.get(op.name).context(UnknownOpSnafu)?;
 	let mut args = op.args.iter();
 	let mut n = 0;
-	let mut spec = SPEC.ops[code[n] as usize].as_ref().context(UnknownOpSnafu)?;
+	let mut spec = f.spec.ops[code[n] as usize].as_ref().context(UnknownOpSnafu)?;
 	f.u8(code[n]);
 	let mut end = if matches!(code[n], 0x01 | 0x04) {
 		Label::new()
@@ -248,7 +248,7 @@ macro_rules! next {
 }
 
 fn write_parts(op: &Op, end: &mut Label, f: &mut VWriter, parts: &[Part], args: &mut std::slice::Iter<Arg>) -> Result<(), OpWriteErrorKind> {
-	use super::spec::Part::*;
+	use Part::*;
 	for part in parts {
 		match part {
 			U8 => f.u8(next!(args, U8)),
@@ -307,10 +307,10 @@ fn write_parts(op: &Op, end: &mut Label, f: &mut VWriter, parts: &[Part], args: 
 				}
 			}
 
-			Part::_40 => write_parts(op, end, f, super::spec::op_40(next!(op, 1, Char)), args)?,
-			Part::_98 => write_parts(op, end, f, super::spec::op_98(next!(op, 0, U16)), args)?,
-			Part::_C0 => write_parts(op, end, f, super::spec::op_c0(next!(op, 0, U16)), args)?,
-			Part::_D2 => write_parts(op, end, f, super::spec::op_d2(next!(op, 0, I16)), args)?,
+			Part::_40 => write_parts(op, end, f, crate::spec::op_40(next!(op, 1, Char)), args)?,
+			Part::_98 => write_parts(op, end, f, crate::spec::op_98(next!(op, 0, U16)), args)?,
+			Part::_C0 => write_parts(op, end, f, crate::spec::op_c0(next!(op, 0, U16)), args)?,
+			Part::_D2 => write_parts(op, end, f, crate::spec::op_d2(next!(op, 0, I16)), args)?,
 
 			Part::_3E => {
 				let a = next!(op, 1, Char).0;

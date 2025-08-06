@@ -1,5 +1,3 @@
-use std::sync::LazyLock;
-
 pub mod read;
 pub mod write;
 pub mod expr;
@@ -7,11 +5,6 @@ pub mod dial;
 
 pub use expr::Expr;
 pub use dial::Dialogue;
-
-mod spec;
-use spec::Spec;
-
-pub static SPEC: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("../../ed85.txt")));
 
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct OpMeta {

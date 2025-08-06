@@ -5,8 +5,8 @@ use snafu::ResultExt;
 
 use crate::{ReaderaExt, VReader};
 
-use super::spec::{Opcode, Part};
-use super::{Arg, Case, Dialogue, Expr, Op, OpMeta, Stmt, SPEC};
+use crate::spec::{Opcode, Part};
+use super::{Arg, Case, Dialogue, Expr, Op, OpMeta, Stmt};
 
 mod decompile;
 
@@ -129,7 +129,7 @@ fn read_op(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 	let mut code = f.u8()?;
 	let mut opcode = Opcode::new(&[code]);
 
-	let name = SPEC.names.get(&opcode).map(|s| s.as_str());
+	let name = f.spec.names.get(&opcode).map(|s| s.as_str());
 
 	let mut line = 0;
 	let mut width = 0xFF;
@@ -163,7 +163,7 @@ fn read_op(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 		_ => {}
 	}
 
-	let Some(mut spec) = SPEC.ops[code as usize].as_ref() else {
+	let Some(mut spec) = f.spec.ops[code as usize].as_ref() else {
 		return UnknownOpSnafu { opcode, width }.fail();
 	};
 
@@ -185,7 +185,7 @@ fn read_op(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 	}
 
 	let mut op = Op {
-		name: SPEC.names.get(&opcode).unwrap(),
+		name: f.spec.names.get(&opcode).unwrap(),
 		meta,
 		args
 	};
@@ -227,7 +227,7 @@ fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), Op
 			}
 		};
 	}
-	use super::spec::Part::*;
+	use Part::*;
 	match part {
 		U8 => args.push(f.u8()?.into()),
 		U16 => args.push(f.u16()?.into()),
@@ -271,10 +271,10 @@ fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), Op
 			}
 		}
 
-		Part::_40 => read_parts(args, f, super::spec::op_40(next!(1, Char)))?,
-		Part::_98 => read_parts(args, f, super::spec::op_98(next!(0, U16)))?,
-		Part::_C0 => read_parts(args, f, super::spec::op_c0(next!(0, U16)))?,
-		Part::_D2 => read_parts(args, f, super::spec::op_d2(next!(0, I16)))?,
+		Part::_40 => read_parts(args, f, crate::spec::op_40(next!(1, Char)))?,
+		Part::_98 => read_parts(args, f, crate::spec::op_98(next!(0, U16)))?,
+		Part::_C0 => read_parts(args, f, crate::spec::op_c0(next!(0, U16)))?,
+		Part::_D2 => read_parts(args, f, crate::spec::op_d2(next!(0, I16)))?,
 
 		Part::_3E => {
 			let a = next!(1, Char).0;

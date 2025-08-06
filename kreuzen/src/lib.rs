@@ -1,4 +1,6 @@
 #![feature(if_let_guard, split_as_slice)]
+use std::sync::LazyLock;
+
 use gospel::read::{Reader, Le as _};
 use gospel::write::{Writer, Label, Le as _};
 use snafu::{ensure, ResultExt as _};
@@ -8,6 +10,11 @@ pub mod table;
 pub mod types;
 
 pub mod sugar;
+
+mod spec;
+use spec::Spec;
+
+pub static SPEC: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("../../ed85.txt")));
 
 #[extend::ext]
 impl<'a> Reader<'a> {
@@ -209,6 +216,7 @@ struct VReader<'a> {
 	#[deref_mut]
 	reader: Reader<'a>,
 	version: u32,
+	spec: &'static Spec,
 }
 
 #[derive(derive_more::Deref, derive_more::DerefMut)]
@@ -218,6 +226,7 @@ struct VWriter {
 	writer: Writer,
 	start: Label,
 	version: u32,
+	spec: &'static Spec,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -266,6 +275,7 @@ pub fn read(data: &[u8]) -> Result<Scena, ReadError> {
 		let mut vr = VReader {
 			reader: Reader::new(&data[..end]).at(start)?,
 			version,
+			spec: &SPEC,
 		};
 		match read_entry(&mut vr, name) {
 			Ok(v) => entries.push((name.clone(), v)),
@@ -326,6 +336,7 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 			writer: Writer::new(),
 			start,
 			version: scena.version,
+			spec: &SPEC,
 		};
 		let align = write_entry(&mut vw, entry).context(EntryWriteSnafu { name })?;
 		f.align(align);
