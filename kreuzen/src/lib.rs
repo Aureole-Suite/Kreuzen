@@ -1,4 +1,4 @@
-#![feature(let_chains, if_let_guard, split_as_slice)]
+#![feature(if_let_guard, split_as_slice)]
 use gospel::read::{Reader, Le as _};
 use gospel::write::{Writer, Label, Le as _};
 use snafu::{ensure, ResultExt as _};
