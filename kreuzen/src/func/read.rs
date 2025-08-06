@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use gospel::read::Le as _;
 use snafu::ResultExt;
 
-use crate::{ReaderaExt, VReader};
+use crate::{Game, ReaderaExt, VReader};
 
 use crate::spec::{Opcode, Part};
 use super::{Arg, Case, Dialogue, Expr, Op, OpMeta, Stmt};
@@ -33,10 +33,18 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Stmt>, ReadError> {
 	let mut ops = Vec::new();
 	while !at_end(f) {
 		let pos = Label(f.pos() as u32);
-		let op = read_op(f).context(OpSnafu { pos })?;
-		ops.push((pos, op))
+		match read_op(f).context(OpSnafu { pos }) {
+			Ok(op) => ops.push((pos, op)),
+			Err(e) => {
+				for op in ops.iter().rev().take(10).rev() {
+					tracing::trace!("{op:?}");
+				}
+				tracing::error!("at {pos:?}\n{:#4X}", f.at(pos.0 as usize).unwrap().dump());
+				Err(e)?;
+			}
+		}
 	}
-	
+
 	let mut labels = BTreeSet::new();
 	for (_, op) in &ops {
 		match op {
@@ -133,7 +141,7 @@ fn read_op(f: &mut VReader) -> Result<FlatOp, OpReadError> {
 
 	let mut line = 0;
 	let mut width = 0xFF;
-	if !matches!(code, 0x01 | 0x04) {
+	if !matches!(code, 0x01 | 0x04) && f.game == Game::Ed85 {
 		line = f.u16()?;
 		f.check_u8(0)?;
 		width = f.u8()?;
@@ -271,8 +279,15 @@ fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), Op
 			}
 		}
 
-		Part::_40 => read_parts(args, f, crate::spec::op_40(next!(1, Char)))?,
-		Part::_98 => read_parts(args, f, crate::spec::op_98(next!(0, U16)))?,
+		Part::_40 => {
+			if (f.game, f.name, f.entry) == (Game::Ed84, "a2050", "FuncEvDanceReanAlisa") {
+				read_parts(args, f, &[F32, F32, F32, F32, U8, Flags16])?;
+				args.push(Arg::Str("<broken>".into()));
+			} else {
+				read_parts(args, f, crate::spec::op_40(next!(1, Char)))?
+			}
+		},
+		Part::_98 => read_parts(args, f, crate::spec::op_98(next!(0, U16), f.game))?,
 		Part::_C0 => read_parts(args, f, crate::spec::op_c0(next!(0, U16)))?,
 		Part::_D2 => read_parts(args, f, crate::spec::op_d2(next!(0, I16)))?,
 
@@ -288,24 +303,28 @@ fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), Op
 			}
 		}
 		Part::_3F => {
-			if f.version != 2 {
+			if f.version == 1 {
 				read_parts(args, f, &[U32])?;
 			}
 		}
 		Part::_4E => {
-			if f.version != 2 {
+			if f.version == 1 {
 				read_parts(args, f, &[U8])?;
 			}
 		}
 		Part::_6C => {
-			if f.version != 2 {
+			if f.version == 1 {
 				read_parts(args, f, &[I32])?;
 			}
 		}
 		Part::_79 => {
 			let a = next!(0, U8);
 			if a == 7 {
-				read_parts(args, f, &[U8, U8])?;
+				if f.game == Game::Ed85 {
+					read_parts(args, f, &[U8, U8])?;
+				} else {
+					read_parts(args, f, &[U8])?;
+				}
 			}
 		}
 		Part::_AB00 => {
@@ -322,6 +341,36 @@ fn read_part(args: &mut Vec<Arg>, f: &mut VReader, part: &Part) -> Result<(), Op
 			}
 			for _ in n..50 {
 				f.check_u16(0)?;
+			}
+		}
+
+		Part::Broken20 => {
+			if matches!(f.remaining().first(), Some(x) if x % 0x11 == 0) {
+				read_parts(args, f, &[Dyn])?;
+			} else {
+				args.push(Arg::Str("<broken>".into()));
+			}
+		}
+		Part::BrokenEffLoad => {
+			if (f.game, f.name, f.entry) == (Game::Ed84, "mg11", "Mg11_Init_char_function")
+			&& f.check_u32(0).is_ok()
+			{
+			args.push(Arg::Str("<broken>".into()));
+			}
+		}
+		Part::Broken40 => {
+			if (f.game, f.name, f.entry) == (Game::Ed84, "a2050", "FuncEvDanceReanAlisa") {
+				read_parts(args, f, &[F32, F32, F32, F32, U8, Flags16])?;
+				args.push(Arg::Str("<broken>".into()));
+			} else {
+				read_parts(args, f, &[_40])?;
+			}
+		},
+		Part::Broken62 => {
+			if (f.game, f.name, f.entry) == (Game::Ed84, "a2050", "FuncEvDanceReanAlisa") {
+				args.push(Arg::Str("<broken>".into()));
+			} else {
+				read_parts(args, f, &[U16, U16])?;
 			}
 		}
 	}

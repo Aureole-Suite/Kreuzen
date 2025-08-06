@@ -78,7 +78,13 @@ pub(crate) fn read(f: &mut VReader) -> Result<Vec<Action>, ReadError> {
 		let u3 = (f.u16()?, f.u16()?);
 		let flags = f.sstr(16)?;
 		let ani = f.sstr(32)?;
-		let name = f.sstr(64)?;
+		let name = if f.remaining().len() == 47 {
+			// Why does CS4 have this
+			f.check(&[0; 47])?;
+			String::new()
+		} else {
+			f.sstr(64)?
+		};
 		table.push(Action { id, u1, target, u2, time, effects, u3, flags, ani, name });
 	}
 	Ok(table)

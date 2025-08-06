@@ -25,9 +25,13 @@ pub struct Part {
 
 pub(crate) fn read(f: &mut VReader) -> Result<Vec<Part>, ReadError> {
 	let mut parts = Vec::new();
+	let end = match f.game {
+		crate::Game::Ed84 => 0xFF,
+		crate::Game::Ed85 => 0xFFFF,
+	};
 	loop {
 		let id = f.u32()?;
-		if id == 0xFFFF {
+		if id == end {
 			break;
 		}
 		let a = f.sstr(32)?;

@@ -52,6 +52,7 @@ pub enum DialogueControl {
 	_13,
 	_16,
 	_17(u16),
+	_18,
 	_19(u16),
 	_1A,
 }
@@ -102,6 +103,7 @@ impl Dialogue {
 					0x13 => DialogueControl::_13,
 					0x16 => DialogueControl::_16,
 					0x17 => DialogueControl::_17(f.u16()?),
+					0x18 => DialogueControl::_18,
 					0x19 => DialogueControl::_19(f.u16()?),
 					0x1A => DialogueControl::_1A,
 					byte => return BadControlSnafu { byte }.fail(),
@@ -133,6 +135,7 @@ impl Dialogue {
 					DialogueControl::_13 => f.u8(0x13),
 					DialogueControl::_16 => f.u8(0x16),
 					DialogueControl::_17(v) => { f.u8(0x17); f.u16(*v); },
+					DialogueControl::_18 => f.u8(0x18),
 					DialogueControl::_19(v) => { f.u8(0x19); f.u16(*v); },
 					DialogueControl::_1A => f.u8(0x1A),
 				},

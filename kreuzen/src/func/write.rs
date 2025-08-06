@@ -308,7 +308,7 @@ fn write_parts(op: &Op, end: &mut Label, f: &mut VWriter, parts: &[Part], args: 
 			}
 
 			Part::_40 => write_parts(op, end, f, crate::spec::op_40(next!(op, 1, Char)), args)?,
-			Part::_98 => write_parts(op, end, f, crate::spec::op_98(next!(op, 0, U16)), args)?,
+			Part::_98 => write_parts(op, end, f, crate::spec::op_98(next!(op, 0, U16), f.game), args)?,
 			Part::_C0 => write_parts(op, end, f, crate::spec::op_c0(next!(op, 0, U16)), args)?,
 			Part::_D2 => write_parts(op, end, f, crate::spec::op_d2(next!(op, 0, I16)), args)?,
 
@@ -363,6 +363,10 @@ fn write_parts(op: &Op, end: &mut Label, f: &mut VWriter, parts: &[Part], args: 
 					f.u16(0);
 				}
 			}
+			Part::Broken20 => todo!(),
+			Part::BrokenEffLoad => todo!(),
+			Part::Broken40 => todo!(),
+			Part::Broken62 => todo!(),
 		}
 	}
 	Ok(())

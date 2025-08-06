@@ -18,15 +18,19 @@ pub enum WriteError {
 
 pub(crate) fn read(f: &mut VReader) -> Result<Vec<(u16, u16)>, ReadError> {
 	let mut table = Vec::new();
+	let end = match f.game {
+		crate::Game::Ed84 => (0, 0),
+		crate::Game::Ed85 => (0xFFFF, 1),
+	};
 	loop {
 		let id = f.u16()?;
-		if id == 0xFFFF {
+		if id == end.0 {
 			break;
 		}
 		let value = f.u16()?;
 		table.push((id, value));
 	}
-	f.check_u16(1)?;
+	f.check_u16(end.1)?;
 	Ok(table)
 }
 

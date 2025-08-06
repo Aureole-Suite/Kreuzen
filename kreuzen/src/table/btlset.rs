@@ -44,7 +44,11 @@ pub(crate) fn read(f: &mut VReader) -> Result<Btlset, ReadError> {
 	let bgm = (f.u16()?, f.u16()?);
 	f.check_u32(0)?;
 	let unk2 = f.u32()?;
-	let script = f.sstr(32)?;
+	let script_len = match f.game {
+		crate::Game::Ed84 => 16,
+		crate::Game::Ed85 => 32,
+	};
+	let script = f.sstr(script_len)?;
 	let mut variants = Vec::new();
 	loop {
 		let num = f.u32()?;

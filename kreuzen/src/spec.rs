@@ -4,6 +4,8 @@ use std::collections::{BTreeMap, BTreeSet};
 mod opcode;
 pub use opcode::Opcode;
 
+use crate::Game;
+
 #[derive(Debug, Clone, PartialEq, Eq, derive_more::FromStr)]
 pub enum Part {
 	U8,
@@ -48,6 +50,11 @@ pub enum Part {
 	_AB02,
 	_C0,
 	_D2,
+
+	Broken20,
+	BrokenEffLoad,
+	Broken40,
+	Broken62,
 }
 
 #[derive(Debug)]
@@ -215,7 +222,7 @@ pub(crate) fn op_40(a: crate::types::Char) -> &'static [Part] {
 	}
 }
 
-pub(crate) fn op_98(a: u16) -> &'static [Part] {
+pub(crate) fn op_98(a: u16, game: Game) -> &'static [Part] {
 	use Part::*;
 	match a {
 		1 => &[F32],
@@ -237,7 +244,7 @@ pub(crate) fn op_98(a: u16) -> &'static [Part] {
 		6001 => &[U32],
 		6500 => &[U32],
 		7000 => &[U8],
-		7001 => &[U8],
+		7001 if game == Game::Ed85 => &[Global],
 		8000 => &[Str, U8],
 		9000 => &[F32],
 		10000 => &[F32, F32, F32, F32, F32, F32, F32, F32],

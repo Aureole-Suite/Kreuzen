@@ -1,16 +1,18 @@
 use std::io::Write;
 use std::path::Path;
 
+use kreuzen::Game;
 use similar_asserts::SimpleDiff;
 use snafu::ResultExt;
 
 fn main() {
 	unsafe { compact_debug::enable(true) };
 	tracing_subscriber::fmt::init();
-	run_all("/home/large/kiseki/reverie/data/scripts/", "out/reverie");
+	// run_all("/home/large/kiseki/reverie/data/scripts/", "out/reverie");
+	run_all("/home/large/kiseki/cs4/data/scripts/ani", "out/cs4", Game::Ed84);
 }
 
-fn run_all(root: &str, out: &str) {
+fn run_all(root: &str, out: &str, game: Game) {
 	let root = Path::new(root);
 	let out = Path::new(out);
 	for arg in walkdir::WalkDir::new(root) {
@@ -20,7 +22,7 @@ fn run_all(root: &str, out: &str) {
 			continue;
 		}
 		let out = out.join(path.strip_prefix(root).unwrap());
-		if let Err(err) = process_file(path, &out) {
+		if let Err(err) = process_file(path, &out, game) {
 			println!("Error processing file '{}'\n{}", path.display(), snafu::Report::from_error(err));
 		}
 	}
@@ -34,10 +36,10 @@ enum Error {
 	ParseFile { source: kreuzen::ReadError },
 }
 
-fn process_file(path: &Path, outpath: &Path) -> Result<(), Error> {
+fn process_file(path: &Path, outpath: &Path, game: Game) -> Result<(), Error> {
 	let _span = tracing::error_span!("process_file", path = %path.display()).entered();
 	let data = std::fs::read(path).context(ReadFileSnafu)?;
-	let scena = kreuzen::read(&data).context(ParseFileSnafu)?;
+	let scena = kreuzen::read(&data, game).context(ParseFileSnafu)?;
 	std::fs::create_dir_all(outpath.parent().unwrap()).unwrap();
 
 	let f = std::fs::File::create(outpath).unwrap();

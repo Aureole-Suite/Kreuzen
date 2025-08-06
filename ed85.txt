@@ -99,11 +99,11 @@
 2F06 'CharAniclipLoadByCatalog' char flags32
 2F07 'CharAniclipReleaseByCatalog' char flags32
 2F08 'CharAniPreload' char u8 str str str str str str str str str str str str str str str str
-2F09 char u8
+2F09 'CharAniUndoPreload' char u8
 2F0A 'CharAniclipChangeSkin' char str str
 2F0B 'CharAniclipLoadFace' char str str
 2F0C 'CharAniclipSetChrPresetFaceModel' char str str
-2F0D char
+2F0D 'CharAniClear' char
 2F0E char u32 str str
 2F0F char u8
 2F10 char str

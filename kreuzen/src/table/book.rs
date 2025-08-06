@@ -27,7 +27,7 @@ pub enum Book {
 pub(crate) fn read(f: &mut VReader) -> Result<Book, ReadError> {
 	let b = match f.u16()? {
 		0 => {
-			let s = f.str()?;
+			let s = if f.remaining().is_empty() { String::new() } else { f.str()? };
 			Book::Page(s)
 		}
 		1 => {

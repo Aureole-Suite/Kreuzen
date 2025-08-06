@@ -14,7 +14,22 @@ pub mod sugar;
 mod spec;
 use spec::Spec;
 
-pub static SPEC: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("../../ed85.txt")));
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Game {
+	/// The Legend of Heroes: Trails of Cold Steel IV
+	Ed84,
+	/// The Legend of Heroes: Trails into Reverie
+	Ed85,
+}
+
+fn spec(game: Game) -> &'static Spec {
+	static ED84: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("../../ed84.txt")));
+	static ED85: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("../../ed85.txt")));
+	match game {
+		Game::Ed84 => &ED84,
+		Game::Ed85 => &ED85,
+	}
+}
 
 #[extend::ext]
 impl<'a> Reader<'a> {
@@ -103,9 +118,10 @@ pub enum ReadError {
 		#[snafu(implicit)]
 		location: snafu::Location,
 	},
-	#[snafu(display("failed to read entry '{name}'"))]
+	#[snafu(display("failed to read entry '{name}' at {pos:X}"))]
 	EntryRead {
 		name: String,
+		pos: usize,
 		source: EntryReadError,
 	},
 	#[snafu(display("cannot handle version {version}"))]
@@ -152,7 +168,10 @@ enum Type {
 
 impl Type {
 	fn from_name(name: &str) -> Self {
-		if name.starts_with("_a") || name.starts_with("_Lambda") {
+		#[expect(clippy::if_same_then_else)]
+		if name.starts_with("_a") && name[2..].starts_with(|c| char::is_ascii_digit(&c)) {
+			Type::Normal
+		} else if name.starts_with("_Lambda") {
 			Type::Normal
 		} else if name.starts_with("_") {
 			Type::Preload
@@ -217,7 +236,10 @@ struct VReader<'a> {
 	#[deref_mut]
 	reader: Reader<'a>,
 	version: u32,
+	game: Game,
 	spec: &'static Spec,
+	name: &'a str,
+	entry: &'a str,
 }
 
 #[derive(derive_more::Deref, derive_more::DerefMut)]
@@ -227,6 +249,7 @@ struct VWriter {
 	writer: Writer,
 	start: Label,
 	version: u32,
+	game: Game,
 	spec: &'static Spec,
 }
 
@@ -237,7 +260,7 @@ pub struct Scena {
 	pub entries: Vec<(String, Entry)>,
 }
 
-pub fn read(data: &[u8]) -> Result<Scena, ReadError> {
+pub fn read(data: &[u8], game: Game) -> Result<Scena, ReadError> {
 	let mut f = Reader::new(data);
 	f.check_u32(0x20)?;
 	f.check_u32(0x20)?;
@@ -250,19 +273,28 @@ pub fn read(data: &[u8]) -> Result<Scena, ReadError> {
 	assert_eq!(table_size, nfunc * 4);
 
 	f.check_u32(0xABCDEF00)?;
-	let name = f.str()?;
+	let script_name = f.str()?;
 
-	let mut version = 0;
-	while f.pos() < table_top {
-		f.align_zeroed(4)?;
-		f.check_u32(0xFF000000)?;
-		version += 1;
+	let version = match game {
+		Game::Ed84 => {
+			let d = f.slice(table_top - f.pos())?;
+			if !d.iter().all(|&b| b == 0) {
+				tracing::debug!("{:02X?}", d);
+			}
+			0
+		},
+		Game::Ed85 => {
+			let mut version = 0;
+			while f.pos() < table_top {
+				f.align_zeroed(4)?;
+				f.check_u32(0xFF000000)?;
+				version += 1;
+			};
+			version
+		}
 	};
-	let _span = tracing::error_span!("read", name = name.as_str(), version).entered();
 
-	if version != 1 && version != 2 {
-		return Err(ReadError::BadVersion { version });
-	}
+	let _span = tracing::error_span!("read", name = script_name.as_str(), version).entered();
 
 	assert_eq!(f.pos(), table_top);
 	let table = read_table(&mut f, nfunc)?;
@@ -276,12 +308,15 @@ pub fn read(data: &[u8]) -> Result<Scena, ReadError> {
 		let mut vr = VReader {
 			reader: Reader::new(&data[..end]).at(start)?,
 			version,
-			spec: &SPEC,
+			game,
+			spec: spec(game),
+			name: &script_name,
+			entry: name,
 		};
 		match read_entry(&mut vr, name) {
 			Ok(v) => entries.push((name.clone(), v)),
 			Err(e) => {
-				tracing::error!("{e}\n{:#X}", vr.dump().start(start));
+				tracing::error!("error reading {name} at {start:X}");
 				for e in std::iter::successors(Some(&e as &dyn std::error::Error), |e| e.source()) {
 					tracing::error!("{e}");
 				}
@@ -289,10 +324,10 @@ pub fn read(data: &[u8]) -> Result<Scena, ReadError> {
 		}
 	}
 
-	Ok(Scena { name, version, entries })
+	Ok(Scena { name: script_name, version, entries })
 }
 
-pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
+pub fn write(scena: &Scena, game: Game) -> Result<Vec<u8>, WriteError> {
 	let _span = tracing::error_span!("write", name = scena.name.as_str(), version = scena.version).entered();
 
 	let mut f = Writer::new();
@@ -337,7 +372,8 @@ pub fn write(scena: &Scena) -> Result<Vec<u8>, WriteError> {
 			writer: Writer::new(),
 			start,
 			version: scena.version,
-			spec: &SPEC,
+			game,
+			spec: spec(game),
 		};
 		let align = write_entry(&mut vw, entry).context(EntryWriteSnafu { name })?;
 		f.align(align);
@@ -430,9 +466,20 @@ fn read_entry(f: &mut VReader, name: &str) -> Result<Entry, EntryReadError> {
 	ensure!(data.len() >= f.reader.pos(), BadTerminatorSnafu);
 	f.reader = Reader::new(data).at(f.reader.pos()).unwrap();
 
+	let pos = f.pos();
+
 	let item = match Type::from_name(name) {
 		Type::Normal => Entry::Func(func::read::read(f)?),
-		Type::Preload => Entry::Preload(table::preload::read(f)?),
+		Type::Preload => {
+			match table::preload::read(f) {
+				Err(_)
+					if f.game == Game::Ed84
+					&& let () = f.seek(pos).unwrap()
+					&& let Ok(v) = func::read::read(f)
+				=> Entry::Func(v),
+				r => Entry::Preload(r?),
+			}
+		}
 		Type::FcAuto => Entry::Fc(table::fc_auto::read(f)?),
 		Type::BookData => Entry::BookPage(table::book::read(f)?),
 		Type::BookData99 => Entry::BookMetadata(table::book99::read(f)?),

@@ -34,9 +34,13 @@ pub enum Reaction {
 
 pub(crate) fn read(f: &mut VReader) -> Result<Vec<Reaction>, ReadError> {
 	let mut table = Vec::new();
+	let end = match f.game {
+		crate::Game::Ed84 => 0,
+		crate::Game::Ed85 => 0xFFFF,
+	};
 	while !f.remaining().is_empty() {
 		let id = f.u16()?;
-		if id == 0xFFFF {
+		if id == end {
 			break;
 		}
 		let u1 = (f.u16()?, f.u16()?, f.u16()?);
