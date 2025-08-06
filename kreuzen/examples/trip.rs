@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use gospel::read::Reader;
 use similar_asserts::SimpleDiff;
 
 fn main() {

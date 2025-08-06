@@ -121,7 +121,8 @@ pub enum WriteError {
 	#[snafu(display("failed to write entry '{name}'"))]
 	EntryWrite {
 		name: String,
-		source: EntryWriteError,
+		#[snafu(source(from(EntryWriteError, Box::new)))]
+		source: Box<EntryWriteError>,
 	},
 }
 
