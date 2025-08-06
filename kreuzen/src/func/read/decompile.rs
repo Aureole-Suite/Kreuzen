@@ -229,10 +229,10 @@ fn parse_switch(
 	let last_pos = pos.last().copied().max(Some(default_pos)).unwrap();
 	let mut unresolved = BTreeSet::new();
 	for stmt in &ctx.gctx.stmts[ctx.pos..last_pos] {
-		if let FlatOp::Goto(_, goto) = stmt {
-			if ctx.lookup(*goto)? >= last_pos {
-				unresolved.insert(*goto);
-			}
+		if let FlatOp::Goto(_, goto) = stmt
+		&& ctx.lookup(*goto)? >= last_pos
+		{
+			unresolved.insert(*goto);
 		}
 	}
 
