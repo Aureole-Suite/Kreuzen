@@ -393,7 +393,7 @@ pub enum Entry {
 	BookPage(table::Book),
 	BookMetadata(u16),
 	Btlset(table::Btlset),
-	StyleName(String),
+	StyleName(table::StyleName),
 
 	ActionTable(Vec<table::Action>),
 	AddCollision(Vec<table::Collision>),

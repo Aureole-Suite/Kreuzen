@@ -27,6 +27,8 @@ pub mod weapon_att_table;
 pub use preload::Preload;
 pub use book::Book;
 pub use btlset::{Btlset, BtlVariant};
+pub use style_name::StyleName;
+
 pub use action_table::Action;
 pub use add_collision::Collision;
 pub use algo_table::Algo;

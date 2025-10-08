@@ -18,15 +18,17 @@ pub enum WriteError {
 	Value { source: crate::ValueError },
 }
 
-pub(crate) fn read(f: &mut VReader) -> Result<String, ReadError> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StyleName(pub String, pub String);
+
+pub(crate) fn read(f: &mut VReader) -> Result<StyleName, ReadError> {
 	let a = f.sstr(64)?;
 	let b = f.sstr(64)?;
-	ensure!(a == b, StyleMismatchSnafu { a, b });
-	Ok(a)
+	Ok(StyleName(a, b))
 }
 
-pub(crate) fn write(f: &mut VWriter, s: &str) -> Result<(), WriteError> {
-	f.sstr(64, s)?;
-	f.sstr(64, s)?;
+pub(crate) fn write(f: &mut VWriter, s: &StyleName) -> Result<(), WriteError> {
+	f.sstr(64, &s.0)?;
+	f.sstr(64, &s.1)?;
 	Ok(())
 }
