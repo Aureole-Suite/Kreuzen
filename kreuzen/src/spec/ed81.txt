@@ -1,0 +1,7 @@
+01   'return'
+02   'call' u8 str ndyn
+03   'goto'
+04   'fastcall' u8 str
+05   'if'
+06   'switch'
+

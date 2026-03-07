@@ -6,15 +6,35 @@ use std::sync::LazyLock;
 pub use opcode::Opcode;
 use crate::Game;
 
+static ED81: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed81.txt")));
+static ED82: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed82.txt")));
+static ED83: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed83.txt")));
 static ED84: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed84.txt")));
 static ED85: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed85.txt")));
 
 pub fn for_game(game: Game) -> &'static Spec {
 	match game {
+		Game::Cs1 => &ED81,
+		Game::Cs2 => &ED82,
+		Game::Cs3 => &ED83,
 		Game::Cs4 => &ED84,
 		Game::Reverie => &ED85,
-		_ => panic!("Unsupported game: {game:?}"),
 	}
+}
+
+#[test]
+fn test_ed81() {
+	LazyLock::force(&ED81);
+}
+
+#[test]
+fn test_ed82() {
+	LazyLock::force(&ED82);
+}
+
+#[test]
+fn test_ed83() {
+	LazyLock::force(&ED83);
 }
 
 #[test]
