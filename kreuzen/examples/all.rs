@@ -33,10 +33,7 @@ fn ls(path: impl AsRef<Path>) -> Vec<String> {
 			.filter_map(|entry| entry.ok())
 			.filter_map(|entry| entry.file_name().into_string().ok())
 			.collect(),
-		Err(e) => {
-			eprintln!("Error reading directory {}: {e}", path.as_ref().display());
-			vec![]
-		}
+		Err(_) => vec![],
 	}
 }
 
@@ -45,15 +42,16 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 	for dir in ls(&path) {
 		for file in ls(path.join(&dir).join(folder)) {
 			let script = path.join(&dir).join(folder).join(&file);
-			let scriptname = format!("{game:?}/{dir}/{folder}/{file}");
-			let _span = tracing::error_span!("script", name = %scriptname).entered();
+			let scriptname = format!("{game:?}/{dir}/{folder}/{file:<26}");
+			let _span = tracing::error_span!("script", name = %script.display()).entered();
 			process(game, enc, &script).emit();
 		}
 	}
 }
 
 fn process(game: Game, enc: Enc, script: &Path) -> eyre::Result<()> {
-	let src = std::fs::read(script)?;
-	tracing::info!("Processing {}", script.display());
+	let bytes = std::fs::read(script)?;
+	let config = kreuzen::Config::new(game, enc);
+	let scena = kreuzen::parse(&config, &bytes)?;
 	Ok(())
 }
