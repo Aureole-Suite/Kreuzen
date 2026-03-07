@@ -1,4 +1,6 @@
 use gospel::read::{Le as _, Reader};
+mod io;
+use io::VReader;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
 pub enum Game {
@@ -16,60 +18,18 @@ pub enum Enc {
 	Utf8,
 }
 
-pub struct Config {
-	game: Game,
-	enc: Enc,
-}
-
-impl Config {
-	pub fn new(game: Game, enc: Enc) -> Self {
-		Self { game, enc }
-	}
-}
-
-#[extend::ext]
-impl<'a> Reader<'a> {
-	fn str(&mut self) -> Result<String, gospel::read::Error> {
-		let pos = self.pos();
-		let cstr = self.cstr()?;
-		let s = cstr.to_str().map_err(|e| gospel::read::Error::Other {
-			pos,
-			source: Box::new(e),
-		})?;
-		Ok(String::from(s))
-	}
-
-	fn sstr(&mut self, s: usize) -> Result<String, gospel::read::Error> {
-		let pos = self.pos();
-		let str = self.slice(s)?;
-		let len = str.iter().position(|&b| b == 0).unwrap_or(s);
-		let cstr = &str[..len];
-		let s = std::str::from_utf8(cstr).map_err(|e| gospel::read::Error::Other {
-			pos,
-			source: Box::new(e),
-		})?;
-		if !str[len..].iter().all(|&b| b == 0) {
-			return Err(gospel::read::Error::Other {
-				pos,
-				source: format!(
-					"nonzero padding on sized string: {:?}",
-					String::from_utf8_lossy(str)
-				)
-				.into(),
-			});
-		}
-		Ok(String::from(s))
-	}
-}
-
 pub struct Scena {
 	pub name: String,
 	pub oddness: u32,
 	pub chunks: Vec<(String, Vec<u8>)>,
 }
 
-pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
-	let mut f = Reader::new(bytes);
+pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
+	let mut f = VReader {
+		game,
+		enc,
+		reader: Reader::new(bytes),
+	};
 	f.check_u32(0x20)?;
 	let mut oddness = 0;
 	let name_start = f.u32()? as usize;
@@ -89,7 +49,7 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 		String::new()
 	};
 
-	match config.game {
+	match f.game {
 		Game::Cs4 => {
 			if f.pos() != table_top {
 				f.align_zeroed(4)?;
@@ -116,7 +76,7 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	let script_name = if name_start == 0x20 {
 		script_name
 	} else {
-		eyre::ensure!(config.game == Game::Cs1);
+		eyre::ensure!(f.game == Game::Cs1);
 		eyre::ensure!(f.pos() == name_start);
 		f.str()?
 	};
@@ -128,7 +88,8 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	if !names.is_empty() {
 		f.align_zeroed(4)?;
 	}
-	let pad = f.slice(first - f.pos())?;
+	let pos = f.pos();
+	let pad = f.slice(first - pos)?;
 	eyre::ensure!(pad.iter().all(|b| *b == 0));
 	eyre::ensure!(pad.len().is_multiple_of(4));
 	let pad = pad.len() / 4;
@@ -149,8 +110,7 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 			tracing::error_span!("chunk", %name, start = format_args!("{start:X}")).entered();
 		eyre::ensure!(f.pos() == start);
 		eyre::ensure!(start <= end && end <= f.len());
-		let slice = f.slice(end - start)?;
-		chunks.push((name, slice.to_vec()));
+		read_entry(&mut f, end)?;
 	}
 	eyre::ensure!(f.pos() == f.len());
 
@@ -161,8 +121,13 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	})
 }
 
+fn read_entry(f: &mut Reader<'_>, end: usize) -> eyre::Result<()> {
+	let slice = f.slice(end - f.pos())?;
+	Ok(())
+}
+
 // This function corresponds to the /asm/ files. Cursed.
-fn read_asm(f: &mut Reader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)> {
+fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)> {
 	let mut starts = Vec::with_capacity(n);
 	for _ in 0..n {
 		starts.push(f.u32()? as usize);

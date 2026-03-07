@@ -53,7 +53,6 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 
 fn process(game: Game, enc: Enc, script: &Path) -> eyre::Result<()> {
 	let bytes = std::fs::read(script)?;
-	let config = kreuzen::Config::new(game, enc);
-	let scena = kreuzen::parse(&config, &bytes)?;
+	let scena = kreuzen::parse(game, enc, &bytes)?;
 	Ok(())
 }
