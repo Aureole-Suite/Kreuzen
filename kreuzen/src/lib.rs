@@ -67,6 +67,7 @@ pub struct Scena {}
 pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	let mut f = Reader::new(bytes);
 	f.check_u32(0x20)?;
+	let mut oddness = 0;
 	let name_start = f.u32()? as usize;
 	let table_top = f.u32()? as usize;
 	let table_size = f.u32()? as usize;
@@ -80,12 +81,30 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	let script_name = if name_start == 0x20 {
 		f.str()?
 	} else {
+		oddness += 1;
 		String::new()
 	};
 
-	let pad = f.slice(table_top - f.pos())?;
-	if config.game < Game::Cs4 {
-		eyre::ensure!(pad.is_empty());
+	match config.game {
+		Game::Cs4 => {
+			if f.pos() != table_top {
+				f.align_zeroed(4)?;
+			} else {
+				oddness += 1;
+			}
+		}
+		Game::Reverie => {
+			if f.pos() != table_top {
+				f.align_zeroed(4)?;
+				f.check_u32(0xFF000000)?;
+				if f.check_u32(0xFF000000).is_ok() {
+					oddness += 2;
+				}
+			} else {
+				oddness += 1;
+			}
+		}
+		_ => {}
 	}
 
 	eyre::ensure!(f.pos() == table_top);
@@ -102,7 +121,22 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	let mut iter = table.iter().map(|e| e.1).chain([f.len()]);
 	let first = iter.next().unwrap(); // chain ensures it's nonempty
 	eyre::ensure!(first >= f.pos());
-	let pad2 = f.slice(first - f.pos())?;
+	if !table.is_empty() {
+		f.align_zeroed(4)?;
+	}
+	let pad = f.slice(first - f.pos())?;
+	eyre::ensure!(pad.iter().all(|b| *b == 0));
+	eyre::ensure!(pad.len().is_multiple_of(4));
+	let pad = pad.len() / 4;
+	if pad != 0 {
+		eyre::ensure!(oddness == 0);
+		eyre::ensure!(pad > 0);
+		oddness += pad;
+	}
+
+	if oddness != 0 {
+		tracing::warn!("oddness: {oddness}");
+	}
 
 	for (&(ref name, start), end) in table.iter().zip(iter) {
 		let _span =
