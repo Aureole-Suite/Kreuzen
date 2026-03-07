@@ -64,7 +64,7 @@ pub struct Scena {}
 pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	let mut f = Reader::new(bytes);
 	f.check_u32(0x20)?;
-	f.check_u32(0x20)?;
+	let name_start = f.u32()? as usize;
 	let table_top = f.u32()? as usize;
 	let table_size = f.u32()? as usize;
 	let function_name_table_top = f.u32()? as usize;
@@ -74,7 +74,7 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	eyre::ensure!(table_size == nfunc * 4);
 
 	f.check_u32(0xABCDEF00)?;
-	let script_name = f.str()?;
+	let script_name = if name_start == 0x20 { f.str()? } else { String::new() };
 
 	let pad = f.slice(table_top - f.pos())?;
 	if config.game < Game::Cs4 {
@@ -83,6 +83,13 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 
 	eyre::ensure!(f.pos() == table_top);
 	let table = read_asm(&mut f, nfunc)?;
+	let script_name = if name_start == 0x20 {
+		script_name
+	} else {
+		eyre::ensure!(config.game == Game::Cs1);
+		eyre::ensure!(f.pos() == name_start);
+		f.str()?
+	};
 	eyre::ensure!(f.pos() == asm_end);
 
 	let mut iter = table.iter().map(|e| e.1).chain([f.len()]);

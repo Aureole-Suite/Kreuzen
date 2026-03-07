@@ -43,7 +43,7 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 		for file in ls(path.join(&dir).join(folder)) {
 			let script = path.join(&dir).join(folder).join(&file);
 			let scriptname = format!("{game:?}/{dir}/{folder}/{file:<26}");
-			let _span = tracing::error_span!("script", name = %script.display()).entered();
+			let _span = tracing::error_span!("script", name = %scriptname).entered();
 			process(game, enc, &script).emit();
 		}
 	}
