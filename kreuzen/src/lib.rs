@@ -27,7 +27,6 @@ impl Config {
 	}
 }
 
-
 #[extend::ext]
 impl<'a> Reader<'a> {
 	fn str(&mut self) -> Result<String, gospel::read::Error> {
@@ -52,7 +51,11 @@ impl<'a> Reader<'a> {
 		if !str[len..].iter().all(|&b| b == 0) {
 			return Err(gospel::read::Error::Other {
 				pos,
-				source: format!("nonzero padding on sized string: {:?}", String::from_utf8_lossy(str)).into(),
+				source: format!(
+					"nonzero padding on sized string: {:?}",
+					String::from_utf8_lossy(str)
+				)
+				.into(),
 			});
 		}
 		Ok(String::from(s))
@@ -74,7 +77,11 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	eyre::ensure!(table_size == nfunc * 4);
 
 	f.check_u32(0xABCDEF00)?;
-	let script_name = if name_start == 0x20 { f.str()? } else { String::new() };
+	let script_name = if name_start == 0x20 {
+		f.str()?
+	} else {
+		String::new()
+	};
 
 	let pad = f.slice(table_top - f.pos())?;
 	if config.game < Game::Cs4 {
@@ -98,7 +105,8 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	let pad2 = f.slice(first - f.pos())?;
 
 	for (&(ref name, start), end) in table.iter().zip(iter) {
-		let _span = tracing::error_span!("chunk", name = name.as_str(), start=format_args!("{start:X}")).entered();
+		let _span =
+			tracing::error_span!("chunk", %name, start = format_args!("{start:X}")).entered();
 		eyre::ensure!(f.pos() == start);
 		eyre::ensure!(start <= end && end <= f.len());
 		let slice = f.slice(end - start)?;
