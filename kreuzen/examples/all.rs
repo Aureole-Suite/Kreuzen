@@ -28,13 +28,15 @@ fn main() {
 }
 
 fn ls(path: impl AsRef<Path>) -> Vec<String> {
-	match std::fs::read_dir(path.as_ref()) {
+	let mut files = match std::fs::read_dir(path.as_ref()) {
 		Ok(read_dir) => read_dir
 			.filter_map(|entry| entry.ok())
 			.filter_map(|entry| entry.file_name().into_string().ok())
 			.collect(),
 		Err(_) => vec![],
-	}
+	};
+	files.sort();
+	files
 }
 
 fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
