@@ -1,5 +1,5 @@
-use gospel::read::Reader;
 use crate::{Enc, Game};
+use gospel::read::Reader;
 
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 pub struct VReader<'a> {
@@ -43,4 +43,3 @@ impl<'a> VReader<'a> {
 		Ok(String::from(s))
 	}
 }
-

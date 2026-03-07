@@ -3,8 +3,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 use std::sync::LazyLock;
 
-pub use opcode::Opcode;
 use crate::Game;
+pub use opcode::Opcode;
 
 static ED81: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed81.txt")));
 static ED82: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed82.txt")));
@@ -172,7 +172,11 @@ fn parse_spec(text: &str) -> Spec {
 		let line = parse_line(line).unwrap_or_else(|| {
 			panic!("Failed to parse spec: {line0}");
 		});
-		assert!(!ops.contains_key(&line.code), "Duplicate code in spec: {}", &line.code);
+		assert!(
+			!ops.contains_key(&line.code),
+			"Duplicate code in spec: {}",
+			&line.code
+		);
 		names.insert(line.code, line.name);
 		ops.insert(line.code, line.parts);
 	}
@@ -203,7 +207,9 @@ fn build_ops(ops: BTreeMap<Opcode, Vec<Part>>) -> [Option<Op>; 256] {
 	out
 }
 
-fn build_names(inp: &BTreeMap<Opcode, String>) -> (BTreeMap<Opcode, String>, BTreeMap<String, Opcode>) {
+fn build_names(
+	inp: &BTreeMap<Opcode, String>,
+) -> (BTreeMap<Opcode, String>, BTreeMap<String, Opcode>) {
 	let mut leaves = BTreeSet::new();
 	for op in inp.keys() {
 		for p in op.prefixes() {
@@ -235,7 +241,9 @@ fn build_names(inp: &BTreeMap<Opcode, String>) -> (BTreeMap<Opcode, String>, BTr
 		put!(s);
 
 		for p in op.prefixes() {
-			if let Some(s) = inp.get(&p) && !s.is_empty() {
+			if let Some(s) = inp.get(&p)
+				&& !s.is_empty()
+			{
 				let mut s = s.to_owned();
 				s.push('_');
 				for b in &op[p.len()..] {

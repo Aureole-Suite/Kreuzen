@@ -2,8 +2,8 @@ use gospel::read::{Le as _, Reader};
 mod io;
 use io::VReader;
 
-mod spec;
 mod code;
+mod spec;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
 pub enum Game {
@@ -151,4 +151,3 @@ fn read_entry(f: &mut VReader, name: &str, end: usize) -> eyre::Result<()> {
 	}
 	Ok(())
 }
-
