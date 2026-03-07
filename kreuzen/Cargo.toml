@@ -9,4 +9,5 @@ tracing = "0.1.44"
 
 [dev-dependencies]
 compact-debug = "0.1.4"
+eyre-span = "0.1.0"
 tracing-subscriber = "0.3.22"

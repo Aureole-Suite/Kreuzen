@@ -1,8 +1,10 @@
+use eyre_span::Emit;
 use kreuzen::{Enc, Game};
 use std::path::{Path, PathBuf};
 
 fn main() {
 	unsafe { compact_debug::enable(true) };
+	eyre_span::install().unwrap();
 
 	tracing_subscriber::fmt::init();
 
@@ -45,7 +47,7 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 			let script = path.join(&dir).join(folder).join(&file);
 			let scriptname = format!("{game:?}/{dir}/{folder}/{file}");
 			let _span = tracing::error_span!("script", name = %scriptname).entered();
-			process(game, enc, &script);
+			process(game, enc, &script).emit();
 		}
 	}
 }
