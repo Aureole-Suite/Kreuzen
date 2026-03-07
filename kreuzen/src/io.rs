@@ -1,24 +1,13 @@
 use gospel::read::Reader;
 use crate::{Enc, Game};
 
+#[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 pub struct VReader<'a> {
 	pub game: Game,
 	pub enc: Enc,
+	#[deref]
+	#[deref_mut]
 	pub reader: Reader<'a>,
-}
-
-impl<'a> std::ops::Deref for VReader<'a> {
-	type Target = Reader<'a>;
-
-	fn deref(&self) -> &Self::Target {
-		&self.reader
-	}
-}
-
-impl<'a> std::ops::DerefMut for VReader<'a> {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.reader
-	}
 }
 
 impl<'a> VReader<'a> {

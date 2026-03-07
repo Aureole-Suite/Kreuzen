@@ -2,6 +2,9 @@ use gospel::read::{Le as _, Reader};
 mod io;
 use io::VReader;
 
+mod spec;
+mod code;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
 pub enum Game {
 	Cs1,
@@ -99,10 +102,6 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		oddness += pad as u32;
 	}
 
-	if oddness != 0 {
-		tracing::warn!("oddness: {oddness}");
-	}
-
 	let mut chunks = Vec::with_capacity(names.len());
 
 	for (name, (start, end)) in names.into_iter().zip(starts.iter().copied().zip(iter)) {
@@ -110,7 +109,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 			tracing::error_span!("chunk", %name, start = format_args!("{start:X}")).entered();
 		eyre::ensure!(f.pos() == start);
 		eyre::ensure!(start <= end && end <= f.len());
-		read_entry(&mut f, end)?;
+		read_entry(&mut f, &name, end)?;
 	}
 	eyre::ensure!(f.pos() == f.len());
 
@@ -119,11 +118,6 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		oddness,
 		chunks,
 	})
-}
-
-fn read_entry(f: &mut Reader<'_>, end: usize) -> eyre::Result<()> {
-	let slice = f.slice(end - f.pos())?;
-	Ok(())
 }
 
 // This function corresponds to the /asm/ files. Cursed.
@@ -144,3 +138,17 @@ fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)
 	}
 	Ok((names, starts))
 }
+
+fn read_entry(f: &mut VReader, name: &str, end: usize) -> eyre::Result<()> {
+	let prefixes = ["Ani", "TK_"];
+	let fixed = ["Init", "PreInit", "Reinit"];
+	if prefixes.iter().any(|p| name.starts_with(p)) || fixed.contains(&name) {
+		// These ones are very likely to be code, so we'll start with them
+		let code = code::decompile(f, end)?;
+	} else {
+		let pos = f.pos();
+		let slice = f.slice(end - pos)?;
+	}
+	Ok(())
+}
+
