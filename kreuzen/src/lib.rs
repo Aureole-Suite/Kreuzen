@@ -112,7 +112,7 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	}
 
 	eyre::ensure!(f.pos() == table_top);
-	let table = read_asm(&mut f, nfunc)?;
+	let (names, starts) = read_asm(&mut f, nfunc)?;
 	let script_name = if name_start == 0x20 {
 		script_name
 	} else {
@@ -122,10 +122,10 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	};
 	eyre::ensure!(f.pos() == asm_end);
 
-	let mut iter = table.iter().map(|e| e.1).chain([f.len()]);
+	let mut iter = starts.iter().copied().chain([f.len()]);
 	let first = iter.next().unwrap(); // chain ensures it's nonempty
 	eyre::ensure!(first >= f.pos());
-	if !table.is_empty() {
+	if !names.is_empty() {
 		f.align_zeroed(4)?;
 	}
 	let pad = f.slice(first - f.pos())?;
@@ -142,15 +142,15 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 		tracing::warn!("oddness: {oddness}");
 	}
 
-	let mut chunks = Vec::with_capacity(table.len());
+	let mut chunks = Vec::with_capacity(names.len());
 
-	for (&(ref name, start), end) in table.iter().zip(iter) {
+	for (name, (start, end)) in names.into_iter().zip(starts.iter().copied().zip(iter)) {
 		let _span =
 			tracing::error_span!("chunk", %name, start = format_args!("{start:X}")).entered();
 		eyre::ensure!(f.pos() == start);
 		eyre::ensure!(start <= end && end <= f.len());
 		let slice = f.slice(end - start)?;
-		chunks.push((name.clone(), slice.to_vec()));
+		chunks.push((name, slice.to_vec()));
 	}
 	eyre::ensure!(f.pos() == f.len());
 
@@ -162,7 +162,7 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 }
 
 // This function corresponds to the /asm/ files. Cursed.
-fn read_asm(f: &mut Reader, n: usize) -> eyre::Result<Vec<(String, usize)>> {
+fn read_asm(f: &mut Reader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)> {
 	let mut starts = Vec::with_capacity(n);
 	for _ in 0..n {
 		starts.push(f.u32()? as usize);
@@ -177,9 +177,5 @@ fn read_asm(f: &mut Reader, n: usize) -> eyre::Result<Vec<(String, usize)>> {
 		assert_eq!(f.pos(), lengths[i]);
 		names.push(f.str()?);
 	}
-	let mut entries = Vec::with_capacity(n);
-	for i in 0..n {
-		entries.push((names[i].to_owned(), starts[i]));
-	}
-	Ok(entries)
+	Ok((names, starts))
 }
