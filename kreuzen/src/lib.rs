@@ -62,7 +62,11 @@ impl<'a> Reader<'a> {
 	}
 }
 
-pub struct Scena {}
+pub struct Scena {
+	pub name: String,
+	pub oddness: u32,
+	pub chunks: Vec<(String, Vec<u8>)>,
+}
 
 pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	let mut f = Reader::new(bytes);
@@ -131,12 +135,14 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 	if pad != 0 {
 		eyre::ensure!(oddness == 0);
 		eyre::ensure!(pad > 0);
-		oddness += pad;
+		oddness += pad as u32;
 	}
 
 	if oddness != 0 {
 		tracing::warn!("oddness: {oddness}");
 	}
+
+	let mut chunks = Vec::with_capacity(table.len());
 
 	for (&(ref name, start), end) in table.iter().zip(iter) {
 		let _span =
@@ -144,10 +150,15 @@ pub fn parse(config: &Config, bytes: &[u8]) -> eyre::Result<Scena> {
 		eyre::ensure!(f.pos() == start);
 		eyre::ensure!(start <= end && end <= f.len());
 		let slice = f.slice(end - start)?;
+		chunks.push((name.clone(), slice.to_vec()));
 	}
 	eyre::ensure!(f.pos() == f.len());
 
-	Ok(Scena {})
+	Ok(Scena {
+		name: script_name,
+		oddness,
+		chunks,
+	})
 }
 
 // This function corresponds to the /asm/ files. Cursed.
