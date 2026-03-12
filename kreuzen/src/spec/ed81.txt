@@ -1,14 +1,23 @@
 01   'return'
-#02   'call' u8 str ndyn
+02   'call' u8 str
 03   'goto'
 04   'fastcall' u8 str
 05   'if'
 06   'switch'
+08   expr
+0A   u8 expr
+0C   u16
+0D   u16
+0E   flags32
+10   u16
+12   u8 expr
+13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
+14   char u8 u8 str
+16   u8
 
-13 'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 
-22 char str u32 cs1_22 f32 f32 f32 f32
-23 char u32
+22   char str u32 cs1_22 f32 f32 f32 f32
+23   char u32
 
 270A u16 u8 str
 270B u16 u8
@@ -23,8 +32,11 @@
 2714 u16 u8 u32 u32 u32 u32
 2715 u8 str
 
+2B   char u32
+2F   char u8 str
+
 3100 u16 f32 u16 u32 u32 u16 u16 u32 u32 u32 u32 str
-3103 u16 u16
+# 3103 u16 u16
 
 490A u32 u32 u32 u32 u32 u32 u32 u32
 490D 'MapPlaceTbox' str str flag item
@@ -42,5 +54,19 @@
 4929 u8 u16
 494E
 
-61 char f32
+61   char f32
+
+68   u16
+6800 u8
+6801 u16
+
+69   'ActiveVoice' u16
+6900 'ActiveVoicePlay' u32
+6901 'ActiveVoiceStop'
+6902 u16 f32 u16 u16 str
+6903 str u32 u16 u16 str
+6905 u32
+
+8600 u16 u16
+8601 u16 u16
 99
