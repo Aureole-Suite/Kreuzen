@@ -9,7 +9,7 @@ pub mod expr;
 pub mod text;
 pub use expr::Expr;
 pub use text::Text;
-use crate::types::*;
+use crate::{Game, types::*};
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Label(u32);
@@ -290,7 +290,7 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 			}
 
 			P::Cs1_22 => {
-				if f.oddness == 0 {
+				if f.game == Game::Cs1 && (f.oddness == 0 || f.scena == "npcx01") {
 					args.push(f.u8()?.into());
 				}
 			}
