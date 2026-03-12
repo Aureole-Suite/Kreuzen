@@ -1,12 +1,14 @@
 use std::collections::BTreeSet;
 
-use eyre::{Context as _, ContextCompat};
+use eyre::Context as _;
 use gospel::read::Le as _;
 
 use crate::io::CReader;
 use crate::spec::{Opcode, Part};
-mod expr;
+pub mod expr;
+pub mod text;
 pub use expr::Expr;
+pub use text::Text;
 use crate::types::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -157,7 +159,7 @@ pub enum Arg {
 	#[debug("{_0:?}")] Flags32(crate::types::Flags32),
 
 	#[debug("{_0:?}")] Expr(Expr),
-	// #[debug("{_0:?}")] #Dialogue(dial::Dialogue),
+	#[debug("{_0:?}")] Text(Text),
 }
 
 #[derive(Clone, PartialEq, derive_more::Debug)]
@@ -215,8 +217,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 	let mut op_spec = match spec.ops[code as usize].as_ref() {
 		Some(it) => it,
 		None => {
-			let pos = f.pos();
-			f.seek(pos - 1)?;
+			f.rewind();
 			eyre::bail!("Unknown opcode {opcode}")
 		}
 	};
@@ -232,8 +233,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 			op_spec = match op_spec.child(code) {
 				Some(it) => it,
 				None => {
-					let pos = f.pos();
-					f.seek(pos - 1)?;
+					f.rewind();
 					eyre::bail!("Unknown opcode {opcode}")
 				}
 			};
@@ -281,7 +281,7 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 			P::Flags32 => args.push(Arg::Flags32(f.u32()?.into())),
 
 			P::Expr => args.push(self::Expr::read(f)?.into()),
-			// P::Text => args.push(self::Dialogue::read(f)?.into()),
+			P::Text => args.push(self::Text::read(f)?.into()),
 			P::Dyn => args.push(read_dyn(f)?),
 			P::Ndyn => {
 				for _ in 0..f.u8()? {

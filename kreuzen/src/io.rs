@@ -42,6 +42,10 @@ impl<'a> VReader<'a> {
 		}
 		Ok(String::from(s))
 	}
+
+	pub fn rewind(&mut self) {
+		self.reader.seek(self.reader.pos() - 1).ok();
+	}
 }
 
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]

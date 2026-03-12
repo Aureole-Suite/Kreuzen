@@ -14,7 +14,8 @@
 13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 14   char u8 u8 str
 16   u8
-
+18   char text
+1A   char text
 
 22   char str u32 cs1_22 f32 f32 f32 f32
 23   char u32
