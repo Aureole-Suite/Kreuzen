@@ -1,7 +1,46 @@
 01   'return'
-02   'call' u8 str ndyn
+#02   'call' u8 str ndyn
 03   'goto'
 04   'fastcall' u8 str
 05   'if'
 06   'switch'
 
+13 'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
+
+22 char str u32 cs1_22 f32 f32 f32 f32
+23 char u32
+
+270A u16 u8 str
+270B u16 u8
+270C u16 u16 u16 u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u8
+270D u16 u8
+270E u16 u8
+270F u16 u8
+2710 u16 u8
+2711 u16 u8
+2712 u16 u8 u16
+2713 u16 u8 u32 u32 u32 u32
+2714 u16 u8 u32 u32 u32 u32
+2715 u8 str
+
+3100 u16 f32 u16 u32 u32 u16 u16 u32 u32 u32 u32 str
+3103 u16 u16
+
+490A u32 u32 u32 u32 u32 u32 u32 u32
+490D 'MapPlaceTbox' str str flag item
+4914 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
+4915 str
+4917 u8 u32
+4918 u16 u8
+4919 'MapPlaceHealObj' str str
+491C str u16 u16
+4921 u32
+4923 u16
+4924 u16
+4926 u8 u32 u32 str
+4928 u16
+4929 u8 u16
+494E
+
+61 char f32
+99

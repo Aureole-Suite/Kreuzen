@@ -115,6 +115,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		let mut cr = CReader {
 			reader: &mut f,
 			scena: &script_name,
+			oddness,
 			entry: &name,
 			entry_start: start,
 		};

@@ -37,11 +37,10 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 				ops.push((pos, op))
 			}
 			Err(e) => {
-				for op in ops.iter().rev().take(10).rev() {
-					tracing::trace!("{op:?}");
-				}
 				let pos2 = f.pos();
-				eprint!("{:4?} {e} {:<24} {:#1.48X}", f.game, f.entry, f.at(pos.0 as usize).unwrap().dump().num_width_as(0xFFFFF).end(pos2+1));
+				let name = format!("{:?}/{}/{}:{}", f.game, f.oddness, f.scena, f.entry);
+				let dump = f.at(pos.0 as usize).unwrap().dump().num_width_as(0xFFFFF).mark(pos2).oneline();
+				println!("{e} {dump:#1.40X} {name}");
 				Err(e).with_context(|| format!("Failed to read op at {pos:?}"))?;
 			}
 		}
@@ -278,6 +277,13 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 					args.push(read_dyn(f)?);
 				}
 			}
+
+			P::Cs1_22 => {
+				if f.oddness == 0 {
+					f.check_u8(0)?;
+				}
+			}
+
 			p => eyre::bail!("Unsupported part type: {p:?}"),
 		}
 	}
