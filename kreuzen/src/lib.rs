@@ -153,7 +153,11 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let prefixes = ["Ani", "TK_"];
 	let fixed = ["Init", "PreInit", "Reinit"];
 	let tables = ["AnimeClipTable"];
-	if prefixes.iter().any(|p| f.entry.starts_with(p)) && !tables.contains(&f.entry) || fixed.contains(&f.entry) {
+	let has_prefix = prefixes.iter().any(|p| f.entry.starts_with(p));
+	let is_table = tables.contains(&f.entry);
+	let is_fixed = fixed.contains(&f.entry);
+	let is_menu = f.scena.contains("_menu");
+	if (has_prefix || is_fixed) && !is_table && !is_menu {
 		// These ones are very likely to be code, so we'll start with them
 		let code = code::decompile(f, end)?;
 		let pos = f.pos();
