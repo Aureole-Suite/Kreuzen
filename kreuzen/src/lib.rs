@@ -4,6 +4,7 @@ use io::VReader;
 
 mod code;
 mod spec;
+mod types;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
 pub enum Game {
