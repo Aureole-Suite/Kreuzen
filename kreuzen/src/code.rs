@@ -218,7 +218,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 		Some(it) => it,
 		None => {
 			f.rewind();
-			eyre::bail!("Unknown opcode {opcode}")
+			eyre::bail!("_Unknown opcode {opcode}")
 		}
 	};
 
@@ -234,7 +234,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 				Some(it) => it,
 				None => {
 					f.rewind();
-					eyre::bail!("Unknown opcode {opcode}")
+					eyre::bail!("_Unknown opcode {opcode}")
 				}
 			};
 		} else {
