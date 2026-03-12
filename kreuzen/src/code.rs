@@ -291,7 +291,7 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 
 			P::Cs1_22 => {
 				if f.oddness == 0 {
-					f.check_u8(0)?;
+					args.push(f.u8()?.into());
 				}
 			}
 
