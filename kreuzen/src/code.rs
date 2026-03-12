@@ -212,9 +212,14 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 		_ => {}
 	}
 
-	let mut op_spec = spec.ops[code as usize]
-		.as_ref()
-		.with_context(|| format!("Unknown opcode {opcode}"))?;
+	let mut op_spec = match spec.ops[code as usize].as_ref() {
+		Some(it) => it,
+		None => {
+			let pos = f.pos();
+			f.seek(pos - 1)?;
+			eyre::bail!("Unknown opcode {opcode}")
+		}
+	};
 
 	let mut args = Vec::new();
 
@@ -223,9 +228,15 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 		if op_spec.has_children() {
 			code = f.u8()?;
 			opcode.push(code);
-			op_spec = op_spec
-				.child(code)
-				.with_context(|| format!("Invalid sub-op {opcode}"))?;
+
+			op_spec = match op_spec.child(code) {
+				Some(it) => it,
+				None => {
+					let pos = f.pos();
+					f.seek(pos - 1)?;
+					eyre::bail!("Unknown opcode {opcode}")
+				}
+			};
 		} else {
 			break;
 		}
