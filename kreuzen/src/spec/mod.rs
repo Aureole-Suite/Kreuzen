@@ -13,7 +13,13 @@ macro_rules! spec {
 			LazyLock::force(&$name);
 		}
 
-		static $name: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!($file)));
+		static $name: LazyLock<Spec> = LazyLock::new(|| {
+			#[cfg(not(feature="live"))]
+			let source = include_str!($file);
+			#[cfg(feature="live")]
+			let source = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/src/spec/", $file)).unwrap();
+			Spec::parse(&source)
+		});
 	};
 }
 
@@ -31,31 +37,6 @@ pub fn for_game(game: Game) -> &'static Spec {
 		Game::Cs4 => &ED84,
 		Game::Reverie => &ED85,
 	}
-}
-
-#[test]
-fn test_ed81() {
-	LazyLock::force(&ED81);
-}
-
-#[test]
-fn test_ed82() {
-	LazyLock::force(&ED82);
-}
-
-#[test]
-fn test_ed83() {
-	LazyLock::force(&ED83);
-}
-
-#[test]
-fn test_ed84() {
-	LazyLock::force(&ED84);
-}
-
-#[test]
-fn test_ed85() {
-	LazyLock::force(&ED85);
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, derive_more::FromStr)]
