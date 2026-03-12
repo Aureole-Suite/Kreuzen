@@ -46,14 +46,8 @@ impl Text {
 				scratch.push(byte);
 			} else {
 				if !scratch.is_empty() {
-					match String::from_utf8(scratch) {
-						Ok(text) => out.push(TextPart::String(text)),
-						Err(e) => {
-							let text = String::from_utf8_lossy(&e.into_bytes()).into_owned();
-							eyre::bail!("Invalid UTF-8 in text: {text:?}");
-						}
-					}
-					scratch = Vec::new();
+					out.push(TextPart::String(f.decode(&scratch)?));
+					scratch.clear();
 				}
 				let c = match byte {
 					0x00 => break,
