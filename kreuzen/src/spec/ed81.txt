@@ -4,7 +4,7 @@
 04   'fastcall' u8 str
 05   'if'
 06   'switch'
-08   expr
+08   u8 expr
 0A   u8 expr
 0C   u16
 0D   u16
@@ -13,12 +13,23 @@
 12   u8 expr
 13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 14   char u8 u8 str
+15   char u8
 16   u8
+17   u8
 18   char text
 1A   char text
-
+1B
+1C
+1D   str u16
+# 1F00 u16 u32
+2000 str str u8
+2001 str str u8
+2002 str str u8
 22   char str u32 cs1_22 f32 f32 f32 f32
 23   char u32
+24   u8 char str str
+2500 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
+26   u8 str
 
 270A u16 u8 str
 270B u16 u8
@@ -33,13 +44,116 @@
 2714 u16 u8 u32 u32 u32 u32
 2715 u8 str
 
+2800 u16 u16 u8
+2801 u16 u32 u32
+2802 u8
+2803
+2804 u8
+2805 u8 str
+2806 u8
+2807 u8 str
+2808 u8
+2809 u16
+280A u16 u16
+280B u16 u32
+280C u16 u32
+280D u16
+280E u16 u16 u32
+280F u16 u16
+2810 u16
+2811 u16 u8
+# 2812 [u16]; for (int i = 0; i < 8; i++) { [u16]; } break; }
+2813 u16 u16 u16 u32 u32 u32
+2814 u16
+2816
+2815 u16 u32 u32 u32 u32 u32
+2817 u16
+2819 u16
+281A u16
+281C u16
+2832 u16 u16 u32 u32 u32 u32 u8 u8
+2833
+2834 u16 u32
+2835 u16 u32 u32 u32 u32
+2836 u16 u16 u32 u16
+2837 u16 u16 u32 u32 u32 u32 u32 u8
+283C u16 u16 u32 u32
+2846 f32 f32 f32
+2847
+2848 u16
+2850 u16 str u32 u32 u32 u32 u16 str
+285A u16 u32
+285B u8 u32
+285C u8
+285D u16
+285E u16
+285F u16
+2860 u16
+2861 u16 u8 u32
+2862 u16 u8
+2863 u16
+2864 str
+2865 u16
+2866 u16
+2869 u16 str str
+286A u16
+286B u16
+286C u16
+286D u16
+286E u16 u16 u32 u32 u32
+2871 u32 u16 u8
+2872 u32 u32 u16 u8
+2873 u16
+2874 u16
+2875 u16
+2879 u16
+287A u16 u8
+287B u16 u16
+287E u32 u16 u8
+
+2901 f32 f32 f32 f32
+
 2B   char u32
+2C   char u32
+
+2D00
+2D02 u8 f32 f32 f32 u16
+2D03 u8 u16 str f32 f32 f32 u16
+2D04 u8 f32 f32 f32 u16 u8
+2D05 u8 f32 u16
+2D07 u16
+2D08 u8 u16
+2D09 f32 f32 f32
+2D0B u8 f32 u16
+2D0C u8 f32 f32 f32 u16
+2D0D u8 f32 f32 f32 u16
+2D0E u8 u16 u16 f32 u16
+2D0F u16 f32 f32 f32
+2D11 u8 f32 f32 f32 u16 u8
+2D12 u16
+2D13 u16 u8 f32 f32 f32 u16 u8
+2D14 u8 u16 str f32 f32 f32 u16
+2D15 u8 f32 u32 u8
+2D16 u8 f32 u16
+2D17 u16
+
 2F   char u8 str
 
-3100 u16 f32 u16 u32 u32 u16 u16 u32 u32 u32 u32 str
-# 3103 u16 u16
+3000 u16 u32 u16 u32 u8
+3001 u16 u8
+3002 u8
+3003 f32 u16 u8
+3004 u16 f32 u16 f32 u8
+3005 u16 u16
+3006 u16
 
-490A u32 u32 u32 u32 u32 u32 u32 u32
+3100 u16 f32 u16 u32 u32 u16 u16 u32 u32 u32 u32 str
+3101 u16 u16
+
+3203 str str str str
+3204 char str
+
+# 490A u32 u32 u32 u32 u32 u32 u32 u32
 490D 'MapPlaceTbox' str str flag item
 4914 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
 4915 str
