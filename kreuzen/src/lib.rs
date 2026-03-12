@@ -151,9 +151,12 @@ fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)
 fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let prefixes = ["Ani", "TK_"];
 	let fixed = ["Init", "PreInit", "Reinit"];
-	if prefixes.iter().any(|p| f.entry.starts_with(p)) || fixed.contains(&f.entry) {
+	let tables = ["AnimeClipTable"];
+	if prefixes.iter().any(|p| f.entry.starts_with(p)) && !tables.contains(&f.entry) || fixed.contains(&f.entry) {
 		// These ones are very likely to be code, so we'll start with them
 		let code = code::decompile(f, end)?;
+		let pos = f.pos();
+		let slice = f.slice(end - pos)?;
 	} else {
 		let pos = f.pos();
 		let slice = f.slice(end - pos)?;

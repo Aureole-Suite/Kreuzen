@@ -31,15 +31,18 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 	let mut ops = Vec::new();
 	while f.pos() < end {
 		let pos = Label(f.pos() as u32);
-		match read_op(f).with_context(|| format!("Failed to read op at {pos:?}")) {
-			Ok(op) => ops.push((pos, op)),
+		match read_op(f) {
+			Ok(op) => {
+				tracing::trace!("Read op at {pos:?}: {op:?}");
+				ops.push((pos, op))
+			}
 			Err(e) => {
 				for op in ops.iter().rev().take(10).rev() {
 					tracing::trace!("{op:?}");
 				}
-				tracing::error!("at {pos:?}");
-				eprint!("{:#4X}", f.at(pos.0 as usize).unwrap().dump());
-				Err(e)?;
+				let pos2 = f.pos();
+				eprint!("{:4?} {e} {:<24} {:#1.48X}", f.game, f.entry, f.at(pos.0 as usize).unwrap().dump().num_width_as(0xFFFFF).end(pos2+1));
+				Err(e).with_context(|| format!("Failed to read op at {pos:?}"))?;
 			}
 		}
 	}
@@ -269,14 +272,36 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 
 			P::Expr => args.push(self::Expr::read(f)?.into()),
 			// P::Text => args.push(self::Dialogue::read(f)?.into()),
-			// P::Dyn => args.push(read_dyn(f)?),
-			// P::Ndyn => {
-			// 	for _ in 0..f.u8()? {
-			// 		args.push(read_dyn(f)?);
-			// 	}
-			// }
+			P::Dyn => args.push(read_dyn(f)?),
+			P::Ndyn => {
+				for _ in 0..f.u8()? {
+					args.push(read_dyn(f)?);
+				}
+			}
 			p => eyre::bail!("Unsupported part type: {p:?}"),
 		}
 	}
 	Ok(())
+}
+
+#[rustfmt::skip]
+fn read_dyn(f: &mut CReader) -> eyre::Result<Arg> {
+	Ok(match f.u8()? {
+		0x11 => { let v = f.u8()?; f.check_u32(0)?; Var(v).into() }
+		0x33 => { let v = f.u8()?; f.check_u32(0)?; NumReg(v).into() }
+		0x44 => { let v = f.u8()?; f.check_u32(0)?; StrReg(v).into() }
+		0x55 => { let v = f.u8()?; f.check_u32(0)?; Global(v).into() }
+		0xDD => { let v = f.str()?; Arg::Str(v) }
+		0xEE => { let v = f.f32()?; f.check_u8(0)?; Arg::F32(v) }
+		0xFF => {
+			let v = f.i32()?;
+			f.check_u8(0)?;
+			if v.abs() > 0x1000000 {
+				Arg::I32Munged(f32::from_bits(v as u32))
+			} else {
+				Arg::I32(v)
+			}
+		}
+		code => eyre::bail!("Unknown dyn code: {code:02X}"),
+	})
 }
