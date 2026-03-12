@@ -6,11 +6,22 @@ use std::sync::LazyLock;
 use crate::Game;
 pub use opcode::Opcode;
 
-static ED81: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed81.txt")));
-static ED82: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed82.txt")));
-static ED83: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed83.txt")));
-static ED84: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed84.txt")));
-static ED85: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!("ed85.txt")));
+macro_rules! spec {
+	($name:ident, $test:ident, $file:expr) => {
+		#[test]
+		fn $test() {
+			LazyLock::force(&$name);
+		}
+
+		static $name: LazyLock<Spec> = LazyLock::new(|| Spec::parse(include_str!($file)));
+	};
+}
+
+spec!(ED81, test_ed81, "ed81.txt");
+spec!(ED82, test_ed82, "ed82.txt");
+spec!(ED83, test_ed83, "ed83.txt");
+spec!(ED84, test_ed84, "ed84.txt");
+spec!(ED85, test_ed85, "ed85.txt");
 
 pub fn for_game(game: Game) -> &'static Spec {
 	match game {
