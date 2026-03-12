@@ -2,6 +2,8 @@ use gospel::read::{Le as _, Reader};
 mod io;
 use io::VReader;
 
+use crate::io::CReader;
+
 mod code;
 mod spec;
 mod types;
@@ -110,7 +112,13 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 			tracing::error_span!("chunk", %name, start = format_args!("{start:X}")).entered();
 		eyre::ensure!(f.pos() == start);
 		eyre::ensure!(start <= end && end <= f.len());
-		read_entry(&mut f, &name, end)?;
+		let mut cr = CReader {
+			reader: &mut f,
+			scena: &script_name,
+			entry: &name,
+			entry_start: start,
+		};
+		read_entry(&mut cr, end)?;
 	}
 	eyre::ensure!(f.pos() == f.len());
 
@@ -140,10 +148,10 @@ fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)
 	Ok((names, starts))
 }
 
-fn read_entry(f: &mut VReader, name: &str, end: usize) -> eyre::Result<()> {
+fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let prefixes = ["Ani", "TK_"];
 	let fixed = ["Init", "PreInit", "Reinit"];
-	if prefixes.iter().any(|p| name.starts_with(p)) || fixed.contains(&name) {
+	if prefixes.iter().any(|p| f.entry.starts_with(p)) || fixed.contains(&f.entry) {
 		// These ones are very likely to be code, so we'll start with them
 		let code = code::decompile(f, end)?;
 	} else {

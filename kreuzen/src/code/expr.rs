@@ -72,7 +72,7 @@ pub enum AssOp {
 }
 
 impl Expr {
-	pub(crate) fn read(f: &mut crate::VReader) -> eyre::Result<Expr> {
+	pub(crate) fn read(f: &mut crate::io::CReader) -> eyre::Result<Expr> {
 		let mut stack = Vec::new();
 		loop {
 			let pos = f.pos();

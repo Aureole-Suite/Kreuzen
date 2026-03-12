@@ -43,3 +43,13 @@ impl<'a> VReader<'a> {
 		Ok(String::from(s))
 	}
 }
+
+#[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
+pub struct CReader<'a, 'b> {
+	#[deref]
+	#[deref_mut]
+	pub reader: &'b mut VReader<'a>,
+	pub scena: &'b str,
+	pub entry: &'b str,
+	pub entry_start: usize,
+}

@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use eyre::{Context as _, ContextCompat};
 use gospel::read::Le as _;
 
-use crate::io::VReader;
+use crate::io::CReader;
 use crate::spec::{Opcode, Part};
 mod expr;
 pub use expr::Expr;
@@ -24,7 +24,7 @@ impl std::fmt::Display for Label {
 	}
 }
 
-pub fn decompile(f: &mut VReader<'_>, mut end: usize) -> eyre::Result<()> {
+pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 	while end > 0 && f.data()[end - 1] == 0 {
 		end -= 1;
 	}
@@ -168,7 +168,7 @@ pub enum FlatOp {
 	Switch(OpMeta, Expr, Vec<(i32, Label)>, Label),
 }
 
-fn read_op(f: &mut VReader) -> eyre::Result<FlatOp> {
+fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 	let mut code = f.u8()?;
 	let mut opcode = Opcode::new(&[code]);
 
@@ -238,7 +238,7 @@ fn read_op(f: &mut VReader) -> eyre::Result<FlatOp> {
 	Ok(FlatOp::Op(op))
 }
 
-fn read_parts(args: &mut Vec<Arg>, f: &mut VReader<'_>, parts: &[Part]) -> eyre::Result<()> {
+fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> {
 	use Part as P;
 	for p in parts {
 		match p {
