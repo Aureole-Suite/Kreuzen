@@ -206,7 +206,11 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 			let expr = Expr::read(f)?;
 			let mut cases = Vec::new();
 			for _ in 0..f.u8()? {
-				cases.push((f.i32()?, Label(f.u32()?)));
+				let value = match f.game {
+					Game::Cs1 => f.i16()? as i32,
+					_ => f.i32()?,
+				};
+				cases.push((value, Label(f.u32()?)));
 			}
 			let default = Label(f.u32()?);
 			return Ok(FlatOp::Switch(meta, expr, cases, default));
