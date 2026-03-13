@@ -41,7 +41,12 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 			Err(e) => {
 				let pos2 = f.pos();
 				let name = format!("{:?}/{}:{}", f.game, f.scena, f.entry);
-				let dump = f.at(pos.0 as usize).unwrap().dump().num_width_as(0xFFFFF).mark(pos2).oneline();
+				let dump = f.at(pos.0 as usize).unwrap()
+					.dump()
+					.num_width_as(0xFFFFF)
+					.mark(pos2)
+					.end(end)
+					.oneline();
 				println!("{e}/{} {dump:#1.40X} {name}", f.oddness);
 				Err(e).with_context(|| format!("Failed to read op at {pos:?}"))?;
 			}
@@ -301,6 +306,8 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 			P::Cs1_2834 => {
 				if f.check_u32(0).is_ok() {
 					args.push(0u32.into());
+				} else if f.check_u32(1).is_ok() {
+					args.push(1u32.into());
 				}
 			}
 
