@@ -23,19 +23,19 @@ macro_rules! spec {
 	};
 }
 
-spec!(ED81, test_ed81, "ed81.txt");
-spec!(ED82, test_ed82, "ed82.txt");
-spec!(ED83, test_ed83, "ed83.txt");
-spec!(ED84, test_ed84, "ed84.txt");
-spec!(ED85, test_ed85, "ed85.txt");
+spec!(CS1, test_ed81, "cs1.txt");
+spec!(CS2, test_ed82, "cs2.txt");
+spec!(CS3, test_ed83, "cs3.txt");
+spec!(CS4, test_ed84, "cs4.txt");
+spec!(REVERIE, test_ed85, "reverie.txt");
 
 pub fn for_game(game: Game) -> &'static Spec {
 	match game {
-		Game::Cs1 => &ED81,
-		Game::Cs2 => &ED82,
-		Game::Cs3 => &ED83,
-		Game::Cs4 => &ED84,
-		Game::Reverie => &ED85,
+		Game::Cs1 => &CS1,
+		Game::Cs2 => &CS2,
+		Game::Cs3 => &CS3,
+		Game::Cs4 => &CS4,
+		Game::Reverie => &REVERIE,
 	}
 }
 
