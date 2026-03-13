@@ -290,8 +290,13 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 			}
 
 			P::Cs1_22 => {
-				if f.game == Game::Cs1 && (f.oddness == 0 || f.scena == "npcx01") {
+				if f.oddness == 0 || f.scena == "npcx01" {
 					args.push(f.u8()?.into());
+				}
+			}
+			P::Cs1_2834 => {
+				if f.check_u32(0).is_ok() {
+					args.push(0u32.into());
 				}
 			}
 
