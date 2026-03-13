@@ -17,18 +17,20 @@
 16   u8
 17   u8
 18   char text
+1905 u16 u16 u16 u16 u8
 1A   char text
 1B
 1C
 1D   str u16
 # 1F00 u16 u32
-2000 str str u8
-2001 str str u8
-2002 str str u8
+2000 char str str u8
+2001 char str str u8
+2002 char str str u8
 22   char str u32 cs1_22 f32 f32 f32 f32
 23   char u32
 24   u8 char str str
 2500 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
+2501 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
 26   u8 str
 
 270A u16 u8 str
@@ -77,7 +79,7 @@
 2835 u16 u32 u32 u32 u32
 2836 u16 u16 u32 u16
 2837 u16 u16 u32 u32 u32 u32 u32 u8
-283C u16 u16 u32 u32
+283C char char u32 f32
 2846 f32 f32 f32
 2847
 2848 u16
@@ -113,8 +115,8 @@
 
 2901 f32 f32 f32 f32
 
-2B   char u32
-2C   char u32
+2B   char flags32
+2C   char flags32
 
 2D00
 2D02 u8 f32 f32 f32 u16
@@ -149,11 +151,20 @@
 
 3100 u16 f32 u16 u32 u32 u16 u16 u32 u32 u32 u32 str
 3101 u16 u16
+3103 u16 u32 u16
 
-3203 str str str str
+3203 char str str str str
 3204 char str
 
-# 490A u32 u32 u32 u32 u32 u32 u32 u32
+3A   char u8 f32 u16
+
+3F00 u16
+3F02
+3F04 u16
+3F05 u16
+
+490A u32 u32 u32 u32 u32 u32 u32 u32
+490B
 490D 'MapPlaceTbox' str str flag item
 4914 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
 4915 str
@@ -161,6 +172,7 @@
 4918 u16 u8
 4919 'MapPlaceHealObj' str str
 491C str u16 u16
+4920
 4921 u32
 4923 u16
 4924 u16
@@ -181,6 +193,7 @@
 6902 u16 f32 u16 u16 str
 6903 str u32 u16 u16 str
 6905 u32
+80   f32 f32 f32 f32 u32 u8
 
 8600 u16 u16
 8601 u16 u16

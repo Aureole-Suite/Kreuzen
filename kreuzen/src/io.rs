@@ -36,7 +36,13 @@ impl<'a> VReader<'a> {
 			Enc::Utf8 => match String::from_utf8_lossy(bytes) {
 				Cow::Borrowed(text) => Ok(text.to_owned()),
 				Cow::Owned(e) => {
-					eyre::bail!("Invalid UTF-8 in text: {e:?}");
+					if let Ok(mut s) = falcom_sjis::decode(bytes){
+						tracing::warn!("Invalid UTF-8 in text, but valid Shift-JIS: {s:?}");
+						s.insert(0, '\u{FFFD}');
+						Ok(s)
+					} else {
+						eyre::bail!("Invalid UTF-8 in text: {e:?}");
+					}
 				}
 			}
 			Enc::Sjis => match falcom_sjis::decode(bytes) {

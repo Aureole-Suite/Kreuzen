@@ -40,9 +40,9 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 			}
 			Err(e) => {
 				let pos2 = f.pos();
-				let name = format!("{:?}/{}/{}:{}", f.game, f.oddness, f.scena, f.entry);
+				let name = format!("{:?}/{}:{}", f.game, f.scena, f.entry);
 				let dump = f.at(pos.0 as usize).unwrap().dump().num_width_as(0xFFFFF).mark(pos2).oneline();
-				println!("{e} {dump:#1.40X} {name}");
+				println!("{e}/{} {dump:#1.40X} {name}", f.oddness);
 				Err(e).with_context(|| format!("Failed to read op at {pos:?}"))?;
 			}
 		}
