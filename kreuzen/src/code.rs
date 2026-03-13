@@ -303,6 +303,11 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 					args.push(f.u8()?.into());
 				}
 			}
+			P::Cs1_3c => {
+				if args[1] == Arg::Char(Char(0xFFFF)) {
+					read_parts(args, f, &[P::U32, P::U32, P::U32])?;
+				}
+			}
 			P::Cs1_2834 => {
 				if f.check_u32(0).is_ok() {
 					args.push(0u32.into());

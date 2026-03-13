@@ -182,7 +182,7 @@
 39FE u16
 39FF u16
 3A   char u8 f32 u16
-3C   u16 u16 u16 # sometime also u32 u32 u32? Unclear
+3C   char char u16 cs1_3c
 3D00 str u16
 3E00 u32 u16
 3F00 u16
@@ -220,7 +220,15 @@
 52   char str u32 u32 u32 u32 u32 u32 u32 u32 u32
 53   u8 u16 u16 f32
 55   char u8 u8
+58   char u8
 59   u16
+5A   u8 str u16
+5B02 u16
+5B04 u16 u16
+5C02 u16
+5D00 str u16
+5D01 str u16
+5D09 str
 
 61   char f32
 
