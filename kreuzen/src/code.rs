@@ -340,6 +340,10 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				f.check(&[0; 13])?;
 			}
 
+			P::Print => {
+				println!("{args:?}");
+			}
+
 			p => eyre::bail!("Unsupported part type: {p:?}"),
 		}
 	}

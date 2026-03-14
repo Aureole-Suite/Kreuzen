@@ -96,6 +96,9 @@ pub enum Part {
 	BrokenEffLoad,
 	Broken40,
 	Broken62,
+
+	Print,
+	Fail,
 }
 
 #[derive(Debug)]
