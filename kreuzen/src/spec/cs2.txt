@@ -30,7 +30,7 @@
 1E   'NewScena' str str u8
 
 1F 'Menu'
-1F00 u8 u16 u32
+1F00 u8 u16 f32
 1F01 u8 str u16
 1F02 u8 u8 u16 u16 u8
 1F03 u8
@@ -39,7 +39,7 @@
 1F07 u8 u16
 
 20   u8 char str str u8
-2100 u32 u8 u8 u32 u8 u32 u8
+2100 u32 u8 u8 i32 u8 i32 u8
 2101 u32 u8 u8 u16 u16 u16 u16
 22   char str u8 u8 u8 cs1_22 f32 f32 f32 f32 u8
 23   char u32 u8
@@ -77,7 +77,7 @@
 271A u16
 
 2800 u16 u16 u8
-2801 u16 u32 u32
+2801 u16 f32 f32
 2802 u8 u16
 2803 u16
 2804 u8
@@ -87,8 +87,8 @@
 2808 u8
 2809 u16
 280A u16 u16
-280B u16 u32
-280C u16 u32
+280B char flags32
+280C char flags32
 280D u16
 280E u16 u16 u32
 280F u16 u16
@@ -98,7 +98,7 @@
 2813 u16 u16 u16 u32 u32 u32
 2814 u16
 2816
-2815 u16 u32 u32 u32 u32 u32
+2815 char f32 f32 f32 f32 f32
 2817 char u32
 2818
 2819 u32
@@ -121,12 +121,12 @@
 282C u16
 282D u16
 282E char char
-2832 u16 u16 u32 u32 u32 u32 u8 u8
+2832 u16 u16 f32 f32 f32 f32 u8 u8
 2833
 2834 char cs1_2834
-2835 u16 u32 u32 u32 u32
-2836 u16 u16 u32 u16
-2837 u16 u16 u32 u32 u32 u32 u32 u8
+2835 char f32 f32 f32 f32
+2836 char char f32 u16
+2837 u16 u16 u32 u32 f32 f32 f32 u8
 283C char char f32 f32
 2846 f32 f32 f32
 2847
@@ -158,7 +158,7 @@
 286F
 2870
 287D u8
-287E u32 u16 u8
+287E f32 u16 u8
 287F
 2880 u8
 2881 u16
@@ -206,7 +206,7 @@
 2D12 flags16
 2D13 u16 u8 f32 f32 f32 u16 u8
 2D14 u8 u16 str f32 f32 f32 u16
-2D15 u8 f32 u32 u8
+2D15 u8 f32 i32 u8
 2D16 u8 f32 u16
 2D17 u16
 2D18 u8 str u32 u32 u32 u16
@@ -218,7 +218,7 @@
 2E   char f32 f32 f32 f32
 2F   char u8 u8 str
 
-30   u16 u8 str f32 f32 f32
+30   u16 u8 str f32 f32 u32
 
 3100 u16 f32 u16 u32 u8
 3101 u16 u8
@@ -229,9 +229,9 @@
 3106 u16
 3107
 
-3200 u16 f32 u16 f32 f32 char u16 u32 u32 u32 u32 str
+3200 u16 f32 u16 f32 f32 char u16 u32 u32 u32 f32 str
 3201 u16 u16
-3203 u16 u32 u16
+3203 u16 f32 u16
 3232 u16 f32 u16 f32 f32 char u16 u32 u32 u32 u32 str
 3234 u16
 3239 char
@@ -267,7 +267,7 @@
 3D   char char u16 cs1_3c
 3E00 str u16
 3E01 str u16
-3F   u8 u32 u16
+3F00 u16 u16 u16
 
 4000 u16
 4002
@@ -283,7 +283,7 @@
 4011 u8
 
 41   f32 f32 f32 f32 u16 u8
-42   char u32 u32 u32 u32 u16 u8
+42   char f32 f32 f32 f32 u16 u8
 43   char u8
 44   f32
 4500 char u32 u16 u16 u32 u32
@@ -314,7 +314,7 @@
 4A1C str u16 u16
 4A1F
 4A20
-4A21 u16 u32
+4A21 char f32
 4A23 u16
 4A24 u16
 4A26 u8 u32 u32 str
@@ -345,7 +345,7 @@
 51   char u8 expr
 52   char u8 str
 53   char str u32 u32 u32 u32 u32 u32 u32 u32 u32 u16
-54   u8 u16 u16 u32
+54   u8 u16 u16 f32
 56   char u8 u8
 58
 59   char u8
@@ -378,9 +378,9 @@
 5F0D u16 u16
 5F0E u16 u16 u32
 
-61   u8 u16 u16 u32 u32 u32
+61   u8 u16 u16 f32 f32 f32
 62   char f32
-63   str u32 u16
+63   str f32 u16
 64   u16 f32 u32 f32 f32 u8
 65   u8 u16 u32
 6600 u16 u16 u8
@@ -407,10 +407,10 @@
 6A00 'ActiveVoicePlay' u32
 6A01 'ActiveVoiceStop'
 6A02 u16 f32 u16 u16 str f32
-6A03 str u32 u16 u16 str f32
+6A03 str f32 u16 u16 str f32
 
 6B 'Menu2'
-6B00 u8 u16 u32
+6B00 u8 u16 f32
 6B01 u8 str u16
 6B02 u8 u8 u16 u16 u8
 6B03 u8
@@ -444,8 +444,8 @@
 7502
 7504
 76   f32
-78   u16 u32 u32 u32 u32 u32 u32 u32
-79   u16 u16 u16 u16
+78   char u32 f32 f32 f32 f32 f32 u32
+79   char u16 u16 u16
 7A   u8 u32 u32 u32 u32
 7CFF cs2_7c
 7E   u16 u16
@@ -476,7 +476,7 @@
 940D u16 u16 u16 u16
 940E u16 u16 u16 u16
 96
-97   u32 u32 u32 u16 u16
+97   f32 u32 u32 u16 u16
 98   u16
 9A   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 9E   u32
