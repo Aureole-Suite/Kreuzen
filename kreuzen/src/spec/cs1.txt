@@ -251,6 +251,8 @@
 4920
 4921 u32
 4924 char
+4927
+492C f32 # only in CS2's t4720
 
 4A   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str
 4B   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32

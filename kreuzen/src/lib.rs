@@ -106,6 +106,10 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		oddness += pad as u32;
 	}
 
+	if game == Game::Cs2 && script_name == "t4720" {
+		f.game = Game::Cs1
+	}
+
 	let mut chunks = Vec::with_capacity(names.len());
 
 	for (name, (start, end)) in names.into_iter().zip(starts.iter().copied().zip(iter)) {
