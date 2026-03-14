@@ -73,6 +73,7 @@ pub enum Part {
 	F32Opt,
 
 	Cs1_22,
+	Cs1_36,
 	Cs1_3c,
 	Cs1_2834,
 

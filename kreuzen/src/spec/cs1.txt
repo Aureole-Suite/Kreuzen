@@ -4,38 +4,45 @@
 04   'fastcall' u8 str
 05   'if'
 06   'switch'
-08   u8 expr
-0A   u8 expr
-0C   u16
-0D   u16
-0E   flags32
-10   u16
-12   u8 expr
+07    u32
+08   'SetAttr' attr expr
+0A   'SetVar' var expr
+0C   'FlagSet' flag
+0D   'FlagUnset' flag
+0E   'SystemFlagsSet' flags32
+0F   'SystemFlagsUnset' flags32
+10   'Sleep' u16
+12   'SetGlobal' global expr
 13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
-14   char u8 u8 str
-15   char u8
+14   'Fork' char u8 u8 str
+15   'ForkKill' char u8
 16   u8
 17   u8
-18   char text
-1905 u16 u16 u16 u16 u8
-1A   char text
-1B
-1C
-1D   str u16
-1F00 u16 u32 u8
+18   'TextShow' char text
+1901 char u16 u8
+1905 'TextSetPos' i16 i16 i16 i16 u8
+1A   'TextTalk' char text
+1B   'TextClose'
+1C   'TextWait'
+1D   'TextSetName' str char
+1E   'NewScena' str str
+
+1F 'Menu'
+1F00 u8 u16 u32
 1F01 u8 str u16
 1F02 u8 u8 u16 u16
 1F03 u8
 1F04 u8 u8
 1F07 u16
+
 2000 char str str u8
 2001 char str str u8
 2002 char str str u8
+2100 u32 u8 u8
 22   char str u32 cs1_22 f32 f32 f32 f32
 23   char u32
 24   u8 char str str
-2500 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
-2501 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
+25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
 26   u8 str
 
 270A u16 u8 str
@@ -75,6 +82,7 @@
 2816
 2815 u16 u32 u32 u32 u32 u32
 2817 u16
+2818
 2819 u16
 281A u16
 281B
@@ -109,6 +117,7 @@
 286C u16
 286D u16
 286E u16 u16 u32 u32 u32
+2870
 2871 u32 u16 u8
 2872 u32 u32 u16 u8
 2873 u16
@@ -123,6 +132,7 @@
 
 2900 f32 f32 f32 f32
 2901 f32 f32 f32 f32
+2902 f32 f32 f32 f32
 2A   char
 2B   char flags32
 2C   char flags32
@@ -167,6 +177,7 @@
 3139 char
 313A char u16 u16 u16 u16
 3164 u16 f32
+3196 u16
 
 3203 char str str str str
 3204 char str
@@ -174,29 +185,41 @@
 33   char f32 f32 u8
 34   char u16 f32 u8
 35   char
+36   char char f32 f32 f32 cs1_36 f32 u8 u16
 
 3900 u16 f32
 3903 u16 f32
+3905 u16
+390A u16
+390B u16
+390C u16
 3964 u16 f32
 3965 u16 f32
+3967 u16 f32
+3969 u16 f32
 39FE u16
 39FF u16
 3A   char u8 f32 u16
+3B   char f32 f32 f32 u16 u16
 3C   char char u16 cs1_3c
 3D00 str u16
+3D01 str u16
 3E00 u32 u16
 3F00 u16
 3F02
 3F04 u16
 3F05 u16
 3F06 u16
+3F07
 
 40   f32 f32 f32 f32 u16 u8
 41   char u32 u32 u32 u32 u16 u8
 42   char u8
 43   f32
+45   str str
 48   u8
 
+4902 u32 u32 u32 u32 u32 u32 u32 u32
 490A u32 u32 u32 u32 u32 u32 u32 u32
 490B
 490D 'MapPlaceTbox' str str flag item
@@ -205,13 +228,16 @@
 4917 u8 u32
 4918 u16 u8
 4919 'MapPlaceHealObj' str str
+491A
 491B
 491C str u16 u16
+491F
 4920
 4921 u32
 4923 u16
 4924 u16
 4926 u8 u32 u32 str
+4927
 4928 u16
 4929 u8 u16
 494E
@@ -220,6 +246,7 @@
 52   char str u32 u32 u32 u32 u32 u32 u32 u32 u32
 53   u8 u16 u16 f32
 55   char u8 u8
+56   str u16
 58   char u8
 59   u16
 5A   u8 str u16
@@ -232,6 +259,11 @@
 
 61   char f32
 
+6400 u16 u32
+6402 u16 u32
+6507 char u8
+66   f32 u16
+
 68   u16
 6800 u8
 6801 u16
@@ -242,8 +274,36 @@
 6902 u16 f32 u16 u16 str
 6903 str u32 u16 u16 str
 6905 u32
+
+6A 'Menu2'
+6A00 u8 u16 u32
+6A01 u8 str u16
+6A02 u8 u8 u16 u16
+6A03 u8
+6A04 u8 u8
+6A07 u16
+
+6B   char str str u8
+6D   u8 str
+6F00 str
+6F01 char str
+6F02 char str
+72   u16
+77   u16 u32 u32 u32 u32 u32 u32 u32
+78   u16 u16 u16 u16
+79   u8 u32 u32 u32 u32
+7B   u8 u16 u16 u16 u16 u16 u32 u32 u32 str
+7F00 u16 u16 str str
 80   f32 f32 f32 f32 u32 u8
 
+85   str u32
 8600 u16 u16
 8601 u16 u16
+8C   u16
+9000
+9001 u16
+96   u32 u32 u32 u16 u16
+97   u16
 99
+9D   u32
+9E   u8
