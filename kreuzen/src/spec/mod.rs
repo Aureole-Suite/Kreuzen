@@ -78,6 +78,7 @@ pub enum Part {
 	Cs1_2834,
 
 	Cs2_37,
+	Cs2_7C,
 
 	_3E,
 	_3F,

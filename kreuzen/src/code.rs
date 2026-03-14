@@ -330,6 +330,15 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 					read_parts(args, f, &[P::F32])?;
 				}
 			}
+			P::Cs2_7C => {
+				let mut n = 0;
+				while f.check_u16(0).is_ok() {
+					n += 1;
+				}
+				args.push(Arg::U16(n));
+				f.check_u16(0xFFFF)?;
+				f.check(&[0; 13])?;
+			}
 
 			p => eyre::bail!("Unsupported part type: {p:?}"),
 		}

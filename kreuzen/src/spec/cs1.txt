@@ -160,7 +160,7 @@
 2D0E u8 u16 u16 f32 u16
 2D0F u16 f32 f32 f32
 2D11 u8 f32 f32 f32 u16 u8
-2D12 u16
+2D12 flags16
 2D13 u16 u8 f32 f32 f32 u16 u8
 2D14 u8 u16 str f32 f32 f32 u16
 2D15 u8 f32 u32 u8
@@ -233,14 +233,15 @@
 42   char u8
 43   f32
 45   str str
-48   u8
+4801
+4808
 
 4902 u32 u32 u32 u32 u32 u32 u32 u32
 490A u32 u32 u32 u32 u32 u32 u32 u32
 490B
 490D 'MapPlaceTbox' str str flag item
 4914 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
-4915 str
+# 4915 str
 4917 u8 u32
 4918 u16 u8
 4919 'MapPlaceHealObj' str str
@@ -250,13 +251,13 @@
 491F
 4920
 4921 u32
-4923 u16
+# 4923 u16
 4924 u16
-4926 u8 u32 u32 str
+# 4926 u8 u32 u32 str
 4927
-4928 u16
-4929 u8 u16
-494E
+# 4928 u16
+# 4929 u8 u16
+# 494E
 
 4A   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str
 4B   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
@@ -342,11 +343,9 @@
 6F00 str
 6F01 char str
 6F02 char str
-
 7001 str u8 u8 u8
 7002
 7009
-
 7100 u16 u16 u16 u16 u16
 7101
 72   u16

@@ -27,7 +27,7 @@
 1B   'TextClose' u8
 1C   'TextWait'
 1D   'TextSetName' str char
-1E   'NewScena' str str
+1E   'NewScena' str str u8
 
 1F 'Menu'
 1F00 u8 u16 u32
@@ -43,6 +43,8 @@
 2101 u32 u8 u8 u16 u16 u16 u16
 22   char str u8 u8 u8 cs1_22 f32 f32 f32 f32 u8
 23   char u32 u8
+2400 char str str
+2402 char str str
 2404 char str str
 2405 char str str
 2406 char flags32
@@ -52,6 +54,7 @@
 240A char str str
 240B char str str
 240D char
+240E char u32 str str
 25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
 26   u8 str
 
@@ -96,10 +99,15 @@
 2814 u16
 2816
 2815 u16 u32 u32 u32 u32 u32
+2817 char u32
+2818
 2819 u32
 281A u32
 281B
 281C u16
+281E u16 u16 str str
+281F u16
+2820 u16 f32 f32
 2821
 2822
 2823
@@ -112,6 +120,7 @@
 282B
 282C u16
 282D u16
+282E char char
 2832 u16 u16 u32 u32 u32 u32 u8 u8
 2833
 2834 char cs1_2834
@@ -124,6 +133,7 @@
 2848 u16
 2849 f32
 2851 str u16
+2852 char u8
 285A u16 u32
 285B u8 u32
 285C u8
@@ -137,13 +147,21 @@
 2864 str
 2865 u16
 2866 u16
+2867
+2868
+2869
+286A
 286B u16
 286C u16
 286D u16
+286E char char u32 u32 u32 u32
 286F
 2870
 287D u8
+287E u32 u16 u8
 287F
+2880 u8
+2881 u16
 2883 u16 u16
 2885
 2886
@@ -155,11 +173,14 @@
 288E u16 u16
 288F u16
 2891 u16 u16
+2897 u8
+2898 u16
 2899 u8
 289A
 289B u16
 289C u16 u32
 289E u16 str
+289F
 
 2900 f32 f32 f32 f32
 2901 f32 f32 f32 f32
@@ -180,13 +201,20 @@
 2D0D u8 f32 f32 f32 u16
 2D0E u8 u16 u16 f32 u16
 2D0F u16 f32 f32 f32
+2D10
 2D11 u8 f32 f32 f32 u16 u8
-2D12 u16
+2D12 flags16
 2D13 u16 u8 f32 f32 f32 u16 u8
 2D14 u8 u16 str f32 f32 f32 u16
 2D15 u8 f32 u32 u8
 2D16 u8 f32 u16
 2D17 u16
+2D18 u8 str u32 u32 u32 u16
+2D19 u8 str u32 u32 u32 u16
+2D1A str u8 u32 u32 u32 u16 u8
+2D1B u32 u32
+2D1E u8 u32 u32 u8
+
 2E   char f32 f32 f32 f32
 2F   char u8 u8 str
 
@@ -222,7 +250,6 @@
 36   char
 37   char char f32 f32 f32 cs1_36 f32 u8 u16 cs2_37
 38   u16 u8
-
 3A00 u16 f32
 3A03 u16 f32
 3A05 u16
@@ -240,7 +267,7 @@
 3D   char char u16 cs1_3c
 3E00 str u16
 3E01 str u16
-3F00 u32 u16
+3F   u8 u32 u16
 
 4000 u16
 4002
@@ -253,10 +280,236 @@
 400A u16
 400D u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 4010 u16
+4011 u8
 
 41   f32 f32 f32 f32 u16 u8
 42   char u32 u32 u32 u32 u16 u8
 43   char u8
 44   f32
+4500 char u32 u16 u16 u32 u32
+4501 char
+4502 char u16 u16 u16 u8
+4503 char f32 f32 f32 f32 u16 u8
+4504 char u16
+4505 char u16
 46   str str
-49   u8
+47   f32 f32 f32 f32 f32 u16
+48   u8 u16
+4901
+4908
+
+4A02 u32 u32 u32 u32 u32 u32 u32 u32
+4A0A u32 u32 u32 u32 u32 u32 u32 u32
+4A0B char
+4A0D 'MapPlaceTbox' str str flag item
+4A11
+4A12
+4A14 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
+4A15 str
+4A17 u8 u32
+4A18 u16 u8
+4A19 'MapPlaceHealObj' str str
+4A1A
+4A1B
+4A1C str u16 u16
+4A1F
+4A20
+4A21 u16 u32
+4A23 u16
+4A24 u16
+4A26 u8 u32 u32 str
+4A27
+4A28 u16
+4A29 u8 u16
+4A2A
+4A2B u8 str u16
+4A2D
+4A2E
+4A30 flags32
+4A31
+4A36
+4A39 u16
+4A3B u16 u16 u32 u32
+4A3D u32
+4A3F
+4A43
+4A4E
+
+4B   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str
+4C   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
+4D   'VisWait' u8 u8
+4E   'VisHide' u8
+4F   u8
+50   u16 u16 str u8 u16
+
+51   char u8 expr
+52   char u8 str
+53   char str u32 u32 u32 u32 u32 u32 u32 u32 u32 u16
+54   u8 u16 u16 u32
+56   char u8 u8
+58
+59   char u8
+5B   u8 str u16
+5C00 u16 u16
+5C01 u16 u16
+5C02 u16 u32
+5C03 u16
+5C04 u16 u16
+5C05 u16
+5C06 u16 u16
+5D02 u16
+5E00 str u16
+5E01 str u16
+5E02 str f32 f32 f32
+5E03 str f32 f32 f32
+5E04 str f32 f32 f32
+5E08 str u32 u32 u32 u16 u8
+5E09 str
+5F00 u16 u16 u8 u32
+5F02 u16 u16 u16
+5F04 u16
+5F05 u16 u16 u16
+5F06 u16 u16 u16 u32
+5F07 u16
+5F08 u16
+5F09 u16
+5F0A u16 u16 u8
+5F0B u16
+5F0D u16 u16
+5F0E u16 u16 u32
+
+61   u8 u16 u16 u32 u32 u32
+62   char f32
+63   str u32 u16
+64   u16 f32 u32 f32 f32 u8
+65   u8 u16 u32
+6600 u16 u16 u8
+6601 u16 u8
+6603 u16 u16 u8 u8
+6604 u16 u8 u8
+6606 u16 u8 u8 u8
+6607 char u8
+660A u16 u32 u32
+67   f32 u16
+
+68 u16
+6801 u16
+6802 u16
+6803 u8
+6804 u8
+6805
+6806 u16 # SSD has a weird if here
+69   u16
+6900 u8 u8
+6901 u16 u8
+
+6A   'ActiveVoice' u16
+6A00 'ActiveVoicePlay' u32
+6A01 'ActiveVoiceStop'
+6A02 u16 f32 u16 u16 str f32
+6A03 str u32 u16 u16 str f32
+
+6B 'Menu2'
+6B00 u8 u16 u32
+6B01 u8 str u16
+6B02 u8 u8 u16 u16 u8
+6B03 u8
+6B04 u8 u8
+6B06 u8 u16
+
+6C   char str str u8
+6E   u8 str
+6F00 u16
+6F08 u16
+6F64 u16
+6F65 u16
+6F67 u16
+7000 str
+7001 char str
+7002 char str
+7101 str u8 u8 u8
+7102
+7109
+7200 u8 u16 u16 u16 u16 u16 u16 u16
+7201
+73   u16 u32 u16
+7400
+7402 u16
+7403 u32 u32 u32
+7404 u16
+7405 f32
+7406 u16
+7500 u8
+7501
+7502
+7504
+76   f32
+78   u16 u32 u32 u32 u32 u32 u32 u32
+79   u16 u16 u16 u16
+7A   u8 u32 u32 u32 u32
+7CFF cs2_7c
+7E   u16 u16
+7F   u16
+8000 u16 u16 str str
+8001 u16 u16 str str
+8002 u16
+81   f32 f32 f32 f32 u32 u8
+8200 u16
+8201
+
+86   str u32
+8700 u16 u16
+8701 u16 u16
+88   u8 u16
+8D   u16
+8E02 u8 f32
+
+90   u16 f32 f32 f32
+9200 u8 u16 u16 u16 u16 u16
+9201
+9202 u16
+9400
+9401
+940A u8 u8
+940B
+940C u16 u16 u16 u16
+940D u16 u16 u16 u16
+940E u16 u16 u16 u16
+96
+97   u32 u32 u32 u16 u16
+98   u16
+9A   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+9E   u32
+9F   u8
+
+A0   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
+A200 u8
+A201 u16
+A202 u16
+A203 u16
+A204 u16
+A3   u8 u8
+A4   str u16
+A5   u8
+A601 u8
+A602
+A606
+A607
+A609
+A7   u8 u16 u32
+A8   u8 char
+A9   f32 f32 f32 f32 u16 u16
+AA
+AB   u16 u8 f32 f32 f32
+AC   u16 u8
+
+B00A
+B00B # Haha
+B201 u8 u16 f32 f32 f32 f32 f32 f32 f32
+B203 u8 f32
+B206 u8 u8 f32 f32 f32 f32 f32 f32
+B300 str
+B301 u16
+B303 f32
+B30A u16 u16
+B4   u16 u8 f32 f32
