@@ -234,6 +234,7 @@
 323A char u16 u16 u16 u16
 3264 u16 f32
 3296 u16
+32FF f32 f32 f32
 
 3302 char u16 u16
 3303 char str str str str
@@ -266,6 +267,7 @@
 3F00 u16 u16 u16
 
 4000 u16
+4001 u16
 4002
 4003
 4004 u16
@@ -277,6 +279,8 @@
 400D u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 4010 u16
 4011 u8
+4013 u16
+4014
 
 41   f32 f32 f32 f32 u16 u8
 42   char f32 f32 f32 f32 u16 u8
@@ -300,6 +304,7 @@
 4A0D 'MapPlaceTbox' str str flag item
 4A11
 4A12
+4A13
 4A14 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
 4A15 str
 4A17 u8 u32
@@ -324,6 +329,7 @@
 4A36
 4A39 u16
 4A3B char u16 f32 f32
+4A3C char u32 u32
 4A3D u32
 4A3F
 4A43
@@ -382,8 +388,11 @@
 6603 u16 u16 u8 u8
 6604 u16 u8 u8
 6606 u16 u8 u8 u8
-6607 char u8
+6607 u16 u8
+6608 u16 u32
 660A u16 u32 u32
+660B u16 u8
+660C u16 u8 u8
 67   f32 u16
 
 68 u16
@@ -402,6 +411,8 @@
 6A01 'ActiveVoiceStop'
 6A02 u16 f32 u16 u16 str f32
 6A03 str f32 u16 u16 str f32
+6A14 u32
+6A15
 
 6B 'Menu2'
 6B00 u8 u16 f32
@@ -451,9 +462,15 @@
 8200 u16
 8201
 
+84   u16 u16 u16 u16 u16 u16 u16
+85
 86   str u32
 8700 u16 u16
 8701 u16 u16
+8A00 u32
+8A01
+8B00 str str u8 u16
+8B01
 88   u8 u16
 8D   u16
 8E02 u8 f32
@@ -462,6 +479,7 @@
 9200 u8 u16 u16 u16 u16 u16
 9201
 9202 u16
+93   u8 u8
 9400
 9401
 940A u8 u8
@@ -500,7 +518,10 @@ AC   char u8
 B00A
 B00B # Haha
 B201 u8 u16 f32 f32 f32 f32 f32 f32 f32
+B202 u8
 B203 u8 f32
+B204 u8 f32
+B205 u8
 B206 u8 u8 f32 f32 f32 f32 f32 f32
 B300 str
 B301 u16
