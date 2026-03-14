@@ -308,6 +308,8 @@
 8663 u8
 8A00 str str u8 u16
 8A01
+8D01 u8 f32
+8D02 u8 f32
 9301 u8 u8 u32
 9302 u8
 9303 u8 u8 u8
@@ -315,71 +317,169 @@
 9D   flags32
 
 A100 u8
+A101 u16
+A102 u16
 A200 u16 u8
 A3   str u16
+A9
+AA   u16 u8 f32 f32 f32
+
+B101 u8 u16 f32 f32 f32 f32 f32 f32 f32
+B102 u8
+B103 u8 f32
+B104 u8 f32
+B105 u8
+B106 u8 u8 f32 f32 f32 f32 f32 f32
+B10A u8 u16 str f32
+B10B u8
+B10C u8 f32 f32 f32 f32
+B10D u8 f32 f32 f32 f32
+B10E u8 f32 f32
+B10F u8 f32 f32 f32 f32 f32 f32 f32 f32 f32
+
+
+B201 u16 f32 f32 f32 f32 f32 f32
+B202 char
+B207
+B208
+B209
+B20A char char f32 f32 f32 f32 u8 u8 u16 u8
+B20C char u16 f32 f32 f32 u8 u8
+B20E
+B20F char u32
+B20D char f32 f32 f32 f32 f32 f32 f32 f32
+B212 u16 u16 u16
+B3  char u8 f32 f32
+B60000 char u16 u32 u8
+B60100 char
+B60200 char
+B60300 char
+B60400 char
 B8   char f32
+
 B90000 char f32 f32 u8 f32 f32 f32
-# B90100 u16 f32 f32 u8
+B90100 char f32 f32 u8
 B90200 char f32 u8
-# B90300 u16 u32 f32 f32 f32
+B90300 char i32 f32 f32 f32
 B90400 char flags32
 B90500 char flags32
-# B90700 u16 f32
-# B90900 u16 f32 u8 u8
-# B90A00 u16 u16 u32 u16 u32 u32 str f32 f32 f32
-# B90B00 u16 u16 f32 f32
-# B90C00 u16 u16 u32
-# B90D00 u16 u16 u32
-# B90E00 u16 u16 u16 u16 f32
-# B90F00 u16
-# B91400 u16
-# B91500 f32
-# B91600 u16 u16
-# B91700 u16 u16
-# B91800 u16 f32
-# B91A00 u16 u16
-# B91B00 u16 u16
-# B91D00 u16
-# B91E00 u16
-# B91F00 u16 u8 u8 str u8 str u16
-# B92000 u16
-# B92100 u16 str u8 u8 u8
-# B92200 u16 u8
-# B92300 u16 f32 f32 f32
-# B92400 u16
-# B92700 u16 u32
-# B92900 u16
-# B92A00 u16 u16 u8 f32 f32
-# B92B00 u16 u16
-# B92C00 u16
-# B92D00 u16 u16
-# B92E00 u16 u16
+B90700 char f32
+B90900 char f32 u8 u8
+B90A00 char u16 u16 u16 u16 f32 f32 str f32 f32 f32
+B90B00 char u32 u8 u8 f32
+B90C00 char u16 u32
+B90D00 char char u32
+B90E00 char u16 u16 u16 f32
+# B90F00 u16 print
+B91400 char
+B91500 f32
+B91600 char u16
+B91700 char u16
+B91800 char flags32
+B91900 char flags32
+# B91A00 u16 u16 print
+B91B00 char char
+B91D00 char
+B91E00 char
+B91F00 char u8 u8 str u8 str u16
+B92000 char
+B92100 char str u8 u8 u8
+B92200 char u8
+B92300 char f32 f32 f32
+B92400 char
+B92700 char u32
+B92800 char u32
+B92900 char
+# B92A00 u16 u16 u8 f32 f32 print
+B92B00 char u16
+# B92C00 u16 print
+B92D00 char u16
+# B92E00 u16 u16 print
 B93000 char f32
-# B93100 u16 f32 f32 f32
-# B93200
-# B91900 u16 u32
-# B92800 u16 u32
-# B93400 u16
-# B93600 u16 str f32 f32 f32 f32 f32 f32 f32
-# B93700 u16 u16
-# B93800 u16
-# B93900 u16 u8 u16 f32 f32
-# B93A00 u16 u16
-# B93B00 u16 u16
-# B93C00 u16
-# B93D00 u16 u16 u16 u32 u8
-# B93E00 f32
-# B93F00 u16 f32 f32 f32
-# B94000 u16 u32
-# B94100 u16
-# B94200 u16 f32 f32
-# B94300 u16
-# B94400 u16 u8
-# B94500 u16
-# B94600 u16 u8
-# B94700 u16 u16
-# B94800 u16 u16
-# B94900 u16
-# B94A00 u16 u8
-# B95400 u16 f32
+B93100 char f32 f32 f32
+B93200
+# B93400 u16 print
+B93600 char str f32 f32 f32 f32 f32 f32 f32
+B93700 char char
+B93800 char
+B93900 char u8 char f32 f32
+# B93A00 u16 u16 print
+B93B00 char char
+B93C00 char
+B93D00 char u16 u16 u32 u8
+# B93E00 f32 print
+B93F00 char f32 f32 f32
+B94000 char u32
+B94100 char
+B94200 char f32 f32
+B94300 char
+B94400 char u8
+# B94500 u16 print
+# B94600 u16 u8 print
+B94700 char char
+B94800 char u16
+B94900 char
+B94A00 char u8
+B95400 char f32
+
+BA0200 str u8 u8
+BA0300
+BA0400
+BA0500
+BA0600 u32 u32 u16 u8
+BA0700
+BB   char f32 f32 f32 u16 u8
+
+# BC0000 u16 u8
+BC0100 u16 u8 u16
+BC0200 u16
+BC0300 u16 u16
+# BC0400 u16
+BC0500
+BC0700 u16 u8
+BC0800 u16 u8
+BC0900
+BC0A00 u16
+BC0B00
+# BC1400 u16 u16
+BC1500 u16 u16
+# BC1600 u16
+# BC1700 u16
+# BC1800 u16 u16
+BC1E00 char str
+# BC2800 u16
+# BC2900 u16
+BC2D00 u8
+# BC2E00 u16 u8
+# BC3500 u8 u8
+BC3700
+# BC3800 u16
+# BC3A00 u16 u8
+# BC3B00 u16
+# BC3C00 u16 u8
+# BC3D00 u16
+# BC3F00 u16 u8
+# BC4000 u16 u16 u16
+# BC4100 u16 u16 u16
+BC4200
+BC4300
+# BC4400 u8
+# BC4500 u8
+# BC4700 u16
+# BC4800 u16
+# BC4900 u16
+BC4A00 u16
+BC4B00
+BC4C00
+# BC4D00 u16
+BC5B00 u8
+BC5F00 u8
+
+BE   char flags32
+BF   char flags32
+C0   u8
 C1   char u8
+C300 u16 f32 f32 f32 f32
+C500 char u16
+C8   u8 u16
+CA
