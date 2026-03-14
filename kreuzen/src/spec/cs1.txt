@@ -12,6 +12,7 @@
 0E   'SystemFlagsSet' flags32
 0F   'SystemFlagsUnset' flags32
 10   'Sleep' u16
+11   u16 u16
 12   'SetGlobal' global expr
 13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 14   'Fork' char u8 u8 str
@@ -20,6 +21,7 @@
 17   u8
 18   'TextShow' char text
 1901 char u16 u8
+1902 char u16
 1905 'TextSetPos' i16 i16 i16 i16 u8
 1A   'TextTalk' char text
 1B   'TextClose'
@@ -33,12 +35,13 @@
 1F02 u8 u8 u16 u16
 1F03 u8
 1F04 u8 u8
-1F07 u16
+1F07 u8 u16
 
 2000 char str str u8
 2001 char str str u8
 2002 char str str u8
 2100 u32 u8 u8
+2101 u32 u8 u8 u16 u16 u16 u16
 22   char str u32 cs1_22 f32 f32 f32 f32
 23   char u32
 24   u8 char str str
@@ -123,9 +126,12 @@
 2873 u16
 2874 u16
 2875 u16
+2877
+2878
 2879 u16
 287A u16 u8
 287B u16 u16
+287C
 287D
 287E u32 u16 u8
 287F
@@ -168,6 +174,7 @@
 3004 u16 f32 u16 f32 u8
 3005 u16 u16
 3006 u16
+3007
 
 3100 u16 f32 u16 f32 f32 char u16 u32 u32 u32 u32 str
 3101 u16 u16
@@ -179,13 +186,17 @@
 3164 u16 f32
 3196 u16
 
+3202 char u16 u16
 3203 char str str str str
 3204 char str
+320A char
+320B char
 
 33   char f32 f32 u8
 34   char u16 f32 u8
 35   char
 36   char char f32 f32 f32 cs1_36 f32 u8 u16
+37   u16 u8
 
 3900 u16 f32
 3903 u16 f32
@@ -196,7 +207,7 @@
 3964 u16 f32
 3965 u16 f32
 3967 u16 f32
-3969 u16 f32
+3969 u16
 39FE u16
 39FF u16
 3A   char u8 f32 u16
@@ -207,10 +218,12 @@
 3E00 u32 u16
 3F00 u16
 3F02
+3F03
 3F04 u16
 3F05 u16
 3F06 u16
 3F07
+3F0A u16
 
 40   f32 f32 f32 f32 u16 u8
 41   char u32 u32 u32 u32 u16 u8
@@ -242,6 +255,12 @@
 4929 u8 u16
 494E
 
+4A   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str
+4B   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
+4C   'VisWait' u8 u8
+4D   'VisHide' u8
+4F   u16 u16 str u8 u16
+
 51   char u8 str
 52   char str u32 u32 u32 u32 u32 u32 u32 u32 u32
 53   u8 u16 u16 f32
@@ -250,20 +269,45 @@
 58   char u8
 59   u16
 5A   u8 str u16
+5B00 u16 u16
 5B02 u16
+5B03 u16
 5B04 u16 u16
 5C02 u16
 5D00 str u16
 5D01 str u16
+5D02 str f32 f32 f32
+5D03 str f32 f32 f32
+5D04 str f32 f32 f32
+5D08 str u32 u32 u32 u16 u8
 5D09 str
+5E00 u16 u16 u32
+5E02 u16 u16 u16
+5E04 u16
+5E05 u16 u16 u16
+5E06 u16 u16 u16 u32
+5E07 u16
+5E08 u16
+5E09 u16
+5E0A u16 u16 u8
 
+60   u8 u16 u16 u32 u32 u32
 61   char f32
-
-6400 u16 u32
-6402 u16 u32
+62   str u32 u16
+63   u16 f32 u32 f32 f32 u8
+64   u8 u16 u32
+6500 u16 u16 u8
+6503 u16 u16 u8
+6506 u16 u8 u8
 6507 char u8
 66   f32 u16
 
+67 u16
+6701 u16
+6702 u16
+6703 u8
+6704 u8
+6706 u16 # SSD has a weird if here
 68   u16
 6800 u8
 6801 u16
@@ -281,29 +325,54 @@
 6A02 u8 u8 u16 u16
 6A03 u8
 6A04 u8 u8
-6A07 u16
+6A06 u8 u16
 
 6B   char str str u8
 6D   u8 str
 6F00 str
 6F01 char str
 6F02 char str
+
+7001 str u8 u8 u8
+7002
+7009
+
+7100 u16 u16 u16 u16 u16
+7101
 72   u16
+7400
+7401
+7402
 77   u16 u32 u32 u32 u32 u32 u32 u32
 78   u16 u16 u16 u16
 79   u8 u32 u32 u32 u32
 7B   u8 u16 u16 u16 u16 u16 u32 u32 u32 str
+7D   u16 u16
+7E   u16
 7F00 u16 u16 str str
 80   f32 f32 f32 f32 u32 u8
+8100 u16
+8101
 
 85   str u32
 8600 u16 u16
 8601 u16 u16
+87   u8 u16
 8C   u16
-9000
-9001 u16
+9000 u16
+9001
+9002
+9003
+9004
+9100 u8 u16 u16 u16 u16
+9101
+92   u8 u8
+9301
+94   u32 u32 u32 u32
+95
 96   u32 u32 u32 u16 u16
 97   u16
+98   u16 u16
 99
 9D   u32
 9E   u8
