@@ -409,7 +409,7 @@
 6A   'ActiveVoice' u16
 6A00 'ActiveVoicePlay' u32
 6A01 'ActiveVoiceStop'
-6A02 u16 f32 u16 u16 str f32
+6A02 char f32 u16 u16 str f32
 6A03 str f32 u16 u16 str f32
 6A14 u32
 6A15
@@ -471,7 +471,7 @@
 8A01
 8B00 str str u8 u16
 8B01
-88   u8 u16
+8800 u16 u16
 8D   u16
 8E02 u8 f32
 

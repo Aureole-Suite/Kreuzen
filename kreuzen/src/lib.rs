@@ -16,7 +16,7 @@ pub enum Game {
 	Cs3,
 	Cs4,
 	Reverie,
-	// I believe Tx should be supported too but I don't own it
+	Tx,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

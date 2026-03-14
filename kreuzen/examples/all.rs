@@ -15,11 +15,13 @@ fn main() {
 	let cs3 = dir.join("The Legend of Heroes Trails of Cold Steel III");
 	let cs4 = dir.join("The Legend of Heroes Trails of Cold Steel IV");
 	let rev = dir.join("The Legend of Heroes Trails into Reverie");
+	let tx = dir.join("Tokyo Xanadu eX+");
 
 	game(Game::Cs1, Enc::Sjis, &cs1, "dat");
 	game(Game::Cs1, Enc::Utf8, &cs1, "dat_us");
 	game(Game::Cs2, Enc::Sjis, &cs2, "dat");
 	game(Game::Cs2, Enc::Utf8, &cs2, "dat_us");
+	game(Game::Tx, Enc::Utf8, &tx, "dat");
 	game(Game::Cs3, Enc::Utf8, &cs3, "dat");
 	game(Game::Cs3, Enc::Utf8, &cs3, "dat_en");
 	game(Game::Cs3, Enc::Utf8, &cs3, "dat_fr");

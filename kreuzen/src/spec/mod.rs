@@ -28,6 +28,7 @@ spec!(CS2, test_ed82, "cs2.txt");
 spec!(CS3, test_ed83, "cs3.txt");
 spec!(CS4, test_ed84, "cs4.txt");
 spec!(REVERIE, test_ed85, "reverie.txt");
+spec!(TX, test_tx, "tx.txt");
 
 pub fn for_game(game: Game) -> &'static Spec {
 	match game {
@@ -36,9 +37,11 @@ pub fn for_game(game: Game) -> &'static Spec {
 		Game::Cs3 => &CS3,
 		Game::Cs4 => &CS4,
 		Game::Reverie => &REVERIE,
+		Game::Tx => &TX,
 	}
 }
 
+#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, derive_more::FromStr)]
 pub enum Part {
 	U8,
@@ -74,11 +77,13 @@ pub enum Part {
 
 	Cs1_22,
 	Cs1_36,
-	Cs1_3c,
+	Cs1_3C,
 	Cs1_2834,
 
 	Cs2_37,
 	Cs2_7C,
+
+	Tx_3C,
 
 	_3E,
 	_3F,

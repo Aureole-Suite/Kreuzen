@@ -321,7 +321,7 @@
 69   'ActiveVoice' u16
 6900 'ActiveVoicePlay' u32
 6901 'ActiveVoiceStop'
-6902 u16 f32 u16 u16 str
+6902 char f32 u16 u16 str
 6903 str f32 u16 u16 str
 6905 u32
 
@@ -363,7 +363,7 @@
 85   str u32
 8600 u16 u16
 8601 u16 u16
-87   u8 u16
+8700 u16 u16
 8800 u8
 8801
 8900 flags32
