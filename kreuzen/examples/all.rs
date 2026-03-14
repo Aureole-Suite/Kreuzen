@@ -1,3 +1,4 @@
+#![expect(unused)]
 use eyre_span::Emit;
 use kreuzen::{Enc, Game};
 use std::path::{Path, PathBuf};

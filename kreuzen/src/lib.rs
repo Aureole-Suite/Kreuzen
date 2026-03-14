@@ -1,3 +1,4 @@
+#![expect(unused)]
 use gospel::read::{Le as _, Reader};
 mod io;
 use io::VReader;
