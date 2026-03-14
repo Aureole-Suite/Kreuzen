@@ -322,8 +322,6 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 					args.push(0u32.into());
 				} else if f.check_u32(1).is_ok() {
 					args.push(1u32.into());
-				} else {
-					tracing::warn!("op2834 is weird (oddness={})", f.oddness);
 				}
 			}
 
