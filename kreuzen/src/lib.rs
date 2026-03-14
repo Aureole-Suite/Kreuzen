@@ -119,7 +119,16 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 			entry: &name,
 			entry_start: start,
 		};
-		read_entry(&mut cr, end)?;
+		match read_entry(&mut cr, end) {
+			Ok(it) => it,
+			Err(e) => {
+				tracing::error!("{e:#}");
+				let pos = f.pos();
+				f.slice(end - pos)?;
+				continue;
+			}
+		};
+
 	}
 	eyre::ensure!(f.pos() == f.len());
 
