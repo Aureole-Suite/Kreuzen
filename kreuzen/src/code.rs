@@ -331,13 +331,14 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				}
 			}
 			P::Cs2_7C => {
-				let mut n = 0;
-				while f.check_u16(0).is_ok() {
-					n += 1;
+				let v = f.u32()?;
+				if v >> 16 == 0xFFFF {
+					args.push((v as u16).into());
+					f.rewind();
+					f.rewind();
+				} else {
+					args.push(v.into());
 				}
-				args.push(Arg::U16(n));
-				f.check_u16(0xFFFF)?;
-				f.check(&[0; 13])?;
 			}
 
 			P::Print => {
