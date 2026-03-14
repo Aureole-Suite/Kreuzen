@@ -299,8 +299,12 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 			}
 
 			P::Cs1_22 => {
-				if f.oddness == 0 || f.scena == "npcx01" {
+				if f.scena == "npcx01" && f.oddness == 1 {
+					// empty
+				} else if f.oddness == 1 {
 					read_parts(args, f, &[P::U8])?;
+				} else {
+					read_parts(args, f, &[P::U8, P::U8])?;
 				}
 			}
 			P::Cs1_36 => {

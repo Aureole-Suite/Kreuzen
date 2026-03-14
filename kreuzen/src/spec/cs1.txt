@@ -42,7 +42,7 @@
 2002 char str str u8
 2100 u32 u8 u8
 2101 u32 u8 u8 u16 u16 u16 u16
-22   char str u32 cs1_22 f32 f32 f32 f32
+22   char str u8 u8 u8 cs1_22 f32 f32 f32 f32
 23   char u32
 24   u8 char str str
 25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
