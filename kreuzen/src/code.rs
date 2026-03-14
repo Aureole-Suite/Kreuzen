@@ -212,7 +212,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 			let mut cases = Vec::new();
 			for _ in 0..f.u8()? {
 				let value = match f.game {
-					Game::Cs1 => f.i16()? as i32,
+					Game::Cs1 | Game::Cs2 => f.i16()? as i32,
 					_ => f.i32()?,
 				};
 				cases.push((value, Label(f.u32()?)));
@@ -322,6 +322,12 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 					args.push(0u32.into());
 				} else if f.check_u32(1).is_ok() {
 					args.push(1u32.into());
+				}
+			}
+
+			P::Cs2_37 => {
+				if matches!(args[1], Arg::Char(Char(0xFE04))) {
+					read_parts(args, f, &[P::F32])?;
 				}
 			}
 

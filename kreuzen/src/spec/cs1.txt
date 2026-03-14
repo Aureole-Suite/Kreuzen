@@ -38,14 +38,17 @@
 1F06 u8 u16
 1F07 u8 u16
 
-2000 char str str u8
-2001 char str str u8
-2002 char str str u8
+20   u8 char str str u8
 2100 u32 u8 u8
 2101 u32 u8 u8 u16 u16 u16 u16
 22   char str u8 u8 u8 cs1_22 f32 f32 f32 f32
 23   char u32
-24   u8 char str str
+2400 char str str
+2402 char str str
+2404 char str str
+2405 char str str
+240A char str str
+240B char str str
 25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
 26   u8 str
 
@@ -97,7 +100,7 @@
 2835 u16 u32 u32 u32 u32
 2836 u16 u16 u32 u16
 2837 u16 u16 u32 u32 u32 u32 u32 u8
-283C char char u32 f32
+283C char char f32 f32
 2846 f32 f32 f32
 2847
 2848 u16
@@ -109,14 +112,14 @@
 285E u16
 285F u16
 2860 u16
-2861 u16 u8 u32
+# 2861 u16 u8 u32
 2862 u16 u8
 2863 u16
 2864 str
 2865 u16
 2866 u16
-2869 u16 str str
-286A u16
+# 2869 u16 str str
+# 286A u16
 286B u16
 286C u16
 286D u16
@@ -143,8 +146,6 @@
 2A   char
 2B   char flags32
 2C   char flags32
-2E   char f32 f32 f32 f32
-
 2D00
 2D02 u8 f32 f32 f32 u16
 2D03 u8 u16 str f32 f32 f32 u16
@@ -165,7 +166,7 @@
 2D15 u8 f32 u32 u8
 2D16 u8 f32 u16
 2D17 u16
-
+2E   char f32 f32 f32 f32
 2F   char u8 str
 
 3000 u16 f32 u16 u32 u8

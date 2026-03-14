@@ -1,6 +1,262 @@
 01   'return'
-02   'call' u8 str ndyn
+02   'call' u8 str
 03   'goto'
 04   'fastcall' u8 str
 05   'if'
 06   'switch'
+07    u32
+08   'SetAttr' attr expr
+0A   'SetVar' var expr
+0C   'FlagSet' flag
+0D   'FlagUnset' flag
+0E   'SystemFlagsSet' flags32
+0F   'SystemFlagsUnset' flags32
+10   'Sleep' u16
+11   u16 u16
+12   'SetGlobal' global expr
+13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
+14   'Fork' char u8 u8 str
+15   'ForkKill' char u8
+16   u8 u16
+17   u8
+18   'TextShow' char text
+1901 char u16 u8
+1902 char u16
+1905 'TextSetPos' i16 i16 i16 i16 u8
+1A   'TextTalk' char text
+1B   'TextClose' u8
+1C   'TextWait'
+1D   'TextSetName' str char
+1E   'NewScena' str str
+
+1F 'Menu'
+1F00 u8 u16 u32
+1F01 u8 str u16
+1F02 u8 u8 u16 u16 u8
+1F03 u8
+1F04 u8 u8
+1F06 u8 u16
+1F07 u8 u16
+
+20   u8 char str str u8
+2100 u32 u8 u8 u32 u8 u32 u8
+2101 u32 u8 u8 u16 u16 u16 u16
+22   char str u8 u8 u8 cs1_22 f32 f32 f32 f32 u8
+23   char u32 u8
+2404 char str str
+2405 char str str
+2406 char flags32
+2407 char flags32
+2408 char u8 str str str str str str str str str str str str str str str str
+2409 char u8
+240A char str str
+240B char str str
+240D char
+25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
+26   u8 str
+
+270A u16 u8 str
+270B u16 u8
+270C u16 u16 u16 u16 u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u8
+270D u16 u8
+270E u16 u8
+270F u16 u8
+2710 u16 u16
+2711 u16 u16
+2712 u16 u8 u16
+2713 u16 u8 u32 u32 u32 u32
+2714 u16 u8 u32 u32 u32 u32
+2715 u8 str
+2716 u16 u8 u32
+2717 u16 u8 u16
+2718 u16 u8 u32 u32
+2719 str
+271A u16
+
+2800 u16 u16 u8
+2801 u16 u32 u32
+2802 u8 u16
+2803 u16
+2804 u8
+2805 u8 str
+2806 u8
+2807 u8 str
+2808 u8
+2809 u16
+280A u16 u16
+280B u16 u32
+280C u16 u32
+280D u16
+280E u16 u16 u32
+280F u16 u16
+2810 u16
+2811 u16 u8
+# 2812 [u16]; for (int i = 0; i < 8; i++) { [u16]; } break; }
+2813 u16 u16 u16 u32 u32 u32
+2814 u16
+2816
+2815 u16 u32 u32 u32 u32 u32
+2819 u32
+281A u32
+281B
+281C u16
+2821
+2822
+2823
+2824
+2825
+2827
+2828
+2829
+282A
+282B
+282C u16
+282D u16
+2832 u16 u16 u32 u32 u32 u32 u8 u8
+2833
+2834 char cs1_2834
+2835 u16 u32 u32 u32 u32
+2836 u16 u16 u32 u16
+2837 u16 u16 u32 u32 u32 u32 u32 u8
+283C char char f32 f32
+2846 f32 f32 f32
+2847
+2848 u16
+2849 f32
+2851 str u16
+285A u16 u32
+285B u8 u32
+285C u8
+285D u16
+285E u16
+285F u16
+2860 u16
+2861 u16 u8 u32 u32 u32 u32
+2862 u16 u8
+2863 u16
+2864 str
+2865 u16
+2866 u16
+286B u16
+286C u16
+286D u16
+286F
+2870
+287D u8
+287F
+2883 u16 u16
+2885
+2886
+2887
+2888
+2889 u16
+288A
+288B
+288E u16 u16
+288F u16
+2891 u16 u16
+2899 u8
+289A
+289B u16
+289C u16 u32
+289E u16 str
+
+2900 f32 f32 f32 f32
+2901 f32 f32 f32 f32
+2902 f32 f32 f32 f32
+2A   char
+2B   char flags32
+2C   char flags32
+2D00
+2D02 u8 f32 f32 f32 u16
+2D03 u8 u16 str f32 f32 f32 u16
+2D04 u8 f32 f32 f32 u16 u8
+2D05 u8 f32 u16
+2D07 u16
+2D08 u8 u16
+2D09 f32 f32 f32
+2D0B u8 f32 u16
+2D0C u8 f32 f32 f32 u16
+2D0D u8 f32 f32 f32 u16
+2D0E u8 u16 u16 f32 u16
+2D0F u16 f32 f32 f32
+2D11 u8 f32 f32 f32 u16 u8
+2D12 u16
+2D13 u16 u8 f32 f32 f32 u16 u8
+2D14 u8 u16 str f32 f32 f32 u16
+2D15 u8 f32 u32 u8
+2D16 u8 f32 u16
+2D17 u16
+2E   char f32 f32 f32 f32
+2F   char u8 u8 str
+
+30   u16 u8 str f32 f32 f32
+
+3100 u16 f32 u16 u32 u8
+3101 u16 u8
+3102 u8
+3103 f32 u16 u8
+3104 u16 f32 u16 f32 u8
+3105 u16 u16
+3106 u16
+3107
+
+3200 u16 f32 u16 f32 f32 char u16 u32 u32 u32 u32 str
+3201 u16 u16
+3203 u16 u32 u16
+3232 u16 f32 u16 f32 f32 char u16 u32 u32 u32 u32 str
+3234 u16
+3239 char
+323A char u16 u16 u16 u16
+3264 u16 f32
+3296 u16
+
+3302 char u16 u16
+3303 char str str str str
+3304 char str
+330A char
+330B char
+
+34   char f32 f32 u8
+35   char u16 f32 u8
+36   char
+37   char char f32 f32 f32 cs1_36 f32 u8 u16 cs2_37
+38   u16 u8
+
+3A00 u16 f32
+3A03 u16 f32
+3A05 u16
+3A0A u16
+3A0B u16
+3A0C u16
+3A64 u16 f32
+3A65 u16 f32
+3A67 u16 f32
+3A69 u16
+3AFE u16
+3AFF u16
+3B   char u8 f32 u16
+3C   char f32 f32 f32 u16 u16
+3D   char char u16 cs1_3c
+3E00 str u16
+3E01 str u16
+3F00 u32 u16
+
+4000 u16
+4002
+4003
+4004 u16
+4005 u16
+4006 u16
+4007
+4008 u16 u8 u8 u16
+400A u16
+400D u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+4010 u16
+
+41   f32 f32 f32 f32 u16 u8
+42   char u32 u32 u32 u32 u16 u8
+43   char u8
+44   f32
+46   str str
+49   u8
