@@ -58,44 +58,40 @@
 25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
 26   u8 str
 
-270A u16 u8 str
-270B u16 u8
-270C u16 u16 u16 u16 u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u8
-270D u16 u8
-270E u16 u8
-270F u16 u8
-2710 u16 u16
-2711 u16 u16
-2712 u16 u8 u16
-2713 u16 u8 u32 u32 u32 u32
-2714 u16 u8 u32 u32 u32 u32
+270A char u8 str
+270B char u8
+270C char u16 u16 char u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u8
+270D char u8
+270E char u8
+270F char u8
+2710 char u16
+2711 char u16
+2712 char u8 u16
+2713 char u8 f32 f32 f32 f32
 2715 u8 str
-2716 u16 u8 u32
-2717 u16 u8 u16
-2718 u16 u8 u32 u32
-2719 str
-271A u16
+2716 char u8 f32
+2718 char u8 f32 f32
 
-2800 u16 u16 u8
-2801 u16 f32 f32
-2802 u8 u16
-2803 u16
+2800 char char u8
+2801 char f32 f32
+2802 u8 char
+2803 char
 2804 u8
 2805 u8 str
 2806 u8
 2807 u8 str
 2808 u8
 2809 u16
-280A u16 u16
+280A char char
 280B char flags32
 280C char flags32
-280D u16
-280E u16 u16 u32
-280F u16 u16
-2810 u16
-2811 u16 u8
+280D char
+280E char u16 u32
+280F char u16
+2810 char
+2811 char u8
 # 2812 [u16]; for (int i = 0; i < 8; i++) { [u16]; } break; }
-2813 u16 u16 u16 u32 u32 u32
+2813 char u16 char u32 u32 u32
 2814 u16
 2816
 2815 char f32 f32 f32 f32 f32
@@ -104,7 +100,7 @@
 2819 u32
 281A u32
 281B
-281C u16
+281C char
 281E u16 u16 str str
 281F u16
 2820 u16 f32 f32
@@ -121,16 +117,16 @@
 282C u16
 282D u16
 282E char char
-2832 u16 u16 f32 f32 f32 f32 u8 u8
+2832 char char f32 f32 f32 f32 u8 u8
 2833
 2834 char cs1_2834
 2835 char f32 f32 f32 f32
 2836 char char f32 u16
-2837 u16 u16 u32 u32 f32 f32 f32 u8
+2837 char char f32 f32 f32 f32 f32 u8
 283C char char f32 f32
 2846 f32 f32 f32
 2847
-2848 u16
+2848 char
 2849 f32
 2851 str u16
 2852 char u8
@@ -141,8 +137,8 @@
 285E u16
 285F u16
 2860 u16
-2861 u16 u8 u32 u32 u32 u32
-2862 u16 u8
+2861 char u8 u32 u32 u32 u32
+2862 char u8
 2863 u16
 2864 str
 2865 u16
@@ -162,24 +158,24 @@
 287F
 2880 u8
 2881 u16
-2883 u16 u16
+2883 char char
 2885
 2886
 2887
 2888
-2889 u16
+2889 char
 288A
 288B
-288E u16 u16
-288F u16
-2891 u16 u16
+288E char u16
+288F char
+2891 char u16
 2897 u8
-2898 u16
+2898 char
 2899 u8
 289A
-289B u16
-289C u16 u32
-289E u16 str
+289B char
+289C char u32
+289E char str
 289F
 
 2900 f32 f32 f32 f32
@@ -190,7 +186,7 @@
 2C   char flags32
 2D00
 2D02 u8 f32 f32 f32 u16
-2D03 u8 u16 str f32 f32 f32 u16
+2D03 u8 char str f32 f32 f32 u16
 2D04 u8 f32 f32 f32 u16 u8
 2D05 u8 f32 u16
 2D07 u16
@@ -204,8 +200,8 @@
 2D10
 2D11 u8 f32 f32 f32 u16 u8
 2D12 flags16
-2D13 u16 u8 f32 f32 f32 u16 u8
-2D14 u8 u16 str f32 f32 f32 u16
+2D13 char u8 f32 f32 f32 u16 u8
+2D14 u8 char str f32 f32 f32 u16
 2D15 u8 f32 i32 u8
 2D16 u8 f32 u16
 2D17 u16
@@ -218,7 +214,7 @@
 2E   char f32 f32 f32 f32
 2F   char u8 u8 str
 
-30   u16 u8 str f32 f32 u32
+30   char u8 str f32 f32 u32
 
 3100 u16 f32 u16 u32 u8
 3101 u16 u8
@@ -229,10 +225,10 @@
 3106 u16
 3107
 
-3200 u16 f32 u16 f32 f32 char u16 u32 u32 u32 f32 str
+3200 u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
 3201 u16 u16
 3203 u16 f32 u16
-3232 u16 f32 u16 f32 f32 char u16 u32 u32 u32 u32 str
+3232 u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
 3234 u16
 3239 char
 323A char u16 u16 u16 u16
@@ -249,7 +245,7 @@
 35   char u16 f32 u8
 36   char
 37   char char f32 f32 f32 cs1_36 f32 u8 u16 cs2_37
-38   u16 u8
+38   char u8
 3A00 u16 f32
 3A03 u16 f32
 3A05 u16
@@ -307,7 +303,7 @@
 4A14 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
 4A15 str
 4A17 u8 u32
-4A18 u16 u8
+4A18 char u8
 4A19 'MapPlaceHealObj' str str
 4A1A
 4A1B
@@ -315,11 +311,9 @@
 4A1F
 4A20
 4A21 char f32
-4A23 u16
-4A24 u16
+4A24 char
 4A26 u8 u32 u32 str
 4A27
-4A28 u16
 4A29 u8 u16
 4A2A
 4A2B u8 str u16
@@ -329,7 +323,7 @@
 4A31
 4A36
 4A39 u16
-4A3B u16 u16 u32 u32
+4A3B char u16 f32 f32
 4A3D u32
 4A3F
 4A43
@@ -450,9 +444,9 @@
 7CFF cs2_7c
 7E   u16 u16
 7F   u16
-8000 u16 u16 str str
-8001 u16 u16 str str
-8002 u16
+8000 char char str str
+8001 char char str str
+8002 char
 81   f32 f32 f32 f32 u32 u8
 8200 u16
 8201
@@ -500,8 +494,8 @@ A7   u8 u16 u32
 A8   u8 char
 A9   f32 f32 f32 f32 u16 u16
 AA
-AB   u16 u8 f32 f32 f32
-AC   u16 u8
+AB   char u8 f32 f32 f32
+AC   char u8
 
 B00A
 B00B # Haha
@@ -512,4 +506,4 @@ B300 str
 B301 u16
 B303 f32
 B30A u16 u16
-B4   u16 u8 f32 f32
+B4   char u8 f32 f32
