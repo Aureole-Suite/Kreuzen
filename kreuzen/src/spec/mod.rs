@@ -85,6 +85,9 @@ pub enum Part {
 
 	Tx_3C,
 
+	Cs3_98,
+	Cs3_c0,
+
 	_3E,
 	_3F,
 	_40,

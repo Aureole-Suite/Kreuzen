@@ -504,7 +504,7 @@
 4D   'ForkWait' char u8
 4E   f32 f32 u8 _4E
 4F00 char f32 i16 u16 u32 f32
-4F01 char 
+4F01 char
 4F02 char u16 u16 u16
 4F03 char f32 f32 f32 f32 u16 u8
 4F06 char u8 u32
@@ -546,7 +546,7 @@
 543102 u16
 543103
 5434 u32
-5435 u8 char str i32 str str str
+5435 u8 char str u16 u16 str str str
 5436 u8
 5437 char u8 u8 u8
 5438 u8 u32
@@ -710,7 +710,7 @@
 691C u32
 691D u16
 
-6A   char # fall through
+6A   char
 6A00 f32 u8 u16
 6A01
 6A02 f32 f32 f32 f32 f32 f32 u32
@@ -767,7 +767,7 @@
 7100 'FlagSetRange' flag flag
 7101 'FlagUnsetRange' flag flag
 
-72 'Quest' u16 # fall through
+72 'Quest' u16
 7201 'QuestTaskSet' u16 u8
 7202 'QuestTaskUnset' u16 u8
 7203 'QuestFlagsSet' flags8 u8
@@ -779,13 +779,13 @@
 720A dyn
 720B dyn u8 u8
 
-73   u16 # fall through
+73   u16
 7300 u8 u8
 7301 u16 u8
 7302 dyn u8 u8
 7304 dyn
 
-74   'ActiveVoice' u16 # fall through
+74   'ActiveVoice' u16
 7400 'ActiveVoicePlay' u32
 7401 'ActiveVoiceStop'
 7402 u16 f32 u16 u16 str f32
@@ -811,6 +811,7 @@
 750E u8 u8
 750F u8 u8
 7510 u8 u32
+
 76   char str str u8 u8 f32 f32 f32 f32
 77   'CharDelete' char
 7800 str

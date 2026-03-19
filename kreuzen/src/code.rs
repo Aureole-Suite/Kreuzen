@@ -347,6 +347,19 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				}
 			}
 
+			P::Cs3_98 => {
+				let Arg::U16(v) = args[0] else {
+					eyre::bail!("Expected U16 for Cs3_c0 part");
+				};
+				read_parts(args, f, op_98(v, f.game))?;
+			}
+			P::Cs3_c0 => {
+				let Arg::U16(v) = args[0] else {
+					eyre::bail!("Expected U16 for Cs3_c0 part");
+				};
+				read_parts(args, f, op_c0(v))?;
+			}
+
 			P::Print => {
 				println!("{args:?}");
 			}
@@ -355,6 +368,48 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 		}
 	}
 	Ok(())
+}
+
+fn op_98(a: u16, game: Game) -> &'static [Part] {
+	use Part::*;
+	match a {
+		1 => &[F32],
+		2 => &[F32],
+		6 => &[F32],
+		7 => &[F32],
+		3 => &[U16, U8],
+		1000 => &[F32, U8], // a0100:TK_Enter2 says this is rotation
+		1001 => &[F32, U8],
+		2000 => &[U8, F32, U8],
+		3000 => &[F32, F32, U16, F32],
+		4000 => &[Char, F32, U16, U8],
+		4001 => &[Str, F32, U16, U8],
+		4002 => &[U16],
+		5000 => &[F32],
+		5001 => &[F32],
+		5002 => &[F32],
+		6000 => &[U32],
+		6001 => &[U32],
+		6500 => &[U32],
+		7000 => &[U8],
+		7001 if game == Game::Reverie => &[Global],
+		8000 => &[Str, U8],
+		9000 => &[F32],
+		10000 => &[F32, F32, F32, F32, F32, F32, F32, F32],
+		_ => &[],
+	}
+}
+
+fn op_c0(a: u16) -> &'static [Part] {
+	use Part::*;
+	match a {
+		1 => &[F32],
+		2 => &[F32],
+		3 => &[Str, F32, F32, F32, F32, F32, F32],
+		4 => &[Str, U8],
+		1000 | 1001 | 1003 => &[U16, U16],
+		_ => &[],
+	}
 }
 
 #[rustfmt::skip]

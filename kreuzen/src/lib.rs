@@ -171,7 +171,15 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let is_table = tables.contains(&f.entry);
 	let is_fixed = fixed.contains(&f.entry);
 	let is_menu = f.scena.contains("_menu");
-	if (has_prefix || is_fixed) && !is_table && !is_menu {
+	let is_weird = match f.game {
+		Game::Cs3 => matches!(f.scena,
+			| "mon046_c00" | "mon042_c00" | "mon042_c01" | "mon037_c00"
+			| "mon000s" | "rob013_c00"
+			| "ply000" | "ply001"
+			| "mon_template" | "chr_enemy_template"),
+		_ => false,
+	};
+	if (has_prefix || is_fixed) && !is_table && !is_menu && !is_weird {
 		// These ones are very likely to be code, so we'll start with them
 		let code = code::decompile(f, end)?;
 		let pos = f.pos();
