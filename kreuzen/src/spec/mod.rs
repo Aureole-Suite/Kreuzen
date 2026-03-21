@@ -88,6 +88,15 @@ pub enum Part {
 	Cs3_98,
 	Cs3_c0,
 
+	Cs4_odd,
+	Cs4_3348,
+	Cs4_333C,
+	Cs4_333D,
+	Cs4_sound_play,
+	Cs4_40_a,
+	Cs4_40_b,
+	Cs4_5E00,
+
 	_3E,
 	_3F,
 	_40,

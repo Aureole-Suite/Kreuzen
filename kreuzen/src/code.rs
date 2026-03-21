@@ -308,7 +308,7 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				}
 			}
 			P::Cs1_36 => {
-				if matches!(args[1], Arg::Char(Char(0xFE02 | 0xFE03))) {
+				if matches!(args[1], Arg::Char(Char(0xFE02..=0xFE03))) {
 					read_parts(args, f, &[P::F32])?;
 				}
 			}
@@ -359,6 +359,49 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				};
 				read_parts(args, f, op_c0(v))?;
 			}
+			
+			P::Cs4_odd => {
+				if f.oddness == 1 {
+					break;
+				}
+			}
+			P::Cs4_333C => {
+				if matches!(f.scena, "rob030") {
+					read_parts(args, f, &[P::U32])?;
+				}
+			}
+			P::Cs4_333D => {
+				if matches!(f.scena, "rob030") {
+					read_parts(args, f, &[P::U16])?;
+					break;
+				}
+			}
+			P::Cs4_3348 => {
+				if matches!(f.scena, "rob030") {
+					break;
+				}
+			}
+			P::Cs4_sound_play => {
+				if matches!(f.scena, "rob030" | "npcx03") {
+					read_parts(args, f, cs4_weird_sound_play())?;
+					break;
+				}
+			}
+			P::Cs4_40_a => {
+				if matches!(args[1], Arg::Char(Char(0xFE02..=0xFE04))) {
+					read_parts(args, f, &[P::F32])?;
+				}
+			}
+			P::Cs4_40_b => {
+				if matches!(args[1], Arg::Char(Char(0xFE05))) {
+					read_parts(args, f, &[P::Fail])?;
+				}
+			}
+			P::Cs4_5E00 => {
+				if f.oddness != 1 {
+					read_parts(args, f, &[P::Str])?;
+				}
+			}
 
 			P::Print => {
 				println!("{args:?}");
@@ -368,6 +411,18 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 		}
 	}
 	Ok(())
+}
+
+fn cs4_weird_sound_play() -> &'static [Part] {
+	use Part::*;
+	&[
+		Dyn, F32, Dyn, F32,
+		F32, U16, Char, F32,
+		F32, F32, F32, Str,
+		U16, U16, U16, U16,
+		U16, I16, I16, U16,
+		F32,
+	]
 }
 
 fn op_98(a: u16, game: Game) -> &'static [Part] {
