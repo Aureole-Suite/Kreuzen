@@ -174,7 +174,7 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let is_weird = match f.game {
 		Game::Cs3 | Game::Cs4 => matches!(f.scena,
 			| "mon046_c00" | "mon042_c00" | "mon042_c01" | "mon037_c00"
-			| "mon000s" | "rob013_c00" | "mon027_c00" | "mon093"
+			| "mon000s" | "rob013_c00"
 			| "ply000" | "ply001"
 			| "mon_template" | "chr_enemy_template"),
 		_ => false,

@@ -366,7 +366,7 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				}
 			}
 			P::Cs4_333C => {
-				if matches!(f.scena, "rob030") {
+				if matches!(f.scena, "rob030" | "mon093" | "mon027_c00") {
 					read_parts(args, f, &[P::U32, P::Fail])?;
 				}
 			}
@@ -382,7 +382,7 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				}
 			}
 			P::Cs4_3348 => {
-				if matches!(f.scena, "rob030") {
+				if matches!(f.scena, "rob030" | "mon093" | "mon027_c00") {
 					break;
 				}
 			}
