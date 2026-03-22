@@ -91,6 +91,7 @@ pub enum Part {
 	Cs4_odd,
 	Cs4_3348,
 	Cs4_333C,
+	Cs4_3339,
 	Cs4_333D,
 	Cs4_sound_play,
 	Cs4_40_a,
