@@ -181,7 +181,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 	let mut code = f.u8()?;
 	let mut opcode = Opcode::new(&[code]);
 
-	let spec = crate::spec::for_game(f.game);
+	let spec = crate::spec::for_game(f.game, f.variant);
 	let name = spec.names.get(&opcode).map(|s| s.as_str());
 
 	let mut line = 0;

@@ -112,6 +112,42 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 
 	let mut chunks = Vec::with_capacity(names.len());
 
+	let cs1_special = [
+		"mon022_c00",
+		"mon022_c01",
+		"mon070_c00",
+		"mon118_c00",
+	];
+	let cs1_menu = [
+		"battle_menu",
+		"camp_menu",
+		"camp_menu_v",
+		"note_menu",
+		"note_menu_v",
+		"shop_menu",
+		"shop_menu_v",
+		"title_menu",
+		"title_menu_v",
+	];
+
+	let n = script_name.as_str();
+	let variant = match game {
+		Game::Cs1 => {
+			if cs1_menu.contains(&n) {
+				4
+			} else if cs1_special.contains(&n) {
+				3
+			} else if n == "npcx01" {
+				2
+			} else if oddness == 1 {
+				1
+			} else {
+				0
+			}
+		}
+		_ => 0,
+	};
+
 	for (name, (start, end)) in names.into_iter().zip(starts.iter().copied().zip(iter)) {
 		let _span =
 			tracing::error_span!("chunk", %name, start = format_args!("{start:X}")).entered();
@@ -120,6 +156,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		let mut cr = CReader {
 			reader: &mut f,
 			scena: &script_name,
+			variant,
 			oddness,
 			entry: &name,
 			entry_start: start,
@@ -170,7 +207,7 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let has_prefix = prefixes.iter().any(|p| f.entry.starts_with(p));
 	let is_table = tables.contains(&f.entry);
 	let is_fixed = fixed.contains(&f.entry);
-	let is_menu = f.scena.contains("_menu");
+	let is_menu = f.scena.contains("_menu") && f.game != Game::Cs1;
 	let is_weird = match f.game {
 		Game::Cs3 | Game::Cs4 | Game::Reverie => matches!(f.scena,
 			| "mon042_c00" | "mon042_c01" | "mon037_c00"

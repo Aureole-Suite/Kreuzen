@@ -41,7 +41,7 @@
 20   u8 char str str u8
 2100 u32 u8 u8
 2101 u32 u8 u8 u16 u16 u16 u16
-22   char str u8 u8 u8 u8 u8 f32 f32 f32 f32
+22   char str u8 u8 u8 u8 f32 f32 f32 f32
 23   char u32
 2400 char str str
 2402 char str str
@@ -95,7 +95,7 @@
 281C char
 2832 char char f32 f32 f32 f32 u8 u8
 2833
-2834 char u32
+2834 char
 2835 char f32 f32 f32 f32
 2836 char char f32 u16
 2837 char char f32 f32 f32 f32 f32 u8
