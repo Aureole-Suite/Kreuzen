@@ -184,15 +184,16 @@
 2A   char
 2B   char flags32
 2C   char flags32
+2D 'Cam'
 2D00
-2D02 u8 f32 f32 f32 u16
-2D03 u8 char str f32 f32 f32 u16
-2D04 u8 f32 f32 f32 u16 u8
-2D05 u8 f32 u16
+2D02 'CamLookAt' u8 f32 f32 f32 u16
+2D03 'CamLookAtChar' u8 char str f32 f32 f32 u16
+2D04 'CamRotate' u8 f32 f32 f32 u16 u8
+2D05 'CamDistance' u8 f32 u16
 2D07 u16
 2D08 u8 u16
-2D09 f32 f32 f32
-2D0B u8 f32 u16
+2D09 'CamVibrate' f32 f32 f32
+2D0B 'CamFov' u8 f32 u16
 2D0C u8 f32 f32 f32 u16
 2D0D u8 f32 f32 f32 u16
 2D0E u8 u16 u16 f32 u16
@@ -201,7 +202,7 @@
 2D11 u8 f32 f32 f32 u16 u8
 2D12 flags16
 2D13 char u8 f32 f32 f32 u16 u8
-2D14 u8 char str f32 f32 f32 u16
+2D14 'CamLookAtChar2' u8 char str f32 f32 f32 u16
 2D15 u8 f32 i32 u8
 2D16 u8 f32 u16
 2D17 u16
@@ -211,42 +212,46 @@
 2D1B u32 u32
 2D1E u8 u32 u32 u8
 
-2E   char f32 f32 f32 f32
-2F   char u8 u8 str
+2E   'CharSetPos' char f32 f32 f32 f32
+2F   'CharAniPlay' char u8 u8 str
+30   'CharAniLoop' char u8 str f32 f32 u32
 
-30   char u8 str f32 f32 u32
-
+31 'Bgm'
 3100 u16 f32 u16 u32 u8
 3101 u16 u8
 3102 u8
-3103 f32 u16 u8
-3104 u16 f32 u16 f32 u8
-3105 u16 u16
-3106 u16
+3103 'BgmVolume' f32 u16 u8
+3104 'BgmPlay2' u16 f32 u16 f32 u8
+3105 'BgmReplace' u16 u16
+3106 'BgmRestore' u16
 3107
 
-3200 u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
-3201 u16 u16
+32 'Sound'
+3200 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
+3201 'SoundStop' u16 u16
 3203 u16 f32 u16
-3232 u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3232 'SoundPlayVoice' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
 3234 u16
 3239 char
-323A char u16 u16 u16 u16
+323A 'SoundPlayRandom' char u16 u16 u16 u16
 3264 u16 f32
 3296 u16
-32FF f32 f32 f32
+32FF 'ControllerRumble' f32 f32 f32
 
+33 'CharFace'
 3302 char u16 u16
 3303 char str str str str
 3304 char str
 330A char
 330B char
 
-34   char f32 f32 u8
-35   char u16 f32 u8
+34   'CharTurnDir' char f32 f32 u8
+35   char char f32 u8
 36   char
 37   char char f32 f32 f32 cs1_36 f32 u8 u16 cs2_37
 38   char u8
+
+3A 'Fade'
 3A00 u16 f32
 3A03 u16 f32
 3A05 u16
@@ -259,8 +264,9 @@
 3A69 u16
 3AFE u16
 3AFF u16
-3B   char u8 f32 u16
-3C   char f32 f32 f32 u16 u16
+
+3B   'CharEmote' char u8 f32 u16
+3C   'CharLookDir' char f32 f32 f32 u16 u16
 3D   char char u16 cs1_3c
 3E00 str u16
 3E01 str u16
