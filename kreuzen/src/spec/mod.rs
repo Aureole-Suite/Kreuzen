@@ -37,6 +37,7 @@ spec!(CS3_1, test_ed83_1, "cs3_1.txt");
 spec!(CS3_2, test_ed83_2, "cs3_2.txt");
 spec!(CS3_3, test_ed83_3, "cs3_3.txt");
 spec!(CS4, test_ed84, "cs4.txt");
+spec!(CS4_1, test_ed84_1, "cs4_1.txt");
 spec!(REVERIE, test_ed85, "reverie.txt");
 spec!(TX, test_tx, "tx.txt");
 
@@ -54,7 +55,8 @@ pub fn for_game(game: Game, variant: u8) -> &'static Spec {
 		Game::Cs3 if variant == 1 => &CS3_1,
 		Game::Cs3 if variant == 2 => &CS3_2,
 		Game::Cs3 if variant == 3 => &CS3_3,
-		Game::Cs4 => &CS4,
+		Game::Cs4 if variant == 0 => &CS4,
+		Game::Cs4 if variant == 1 => &CS4_1,
 		Game::Reverie => &REVERIE,
 		Game::Tx => &TX,
 		_ => panic!("Unsupported game or variant: {game:?}/{variant}"),

@@ -106,10 +106,6 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		oddness += pad as u32;
 	}
 
-	if game == Game::Cs2 && script_name == "t4720" {
-		f.game = Game::Cs1
-	}
-
 	let mut chunks = Vec::with_capacity(names.len());
 
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
@@ -117,6 +113,31 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	let cs3_special_1 = ["mon037_c00", "mon042_c00", "mon042_c01", "mon046_c00", "ply000", "ply001"];
 	let cs3_special_2 = ["mon_template", "chr_enemy_template"];
 	let cs3_special_3 = ["mon000s", "rob013_c00"];
+	let cs4_is_cs3 = [
+		"mon027_c00",
+		"mon093",
+		"npcx00",
+		"npcx02",
+		"npcx03",
+		"npcx04",
+		"vehicle",
+
+		"alchr034",
+		"alchr034_0",
+		"almon006_c03",
+		"almon452_0",
+		"almon452_1",
+		"btl0922",
+
+		"a0102",
+		"a0104",
+		"a0106",
+		"a0108",
+		"a2050",
+
+		"tk_bike",
+	];
+	let cs4_special = ["rob030"];
 	let cs1_menu = [
 		"battle_menu",
 		"camp_menu",
@@ -130,7 +151,15 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	];
 
 	let n = script_name.as_str();
-	let variant = match game {
+	if f.game == Game::Cs2 && n == "t4720" {
+		f.game = Game::Cs1
+	}
+
+	if f.game == Game::Cs4 && (cs4_is_cs3.contains(&n) || cs3_special_1.contains(&n) || cs3_special_2.contains(&n) || cs3_special_3.contains(&n)) {
+		f.game = Game::Cs3
+	}
+
+	let variant = match f.game {
 		Game::Cs1 if cs1_menu.contains(&n) => 100,
 		Game::Cs1 if cs1_special.contains(&n) => 3,
 		Game::Cs1 if n == "npcx01" => 2,
@@ -144,6 +173,8 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		Game::Cs3 if cs3_special_2.contains(&n) => 2,
 		Game::Cs3 if cs3_special_1.contains(&n) => 1,
 		Game::Cs3 => 0,
+		Game::Cs4 if cs4_special.contains(&n) => 1,
+		Game::Cs4 => 0,
 		_ => 0,
 	};
 
@@ -206,7 +237,7 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let is_table = tables.contains(&f.entry);
 	let is_fixed = fixed.contains(&f.entry);
 	let is_weird = match f.game {
-		Game::Cs4 | Game::Reverie => matches!(f.scena,
+		Game::Reverie => matches!(f.scena,
 			| "mon042_c00" | "mon042_c01" | "mon037_c00"
 			| "mon000s" | "rob013_c00"
 			| "ply000" | "ply001"
