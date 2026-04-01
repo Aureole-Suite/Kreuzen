@@ -452,7 +452,7 @@
 78   char u32 f32 f32 f32 f32 f32 u32
 79   char u16 u16 u16
 7A   u8 u32 u32 u32 u32
-7C   u8 u16 u16 u16 u32 u16 f32 f32 f32 str
+7C   u8 u16 u16 u16 u16 u16 f32 f32 f32 str
 7E   u16 u16
 7F   u16
 8000 char char str str

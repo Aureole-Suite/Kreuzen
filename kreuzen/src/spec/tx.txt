@@ -42,7 +42,7 @@
 20   u8 char str str u8
 2100 u32 u8 u8 i32 u8 i32 u8
 2101 u32 u8 u8 u16 u16 u16 u16
-22   char str u8 u8 u8 cs1_22 f32 f32 f32 f32 u8
+22   char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8
 23   char u32 u8
 2400 char str str
 2401 char str str
@@ -152,7 +152,8 @@
 39FF u16 u16
 3A   char u8 f32 u16 f32
 3B   char f32 f32 f32 u16 u16
-3C   u16 char u16 u16 tx_3c
+3C0000 char u16 u16
+3C0100 char u16 u16 u32 u32 u32
 3D00 str u16
 3D01 str u16
 3E00 u16 u16 u16

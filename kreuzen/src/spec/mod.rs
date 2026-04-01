@@ -31,6 +31,7 @@ spec!(CS1_2, test_ed81_2, "cs1_2.txt");
 spec!(CS1_3, test_ed81_3, "cs1_3.txt");
 spec!(CS1_MENU, test_ed81_menu, "cs1_menu.txt");
 spec!(CS2, test_ed82, "cs2.txt");
+spec!(CS2_1, test_ed82_1, "cs2_1.txt");
 spec!(CS3, test_ed83, "cs3.txt");
 spec!(CS4, test_ed84, "cs4.txt");
 spec!(REVERIE, test_ed85, "reverie.txt");
@@ -42,8 +43,10 @@ pub fn for_game(game: Game, variant: u8) -> &'static Spec {
 		Game::Cs1 if variant == 1 => &CS1_1,
 		Game::Cs1 if variant == 2 => &CS1_2,
 		Game::Cs1 if variant == 3 => &CS1_3,
-		Game::Cs1 if variant == 4 => &CS1_MENU,
-		Game::Cs2 => &CS2,
+		Game::Cs1 if variant == 100 => &CS1_MENU,
+		Game::Cs2 if variant == 0 => &CS2,
+		Game::Cs2 if variant == 1 => &CS2_1,
+		Game::Cs2 if variant == 100 => &CS1_MENU,
 		Game::Cs3 => &CS3,
 		Game::Cs4 => &CS4,
 		Game::Reverie => &REVERIE,
