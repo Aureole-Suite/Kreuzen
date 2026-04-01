@@ -47,12 +47,14 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 					.mark(pos2)
 					.end(end)
 					.oneline();
-				println!("{e}/{} {dump:#1.40X} {name}", f.oddness);
+				println!("{e}/{} {dump:#1.40X} {name}", f.variant);
 				Err(e).with_context(|| format!("Failed to read op at {pos:?}"))?;
 			}
 		}
 	}
-	eyre::ensure!(f.pos() == end);
+	if f.pos() != end {
+		tracing::warn!("Expected to end at {end:X} but ended at {:X}", f.pos());
+	}
 
 	let mut labels = BTreeSet::new();
 	for (_, op) in &ops {

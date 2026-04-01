@@ -1,0 +1,76 @@
+01   'return'
+02   'call' u8 str ndyn
+03   'goto'
+04   'fastcall' u8 str
+05   'if'
+06   'switch'
+10   char u16
+12   'Sleep' u16
+19   'Fork' char u8 u8 str
+27   char str flags32 u8 f32 f32 f32 f32 u16
+28   char u32 u8
+2A00 char str str u8
+2A01 char str str u8
+2A06 char flags32
+2A07 char flags32
+2B00 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 char u8 str
+2B01 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 char
+2C00 'PkgLoad' str
+2C01 'PkgUnload' str
+2C02 'PkgIsLoaded' str
+2D 'Eff'
+2D0A 'EffLoad' char u8 str
+2D0B 'EffUnload' char u8
+2D0C 'EffPlay' char u32 char u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u8
+2D0E char u8
+2D10 'EffWait' char u16 u8
+2E 'Btl'
+2E00 'BtlDamage' char char u8
+2E01 'BtlDamageAni' char f32 f32
+2E02 'BtlLoopTargetsReset' var char
+2E05 u8 str
+2E06 u8
+2E0A char char
+2E15 'BtlAfterimageOn' char f32 f32 f32 f32 f32
+2E16 'BtlAfterimageOff'
+2E32 char char f32 f32 f32 f32 u16
+2E33
+2E34 char u32
+2E37 char char f32 f32 f32 f32 f32 u8
+2E3C 'BtlCharTurnToChar' char char f32 f32
+2E46 f32 f32 f32
+2E47
+2E48 char
+2E62 char u8
+2E6B u16
+2E6C u16
+2E7E f32 u16 u8
+2E7F
+2E8A
+2E89 char
+31   'CharFlagSet' char flags32
+32   'CharFlagUnset' char flags32
+33 'Cam'
+3300
+3303 'CamLookAtChar' u8 char str f32 f32 f32 u16
+3304 'CamRotate' u8 f32 f32 f32 u16 u8
+3305 'CamDistance' u8 f32 u16
+3307 'CamWait' u16
+3309 'CamVibrate' f32 f32 f32
+330B 'CamFov' u8 f32 u16
+3313 'CamRotateChar' char str u8 f32 f32 f32 u16 u8
+35   'CharAniPlay' char u8 u8 str
+38 'Sound'
+3800 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
+3832 'SoundPlayVoice' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+383A 'SoundPlayRandom' char u16 u16 u16 u16
+40 'Fade'
+4065 u16 f32
+40FE u16
+40FF u16
+47   f32 f32 f32 f32 u16 u8
+51   u8 u32 u32 u32 u32 u32 u32 u32 u32
+69   char f32
+7702 'CharIsAni' char str
+7D   f32 # 80
+88   f32 f32 f32 f32 u32 u8 # 8B

@@ -113,7 +113,10 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	let mut chunks = Vec::with_capacity(names.len());
 
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
-	let cs2_special = ["e4701", "e4501", "e2230", "m5010"];
+	let cs2_special = ["e2230", "e4501", "e4701", "m5010"];
+	let cs3_special_1 = ["mon037_c00", "mon042_c00", "mon042_c01", "mon046_c00", "ply000", "ply001"];
+	let cs3_special_2 = ["mon_template", "chr_enemy_template"];
+	let cs3_special_3 = ["mon000s", "rob013_c00"];
 	let cs1_menu = [
 		"battle_menu",
 		"camp_menu",
@@ -128,28 +131,19 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 
 	let n = script_name.as_str();
 	let variant = match game {
-		Game::Cs1 => {
-			if cs1_menu.contains(&n) {
-				100
-			} else if cs1_special.contains(&n) {
-				3
-			} else if n == "npcx01" {
-				2
-			} else if oddness == 1 {
-				1
-			} else {
-				0
-			}
-		}
-		Game::Cs2 => {
-			if cs1_menu.contains(&n) {
-				100
-			} else if cs2_special.contains(&n) {
-				1
-			} else {
-				0
-			}
-		}
+		Game::Cs1 if cs1_menu.contains(&n) => 100,
+		Game::Cs1 if cs1_special.contains(&n) => 3,
+		Game::Cs1 if n == "npcx01" => 2,
+		Game::Cs1 if oddness == 1 => 1,
+		Game::Cs1 => 0,
+		Game::Cs2 if cs1_menu.contains(&n) => 100,
+		Game::Cs2 if cs2_special.contains(&n) => 1,
+		Game::Cs2 => 0,
+		Game::Tx => 0,
+		Game::Cs3 if cs3_special_3.contains(&n) => 3,
+		Game::Cs3 if cs3_special_2.contains(&n) => 2,
+		Game::Cs3 if cs3_special_1.contains(&n) => 1,
+		Game::Cs3 => 0,
 		_ => 0,
 	};
 
@@ -170,8 +164,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 			Ok(it) => it,
 			Err(e) => {
 				tracing::error!("{e:#}");
-				let pos = f.pos();
-				f.slice(end - pos)?;
+				f.seek(end)?;
 				continue;
 			}
 		};
@@ -212,20 +205,18 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let has_prefix = prefixes.iter().any(|p| f.entry.starts_with(p));
 	let is_table = tables.contains(&f.entry);
 	let is_fixed = fixed.contains(&f.entry);
-	let is_menu = f.scena.contains("_menu") && f.game > Game::Tx;
 	let is_weird = match f.game {
-		Game::Cs3 | Game::Cs4 | Game::Reverie => matches!(f.scena,
+		Game::Cs4 | Game::Reverie => matches!(f.scena,
 			| "mon042_c00" | "mon042_c01" | "mon037_c00"
 			| "mon000s" | "rob013_c00"
 			| "ply000" | "ply001"
 			| "mon_template" | "chr_enemy_template"),
 		_ => false,
 	};
-	if (has_prefix || is_fixed) && !is_table && !is_menu && !is_weird {
+	if (has_prefix || is_fixed) && !is_table && !is_weird {
 		// These ones are very likely to be code, so we'll start with them
 		let code = code::decompile(f, end)?;
-		let pos = f.pos();
-		let slice = f.slice(end - pos)?;
+		f.seek(end)?;
 	} else {
 		let pos = f.pos();
 		let slice = f.slice(end - pos)?;
