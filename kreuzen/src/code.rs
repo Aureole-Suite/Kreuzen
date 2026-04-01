@@ -186,7 +186,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 
 	let mut line = 0;
 	let mut width = 0xFF;
-	if !matches!(code, 0x01 | 0x04) && f.game == crate::Game::Reverie {
+	if !matches!(code, 0x01 | 0x04) && f.game == crate::Game::Reverie && f.oddness != 1 {
 		line = f.u16()?;
 		f.check_u8(0)?;
 		width = f.u8()?;
@@ -366,8 +366,8 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				}
 			}
 			P::Cs4_333C => {
-				if matches!(f.scena, "rob030" | "mon093" | "mon027_c00") {
-					read_parts(args, f, &[P::U32, P::Fail])?;
+				if matches!(f.scena, "rob030" | "mon093" | "mon027_c00" | "mon046_c00") {
+					read_parts(args, f, &[P::Fail])?;
 				}
 			}
 			P::Cs4_3339 => {
@@ -382,7 +382,7 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				}
 			}
 			P::Cs4_3348 => {
-				if matches!(f.scena, "rob030" | "mon093" | "mon027_c00") {
+				if matches!(f.scena, "rob030" | "mon093" | "mon027_c00" | "mon046_c00") {
 					break;
 				}
 			}
@@ -405,6 +405,18 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 			P::Cs4_5E00 => {
 				if f.oddness != 1 {
 					read_parts(args, f, &[P::Str])?;
+				}
+			}
+
+			P::Rev_3335 => {
+				if f.oddness != 0 {
+					read_parts(args, f, &[P::Char, P::U32, P::Print, P::Fail])?;
+					break;
+				}
+			}
+			P::Rev_6C => {
+				if f.oddness != 0 {
+					break;
 				}
 			}
 

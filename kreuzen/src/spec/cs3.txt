@@ -427,7 +427,7 @@
 6914
 
 6B   u8 u16 u16 f32 f32 f32 # i32 in chr067
-6C   char f32
+6C   'CharAniSpeed' char f32
 
 6F 'Item'
 6F00 'ItemAdd' item u32

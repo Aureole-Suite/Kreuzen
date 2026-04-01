@@ -98,6 +98,9 @@ pub enum Part {
 	Cs4_40_b,
 	Cs4_5E00,
 
+	Rev_3335,
+	Rev_6C,
+
 	_3E,
 	_3F,
 	_40,

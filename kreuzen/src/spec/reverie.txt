@@ -30,7 +30,7 @@
 1D   'CharCreate' char str str str u8 flags32 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 1E   'Fork' char u8 str u8 ndyn
 1F   'ForkKill' char u8
-20   u8 dyn dyn dyn dyn u8 # These dyns are usually FF, but with a float
+20   u8 dyn dyn dyn cs4_odd dyn u8 # These dyns are usually FF, but with a float
 21   u8 u8
 22   'TextShow' char text
 2300 u16 u16 u16 u16 u8
@@ -60,27 +60,27 @@
 2906 u8 u16
 2907 'MenuDisable' u8 u16
 2908 'MenuAddCheckbox' u8 str u32 dyn dyn
-2909 u8 str dyn
-290A u8
-290B u8 dyn
-290C u8 u16
-290D u8 u32
-290E u8 u32
-290F u8
+# 2909 u8 str dyn
+# 290A u8
+# 290B u8 dyn
+# 290C u8 u16
+# 290D u8 u32
+# 290E u8 u32
+# 290F u8
 2910 u8
-2911 u8 str u16 u8 u8 u32
-2912 u8 str u16 u32
+# 2911 u8 str u16 u8 u8 u32
+# 2912 u8 str u16 u32
 2913 u8 f32 f32 f32
 2914 u8 f32 f32 f32
 2915 u8 f32 f32 f32
-2916 'MenuVr' u8 f32 f32 f32 f32 u8
+# 2916 'MenuVr' u8 f32 f32 f32 f32 u8
 
 2A00 char str str u8
-2A01 char str str u8
-2A02 char str str u8
-2A03 char str str u8
+# 2A01 char str str u8
+# 2A02 char str str u8
+# 2A03 char str str u8
 2A04 char str str str
-2A05 char str str
+# 2A05 char str str
 2B00 'Battle' u32 u8 u8 i32 u8 i32 u8 i32 u8 i32 u8 # u32 seems to be index of btlset in function list
 
 2C   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
@@ -93,7 +93,7 @@
 2F 'CharAniclip'
 2F00 'CharAniclipLoad' char str str
 2F01 'CharAniclipUnload' char str str
-2F02 'CharAniclipLoadAsset' char str str
+# 2F02 'CharAniclipLoadAsset' char str str
 2F04 'CharAniclipAddAsset' char str str
 2F05 'CharAniclipRemoveAsset' char str str
 2F06 'CharAniclipLoadByCatalog' char flags32
@@ -121,7 +121,7 @@
 3102 'PkgIsLoaded' str
 
 32 'Eff'
-320A 'EffLoad' char u8 str u32
+320A 'EffLoad' char u8 str cs4_odd u32
 320B 'EffUnload' char u8
 320C 'EffPlay' char dyn char   flags32 dyn  dyn dyn dyn f32  f32  f32  dyn    dyn    dyn    u8
 #              char eff target unk     node x   y   z   rotx roty rotz scalex scaley scalez slot
@@ -137,17 +137,17 @@
 3216 str str
 3217 char u8 f32
 3218 char u8 char
-3219 u16 u8 f32 f32
-321A str
+# 3219 u16 u8 f32 f32
+# 321A str
 321B char
 321C u32 str u32
 321D u32
-321E char u8 f32
+# 321E char u8 f32
 321F char u16
 3221 char u16 u8
-3222 char u32 str
-3223
-3224 char dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
+# 3222 char u32 str
+# 3223
+# 3224 char dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
 
 33 'Btl'
 3300 'BtlDamage' char char u8 u8
@@ -167,10 +167,10 @@
 330E 'BtlCharSetTarget' char u16 char u16
 330F 'BtlCharGetTarget' char u16
 3310 char
-3311 char u8
-331200 str u16 f32 f32
+# 3311 char u8
+# 331200 str u16 f32 f32
 331201
-331202
+# 331202
 3313 char u16 char u32 u32 u32
 3314 'BtlKill' char
 3315 'BtlAfterimageOn' char f32 f32 f32 f32 f32
@@ -179,7 +179,7 @@
 3318 'BtlDummyDelete'
 3319 'BtlFlagsSet' flags32
 331A 'BtlFlagsUnset' flags32
-331B 'BtlFlagsGet'
+# 331B 'BtlFlagsGet'
 331E 'BtlTempCreate' u16 char str str
 331F 'BtlTempDelete' u16
 # Combat shells: chr009 Millium, chr015 Altina, chr070 Alberich, chr072 George, chr948 Zoa Balor
@@ -192,143 +192,141 @@
 3326 u8
 3327 f32 f32
 # End combat shells
-332A char
-332D # used in BattleLinkLevelUpCelineVoice
+# 332A char
+# 332D # used in BattleLinkLevelUpCelineVoice
 332E char
 332F char
 3330 char char
 3331 'BtlAfterimageCreate' char
 3332 'BtlAfterimageDelete'
-3333 char str str # also related to afterimages
-3334 u8
-333500 char f32 f32 f32 str
-333501 char f32 f32 f32 str
-333502 char f32 f32 f32 str
+3333 cs4_odd char str str # also related to afterimages
+3334 cs4_odd u8
+# 3335 rev_3335 char f32 f32 f32 str
 3337 'Btl_CharSetPos' char char f32 f32 f32 f32 u8 u8
 3338 'Btl_MoveToTarget'
 3339 # might be if char can move or something?
 333A 'BtlCharSavePos' char u32 # But where's the loadpos?
 333B char f32 f32 f32 f32
-333C char char f32 u16
+# 333C char char f32 u16 cs4_333C
 333D char char f32 f32 f32 f32 f32 u8
-333E 'Btl_CharSetPosAsync' char char f32 f32 f32 f32opt u8 u8
+333E 'Btl_CharSetPosAsync' char char f32 f32 f32 f32 u8 u8
 333F char
-3340 char u8
+3340 char char f32 f32
 3341 'BtlCharTurnToChar' char char f32 f32
-3342 char u8 f32 f32 f32 u8 u8
+# 3342 char u8 f32 f32 f32 u8 u8
 3346 f32 f32 f32
 3347
-3348 char u16
-3349 char # something with "attack with KeA slot"
+3348 char cs4_3348 u16
+# 3349 char # something with "attack with KeA slot"
 334A f32 # in AniBtlBurstWait
 334B u16 u8
-334C # in AniBtlBraveOrderCancel_Kisin
+# 334C # in AniBtlBraveOrderCancel_Kisin
 3352 char u8 # possibly related to eff
 3354 char u8 f32 f32 f32
-3355 char
-3356 u8 # used in BtlWinGroup
-335A 'BtlCharSetAtDelay' char u32
-335B u8 u32
+# 3355 char
+# 3356 u8 # used in BtlWinGroup
+# 335A 'BtlCharSetAtDelay' char u32
+# 335B u8 u32
 335C 'BtlGetCount' u8 # 10 is number of players
 3361 'BtlCharSetStat' char u8 u8 u32 u8
 3362 'BtlCharGetStat' char u8 # 0 is hp, 27 and 28 are charids for target
 3363 char
-3364 'BtlTextShow' str
+# 3364 'BtlTextShow' str
 3365 char # in chr045:AniBtlSCraft00_EquipErase
-3366 char # in chr045:AniBtlSCraft00_EquipShow
-3367
-3368
+# 3366 char # in chr045:AniBtlSCraft00_EquipShow
+# 3367
+# 3368
 336B u16
 336C u16
 336E char char f32 f32 f32 f32
 336F # in btlcom:AniBtlShowLevelUp
-3370 # in btlcom:AniBtlShowLevelUp
-3373 u16
-3374 u16
-3376
+# 3370 # in btlcom:AniBtlShowLevelUp
+# 3373 u16
+# 3374 u16
+# 3376
 # Kisin-related
 3377 char # mostly, but not only, kisin
 3378 char u16
-337B char char
+# 337B char char
 337D u8
 337E f32 u16 u8 # mostly kisin
 337F # mostly kisin
 # end kisin
-3382 u8 char u32
+# 3382 u8 char u32
 3383 char char
 3385 'BtlKisinPt_85'
 3386 'BtlKisinPt_86'
 3387 'BtlIsKisin'
-3388 'BtlKisinPt_88'
+# 3388 'BtlKisinPt_88'
 338A # related to 3346..=3348
 # kisin crafts; sometimes near CharCraftHas
 338E char u16
 338F char
 3391 char u16
-3392 f32 f32 # also BattleViewMinMax
+# 3392 f32 f32 # also BattleViewMinMax
 3394 char u16 u16
 # end kisin crafts
-3398 char # in btlcom:AniBtlReflect
+# 3398 char # in btlcom:AniBtlReflect
 339E 'BtlCharIsMonster' char str
 33A6 'BtlOrder_A6' # in btlcom:AniBtlBraveOrder00
 33A7 'BtlOrderAnti' u8
 33A8 'BtlOrderCancel' u32
 33A9 'BtlOrderGet' u8 u32 # returns what is possibly a magic
-33AA 'BtlOrder_AA' # in btlcom:AniBtlBraveOrder00
-33AB 'BtlOrder_AB' # in btlcom:AniBtlBraveOrder00
+# 33AA 'BtlOrder_AA' # in btlcom:AniBtlBraveOrder00
+# 33AB 'BtlOrder_AB' # in btlcom:AniBtlBraveOrder00
 33AD 'BtlOrderGet2' # in btlcom:AniBtlBraveOrderLoadEffect and AniBtlBraveOrderLoadEndEffect; ranges from 303 to 326
 33AF 'BtlDamageIsWeak' char # used to choose between BTL_WEAKDAMAGE and BTL_DAMAGE
-33B0 # kisin coop craft
-33B1 # kisin coop craft
-33B2 # kisin coop craft
+# 33B0 # kisin coop craft
+# 33B1 # kisin coop craft
+# 33B2 # kisin coop craft
 33B4 char dyn dyn dyn dyn
-33B5 u8 # in btlwin:SetControlCamera
-33B6 f32 f32 # in various BattleViewMinMax
+# 33B5 u8 # in btlwin:SetControlCamera
+# 33B6 f32 f32 # in various BattleViewMinMax
 33B700 'BtlStatusSet' char flags32 u32 u32 u8
 33B701 'BtlStatusUnset' char flags32 u32 u32 u8
 33B702 'BtlStatus2Set' char flags32 u32 u32 u8
 33B703 'BtlStatus2Unset' char flags32 u32 u32 u8
-33B704 'BtlStatusGet' char flags32 u32 u32 u8
+# 33B704 'BtlStatusGet' char flags32 u32 u32 u8
 33B705 'BtlStatus2Get' char flags32 u32 u32 u8
-33B8 'BtlGoalCharSetHp' char u8 u8
+# 33B8 'BtlGoalCharSetHp' char u8 u8
 33BA 'BtlCharIsMonsterDyn' dyn str # used to check for allies for combos
 33BB dyn dyn # possibly to link with allies
-33BC 'BtlGoalTextShow' u8 u8 u8 str str
-33BD 'BtlGoalTextWait'
+# 33BC 'BtlGoalTextShow' u8 u8 u8 str str
+# 33BD 'BtlGoalTextWait'
 33BE # in KISIN_ATTACK_BEGIN and AniBtlKisinChangeBoost
 33BF 'BtlCharIsPresent' char
-33C0 char u8 u8
-33C2 char char
-33C3 'BtlItem'
+# 33C0 char u8 u8
+# 33C2 char char
+# 33C3 'BtlItem'
 33C4 str str
 33C5 char u32 u32 u32 u32 u32
 33C6 char
-33C7 u32
-33C8 i32
-33C9 char dyn dyn dyn
-33CA char
-33CB u8
-33CC u16 u16
-33CD u32
-33CE
-33D2 u8 u16 u16
-33D300 'BtlLoopAlliesReset' u32
-33D301 'BtlLoopAlliesInit' u32
-33D302 'BtlLoopAlliesRestart' u32
-33D303 'BtlLoopAlliesNext' u32
-33D400
-33D401
-33D402 u8
-33D403 u8
+# 33C7 u32
+# 33C8 i32
+# 33C9 char dyn dyn dyn
+# 33CA char
+# 33CB u8
+# 33CC u16 u16
+# 33CD u32
+# 33CE
+# 33D2 u8 u16 u16
+# 33D300 'BtlLoopAlliesReset' u32
+# 33D301 'BtlLoopAlliesInit' u32
+# 33D302 'BtlLoopAlliesRestart' u32
+# 33D303 'BtlLoopAlliesNext' u32
+# 33D400
+# 33D401
+# 33D402 u8
+# 33D403 u8
 33D404 'BtlGetCastedValiantArtElement' char
-33D405 char u8
+# 33D405 char u8
 33D5 u8 u16 u16
 
-34   u8 f32 f32 f32 f32 u16
+# 34   u8 f32 f32 f32 f32 u16
 3500 'CharFlagSet' char flags32 # might be reverse
 3501 'CharFlagUnset' char flags32
 3502 'CharFlagGet' char flags32
-350A 'CharFlag2Set' char flags32
+# 350A 'CharFlag2Set' char flags32
 350B 'CharFlag2Unset' char flags32
 350C 'CharFlag2Get' char flags32
 
@@ -346,934 +344,934 @@
 360A 'CamShake' f32 f32 f32 u16 u16 u16 u16 u16 u8
 360B 'CamFov' u8 f32 u16
 360C u8 f32 f32 f32 u16
-360D u8 u16 str f32 f32 f32 u16
-360E u8 f32 f32 f32 u16
-360F char f32 f32 f32
-3610
+# 360D u8 u16 str f32 f32 f32 u16
+# 360E u8 f32 f32 f32 u16
+# 360F char f32 f32 f32
+# 3610
 3611 u8 f32 f32 f32 u16 u8
 3612 flags16
 3613 'CamRotateChar' char str u8 f32 f32 f32 u16 u8
 3614 'CamLookAtChar2' u8 char str f32 f32 f32 u16
-3615 u8 f32 i32 u8
+# 3615 u8 f32 i32 u8
 3616 'CamSetHeight' u8 f32 u16
 3617 flags16
-3618 u8 str f32 f32 f32 u16
-3619 u8 str f32 f32 f32 u16
-361A str u8 f32 f32 f32 u16 u8
+# 3618 u8 str f32 f32 f32 u16
+# 3619 u8 str f32 f32 f32 u16
+# 361A str u8 f32 f32 f32 u16 u8
 361B f32 f32
-361C u8
-361D u8
-361F u8 f32 f32 u8
-3620
-3621 char str
-3628 f32 f32 f32
-3629 f32 f32 f32
-362A f32
-362B f32
-362C u16
-362D u16
-362E u8
-362F u8
+# 361C u8
+# 361D u8
+# 361F u8 f32 f32 u8
+# 3620
+# 3621 char str
+# 3628 f32 f32 f32
+# 3629 f32 f32 f32
+# 362A f32
+# 362B f32
+# 362C u16
+# 362D u16
+# 362E u8
+# 362F u8
 
 37   'CharSetPos' char f32 f32 f32 f32
 38   'CharAniPlay' char u8 u8 str
-39   'CharAniLoop' char u8 str f32opt f32 u32
+39   'CharAniLoop' char u8 str f32 f32 u32
 
-3A 'Bgm'
-3A00 'BgmPlay' u16 f32 u16 u32 u8
-3A01 'BgmStop' u16 u8
-3A02 u8
-3A03 'BgmVolume' f32 u16 u8
-3A04 'BgmPlay2' u16 f32 u16 f32 u8
-3A05 'BgmReplace' u16 u16
-3A06 'BgmRestore' u16
-3A07
-3A08 u16 u8
-3A09 u8
+# 3A 'Bgm'
+# 3A00 'BgmPlay' u16 f32 u16 u32 u8
+# 3A01 'BgmStop' u16 u8
+# 3A02 u8
+# 3A03 'BgmVolume' f32 u16 u8
+# 3A04 'BgmPlay2' u16 f32 u16 f32 u8
+# 3A05 'BgmReplace' u16 u16
+# 3A06 'BgmRestore' u16
+# 3A07
+# 3A08 u16 u8
+# 3A09 u8
 
 3B 'Sound'
-3B00 'SoundPlay' dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+3B00 'SoundPlay' cs4_sound_play dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
 3B01 'SoundStop' dyn dyn u16
-3B03 'SoundSetVolume' dyn f32 u16
+# 3B03 'SoundSetVolume' dyn f32 u16
 3B04 dyn f32 u16 u8
-3B05 u32
-3B32 'SoundPlayVoice' dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
-3B33 dyn dyn u16
+# 3B05 u32
+3B32 'SoundPlayVoice' cs4_sound_play dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+# 3B33 dyn dyn u16
 3B34 dyn
-3B37 u32
+# 3B37 u32
 3B39 char
 3B3A 'SoundPlayRandom' char dyn dyn dyn dyn
 3B3B u32
 3B3C u32
 3B3D
 3B3E u16
-3B3F u16
-3B64 u32 f32 f32
-3B96 u16
-3BFA u8
-3BFE u16
+# 3B3F u16
+# 3B64 u32 f32 f32
+# 3B96 u16
+# 3BFA u8
+# 3BFE u16
 3BFF 'ControllerRumble' f32 f32 f32
 
 3C 'CharFace'
 3C03 char str str str str str
 3C04 char str
-3C05 char str str str str str
+# 3C05 char str str str str str
 3D   'CharTurnDir' char f32 f32 u8
-3E   char char f32 u8 _3E
-3F   char _3F
-40   char char _40
-41   char
-4100
-4101
-4104 f32 f32 f32 f32 u8
-4200 char f32 f32 f32 f32 f32 u8 u16
-4201 char f32 f32 f32 f32 f32 u8 u16
+3E   char char f32 u8 print fail
+# 3F   char _3F
+# 40   char char _40
+# 41   char
+# 4100
+# 4101
+# 4104 f32 f32 f32 f32 u8
+# 4200 char f32 f32 f32 f32 f32 u8 u16
+# 4201 char f32 f32 f32 f32 f32 u8 u16
 
-43 'Fade'
-4300 u16 f32 u16
-4301 u16 f32 u16
-4302 u16 f32 u16
-4303 u16 f32 u16
-4304 u16 f32 u16
-4305 u16
-4306 u16
-430A u16
-430B u16
-430C u16
-430D u16 u16
-430E u16 u16
-430F u16 u16 u8
-4364 u16 f32 u16
-4365 u16 f32 u16
-4367 u16 f32 u16
-4368 u16 f32 u16
-4369 u16
-436A u16
-436B u16
-43FE u16
-43FF u16 u16
+# 43 'Fade'
+# 4300 u16 f32 u16
+# 4301 u16 f32 u16
+# 4302 u16 f32 u16
+# 4303 u16 f32 u16
+# 4304 u16 f32 u16
+# 4305 u16
+# 4306 u16
+# 430A u16
+# 430B u16
+# 430C u16
+# 430D u16 u16
+# 430E u16 u16
+# 430F u16 u16 u8
+# 4364 u16 f32 u16
+# 4365 u16 f32 u16
+# 4367 u16 f32 u16
+# 4368 u16 f32 u16
+# 4369 u16
+# 436A u16
+# 436B u16
+# 43FE u16
+# 43FF u16 u16
 
-44   'CharEmote' char u8 f32 u16 f32
-45   'CharLookDir' char f32 f32 f32 u16 u16
-46   'CharLookChar'
-4600 char char u16
-4601 char char u16 f32 f32 f32
-4602 char char u16
-4603 char char u16 f32 u8 # labeled "move only head" and "move only eyes"
-4604 char char u16
-4605 char char u16
-4606 char char u16
-4607 char char u16
-4700 str u16
-4701 str u16
-4800 'CharAddStat' char u16 i16
+# 44   'CharEmote' char u8 f32 u16 f32
+# 45   'CharLookDir' char f32 f32 f32 u16 u16
+# 46   'CharLookChar'
+# 4600 char char u16
+# 4601 char char u16 f32 f32 f32
+# 4602 char char u16
+# 4603 char char u16 f32 u8 # labeled "move only head" and "move only eyes"
+# 4604 char char u16
+# 4605 char char u16
+# 4606 char char u16
+# 4607 char char u16
+# 4700 str u16
+# 4701 str u16
+# 4800 'CharAddStat' char u16 i16
 
-49 'Party'
-4900 'PartyAdd' char
-4901 'PartyRemove' char
-4902 'PartyClear' u8
-4903
-4904 'PartyLock' char
-4905 char
-4906 char
-4907
-4908 'PartySetFormation' char f32 f32 u8
-4909 char
-490A 'CharExists' char
-490B 'CharInParty' char
-490C char char
-490E u8
-490F u8
-4910
-4911 u16
-4912 u8
-4914 char char char char char char char char char char char char char char char char char char char char char char char char char char char char char char
-4915 u16
-4916 u16 u16
-4917 u16
-4918
-491B u8
-491C 'SoloActionMode' u8
-491D u8
-491E u16
-491F u32
+# 49 'Party'
+# 4900 'PartyAdd' char
+# 4901 'PartyRemove' char
+# 4902 'PartyClear' u8
+# 4903
+# 4904 'PartyLock' char
+# 4905 char
+# 4906 char
+# 4907
+# 4908 'PartySetFormation' char f32 f32 u8
+# 4909 char
+# 490A 'CharExists' char
+# 490B 'CharInParty' char
+# 490C char char
+# 490E u8
+# 490F u8
+# 4910
+# 4911 u16
+# 4912 u8
+# 4914 char char char char char char char char char char char char char char char char char char char char char char char char char char char char char char
+# 4915 u16
+# 4916 u16 u16
+# 4917 u16
+# 4918
+# 491B u8
+# 491C 'SoloActionMode' u8
+# 491D u8
+# 491E u16
+# 491F u32
 
-4A   u8 f32 f32 f32 f32 u32 u8
-4B   'CharSetColor' char f32 f32 f32 f32 u16 u8
-4C   char f32 f32 f32 u16 u8
-4D   'ForkWait' char u8
-4E   f32 f32 u8 _4E
-4F00 char f32 i16 u16 u32 f32
-4F01 char
-4F02 char u16 u16 u16
-4F03 char f32 f32 f32 f32 u16 u8
-4F06 char u8 u32
-50   dyn str f32 u8
-51   f32 f32 f32 f32 f32 u16 f32 f32 f32 f32
-52   u8 u16
-53   u8 u8
+# 4A   u8 f32 f32 f32 f32 u32 u8
+# 4B   'CharSetColor' char f32 f32 f32 f32 u16 u8
+# 4C   char f32 f32 f32 u16 u8
+# 4D   'ForkWait' char u8
+# 4E   f32 f32 u8 _4E
+# 4F00 char f32 i16 u16 u32 f32
+# 4F01 char
+# 4F02 char u16 u16 u16
+# 4F03 char f32 f32 f32 f32 u16 u8
+# 4F06 char u8 u32
+# 50   dyn str f32 u8
+# 51   f32 f32 f32 f32 f32 u16 f32 f32 f32 f32
+# 52   u8 u16
+# 53   u8 u8
 
-540A u8
-540B char
-540D 'MapPlaceTbox' str str flag item
-540E 'MapTboxOpen' u8
-540F 'MapTboxClose'
-5412
-5414 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16 u16
-5417 'MapEffSet' u8 u32
-5418 char u8 # something with ladder
-5419 'MapPlaceHealObj' str str
-541A char # something with field attacks
-541B # sometimes at end of battle or something?
-541F 'MapDistanceToEnemy'
-5420
-5421 char f32
-5423 u16 char u16 f32 # related to field follower
-5424 char
-5425
-5426 u8 u32 u32 str
-5427
-5429 u8 u16
-542A
-542B u8 str u16
-542C u8 f32 f32
-542D
-542E
-542F
-5430 dyn
-543100 u16 char f32 f32 u8 u8 u16
-543101 u16
-543102 u16
-543103
-5434 u32
-5435 u8 char str u16 u16 str str str
-5436 u8
-5437 char u8 u8 u8
-5438 u8 u32
-5439 char
-543A char char f32 f32 f32 f32 u8
-543B00 char char char u8 f32 f32
-543B01 char char char u8 f32 f32
-543E00 str u32
-543E01 str u32
-543F
-5440 u16
-5441
-5442 u16 u16
-5443
-5444 f32 f32 f32
-5445 f32
-5446 f32
-5447 u8 char
-5448 char f32
-5449 char char
-544A char u16
-544B char
-544C 'CharSetRiderInfo' char u16 u8
-544D u32
-544E u8
-544F00 u8 u16
-544F01 u8
-544F02 u16 u16 u8
-544F03 u16
-544F04 u16 u16 u8 u8
-544F0A u16 u8 f32 u16
-5450 f32
-5451 u16 str
-5452 u16 u16 u8
-5453 char
-5454 u16 u32
-5455
-5456 u16
-5457 u8
-5458 char str f32 f32 f32 f32 u8
-545A dyn dyn u8
-545B u32
-545C f32
-545D char u16
-545F char f32 f32 f32
-5460 char f32
-5461 u16 u16 u16
-5462 str
-5463 str u32 u32 u32
-5465 char u16 f32 f32 f32 f32 f32 f32 f32
-546B char u16 u32 u32 u32 u32 u32 u32 u32
-546C char u16 u32 u32 u32 u32 u32 u32 u32
-546D char u16 u32 u32 u32 u32 u32 u32 u32
-546E char u16 u32 u32 u32 u32 u32 u32 u32
-546F char u16 u32 u32 u32 u32 u32 u32 u32
-5470 char u16 u32 u32 u32 u32 u32 u32 u32
-5471 char u16 u32 u32 u32 u32 u32 u32 u32
-5472 char u16 u32 u32 u32 u32 u32 u32 u32
-5473 char u16 u32 u32 u32 u32 u32 u32 u32
-5474 char u16 u32 u32 u32 u32 u32 u32 u32
-5479 char u16 u32 u32 u32 u32 u32 u32 u32
+# 540A u8
+# 540B char
+# 540D 'MapPlaceTbox' str str flag item
+# 540E 'MapTboxOpen' u8
+# 540F 'MapTboxClose'
+# 5412
+# 5414 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16 u16
+# 5417 'MapEffSet' u8 u32
+# 5418 char u8 # something with ladder
+# 5419 'MapPlaceHealObj' str str
+# 541A char # something with field attacks
+# 541B # sometimes at end of battle or something?
+# 541F 'MapDistanceToEnemy'
+# 5420
+# 5421 char f32
+# 5423 u16 char u16 f32 # related to field follower
+# 5424 char
+# 5425
+# 5426 u8 u32 u32 str
+# 5427
+# 5429 u8 u16
+# 542A
+# 542B u8 str u16
+# 542C u8 f32 f32
+# 542D
+# 542E
+# 542F
+# 5430 dyn
+# 543100 u16 char f32 f32 u8 u8 u16
+# 543101 u16
+# 543102 u16
+# 543103
+# 5434 u32
+# 5435 u8 char str u16 u16 str str str
+# 5436 u8
+# 5437 char u8 u8 u8
+# 5438 u8 u32
+# 5439 char
+# 543A char char f32 f32 f32 f32 u8
+# 543B00 char char char u8 f32 f32
+# 543B01 char char char u8 f32 f32
+# 543E00 str u32
+# 543E01 str u32
+# 543F
+# 5440 u16
+# 5441
+# 5442 u16 u16
+# 5443
+# 5444 f32 f32 f32
+# 5445 f32
+# 5446 f32
+# 5447 u8 char
+# 5448 char f32
+# 5449 char char
+# 544A char u16
+# 544B char
+# 544C 'CharSetRiderInfo' char u16 u8
+# 544D u32
+# 544E u8
+# 544F00 u8 u16
+# 544F01 u8
+# 544F02 u16 u16 u8
+# 544F03 u16
+# 544F04 u16 u16 u8 u8
+# 544F0A u16 u8 f32 u16
+# 5450 f32
+# 5451 u16 str
+# 5452 u16 u16 u8
+# 5453 char
+# 5454 u16 u32
+# 5455
+# 5456 u16
+# 5457 u8
+# 5458 char str f32 f32 f32 f32 u8
+# 545A dyn dyn u8
+# 545B u32
+# 545C f32
+# 545D char u16
+# 545F char f32 f32 f32
+# 5460 char f32
+# 5461 u16 u16 u16
+# 5462 str
+# 5463 str u32 u32 u32
+# 5465 char u16 f32 f32 f32 f32 f32 f32 f32
+# 546B char u16 u32 u32 u32 u32 u32 u32 u32
+# 546C char u16 u32 u32 u32 u32 u32 u32 u32
+# 546D char u16 u32 u32 u32 u32 u32 u32 u32
+# 546E char u16 u32 u32 u32 u32 u32 u32 u32
+# 546F char u16 u32 u32 u32 u32 u32 u32 u32
+# 5470 char u16 u32 u32 u32 u32 u32 u32 u32
+# 5471 char u16 u32 u32 u32 u32 u32 u32 u32
+# 5472 char u16 u32 u32 u32 u32 u32 u32 u32
+# 5473 char u16 u32 u32 u32 u32 u32 u32 u32
+# 5474 char u16 u32 u32 u32 u32 u32 u32 u32
+# 5479 char u16 u32 u32 u32 u32 u32 u32 u32
 
-55   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 u8 str str
-56   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
-57   'VisWait' u8 u8
-58   'VisHide' u8
+# 55   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 u8 str str
+# 56   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
+# 57   'VisWait' u8 u8
+# 58   'VisHide' u8
 
-5A00 'NameplateShow' u16 u16 str u16
-5A01 'NameplateWait'
+# 5A00 'NameplateShow' u16 u16 str u16
+# 5A01 'NameplateWait'
 
-5B   'SetCharAttr' charattr expr
-5C   char u8 str
-5D   char str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u8 u8
-5E00 'BlurOn' u16 f32 u16 u16 u16 f32 char str f32 f32 f32
-5E01 'BlurOff' u16
-60   char u8 str
-6100 str u8 char f32 f32 f32 f32 f32 f32 f32 u16
-6101 u16
-6102
-62   u16 u16
-63   char u8
-6400 f32
-6401 f32
-6402
-6403
+# 5B   'SetCharAttr' charattr expr
+# 5C   char u8 str
+# 5D   char str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u8 u8
+# 5E00 'BlurOn' u16 f32 u16 u16 u16 f32 char str f32 f32 f32
+# 5E01 'BlurOff' u16
+# 60   char u8 str
+# 6100 str u8 char f32 f32 f32 f32 f32 f32 f32 u16
+# 6101 u16
+# 6102
+# 62   u16 u16
+# 63   char u8
+# 6400 f32
+# 6401 f32
+# 6402
+# 6403
 
-65 'Lp'
-6500 str u16
-6501 str u16
-6503 str f32
+# 65 'Lp'
+# 6500 str u16
+# 6501 str u16
+# 6503 str f32
 
-66 'CharCraft'
-6600 'CharCraftAdd' char magic # 0 for "all at current level"
-6601 'CharCraftRemove' char magic
-6602 char u32
-6603 'CharCraftClear' char
-6604 'CharSetSbreak' char magic
-6605 char
-6606 'CharCraftHas' char magic
-6607 char
-6608 char u16 u8
-6609 char u16
-660A char u16
-660B 'CharOrderAdd' char u32
-660C char
-660D char u16 u32
-660E char
-660F char u16 # magic id
-6610 char u16
-6611 char u16
-6612 char u16 u32
+# 66 'CharCraft'
+# 6600 'CharCraftAdd' char magic # 0 for "all at current level"
+# 6601 'CharCraftRemove' char magic
+# 6602 char u32
+# 6603 'CharCraftClear' char
+# 6604 'CharSetSbreak' char magic
+# 6605 char
+# 6606 'CharCraftHas' char magic
+# 6607 char
+# 6608 char u16 u8
+# 6609 char u16
+# 660A char u16
+# 660B 'CharOrderAdd' char u32
+# 660C char
+# 660D char u16 u32
+# 660E char
+# 660F char u16 # magic id
+# 6610 char u16
+# 6611 char u16
+# 6612 char u16 u32
 
-6700 char u16
-6701 char u16
-6702 char
-6703 char
-6800 str u32
-6801 str u32
-6802 str f32 f32 f32
-6803 str f32 f32 f32
-6804 str f32 f32 f32
-6805 str
-6806 str
-6807 str f32 f32 f32 f32 u16 u8
-6808 str f32 f32 f32 u16 u8
-680A str
-680B str char
-680C str f32 f32 f32
-680D str f32 f32 f32
-680F str char
-6810 str char u8 str f32 f32 f32 f32 f32 f32
-6818 str u32
-6819 str
-681B str f32 f32 f32
+# 6700 char u16
+# 6701 char u16
+# 6702 char
+# 6703 char
+# 6800 str u32
+# 6801 str u32
+# 6802 str f32 f32 f32
+# 6803 str f32 f32 f32
+# 6804 str f32 f32 f32
+# 6805 str
+# 6806 str
+# 6807 str f32 f32 f32 f32 u16 u8
+# 6808 str f32 f32 f32 u16 u8
+# 680A str
+# 680B str char
+# 680C str f32 f32 f32
+# 680D str f32 f32 f32
+# 680F str char
+# 6810 str char u8 str f32 f32 f32 f32 f32 f32
+# 6818 str u32
+# 6819 str
+# 681B str f32 f32 f32
 
-69 'Link'
-6900 char char u8 u8 u8
-6901 u16
-6902 'LinkSetLevel' char char u16
-6903 u16 u16 u16
-6904 u16
-6905 'LinkSetExp' char char u16
-6906 'LinkAddExp' char char u16 u32
-6907 u16
-6908 u16
-6909 u16
-690A u16 u16 u8
-690B u16
-690C u16 u16
-690D u16 u16
-6912 u16 u16
-6913 u16
-6914 'LinkAuto' u8 u8
-6915 u16
-6916
-6917 u16
-6918 u16 u16 u16 u8 u8 u8
-6919 'LinkSetPage' u8
-691A 'LinkClearPage' dyn char
-691B u16
-691C u32
-691D u16
+# 69 'Link'
+# 6900 char char u8 u8 u8
+# 6901 u16
+# 6902 'LinkSetLevel' char char u16
+# 6903 u16 u16 u16
+# 6904 u16
+# 6905 'LinkSetExp' char char u16
+# 6906 'LinkAddExp' char char u16 u32
+# 6907 u16
+# 6908 u16
+# 6909 u16
+# 690A u16 u16 u8
+# 690B u16
+# 690C u16 u16
+# 690D u16 u16
+# 6912 u16 u16
+# 6913 u16
+# 6914 'LinkAuto' u8 u8
+# 6915 u16
+# 6916
+# 6917 u16
+# 6918 u16 u16 u16 u8 u8 u8
+# 6919 'LinkSetPage' u8
+# 691A 'LinkClearPage' dyn char
+# 691B u16
+# 691C u32
+# 691D u16
 
-6A   char
-6A00 f32 u8 u16
-6A01
-6A02 f32 f32 f32 f32 f32 f32 u32
-6A03 f32 u8 u16
-6A04 f32 f32 f32 f32 f32 u8 u16
-6A05 f32 f32 f32 f32 f32 f32 f32
-6A06 dyn dyn dyn dyn dyn dyn u32
-6A07 dyn u8 u16
-6B   u8 u16 u16 f32 f32 f32 # i32 in chr067
-6C   'CharAniSpeed' char f32 _6C
-6E   u16 f32 f32 f32 f32 u8
+# 6A   char
+# 6A00 f32 u8 u16
+# 6A01
+# 6A02 f32 f32 f32 f32 f32 f32 u32
+# 6A03 f32 u8 u16
+# 6A04 f32 f32 f32 f32 f32 u8 u16
+# 6A05 f32 f32 f32 f32 f32 f32 f32
+# 6A06 dyn dyn dyn dyn dyn dyn u32
+# 6A07 dyn u8 u16
+# 6B   u8 u16 u16 f32 f32 f32 # i32 in chr067
+6C   'CharAniSpeed' char f32 rev_6c i32
+# 6E   u16 f32 f32 f32 f32 u8
 
-6F 'Item'
-6F00 'ItemAdd' item u32
-6F01 'ItemRemove' item u32
-6F02 'ItemHas' item u32
-6F03 'ItemClear' u16 u32
-6F04 'MiraAdd' u16 u32
-6F05 'MiraRemove' u16 u32
-6F07 'SepithAdd' item u32
-6F0A item u32
-6F0C 'MiraGet' u16 u32
-6F0E 'ItemsetAdd' u16 u32
-6F14 'ItemUnlock' item u32 # only used in debug script
-6F15 'ItemLock' item u32
-6F16 'ItemIsLocked' item u32
-6F17 u16 u32
-6F18 u16 u32
-6F19 u16 u32
-6F1A 'InventoryClear' u16 u32
-6F1B 'InventorySwitch' u16
-6F1C 'InventoryMerge' u32 u32 u8 u8
-6F1D dyn
-6F1E dyn dyn u8 u8
-6F1F u16 u32
-6F20 'ItemsetGetCount' u16 u8
-6F21 u16 u32
+# 6F 'Item'
+# 6F00 'ItemAdd' item u32
+# 6F01 'ItemRemove' item u32
+# 6F02 'ItemHas' item u32
+# 6F03 'ItemClear' u16 u32
+# 6F04 'MiraAdd' u16 u32
+# 6F05 'MiraRemove' u16 u32
+# 6F07 'SepithAdd' item u32
+# 6F0A item u32
+# 6F0C 'MiraGet' u16 u32
+# 6F0E 'ItemsetAdd' u16 u32
+# 6F14 'ItemUnlock' item u32 # only used in debug script
+# 6F15 'ItemLock' item u32
+# 6F16 'ItemIsLocked' item u32
+# 6F17 u16 u32
+# 6F18 u16 u32
+# 6F19 u16 u32
+# 6F1A 'InventoryClear' u16 u32
+# 6F1B 'InventorySwitch' u16
+# 6F1C 'InventoryMerge' u32 u32 u8 u8
+# 6F1D dyn
+# 6F1E dyn dyn u8 u8
+# 6F1F u16 u32
+# 6F20 'ItemsetGetCount' u16 u8
+# 6F21 u16 u32
 
-70 'CharEquip'
-7000 'CharEquipItem' char item u8 u8
-7001 'CharUnequipItem' char u8
-7003 'CharEquipQuartz' char item u8 u8 u8
-7004 'CharUnequipQuartz' char u8 u8
-7005 char item u8 u8 # "is anyone wearing sub mq", according to comments
-7006 'CharSetSlotLevel' char u8 u8 u8 u8
-7007 char u8
-7008 'MqSetLevel' item u16 u16
-700A 'MqSetExp' item u32 u32
-700B char u8
-700C char u8 u8
-700E 'CharEquipSubMq' char item item
-700F 'CharEquipMq' char item u16
+# 70 'CharEquip'
+# 7000 'CharEquipItem' char item u8 u8
+# 7001 'CharUnequipItem' char u8
+# 7003 'CharEquipQuartz' char item u8 u8 u8
+# 7004 'CharUnequipQuartz' char u8 u8
+# 7005 char item u8 u8 # "is anyone wearing sub mq", according to comments
+# 7006 'CharSetSlotLevel' char u8 u8 u8 u8
+# 7007 char u8
+# 7008 'MqSetLevel' item u16 u16
+# 700A 'MqSetExp' item u32 u32
+# 700B char u8
+# 700C char u8 u8
+# 700E 'CharEquipSubMq' char item item
+# 700F 'CharEquipMq' char item u16
 
-7100 'FlagSetRange' flag flag
-7101 'FlagUnsetRange' flag flag
+# 7100 'FlagSetRange' flag flag
+# 7101 'FlagUnsetRange' flag flag
 
-72 'Quest' u16
-7201 'QuestTaskSet' u16 u8
-7202 'QuestTaskUnset' u16 u8
-7203 'QuestFlagsSet' flags8 u8
-7204 'QuestFlagsUnset' flags8 u8
-7206 u16
-7207
-7208 dyn
-7209
-720A dyn
-720B dyn u8 u8
+# 72 'Quest' u16
+# 7201 'QuestTaskSet' u16 u8
+# 7202 'QuestTaskUnset' u16 u8
+# 7203 'QuestFlagsSet' flags8 u8
+# 7204 'QuestFlagsUnset' flags8 u8
+# 7206 u16
+# 7207
+# 7208 dyn
+# 7209
+# 720A dyn
+# 720B dyn u8 u8
 
-73   u16
-7300 u8 u8
-7301 u16 u8
-7302 dyn u8 u8
-7304 dyn
+# 73   u16
+# 7300 u8 u8
+# 7301 u16 u8
+# 7302 dyn u8 u8
+# 7304 dyn
 
-74   'ActiveVoice' u16
-7400 'ActiveVoicePlay' u32
-7401 'ActiveVoiceStop'
-7402 u16 f32 u16 u16 str f32
-7403 str f32 u16 u16 str f32
-7404
-7416
+# 74   'ActiveVoice' u16
+# 7400 'ActiveVoicePlay' u32
+# 7401 'ActiveVoiceStop'
+# 7402 u16 f32 u16 u16 str f32
+# 7403 str f32 u16 u16 str f32
+# 7404
+# 7416
 
-75 'Menu2'
-7500 'Menu2New' u8 u16 f32 u32
-7501 'Menu2Add' u8 str i32
-7502 'Menu2Show' u8 u8 i16 i16 u8
-7503 'Menu2Hide' u8
-7504 'Menu2Wait' u8 global
-7505 u8 u16 u32
-7506 u8 u16
-7507 u8 u16
-7508 u8
-7509 u8 f32 f32 f32
-750A u8 f32 f32 f32
-750B u8 f32 f32 f32
-750C u8 dyn dyn dyn dyn dyn u8
-750D u8 dyn dyn dyn dyn
-750E u8 u8
-750F u8 u8
-7510 u8 u32
+# 75 'Menu2'
+# 7500 'Menu2New' u8 u16 f32 u32
+# 7501 'Menu2Add' u8 str i32
+# 7502 'Menu2Show' u8 u8 i16 i16 u8
+# 7503 'Menu2Hide' u8
+# 7504 'Menu2Wait' u8 global
+# 7505 u8 u16 u32
+# 7506 u8 u16
+# 7507 u8 u16
+# 7508 u8
+# 7509 u8 f32 f32 f32
+# 750A u8 f32 f32 f32
+# 750B u8 f32 f32 f32
+# 750C u8 dyn dyn dyn dyn dyn u8
+# 750D u8 dyn dyn dyn dyn
+# 750E u8 u8
+# 750F u8 u8
+# 7510 u8 u32
 
-76   char str str u8 u8 f32 f32 f32 f32
-77   'CharDelete' char
-7800 str
-7801 str u8
-79   u8 u16 _79
-7A00 'ScenaIs' str
-7A01 'CharIsModel' char str
-7A02 'CharIsAni' char str
-7A03 'ScenaIsPrefix' str
-7B01 'MoviePlay' str u8 u8 u8
-7B02 'MovieStop'
-7B09 'MovieWait'
-7C02
-7D   'ShopShow' u16 u32 f32
-7E00
-7E01
-7E02 u16
-7E03 f32 f32 f32
-7E04 char
-7E05 f32
-7E06 u16
-7E07 f32 u8
-7E09
+# 76   char str str u8 u8 f32 f32 f32 f32
+# 77   'CharDelete' char
+# 7800 str
+# 7801 str u8
+# 79   u8 u16 _79
+# 7A00 'ScenaIs' str
+# 7A01 'CharIsModel' char str
+# 7A02 'CharIsAni' char str
+# 7A03 'ScenaIsPrefix' str
+# 7B01 'MoviePlay' str u8 u8 u8
+# 7B02 'MovieStop'
+# 7B09 'MovieWait'
+# 7C02
+# 7D   'ShopShow' u16 u32 f32
+# 7E00
+# 7E01
+# 7E02 u16
+# 7E03 f32 f32 f32
+# 7E04 char
+# 7E05 f32
+# 7E06 u16
+# 7E07 f32 u8
+# 7E09
 80   f32
-82   char f32 f32 u16 f32 f32 f32 f32 u16
-83   u16 u16 u16 u16
-8400 f32 f32 f32 f32
-8401 f32 f32 f32 f32
-8402 f32 f32 f32 f32
-8403 char str u8
-86   u8 u16 u16 u16 flag u16 u16 f32 f32 f32 str
-87   u8 u32
-88   'BondPointsSet' u16
-89   'BondPointsAdd' u16
-8A00 char char str str u8
-8A01 char char str str
-8A02 char char
-8A03 char f32 f32 f32 f32 f32 f32 f32 f32 f32
-8A0A char str str str u8
-8A0B char
-8A0C char str str str u8
-8A0D str
-8A32 char str
-8A33 char str
-8AFE char str f32
-8AFF char str f32
-8B   f32 f32 f32 f32 f32 u8
+# 82   char f32 f32 u16 f32 f32 f32 f32 u16
+# 83   u16 u16 u16 u16
+# 8400 f32 f32 f32 f32
+# 8401 f32 f32 f32 f32
+# 8402 f32 f32 f32 f32
+# 8403 char str u8
+# 86   u8 u16 u16 u16 flag u16 u16 f32 f32 f32 str
+# 87   u8 u32
+# 88   'BondPointsSet' u16
+# 89   'BondPointsAdd' u16
+# 8A00 char char str str u8
+# 8A01 char char str str
+# 8A02 char char
+# 8A03 char f32 f32 f32 f32 f32 f32 f32 f32 f32
+# 8A0A char str str str u8
+# 8A0B char
+# 8A0C char str str str u8
+# 8A0D str
+# 8A32 char str
+# 8A33 char str
+# 8AFE char str f32
+# 8AFF char str f32
+# 8B   f32 f32 f32 f32 f32 u8
 
-8C 'Debug'
-8C00 char
-8C01
-8C02
-8C03 u8
-8C04 u32
-8C06
-8C07
-8C08 u32
-8C09
-8C0A u8 str str
-8C0B
-8C0C str u32
-8C0D u32 u32
-8C0F u32
-8C10 u32 u8
-8C11 'DebugWarning' str
-8C12
-8C13
-8C14 u8
+# 8C 'Debug'
+# 8C00 char
+# 8C01
+# 8C02
+# 8C03 u8
+# 8C04 u32
+# 8C06
+# 8C07
+# 8C08 u32
+# 8C09
+# 8C0A u8 str str
+# 8C0B
+# 8C0C str u32
+# 8C0D u32 u32
+# 8C0F u32
+# 8C10 u32 u8
+# 8C11 'DebugWarning' str
+# 8C12
+# 8C13
+# 8C14 u8
 
-8D   char f32 f32 f32 f32
-8E   'CalendarShow' u16 u16 u16 u16 u16 u16 u16 u16
-8F   'CalendarWait'
-90   str u32
+# 8D   char f32 f32 f32 f32
+# 8E   'CalendarShow' u16 u16 u16 u16 u16 u16 u16 u16
+# 8F   'CalendarWait'
+# 90   str u32
 
-91 'Note'
-9100 'CharNoteSet' char flags32
-9101 'CharNoteUnset' char flags32
-9102 str u8
-9105 'FishNoteSet' item flags32
-9106 u16 # something with fish
+# 91 'Note'
+# 9100 'CharNoteSet' char flags32
+# 9101 'CharNoteUnset' char flags32
+# 9102 str u8
+# 9105 'FishNoteSet' item flags32
+# 9106 u16 # something with fish
 
-92   global u16
-9300 u8
-9301
-93D2 u16
-93D3
-93DC
-93DD
-9403
-9500 'BookShow' str str u8 u16
-9501 'BookWait'
-9600 u32
-9601
-9700 u16 flags32
-9702 u16 flags32
-98   u16 _98
-99   'HelpUnlock' u16 u16
-9A   'MapAmbientLight' u16 f32 f32 f32 u16
-9B00 u16
-9B02
-9B04
-9C00 u8 u16 u16 u32
-9C01
-9C03
-9D   u8 u8
-9E00
-9E01
-9E02
-9E0F u8
-9E10
-9E11 char u8
-9E12 u8 u8
-9E13
-9E1401 char str
-9E1402 char
-9E1403 u8
-9E1404 u32
-9E1405 char f32 f32 f32 f32
-9E1407 char
-9E1409 u8 char
-9E140B char u16
-9E140D u8 u32
-9E140E u8 char
-9E140F u8
-9E1410 u16
-9E1411 u16 u8
-9E1412 u8 u32
-9E1413 u8 u32
-9E1414 u8
-9E1415 char u8 str
-9E1416 u16 u32
-9E1417
-9E1418 u16
-9E1419 u16 str dyn
-9E141A u16
-9E141B char
-9E32 char str
-9E33 char str
-9E3400 u32
-9E3401 u32
-9E3402 u32
-9E3403 u32
-9E3404 u32
-9E3405 u32 str
-9E3406 u32
-9E35 u8 u16
-9E36 u8 u32
-9E37 u8
-9E38 u16 u8 str
-9E39
-9E3A char u16 f32 f32 f32 f32 f32 f32 f32 f32
-9E3B char u8
-9E3C u32 u16
-9E3D u32 u16
-9E3E u16
-9E3F u16
-9E40
-9E41 char u16 u32 u16
-9E42 char u32
-9E43 char u32
-9E44 char u16
-9E45 char u16
-9E46 char i32 u16
-9E47
-9E48 u8
-9E49 u8
-9E4A char f32 f32 f32
-9E4B char
-9E4C u16 u8
-9E4D
-9E4E
-9E4F
-9E50 u16
-9E51 u16 i32 u8
-9E53 f32 f32
-9E54 u8
-9E55
-9E56 u8
-9E59 u32
-9E5A
-A0
-A1   f32 f32 f32 u16 u16
-A2   char str u32 u32
-A3   'OrbmentSetCover' char item
-A4   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
-A500 char u16 f32 u8
-A6   char f32 f32 f32
-A8   flags32
-A9   'NoteGetCount' u8
-AA   u8 u8
-AB00 char u8 _AB00
-AB01
-AB02 _AB02
-AB03 f32 f32 f32
-AC00 u8
-AC01 dyn # SSD says dyn×4 here but why
-AC02 u32
-AC03 dyn
-AC04 dyn
-AC05 dyn
-AC07 u16
-AC08
-AC09 u16
-AC0B u16
-AC0D dyn
-AC0E
-AC0F u16
-AC10
-AC11
-AC12 dyn
-AC13 u16
-AC14 dyn
-AC15 u16
-AC16 dyn
-AC17 u16
-AD00 u8
-AD01 u8
-AD02 f32
-AD03 u8
+# 92   global u16
+# 9300 u8
+# 9301
+# 93D2 u16
+# 93D3
+# 93DC
+# 93DD
+# 9403
+# 9500 'BookShow' str str u8 u16
+# 9501 'BookWait'
+# 9600 u32
+# 9601
+# 9700 u16 flags32
+# 9702 u16 flags32
+# 98   u16 _98
+# 99   'HelpUnlock' u16 u16
+# 9A   'MapAmbientLight' u16 f32 f32 f32 u16
+# 9B00 u16
+# 9B02
+# 9B04
+# 9C00 u8 u16 u16 u32
+# 9C01
+# 9C03
+# 9D   u8 u8
+# 9E00
+# 9E01
+# 9E02
+# 9E0F u8
+# 9E10
+# 9E11 char u8
+# 9E12 u8 u8
+# 9E13
+# 9E1401 char str
+# 9E1402 char
+# 9E1403 u8
+# 9E1404 u32
+# 9E1405 char f32 f32 f32 f32
+# 9E1407 char
+# 9E1409 u8 char
+# 9E140B char u16
+# 9E140D u8 u32
+# 9E140E u8 char
+# 9E140F u8
+# 9E1410 u16
+# 9E1411 u16 u8
+# 9E1412 u8 u32
+# 9E1413 u8 u32
+# 9E1414 u8
+# 9E1415 char u8 str
+# 9E1416 u16 u32
+# 9E1417
+# 9E1418 u16
+# 9E1419 u16 str dyn
+# 9E141A u16
+# 9E141B char
+# 9E32 char str
+# 9E33 char str
+# 9E3400 u32
+# 9E3401 u32
+# 9E3402 u32
+# 9E3403 u32
+# 9E3404 u32
+# 9E3405 u32 str
+# 9E3406 u32
+# 9E35 u8 u16
+# 9E36 u8 u32
+# 9E37 u8
+# 9E38 u16 u8 str
+# 9E39
+# 9E3A char u16 f32 f32 f32 f32 f32 f32 f32 f32
+# 9E3B char u8
+# 9E3C u32 u16
+# 9E3D u32 u16
+# 9E3E u16
+# 9E3F u16
+# 9E40
+# 9E41 char u16 u32 u16
+# 9E42 char u32
+# 9E43 char u32
+# 9E44 char u16
+# 9E45 char u16
+# 9E46 char i32 u16
+# 9E47
+# 9E48 u8
+# 9E49 u8
+# 9E4A char f32 f32 f32
+# 9E4B char
+# 9E4C u16 u8
+# 9E4D
+# 9E4E
+# 9E4F
+# 9E50 u16
+# 9E51 u16 i32 u8
+# 9E53 f32 f32
+# 9E54 u8
+# 9E55
+# 9E56 u8
+# 9E59 u32
+# 9E5A
+# A0
+# A1   f32 f32 f32 u16 u16
+# A2   char str u32 u32
+# A3   'OrbmentSetCover' char item
+# A4   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+# A500 char u16 f32 u8
+# A6   char f32 f32 f32
+# A8   flags32
+# A9   'NoteGetCount' u8
+# AA   u8 u8
+# AB00 char u8 _AB00
+# AB01
+# AB02 _AB02
+# AB03 f32 f32 f32
+# AC00 u8
+# AC01 dyn # SSD says dyn×4 here but why
+# AC02 u32
+# AC03 dyn
+# AC04 dyn
+# AC05 dyn
+# AC07 u16
+# AC08
+# AC09 u16
+# AC0B u16
+# AC0D dyn
+# AC0E
+# AC0F u16
+# AC10
+# AC11
+# AC12 dyn
+# AC13 u16
+# AC14 dyn
+# AC15 u16
+# AC16 dyn
+# AC17 u16
+# AD00 u8
+# AD01 u8
+# AD02 f32
+# AD03 u8
 AE   'SetEndFunc' str u16
-AF   u8
-B001
-B002
-B003
-B004 u8
-B007
-B008
-B009
-B00A u8
-B00B u8 u8
-B00C u8
-B00D
-B00E
-B00F
-B010 dyn
-B011
-B012 u8
-B017
-B018
-B019 u8
-B01A
-B01B
-B01C
-B01D u8
-B01E u8
-B01F
-B020
-B021 u8
-B022
-B023
-B024
-B025 u8
-B026
-B027
-B028 u8
-B029
-B02A
-B02B
-B02C
-B02D
-B02E u8
-B02F u8
-B030
-B031 u32
-B032
-B033
-B034
-B035
-B036 u32 u8
-B037
-B038
-B039
-B03B
-B03C u8 char u8
-B03D u32
-B03E u32
-B040
-B100 'PartyCharFlagsSet' char flags32
-B101 'PartyCharFlagsUnset' char flags32
-B102 'PartyCharFlagsToggle' char flags32
-B103 'PartyCharFlagsGet' char flags32
-B200 u8 char
-B201 u8 u8 u8 char
-B3   f32 f32 f32 f32 u16 u16
-B4
-B5   char u8 f32 f32 f32 u16 u16
-B6   char u8
-B7   u8 u16
-B900 u32 u16 str str u32
-B901 u32 f32 f32 f32 f32 f32 f32 f32
-B902 u32 f32 f32 f32
-B903 u32
-BA14 u8 u8
-BA15
-BB   char
-BC00 u16 dyn u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
-BC01 u16 dyn u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
-BC02 u16 dyn u8
-BC03 u16 dyn
-BC04 u16 dyn u16 u16
-BC05 u16 dyn u16 u16
-BC06 u16 dyn
-BC07 u16 dyn f32 f32 u16 u16
-BC08 u16 dyn u32
-BC09 u16 dyn f32 f32 f32 f32 f32 f32 u16 u16
-BC0A u16 dyn f32 f32
-BC0B u16 dyn u32
-BC0C u16 dyn str f32 f32
-BC0D u16 dyn u32
-BC0E u16 dyn dyn u16 u16
-BC0F u16 dyn u16 u32 str
-BC10 u16 dyn u32 u32 u16
-BC11 u16 dyn str f32 f32
-BC12 u16 dyn str f32 f32
-BC13 u16 dyn str f32 f32
-BC14 u16 dyn u32
-BC15 u16 dyn u32
-BC16 u16 dyn u32
-BC17 u16 dyn f32 f32
-BC18 u16 dyn f32
-BC19 u16 dyn str
-BE   char u8 f32 f32
-C0   u16 _C0
-C200 'HelpShow'
-C201 'HelpWait'
-C300 u8 u32 u32 u32
-C301 u8
+# AF   u8
+# B001
+# B002
+# B003
+# B004 u8
+# B007
+# B008
+# B009
+# B00A u8
+# B00B u8 u8
+# B00C u8
+# B00D
+# B00E
+# B00F
+# B010 dyn
+# B011
+# B012 u8
+# B017
+# B018
+# B019 u8
+# B01A
+# B01B
+# B01C
+# B01D u8
+# B01E u8
+# B01F
+# B020
+# B021 u8
+# B022
+# B023
+# B024
+# B025 u8
+# B026
+# B027
+# B028 u8
+# B029
+# B02A
+# B02B
+# B02C
+# B02D
+# B02E u8
+# B02F u8
+# B030
+# B031 u32
+# B032
+# B033
+# B034
+# B035
+# B036 u32 u8
+# B037
+# B038
+# B039
+# B03B
+# B03C u8 char u8
+# B03D u32
+# B03E u32
+# B040
+# B100 'PartyCharFlagsSet' char flags32
+# B101 'PartyCharFlagsUnset' char flags32
+# B102 'PartyCharFlagsToggle' char flags32
+# B103 'PartyCharFlagsGet' char flags32
+# B200 u8 char
+# B201 u8 u8 u8 char
+# B3   f32 f32 f32 f32 u16 u16
+# B4
+# B5   char u8 f32 f32 f32 u16 u16
+# B6   char u8
+# B7   u8 u16
+# B900 u32 u16 str str u32
+# B901 u32 f32 f32 f32 f32 f32 f32 f32
+# B902 u32 f32 f32 f32
+# B903 u32
+# BA14 u8 u8
+# BA15
+# BB   char
+# BC00 u16 dyn u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
+# BC01 u16 dyn u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
+# BC02 u16 dyn u8
+# BC03 u16 dyn
+# BC04 u16 dyn u16 u16
+# BC05 u16 dyn u16 u16
+# BC06 u16 dyn
+# BC07 u16 dyn f32 f32 u16 u16
+# BC08 u16 dyn u32
+# BC09 u16 dyn f32 f32 f32 f32 f32 f32 u16 u16
+# BC0A u16 dyn f32 f32
+# BC0B u16 dyn u32
+# BC0C u16 dyn str f32 f32
+# BC0D u16 dyn u32
+# BC0E u16 dyn dyn u16 u16
+# BC0F u16 dyn u16 u32 str
+# BC10 u16 dyn u32 u32 u16
+# BC11 u16 dyn str f32 f32
+# BC12 u16 dyn str f32 f32
+# BC13 u16 dyn str f32 f32
+# BC14 u16 dyn u32
+# BC15 u16 dyn u32
+# BC16 u16 dyn u32
+# BC17 u16 dyn f32 f32
+# BC18 u16 dyn f32
+# BC19 u16 dyn str
+# BE   char u8 f32 f32
+# C0   u16 _C0
+# C200 'HelpShow'
+# C201 'HelpWait'
+# C300 u8 u32 u32 u32
+# C301 u8
 
-C4 'Team'
-C400 'TeamClear' u8
-C401 'TeamActivate' u8
-C402 'TeamAddChar' dyn char
-C403 'TeamGetChar' char
-C404 u8 dyn f32 f32 f32 f32
-C405 u8 u8
-C406 dyn u8
-C407 'TeamGetCount'
-C408 u8
-C409 dyn
-C40A u8
-C40B 'TeamCopy' u8 u8
-C40C u8 u16
-C40D 'TeamRemoveChar' u8 char
-C40E u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
-C40F u8 u8 u8 u8 u8 u8 u8 u8 u8
-C410 dyn u16
+# C4 'Team'
+# C400 'TeamClear' u8
+# C401 'TeamActivate' u8
+# C402 'TeamAddChar' dyn char
+# C403 'TeamGetChar' char
+# C404 u8 dyn f32 f32 f32 f32
+# C405 u8 u8
+# C406 dyn u8
+# C407 'TeamGetCount'
+# C408 u8
+# C409 dyn
+# C40A u8
+# C40B 'TeamCopy' u8 u8
+# C40C u8 u16
+# C40D 'TeamRemoveChar' u8 char
+# C40E u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
+# C40F u8 u8 u8 u8 u8 u8 u8 u8 u8
+# C410 dyn u16
 
 # Pretty sure C5 has to do with team select menu
-C500 u8 u8
-C501
-C502
-C503
-C504 u8
-C505
-C506 u8
-C507 u32
-C508
-C509 u8 u8 u8 u8 u8 u8 u8 u8
-C50A u8 u8 u8 u8 u8 u8 u8 u8
-C50B
-C50C u8 u8 u8 u8 u8
+# C500 u8 u8
+# C501
+# C502
+# C503
+# C504 u8
+# C505
+# C506 u8
+# C507 u32
+# C508
+# C509 u8 u8 u8 u8 u8 u8 u8 u8
+# C50A u8 u8 u8 u8 u8 u8 u8 u8
+# C50B
+# C50C u8 u8 u8 u8 u8
 
-C6 'Bond'
-C600 'BondShow' u8
-C601 'BondWait'
-C602 char u8
-C603 'BondSetLevel' char u8
-C604 'BondSetExp' char u32
-C605 'BondAddExp' char u32
-C606 'BondGetLevel' char
-C607 'BondGetExp' char
-C608 char u8 u8 u8
-C609 char
+# C6 'Bond'
+# C600 'BondShow' u8
+# C601 'BondWait'
+# C602 char u8
+# C603 'BondSetLevel' char u8
+# C604 'BondSetExp' char u32
+# C605 'BondAddExp' char u32
+# C606 'BondGetLevel' char
+# C607 'BondGetExp' char
+# C608 char u8 u8 u8
+# C609 char
 
-C700
-C701 u16 u32
-C702
-C800 char flag u16
-C801 char flag u16
-C802 char flag u16 char
-C803 char flag u16 f32 f32 f32
-C901 char
-C902
-C903 char u16
-C90A char str
-CD00
-CD05
-CD06 u16 u16 u16 u16
-CE00 u8 str str u8
-CE01 u8 u32 u8
-CE02 u8 str f32 f32 f32 f32 u8
-CE03 u8 u8
-CE04 u8 char f32 f32 f32 f32 u8
-CE05 u8 char str u8
-CE06 u8 u8
-CE07 u8 u8
-CE08 u8 u8
-CE09 u8 f32 f32 u8 u8
-CE0A u8 str u8
-CE0B u8 u32 u8
-CE14 u8 char str u8
-CE15 u8 char u32 u8
-CE1E u8 str str u8
-CE1F u8 str u32 u8
-CE28 u8 str u8
-CE32 u8 str u32 u8
-CE33 u8 str u32 u8
-CF03
-CF04
-CF05
-CF06
-CF07
-CF14 u16
-D000 char str str str str f32 f32 f32
-D01E str str str str f32 f32 f32
-D100 str u16 f32 f32
-D101 str u16
-D2   i16 _D2
-D300 f32 f32 f32 f32 u16 u8 u8 u8
-D301
-D4   u8 u8
-D501 u8 u16
-D6   char dyn dyn dyn dyn
+# C700
+# C701 u16 u32
+# C702
+# C800 char flag u16
+# C801 char flag u16
+# C802 char flag u16 char
+# C803 char flag u16 f32 f32 f32
+# C901 char
+# C902
+# C903 char u16
+# C90A char str
+# CD00
+# CD05
+# CD06 u16 u16 u16 u16
+# CE00 u8 str str u8
+# CE01 u8 u32 u8
+# CE02 u8 str f32 f32 f32 f32 u8
+# CE03 u8 u8
+# CE04 u8 char f32 f32 f32 f32 u8
+# CE05 u8 char str u8
+# CE06 u8 u8
+# CE07 u8 u8
+# CE08 u8 u8
+# CE09 u8 f32 f32 u8 u8
+# CE0A u8 str u8
+# CE0B u8 u32 u8
+# CE14 u8 char str u8
+# CE15 u8 char u32 u8
+# CE1E u8 str str u8
+# CE1F u8 str u32 u8
+# CE28 u8 str u8
+# CE32 u8 str u32 u8
+# CE33 u8 str u32 u8
+# CF03
+# CF04
+# CF05
+# CF06
+# CF07
+# CF14 u16
+# D000 char str str str str f32 f32 f32
+# D01E str str str str f32 f32 f32
+# D100 str u16 f32 f32
+# D101 str u16
+# D2   i16 _D2
+# D300 f32 f32 f32 f32 u16 u8 u8 u8
+# D301
+# D4   u8 u8
+# D501 u8 u16
+# D6   char dyn dyn dyn dyn
 
-D9 'Vr'
-D900 'VrEnable' u8
-D902 'IsVr'
-D904 'VrRotate' u16 f32 f32 f32 f32 f32 f32
-D905
-D906 'VrPosition' f32 f32 f32
+# D9 'Vr'
+# D900 'VrEnable' u8
+# D902 'IsVr'
+# D904 'VrRotate' u16 f32 f32 f32 f32 f32 f32
+# D905
+# D906 'VrPosition' f32 f32 f32
 
-DA00 'RouteMenuShow' u8
-DA01 'RouteMenuWait'
-DB   u8
-DC00 char u16 u8
-DE01 u8 f32
-DE02
-DE03 u8 u8 u8
-DF   u32 u8
-E000
-E001
-E002 u8 u16 f32 f32opt f32opt u8 u8
-E003 u16 f32 f32 f32
-E004
-E005 u8
-E006 str
-E007
-E008
-E100 u16 f32 f32
-E101
-E200 u8 u8
-E201 u8
-E202 u8 u16
-E203 u8 u16
-E204 u8
-E205 u8 u8
-E300
-E301
-E302 u16 u8 u16 u16
-E303 u16 u8 u16
-E304
-E305
-E500 'Team2Clear' u8
-E501 'Team2Copy' u8 u8
-E6   u16
+# DA00 'RouteMenuShow' u8
+# DA01 'RouteMenuWait'
+# DB   u8
+# DC00 char u16 u8
+# DE01 u8 f32
+# DE02
+# DE03 u8 u8 u8
+# DF   u32 u8
+# E000
+# E001
+# E002 u8 u16 f32 f32opt f32opt u8 u8
+# E003 u16 f32 f32 f32
+# E004
+# E005 u8
+# E006 str
+# E007
+# E008
+# E100 u16 f32 f32
+# E101
+# E200 u8 u8
+# E201 u8
+# E202 u8 u16
+# E203 u8 u16
+# E204 u8
+# E205 u8 u8
+# E300
+# E301
+# E302 u16 u8 u16 u16
+# E303 u16 u8 u16
+# E304
+# E305
+# E500 'Team2Clear' u8
+# E501 'Team2Copy' u8 u8
+# E6   u16

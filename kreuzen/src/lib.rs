@@ -172,8 +172,8 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let is_fixed = fixed.contains(&f.entry);
 	let is_menu = f.scena.contains("_menu");
 	let is_weird = match f.game {
-		Game::Cs3 | Game::Cs4 => matches!(f.scena,
-			| "mon046_c00" | "mon042_c00" | "mon042_c01" | "mon037_c00"
+		Game::Cs3 | Game::Cs4 | Game::Reverie => matches!(f.scena,
+			| "mon042_c00" | "mon042_c01" | "mon037_c00"
 			| "mon000s" | "rob013_c00"
 			| "ply000" | "ply001"
 			| "mon_template" | "chr_enemy_template"),

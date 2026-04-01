@@ -177,9 +177,6 @@
 3332 'BtlAfterimageDelete'
 3333 char str str # also related to afterimages
 3334 cs4_odd u8
-# 333500 char f32 f32 f32 str
-# 333501 char f32 f32 f32 str
-# 333502 char f32 f32 f32 str
 3337 'Btl_CharSetPos' char char f32 f32 f32 f32 u8 u8
 3338 'Btl_MoveToTarget'
 3339 cs4_3339 # might be if char can move or something?
@@ -544,7 +541,7 @@
 6915 u16
 
 6B   u8 u16 u16 f32 f32 f32 # i32 in chr067
-6C   char f32
+6C   'CharAniSpeed' char f32
 
 6F 'Item'
 6F00 'ItemAdd' item u32
