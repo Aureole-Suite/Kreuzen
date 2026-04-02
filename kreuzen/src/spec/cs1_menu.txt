@@ -1,66 +1,67 @@
 01   'return'
 02   'call' u8 str
+10   'Sleep' u16
 
 13 'MenuScript'
 1300 u8 str str
 # 1301 u8
 130A u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
 130B u16 u16 u16 str u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 130C u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
+130C u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
 130D u16
 130E u16 u16 u16 u16 u16 u16 u16 u16 u16 u8
 130F u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
 1310 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
 1311 u16 u16 u16 u16 u16 u8 u8 u8 u8 u32
-# 1312 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 1313 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u16 u16 u32
-# 1314 u16 u16 u16 u16 u16 u8 u8 u8 u8 u32
-# 1315 u16 u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 1316 u16 u16 u16 u8 u8 u8 u16 u16 u16 u8 u8 u8 u8 u32
-# 1317 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 1318 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
-# 1319 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 131A u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 131B u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
+1312 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
+1313 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u16 u16 u32
+1314 u16 u16 u16 u16 u16 u8 u8 u8 u8 u32
+1315 u16 u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
+1316 u16 u16 u16 u8 u8 u8 u16 u16 u16 u8 u8 u8 u8 u32
+1317 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
+1318 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
+1319 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
+131A u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
+131B u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
 # 131C u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 131D u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
-# 131E u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 131F u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 1320 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 1321 u16 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
+131D u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
+131E u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
+131F u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
+1320 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
+1321 u16 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
 1322 u16 u16 u16 u8 str u16 u16 u8 u8 u8 u8 u32
-# 1323 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
-# 1324 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
+1323 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
+1324 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
 1325 u16 u16 u16 u16 u16 u16 u16 u16 u16 u32 u32 u32 u32 u8
-# 1326 u16
-# 1327 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
-# 1328 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 1329 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
-# 132A u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
+1326 u16
+1327 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
+1328 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
+1329 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
+132A u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
 132B u16 u16 u16 str u16 u16 u8 u8 u8 u8 u32
-# 132C u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 132D u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
-# 132E u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
+132C u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
+132D u16 u16 u16 u8 u8 u16 u16 u8 u8 u8 u8 u32
+132E u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
 132F u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
-# 1330 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
+1330 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
 1331 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
 # 1332 u16
 1333 u16 u16 u16 u16 u8
 # 1334 u16 u32 u16 u8
-# 1335 u16 u32 u32 u16 u8
+1335 u16 u32 u32 u16 u8
 1336 u16 u8 u8 u8 u8 u16 u8
-# 1337 u16 u8 u16 u8
-# 1338 u16 str
+1337 u16 u8 u16 u8
+1338 u16 str
 1339 u16 u32
-# 133A u16 u32
+133A u16 u32
 # 133B u16 str
 # 133C u16 u16 u16 u16 u8
 # 133D u16 u16
 133E u16 u8
-# 133F u16 u16 u16
+133F u16 u16 u16
 1340 u16 u16 u16 u16
-# 1341 u16 u16
-# 1343 u16 u8 u16 u8
+1341 u16 u16
+1343 u16 u8 u16 u8
 # 1344 u16 u8 u16 u8
 1365 u16 u16 u16 u16 u8
 1368 u16 u8 u8 u8 u8 u16 u8

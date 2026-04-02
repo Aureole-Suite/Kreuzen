@@ -256,14 +256,19 @@ fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)
 }
 
 fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
-	let prefixes = ["Ani", "TK_"];
-	let fixed = ["Init", "PreInit", "Reinit"];
-	let tables = ["AnimeClipTable"];
-	let has_prefix = prefixes.iter().any(|p| f.entry.starts_with(p));
-	let is_table = tables.contains(&f.entry);
-	let is_fixed = fixed.contains(&f.entry);
-	if (has_prefix || is_fixed) && !is_table {
-		// These ones are very likely to be code, so we'll start with them
+	let tables = [
+		"",
+		"ActionTable",
+		"AddCollision",
+		"AlgoTable",
+		"AnimeClipTable",
+		"FieldMonsterData",
+		"PartTable",
+		"ReactionTable",
+		"SummonTable",
+	];
+	let is_table = tables.contains(&f.entry) || f.entry.starts_with("FC_auto") || f.entry.starts_with("BookData");
+	if !is_table {
 		let code = code::decompile(f, end)?;
 		f.seek(end)?;
 	} else {

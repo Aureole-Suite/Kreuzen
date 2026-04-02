@@ -362,7 +362,7 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 			}
 
 			P::Print => println!("{args:?}"),
-			P::Fail => eyre::bail!("Deliberate failure for testing"),
+			P::Fail => eyre::bail!("Fail"),
 		}
 	}
 	Ok(())
