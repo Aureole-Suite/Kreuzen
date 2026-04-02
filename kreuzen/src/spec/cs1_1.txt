@@ -14,7 +14,7 @@
 10   'Sleep' u16
 11   u16 u16
 12   'SetGlobal' global expr
-13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
+13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32
 14   'Fork' char u8 u8 str
 15   'ForkKill' char u8
 16   u8
