@@ -188,7 +188,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 
 	let mut line = 0;
 	let mut width = 0xFF;
-	if !matches!(code, 0x01 | 0x04) && f.game == crate::Game::Reverie && f.oddness != 1 {
+	if !matches!(code, 0x01 | 0x04) && f.game == crate::Game::Reverie {
 		line = f.u16()?;
 		f.check_u8(0)?;
 		width = f.u8()?;
@@ -298,15 +298,6 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				}
 			}
 
-			P::Cs1_22 => {
-				if f.scena == "npcx01" && f.oddness == 1 {
-					// empty
-				} else if f.oddness == 1 {
-					read_parts(args, f, &[P::U8])?;
-				} else {
-					read_parts(args, f, &[P::U8, P::U8])?;
-				}
-			}
 			P::Cs1_36 => {
 				if matches!(args[1], Arg::Char(Char(0xFE02..=0xFE03))) {
 					read_parts(args, f, &[P::F32])?;
@@ -317,27 +308,10 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 					read_parts(args, f, &[P::U32, P::U32, P::U32])?;
 				}
 			}
-			P::Cs1_2834 => {
-				if f.check_u32(0).is_ok() {
-					args.push(0u32.into());
-				} else if f.check_u32(1).is_ok() {
-					args.push(1u32.into());
-				}
-			}
 
 			P::Cs2_37 => {
 				if matches!(args[1], Arg::Char(Char(0xFE04))) {
 					read_parts(args, f, &[P::F32])?;
-				}
-			}
-			P::Cs2_7C => {
-				let v = f.u32()?;
-				if v >> 16 == 0xFFFF {
-					args.push((v as u16).into());
-					f.rewind();
-					f.rewind();
-				} else {
-					args.push(v.into());
 				}
 			}
 
@@ -359,61 +333,14 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				};
 				read_parts(args, f, op_c0(v))?;
 			}
-			
-			P::Cs4_odd => {
-				if f.oddness == 1 {
-					break;
-				}
-			}
-			P::Cs4_333C => {
-				if matches!(f.scena, "rob030" | "mon093" | "mon027_c00" | "mon046_c00") {
-					read_parts(args, f, &[P::Fail])?;
-				}
-			}
-			P::Cs4_3339 => {
-				if matches!(f.scena, "rob030") {
-					read_parts(args, f, &[P::Fail])?;
-				}
-			}
-			P::Cs4_333D => {
-				if matches!(f.scena, "rob030") {
-					read_parts(args, f, &[P::U16])?;
-					break;
-				}
-			}
-			P::Cs4_3348 => {
-				if matches!(f.scena, "rob030" | "mon093" | "mon027_c00" | "mon046_c00") {
-					break;
-				}
-			}
-			P::Cs4_sound_play => {
-				if matches!(f.scena, "rob030" | "npcx03") {
-					read_parts(args, f, cs4_weird_sound_play())?;
-					break;
-				}
-			}
-			P::Cs4_40_a => {
-				if matches!(args[1], Arg::Char(Char(0xFE02..=0xFE04))) {
-					read_parts(args, f, &[P::F32])?;
-				}
-			}
-			P::Cs4_40_b => {
-				if matches!(args[1], Arg::Char(Char(0xFE05))) {
-					read_parts(args, f, &[P::Fail])?;
-				}
-			}
-			P::Cs4_5E00 => {
-				if f.oddness != 1 {
-					read_parts(args, f, &[P::Str])?;
-				}
-			}
 
-			P::Rev_3335 => {
-				if f.oddness != 0 {
-					read_parts(args, f, &[P::Char, P::U32, P::Print, P::Fail])?;
-					break;
-				}
+			P::Cs4_40 => {
+				let Arg::Char(v) = args[1] else {
+					eyre::bail!("Expected Char");
+				};
+				read_parts(args, f, op_40(v))?;
 			}
+			
 			P::Rev_3E => {
 				match args[1] {
 					Arg::Char(Char(0xFE12)) => read_parts(args, f, &[P::U8])?,
@@ -422,27 +349,11 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 					_ => {}
 				}
 			}
-			P::Rev_40 => {
-				if matches!(args[1], Arg::Char(Char(0xFE15))) {
-					read_parts(args, f, &[P::Dyn, P::Dyn, P::Dyn, P::Dyn])?;
-				}
-			}
 			P::Rev_D2 => {
 				let Arg::I16(v) = args[0] else {
 					eyre::bail!("Expected I16");
 				};
 				read_parts(args, f, op_d2(v))?;
-			}
-			P::_40 => {
-				let Arg::Char(v) = args[1] else {
-					eyre::bail!("Expected Char");
-				};
-				read_parts(args, f, op_40(v))?;
-			}
-			P::Rev_6C => {
-				if f.oddness != 0 {
-					break;
-				}
 			}
 			P::Rev_79 => {
 				if matches!(args[0], Arg::U8(7)) {
@@ -450,11 +361,8 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 				}
 			}
 
-			P::Print => {
-				println!("{args:?}");
-			}
-
-			p => eyre::bail!("Unsupported part type: {p:?}"),
+			P::Print => println!("{args:?}"),
+			P::Fail => eyre::bail!("Deliberate failure for testing"),
 		}
 	}
 	Ok(())

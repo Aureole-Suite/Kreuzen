@@ -97,54 +97,21 @@ pub enum Part {
 	Dyn,
 	Ndyn,
 
-	F32Opt,
-
-	Cs1_22,
 	Cs1_36,
 	Cs1_3C,
-	Cs1_2834,
 
 	Cs2_37,
-	Cs2_7C,
 
 	Tx_3C,
 
 	Cs3_98,
 	Cs3_c0,
 
-	Cs4_odd,
-	Cs4_3348,
-	Cs4_333C,
-	Cs4_3339,
-	Cs4_333D,
-	Cs4_sound_play,
-	Cs4_40_a,
-	Cs4_40_b,
-	Cs4_5E00,
+	Cs4_40,
 
-	Rev_3335,
 	Rev_3E,
-	Rev_40,
-	Rev_6C,
 	Rev_79,
 	Rev_D2,
-
-	_3E,
-	_3F,
-	_40,
-	_4E,
-	_6C,
-	_79,
-	_98,
-	_AB00,
-	_AB02,
-	_C0,
-	_D2,
-
-	Broken20,
-	BrokenEffLoad,
-	Broken40,
-	Broken62,
 
 	Print,
 	Fail,

@@ -392,12 +392,12 @@
 3A09 u8
 
 3B 'Sound'
-3B00 'SoundPlay' cs4_sound_play dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+3B00 'SoundPlay' dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
 3B01 'SoundStop' dyn dyn u16
 3B03 'SoundSetVolume' dyn f32 u16
 3B04 dyn f32 u16 u8
 # 3B05 u32
-3B32 'SoundPlayVoice' cs4_sound_play dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+3B32 'SoundPlayVoice' dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
 3B33 dyn dyn u16
 3B34 dyn
 # 3B37 u32
@@ -421,7 +421,7 @@
 3D   'CharTurnDir' char f32 f32 u8
 3E   char char f32 u8 rev_3e
 3F   char u32
-40   char char _40
+40   char char cs4_40
 41   char
 4100
 4101
@@ -720,7 +720,7 @@
 6A06 dyn dyn dyn dyn dyn dyn u32
 6A07 dyn u8 u16
 6B   u8 u16 u16 f32 f32 f32 # i32 in chr067
-6C   'CharAniSpeed' char f32 rev_6c i32
+6C   'CharAniSpeed' char f32 i32
 # 6E   u16 f32 f32 f32 f32 u8
 
 6F 'Item'

@@ -95,7 +95,7 @@
 281C char
 2832 char char f32 f32 f32 f32 u8 u8
 2833
-2834 char cs1_2834
+2834 char u32
 2835 char f32 f32 f32 f32
 2836 char char f32 u16
 2837 char char f32 f32 f32 f32 f32 u8
