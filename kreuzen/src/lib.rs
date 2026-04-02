@@ -138,6 +138,18 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		"tk_bike",
 	];
 	let cs4_special = ["rob030"];
+	let rev_is_cs4 = [
+		"mon027_c00",
+		"mon093",
+		"mon426",
+		"npcx00",
+		"npcx02",
+		"npcx03",
+		"npcx04",
+		"rob030",
+		"a0106",
+		"chr970_c00",
+	];
 	let cs1_menu = [
 		"battle_menu",
 		"camp_menu",
@@ -155,7 +167,13 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		f.game = Game::Cs1
 	}
 
-	if f.game == Game::Cs4 && (cs4_is_cs3.contains(&n) || cs3_special_1.contains(&n) || cs3_special_2.contains(&n) || cs3_special_3.contains(&n)) {
+	let cs3_special = cs3_special_1.contains(&n) || cs3_special_2.contains(&n) || cs3_special_3.contains(&n);
+
+	if f.game == Game::Reverie && (rev_is_cs4.contains(&n) || cs3_special) {
+		f.game = Game::Cs4
+	}
+
+	if f.game == Game::Cs4 && (cs4_is_cs3.contains(&n) || cs3_special) {
 		f.game = Game::Cs3
 	}
 
@@ -175,6 +193,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		Game::Cs3 => 0,
 		Game::Cs4 if cs4_special.contains(&n) => 1,
 		Game::Cs4 => 0,
+		Game::Reverie if oddness == 2 => 1,
 		_ => 0,
 	};
 
@@ -236,15 +255,7 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let has_prefix = prefixes.iter().any(|p| f.entry.starts_with(p));
 	let is_table = tables.contains(&f.entry);
 	let is_fixed = fixed.contains(&f.entry);
-	let is_weird = match f.game {
-		Game::Reverie => matches!(f.scena,
-			| "mon042_c00" | "mon042_c01" | "mon037_c00"
-			| "mon000s" | "rob013_c00"
-			| "ply000" | "ply001"
-			| "mon_template" | "chr_enemy_template"),
-		_ => false,
-	};
-	if (has_prefix || is_fixed) && !is_table && !is_weird {
+	if (has_prefix || is_fixed) && !is_table {
 		// These ones are very likely to be code, so we'll start with them
 		let code = code::decompile(f, end)?;
 		f.seek(end)?;

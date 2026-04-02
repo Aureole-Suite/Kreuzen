@@ -369,7 +369,7 @@
 3D   'CharTurnDir' char f32 f32 u8
 3E   char char f32 u8
 3F   char
-40   char char f32 f32 f32 cs4_40_a f32 u8 u16 f32 f32 u8 cs4_40_b
+40   char char _40
 41   char
 4100
 4101

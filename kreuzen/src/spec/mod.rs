@@ -38,7 +38,8 @@ spec!(CS3_2, test_ed83_2, "cs3_2.txt");
 spec!(CS3_3, test_ed83_3, "cs3_3.txt");
 spec!(CS4, test_ed84, "cs4.txt");
 spec!(CS4_1, test_ed84_1, "cs4_1.txt");
-spec!(REVERIE, test_ed85, "reverie.txt");
+spec!(REVERIE, test_reverie, "reverie.txt");
+spec!(REVERIE_1, test_reverie_1, "reverie_1.txt");
 spec!(TX, test_tx, "tx.txt");
 
 pub fn for_game(game: Game, variant: u8) -> &'static Spec {
@@ -57,7 +58,8 @@ pub fn for_game(game: Game, variant: u8) -> &'static Spec {
 		Game::Cs3 if variant == 3 => &CS3_3,
 		Game::Cs4 if variant == 0 => &CS4,
 		Game::Cs4 if variant == 1 => &CS4_1,
-		Game::Reverie => &REVERIE,
+		Game::Reverie if variant == 0 => &REVERIE,
+		Game::Reverie if variant == 1 => &REVERIE_1,
 		Game::Tx => &TX,
 		_ => panic!("Unsupported game or variant: {game:?}/{variant}"),
 	}
@@ -121,7 +123,11 @@ pub enum Part {
 	Cs4_5E00,
 
 	Rev_3335,
+	Rev_3E,
+	Rev_40,
 	Rev_6C,
+	Rev_79,
+	Rev_D2,
 
 	_3E,
 	_3F,

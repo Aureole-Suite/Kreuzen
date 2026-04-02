@@ -228,7 +228,6 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 	let mut op_spec = match spec.ops[code as usize].as_ref() {
 		Some(it) => it,
 		None => {
-			f.rewind();
 			eyre::bail!("_Unknown opcode {opcode}")
 		}
 	};
@@ -244,7 +243,6 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 			op_spec = match op_spec.child(code) {
 				Some(it) => it,
 				None => {
-					f.rewind();
 					eyre::bail!("_Unknown opcode {opcode}")
 				}
 			};
@@ -416,9 +414,39 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 					break;
 				}
 			}
+			P::Rev_3E => {
+				match args[1] {
+					Arg::Char(Char(0xFE12)) => read_parts(args, f, &[P::U8])?,
+					Arg::Char(Char(0xFE13)) => read_parts(args, f, &[P::F32])?,
+					Arg::Char(Char(0xFFFF)) => read_parts(args, f, &[P::U8, P::U8, P::U8])?,
+					_ => {}
+				}
+			}
+			P::Rev_40 => {
+				if matches!(args[1], Arg::Char(Char(0xFE15))) {
+					read_parts(args, f, &[P::Dyn, P::Dyn, P::Dyn, P::Dyn])?;
+				}
+			}
+			P::Rev_D2 => {
+				let Arg::I16(v) = args[0] else {
+					eyre::bail!("Expected I16");
+				};
+				read_parts(args, f, op_d2(v))?;
+			}
+			P::_40 => {
+				let Arg::Char(v) = args[1] else {
+					eyre::bail!("Expected Char");
+				};
+				read_parts(args, f, op_40(v))?;
+			}
 			P::Rev_6C => {
 				if f.oddness != 0 {
 					break;
+				}
+			}
+			P::Rev_79 => {
+				if matches!(args[0], Arg::U8(7)) {
+					read_parts(args, f, &[P::U8, P::U8])?;
 				}
 			}
 
@@ -442,6 +470,17 @@ fn cs4_weird_sound_play() -> &'static [Part] {
 		U16, I16, I16, U16,
 		F32,
 	]
+}
+
+#[rustfmt::skip]
+fn op_40(a: crate::types::Char) -> &'static [Part] {
+	use Part::*;
+	match a.0 {
+		0xFE02..= 0xFE04 => &[F32, F32, F32, F32, F32, U8, Flags16, F32, F32, U8],
+		0xFE05           => &[F32, F32, F32, F32,      U8, Flags16, F32, F32, U8, Str],
+		0xFE15           => &[Dyn, Dyn, Dyn, Dyn,      U8, Flags16, F32, F32, U8],
+		_                => &[F32, F32, F32, F32,      U8, Flags16, F32, F32, U8],
+	}
 }
 
 fn op_98(a: u16, game: Game) -> &'static [Part] {
@@ -482,6 +521,16 @@ fn op_c0(a: u16) -> &'static [Part] {
 		3 => &[Str, F32, F32, F32, F32, F32, F32],
 		4 => &[Str, U8],
 		1000 | 1001 | 1003 => &[U16, U16],
+		_ => &[],
+	}
+}
+
+fn op_d2(a: i16) -> &'static [Part] {
+	use Part::*;
+	match a {
+		0 => &[U8],
+		3 => &[U8, U8, U32],
+		-2 | -1 => &[Dyn],
 		_ => &[],
 	}
 }

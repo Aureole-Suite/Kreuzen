@@ -420,7 +420,7 @@
 3C05 char str str str str str
 3D   'CharTurnDir' char f32 f32 u8
 3E   char char f32 u8 rev_3e
-3F   char u32
+3F   char
 40   char char _40
 41   char
 4100
@@ -502,7 +502,7 @@
 4B   'CharSetColor' char f32 f32 f32 f32 u16 u8
 4C   char f32 f32 f32 u16 u8
 4D   'ForkWait' char u8
-4E   f32 f32 u8 u8
+4E   f32 f32 u8
 4F00 char f32 i16 u16 u32 f32
 4F01 char
 # 4F02 char u16 u16 u16
