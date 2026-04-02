@@ -163,11 +163,18 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	];
 
 	let n = script_name.as_str();
+	let cs3_special = cs3_special_1.contains(&n) || cs3_special_2.contains(&n) || cs3_special_3.contains(&n);
+
+	if f.game <= Game::Cs2 && n == "mon999"
+		|| f.game == Game::Cs2 && n == "title"
+		|| f.game == Game::Tx && n == "a1019"
+	{
+		f.enc = Enc::Sjis;
+	}
+
 	if f.game == Game::Cs2 && n == "t4720" {
 		f.game = Game::Cs1
 	}
-
-	let cs3_special = cs3_special_1.contains(&n) || cs3_special_2.contains(&n) || cs3_special_3.contains(&n);
 
 	if f.game == Game::Reverie && (rev_is_cs4.contains(&n) || cs3_special) {
 		f.game = Game::Cs4
