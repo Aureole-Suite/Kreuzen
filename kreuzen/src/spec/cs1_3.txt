@@ -20,6 +20,7 @@
 16   u8
 17   u8
 18   'TextShow' char text
+1900 u16 u16 u16 u16 u8
 1901 char u16 u8
 1902 char u16
 1905 'TextSetPos' i16 i16 i16 i16 u8
@@ -44,6 +45,7 @@
 22   char str u8 u8 u8 u8 f32 f32 f32 f32
 23   char u32
 2400 char str str
+2401 char str str
 2402 char str str
 2404 char str str
 2405 char str str
@@ -82,7 +84,7 @@
 280F char u16
 2810 char
 2811 char u8
-# 2812 [u16]; for (int i = 0; i < 8; i++) { [u16]; } break; }
+2812 char char char char char char char char char
 2813 char u16 char u32 u32 u32
 2814 u16
 2816
@@ -129,6 +131,7 @@
 2873 u16
 2874 u16
 2875 u16
+2876
 2877
 2878
 2879 u16
@@ -145,60 +148,76 @@
 2A   char
 2B   char flags32
 2C   char flags32
+
+2D 'Cam'
 2D00
-2D02 u8 f32 f32 f32 u16
-2D03 u8 char str f32 f32 f32 u16
-2D04 u8 f32 f32 f32 u16 u8
-2D05 u8 f32 u16
+2D02 'CamLookAt' u8 f32 f32 f32 u16
+2D03 'CamLookAtChar' u8 char str f32 f32 f32 u16
+2D04 'CamRotate' u8 f32 f32 f32 u16 u8
+2D05 'CamDistance' u8 f32 u16
 2D07 u16
 2D08 u8 u16
-2D09 f32 f32 f32
-2D0B u8 f32 u16
+2D09 'CamVibrate' f32 f32 f32
+2D0B 'CamFov' u8 f32 u16
 2D0C u8 f32 f32 f32 u16
 2D0D u8 f32 f32 f32 u16
 2D0E u8 u16 u16 f32 u16
 2D0F u16 f32 f32 f32
+2D10
 2D11 u8 f32 f32 f32 u16 u8
 2D12 flags16
 2D13 char u8 f32 f32 f32 u16 u8
-2D14 u8 char str f32 f32 f32 u16
+2D14 'CamLokAtChar2' u8 char str f32 f32 f32 u16
 2D15 u8 f32 i32 u8
 2D16 u8 f32 u16
 2D17 u16
-2E   char f32 f32 f32 f32
-2F   char u8 str
 
-3000 u16 f32 u16 u32 u8
+2E   'CharSetPos' char f32 f32 f32 f32
+2F   'CharAniPlay' char u8 str
+
+30 'Bgm'
+3000 'BgmPlay' u16 f32 u16 u32 u8
 3001 u16 u8
 3002 u8
-3003 f32 u16 u8
-3004 u16 f32 u16 f32 u8
-3005 u16 u16
-3006 u16
+3003 'BgmVolume' f32 u16 u8
+3004 'BgmPlay2' u16 f32 u16 f32 u8
+3005 'BgmReplace' u16 u16
+3006 'BgmRestore' u16
 3007
 
-3100 u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
-3101 u16 u16
+31 'Sound'
+3100 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3101 'SoundStop' u16 u16
+3102 u16
 3103 u16 f32 u16
-3132 u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3132 'SoundPlayVoice' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
 3134 u16
+3135 u16 u32 u16
+3137 u16
+3138 u16
 3139 char
-313A char u16 u16 u16 u16
+313A 'SoundPlayRandom' char u16 u16 u16 u16
 3164 u16 f32
 3196 u16
+31FD u8
+31FE u16
+31FF 'ControllerRumble' f32 f32 f32
 
+32 'CharFace'
 3202 char u16 u16
 3203 char str str str str
 3204 char str
 320A char
 320B char
 
-33   char f32 f32 u8
+33   'CharTurnDir' char f32 f32 u8
 34   char u16 f32 u8
 35   char
 36   char char f32 f32 f32 cs1_36 f32 u8 u16
-37   u16 u8
+37   char u8
+38   char f32 f32 f32 f32 f32
 
+39 'Fade'
 3900 u16 f32
 3903 u16 f32
 3905 u16
@@ -218,6 +237,7 @@
 3D01 str u16
 3E00 u16 u16 u16
 3F00 u16
+3F01 u16
 3F02
 3F03
 3F04 u16
@@ -225,33 +245,59 @@
 3F06 u16
 3F07
 3F08 u16 u8 u8 u16
+3F09 u16
 3F0A u16
+3F0B u16
 
 40   f32 f32 f32 f32 u16 u8
 41   char f32 f32 f32 f32 u16 u8
 42   char u8
 43   f32
+4400 char f32 i16 flags16 f32 f32
+4401 char
+4402 char u16 u16 u16 u8
+4403 char f32 f32 f32 f32 u16 u8
+4404 char u16
+4405 char u16
 45   str str
-4801
-4808
+46   f32 f32 f32 f32 f32 u16
+47   u8 u16
+48   u8
 
+4900 u32 u32 u32 u32 u32 u32 u32 u32
+4901 u32 f32 f32 f32 f32 f32 f32 f32
 4902 u32 u32 u32 u32 u32 u32 u32 u32
+4903 u32 u32 u32 u32 u32 u32 u32 u32
+4904 u32 u32 u32 u32 u32 u32 u32 u32
 490A u32 u32 u32 u32 u32 u32 u32 u32
 490B
 490D 'MapPlaceTbox' str str flag item
+490E
+490F
+4910
+4911
+4912
 4914 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
-# 4915 str
+4915 str
+4916
 4917 u8 u32
 4918 char u8
 4919 'MapPlaceHealObj' str str
 491A
 491B
 491C str u16 u16
+491D
+491E
 491F
 4920
 4921 u32
+4923 u16
 4924 char
+4925
+4926 u8 u32 u32 str
 4927
+4928 u16
+4929 u8 u16
 492C f32 # only in CS2's t4720
 
 4A   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str
@@ -263,7 +309,7 @@
 51   char u8 str
 52   char str u32 u32 u32 u32 u32 u32 u32 u32 u32
 53   u8 u16 u16 f32
-55   char u8 u8
+55   char u8 str
 56   str u16
 57
 58   char u8
@@ -275,15 +321,21 @@
 5B03 u16
 5B04 u16 u16
 5B05 u16
+5C00 u16 u16
 5C02 u16
+5C03 u16
 5D00 str u16
 5D01 str u16
 5D02 str f32 f32 f32
 5D03 str f32 f32 f32
 5D04 str f32 f32 f32
-5D08 str u32 u32 u32 u16 u8
+5D05 str
+5D06 str
+5D07 str f32 f32 f32 f32 u16 u8
+5D08 str f32 f32 f32 u16 u8
 5D09 str
 5E00 u16 u16 u32
+5E01 u16
 5E02 u16 u16 u16
 5E04 u16
 5E05 u16 u16 u16
@@ -293,6 +345,13 @@
 5E09 u16
 5E0A u16 u16 u8
 5E0B u16
+5E0C u16 u16
+5E0D u16 u16
+5F char
+5F00 f32 u8 u16
+5F01
+5F02 f32 f32 f32
+5F03 f32 u8 u16
 
 60   u8 u16 u16 f32 f32 f32
 61   char f32
@@ -301,10 +360,13 @@
 64   u8 u16 u32
 6500 u16 u16 u8
 6501 u16 u8
+6502 u16 u16
 6503 u16 u16 u8
 6504 u16 u8
 6506 u16 u8 u8
 6507 char u8
+6508 char u32
+6509 char u8
 66   f32 u16
 
 67 u16
@@ -334,7 +396,18 @@
 6A06 u8 u16
 
 6B   char str str u8
+6C   char
 6D   u8 str
+6E00 u16
+6E01 u16
+6E02 u16
+6E03 u16
+6E04 u16
+6E05 u16 u16 u16 u16
+6E06 u16
+6E07 u16
+6E09 u16
+6E0A u16
 6F00 str
 6F01 char str
 6F02 char str
@@ -344,20 +417,31 @@
 7100 u16 u16 u16 u16 u16
 7101
 72   u16
+7300
+7301
+7302 u16
+7303 f32 f32 f32
+7304 u16
+7305 f32
+7306 u16
 7400
 7401
 7402
 77   u16 u32 u32 u32 u32 u32 u32 u32
 78   u16 u16 u16 u16
 79   u8 u32 u32 u32 u32
+7A   u8 u8
 7B   u8 u16 u16 u16 u16 u16 f32 f32 f32 str
 7D   u16 u16
 7E   u16
 7F00 char char str str
+7F01 char char str str
+7FFE u16 str f32
+7FFF u16 str f32
 80   f32 f32 f32 f32 u32 u8
 8100 u16
 8101
-
+82   char u16 u16
 83   u16 u16 u16 u16 u16 u16 u16
 84
 85   str u32
@@ -370,8 +454,10 @@
 8901
 8A00 str str
 8A01
-
+8B   u16 u8
 8C   u16
+8D   u16 f32
+8E   u16
 
 9000 u16
 9001
@@ -381,6 +467,7 @@
 9100 u8 u16 u16 u16 u16
 9101
 92   u8 u8
+9300
 9301
 94   f32 f32 f32 f32
 95
@@ -388,5 +475,8 @@
 97   u16
 98   u16 u16
 99
+9A02 char u16 f32
+9B   u16 f32 f32 f32
 9D   u32
 9E   u8
+9F   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
