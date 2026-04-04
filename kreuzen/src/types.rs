@@ -77,7 +77,17 @@ impl Char {
 impl std::fmt::Debug for Char {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_tuple("Char")
-			.field(&Tagged(self.0, self.name()))
+			.field(&std::fmt::from_fn(|f| {
+				if self.0 >= 0xF000 {
+					write!(f, "0x{:04X}", self.0)?;
+				} else {
+					write!(f, "{}", self.0)?;
+				}
+				if let Some(v) = self.name() {
+					write!(f, ": {v}")?;
+				}
+				Ok(())
+			}))
 			.finish()
 	}
 }
