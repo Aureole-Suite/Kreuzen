@@ -311,7 +311,7 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 
 			P::Cs2_37 => {
 				if matches!(args[1], Arg::Char(Char(0xFE04))) {
-					read_parts(args, f, &[P::F32])?;
+					read_parts(args, f, &[P::Str])?;
 				}
 			}
 
