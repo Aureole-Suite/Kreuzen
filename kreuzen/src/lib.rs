@@ -1,7 +1,10 @@
 #![expect(unused)]
+use std::sync::LazyLock;
+
 use gospel::read::{Le as _, Reader};
 mod io;
 use io::VReader;
+use regex::Regex;
 
 use crate::io::CReader;
 
@@ -275,8 +278,10 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 	let is_table = tables.contains(&f.entry)
 		|| f.entry.starts_with("FC_auto")
 		|| f.entry.starts_with("BookData")
-		|| (f.entry.starts_with("_") && !f.entry.starts_with("_a"));
-	if !is_table {
+		|| f.entry.starts_with("_");
+	static SHADOW_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^_a[0-9]_").unwrap());
+	let is_shadow = SHADOW_REGEX.is_match(f.entry);
+	if !is_table || is_shadow {
 		let code = code::decompile(f, end)?;
 		f.seek(end)?;
 	} else {
