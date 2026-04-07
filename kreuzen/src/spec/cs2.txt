@@ -37,6 +37,11 @@
 1F04 u8 u8
 1F06 u8 u16
 1F07 u8 u16
+1F08 u8 str u16 u32 u32
+1F09 u8 str u32
+1F0A u8
+1F0B u8 u16
+1F0C u8 u16
 
 20   u8 char str str u8
 2100 u32 u8 u8 i32 u8 i32 u8
@@ -44,6 +49,7 @@
 22   char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8
 23   char u32 u8
 2400 char str str
+2401 char str str
 2402 char str str
 2404 char str str
 2405 char str str
@@ -71,6 +77,8 @@
 2715 u8 str
 2716 char u8 f32
 2718 char u8 f32 f32
+2719 str
+271A char
 
 2800 char char u8
 2801 char f32 f32
@@ -90,7 +98,7 @@
 280F char u16
 2810 char
 2811 char u8
-# 2812 [u16]; for (int i = 0; i < 8; i++) { [u16]; } break; }
+2812 char char char char char char char char char
 2813 char u16 char u32 u32 u32
 2814 u16
 2816
@@ -101,7 +109,8 @@
 281A u32
 281B
 281C char
-281E u16 u16 str str
+281D u16 f32 f32
+281E u16 char str str
 281F u16
 2820 u16 f32 f32
 2821
@@ -109,6 +118,7 @@
 2823
 2824
 2825
+2826 u8 u16 f32 f32 f32 f32
 2827
 2828
 2829
@@ -130,6 +140,7 @@
 2849 f32
 2851 str u16
 2852 char u8
+2853 str
 285A u16 u32
 285B u8 u32
 285C u8
@@ -153,11 +164,18 @@
 286E char char u32 u32 u32 u32
 286F
 2870
+2871 u32 u16 u8
+2872 u32 f32 u16 u8
+2873 u16
+2874 u16
+2876
+287B char char
 287D u8
 287E f32 u16 u8
 287F
 2880 u8
 2881 u16
+2882 str
 2883 char char
 2885
 2886
@@ -166,17 +184,31 @@
 2889 char
 288A
 288B
+288C
+288D
 288E char u16
 288F char
+2890 u8
 2891 char u16
+2892 f32 f32
+2893 u16
+2895
+2896 u16 flags32
 2897 u8
 2898 char
 2899 u8
 289A
 289B char
 289C char u32
+289D u8
 289E char str
 289F
+28A0 u16 u16 u16
+28A1 u16 u16 u16
+28A2 u16 u16 u16
+28A3 u16 u16 u16
+28A4 u16 u16 u16
+28A5 u16 u16 u16
 
 2900 f32 f32 f32 f32
 2901 f32 f32 f32 f32
@@ -207,10 +239,12 @@
 2D15 u8 f32 i32 u8
 2D16 u8 f32 u16
 2D17 u16
-2D18 u8 str u32 u32 u32 u16
-2D19 u8 str u32 u32 u32 u16
-2D1A str u8 u32 u32 u32 u16 u8
-2D1B u32 u32
+2D18 u8 str f32 f32 f32 u16
+2D19 u8 str f32 f32 f32 u16
+2D1A str u8 f32 f32 f32 u16 u8
+2D1B f32 f32
+2D1C
+2D1D
 2D1E u8 u32 u32 u8
 
 2E   'CharSetPos' char f32 f32 f32 f32
@@ -230,13 +264,17 @@
 32 'Sound'
 3200 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
 3201 'SoundStop' u16 u16
+3202 u16
 3203 u16 f32 u16
 3232 'SoundPlayVoice' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3233 u16 u16
 3234 u16
+3237 u16
 3239 char
 323A 'SoundPlayRandom' char u16 u16 u16 u16
 3264 u16 f32
 3296 u16
+32FE u16
 32FF 'ControllerRumble' f32 f32 f32
 
 33 'CharFace'
@@ -251,9 +289,12 @@
 36   char
 37   char char f32 f32 f32 cs1_36 f32 u8 u16 cs2_37
 38   char u8
+3900 char f32 f32 f32 f32 f32 u8 u16
+3901 char f32 f32 f32 f32 f32 u8 u16
 
 3A 'Fade'
 3A00 u16 f32
+3A02 u16 f32
 3A03 u16 f32
 3A05 u16
 3A0A u16
@@ -282,10 +323,15 @@
 4006 u16
 4007
 4008 u16 u8 u8 u16
+4009 u16
 400A u16
+400B u16
 400D u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+400E
+400F
 4010 u16
 4011 u8
+4012
 4013 u16
 4014
 
@@ -307,9 +353,14 @@
 4A00 u32 u32 u32 u32 u32 u32 u32 u32
 4A01 u32 f32 f32 f32 f32 f32 f32 f32
 4A02 u32 u32 u32 u32 u32 u32 u32 u32
+4A05 u32 u32 u32 u32 u32 u32 u32 u32
+4A06 u32 u32 u32 u32 u32 u32 u32 u32
 4A0A u32 u32 u32 u32 u32 u32 u32 u32
 4A0B char
 4A0D 'MapPlaceTbox' str str flag item
+4A0E u8
+4A0F
+4A10
 4A11
 4A12
 4A13
@@ -321,10 +372,13 @@
 4A1A
 4A1B
 4A1C str u16 u16
+4A1D
+4A1E
 4A1F
 4A20
 4A21 char f32
 4A24 char
+4A25
 4A26 u8 u32 u32 str
 4A27
 4A29 u8 u16
@@ -332,14 +386,25 @@
 4A2B u8 str u16
 4A2D
 4A2E
+4A2F
 4A30 flags32
 4A31
+4A33 u16
+4A34 flags32
+4A35 u16 u32 str str str
 4A36
+4A37 u32 u16
+4A38 u8 u32
 4A39 u16
+4A3A char u16 f32 f32 f32 f32
 4A3B char u16 f32 f32
-4A3C char u32 u32
+4A3C char f32 f32
 4A3D u32
+4A3E u8 str u32
 4A3F
+4A40 u16
+4A41
+4A42 char
 4A43
 4A4E
 
@@ -355,6 +420,7 @@
 53   char str u32 u32 u32 u32 u32 u32 u32 u32 u32 u16
 54   u8 u16 u16 f32
 56   char u8 str
+57   str u8 u16 f32 f32 f32 f32 f32 f32 f32 u16
 58
 59   char u8
 5B   u8 str u16
@@ -371,9 +437,15 @@
 5E02 str f32 f32 f32
 5E03 str f32 f32 f32
 5E04 str f32 f32 f32
-5E08 str u32 u32 u32 u16 u8
+5E05 str
+5E06 str
+5E07 str f32 f32 f32 f32 u16 u8
+5E08 str f32 f32 f32 u16 u8
 5E09 str
+5E0A str
+5E0B str u16
 5F00 u16 u16 u8 u32
+5F01 u16
 5F02 u16 u16 u16
 5F04 u16
 5F05 u16 u16 u16
@@ -383,8 +455,21 @@
 5F09 u16
 5F0A u16 u16 u8
 5F0B u16
+5F0C u16 u16
 5F0D u16 u16
 5F0E u16 u16 u32
+5F0F u16 u16
+5F10 u16 u16
+5F11 u16 u16
+5F12 u16 u16
+5F13 u16
+60 char
+6000 f32 u8 u16
+6001
+6002 f32 f32 f32
+6003 f32 u8 u16
+6004 f32 f32 f32 f32 f32 u8 u16
+6005 f32 f32 f32 f32 f32 f32 f32
 
 61   u8 u16 u16 f32 f32 f32
 62   char f32
@@ -399,7 +484,7 @@
 6606 u16 u8 u8 u8
 6607 u16 u8
 6608 u16 u32
-6609 u16 u8
+6609 u16 u8 u8
 660A u16 u32 u32
 660B u16 u8
 660C u16 u8 u8
@@ -436,9 +521,17 @@
 6D   char
 6E   u8 str
 6F00 u16
+6F01 u16
+6F02 u16
+6F03 u16
+6F04 u16
+6F06 u16
 6F08 u16
+6F09 u16
+6F0B u16
 6F64 u16
 6F65 u16
+6F66 u16
 6F67 u16
 7000 str
 7001 char str
@@ -450,6 +543,7 @@
 7201
 73   u16 u32 u16
 7400
+7401
 7402 u16
 7403 u32 u32 u32
 7404 u16
@@ -458,21 +552,25 @@
 7500 u8
 7501
 7502
+7503
 7504
 76   f32
 78   char u32 f32 f32 f32 f32 f32 u32
 79   char u16 u16 u16
 7A   u8 u32 u32 u32 u32
+7B   u8 u8
 7C   u8 u16 u16 u16 u32 u16 f32 f32 f32 str
 7E   u16 u16
 7F   u16
 8000 char char str str
 8001 char char str str
 8002 char
+80FE char str f32
+80FF char str f32
 81   f32 f32 f32 f32 u32 u8
 8200 u16
 8201
-
+83   u16 f32 f32 f32 f32
 84   u16 u16 u16 u16 u16 u16 u16
 85
 86   str u32
@@ -482,11 +580,29 @@
 8A01
 8B00 str str u8 u16
 8B01
-88   u8 u16 u16
+8811 u16
+8900 u8
+8901
+8902
+8903
+8904
+8905
+8906 flags32
+8907 flags32
+8908 flags32
+8909
+890A
+890B
 8D   u16
+8E01 u8 f32
 8E02 u8 f32
-
-90   u16 f32 f32 f32
+8F   u16
+90 u16 f32 f32 f32
+9100 u16
+9101
+9102
+9103
+9104
 9200 u8 u16 u16 u16 u16 u16
 9201
 9202 u16
@@ -498,14 +614,21 @@
 940C u16 u16 u16 u16
 940D u16 u16 u16 u16
 940E u16 u16 u16 u16
+95   f32 f32 f32 f32
 96
 97   f32 u32 u32 u16 u16
 98   u16
 9A   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+9B02 char u16 f32
+9C   char f32 f32 f32
 9E   u32
 9F   u8
 
 A0   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
+A100 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
+A101
+A102 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+A103 f32 f32 f32
 A200 u8
 A201 u16
 A202 u16
@@ -516,18 +639,38 @@ A4   str u16
 A5   u8
 A601 u8
 A602
+A603 u8
+A604 u8
+A605
 A606
 A607
 A609
+A60A
+A60B
+A60C
+A60D
+A60E u8
+A60F
+A610
+A611
 A7   u8 u16 u32
 A8   u8 char
 A9   f32 f32 f32 f32 u16 u16
 AA
 AB   char u8 f32 f32 f32
 AC   char u8
-
+AD   u8 char
+AE   u8 flags32 flags32 # These values are 0xABCDEFnn, I assume they're garbage
+AF00 u32 u16 str str u32
+AF01 u32 f32 f32 f32 f32 f32 f32 f32
+AF02 u32 f32 f32 f32
+AF03 u32
+AF04 u32
+B000
+B001
 B00A
 B00B # Haha
+B1   char
 B201 u8 u16 f32 f32 f32 f32 f32 f32 f32
 B202 u8
 B203 u8 f32
@@ -538,4 +681,8 @@ B300 str
 B301 u16
 B303 f32
 B30A u16 u16
+B30B
+B30C
+B30D
 B4   char u8 f32 f32
+B5   char u16 f32 u8 f32

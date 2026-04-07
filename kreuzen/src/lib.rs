@@ -266,8 +266,16 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 		"PartTable",
 		"ReactionTable",
 		"SummonTable",
+		"ConditionTable",
+		"BreakTable",
+		"WeaponAttTable",
+		"FieldFollowData",
+		"ShinigPomBtlset",
 	];
-	let is_table = tables.contains(&f.entry) || f.entry.starts_with("FC_auto") || f.entry.starts_with("BookData");
+	let is_table = tables.contains(&f.entry)
+		|| f.entry.starts_with("FC_auto")
+		|| f.entry.starts_with("BookData")
+		|| (f.entry.starts_with("_") && !f.entry.starts_with("_a"));
 	if !is_table {
 		let code = code::decompile(f, end)?;
 		f.seek(end)?;
