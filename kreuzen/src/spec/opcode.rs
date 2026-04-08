@@ -45,7 +45,7 @@ impl Opcode {
 	}
 
 	pub fn prefixes(self) -> impl Iterator<Item = Opcode> {
-		(0..self.len()).map(move |i| Opcode::new(&self[..i]))
+		(1..=self.len()).map(move |i| Opcode::new(&self[..i]))
 	}
 
 	pub fn push(&mut self, byte: u8) {

@@ -231,53 +231,47 @@ fn build_ops(ops: BTreeMap<Opcode, Vec<Part>>) -> [Option<Op>; 256] {
 fn build_names(
 	inp: &BTreeMap<Opcode, String>,
 ) -> (BTreeMap<Opcode, String>, BTreeMap<String, Opcode>) {
+	let mut all = BTreeSet::new();
 	let mut leaves = BTreeSet::new();
 	for op in inp.keys() {
 		for p in op.prefixes() {
 			leaves.remove(&p);
+			all.insert(p);
 		}
 		leaves.insert(*op);
 	}
+
 	let mut names = BTreeMap::new();
 	let mut by_name = BTreeMap::new();
-	for (&op, opname) in inp {
-		if !leaves.contains(&op) {
-			continue;
+	let mut put = |op: Opcode, name: String| {
+		if leaves.contains(&op) && let Some(prev) = by_name.insert(name.clone(), op) {
+			panic!("Duplicate name in spec: {prev} and {op} are both named {name}");
 		}
+		names.insert(op, name);
+	};
 
-		let mut name;
-		macro_rules! put {
-			($name:expr) => {
-				name = $name;
-				if let Some(prev) = by_name.insert(name.clone(), op) {
-					panic!("Duplicate name in spec: {prev} and {op} are both named {name}");
-				}
-			};
-		}
-
+	for op in all {
 		let mut s = String::from("op");
 		for b in op {
 			write!(s, "{b:02X}").unwrap();
 		}
-		put!(s);
+		put(op, s);
+	}
 
+	for op in inp.keys() {
 		for p in op.prefixes() {
-			if let Some(s) = inp.get(&p)
-				&& !s.is_empty()
-			{
-				let mut s = s.to_owned();
-				s.push('_');
-				for b in &op[p.len()..] {
-					write!(s, "{b:02X}").unwrap();
+			if let Some(s) = inp.get(&p) && !s.is_empty() {
+				let mut s = s.clone();
+				if p.len() < op.len() {
+					s.push('_');
+					for b in &op[p.len()..] {
+						write!(s, "{b:02X}").unwrap();
+					}
 				}
-				put!(s);
+				put(*op, s);
 			}
 		}
-		if !opname.is_empty() {
-			put!(opname.clone());
-		}
-
-		names.insert(op, name);
 	}
+
 	(names, by_name)
 }
