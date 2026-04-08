@@ -104,6 +104,7 @@ pub enum Part {
 	Cs2_37,
 
 	Tx_3C,
+	Tx_isforceload,
 
 	Cs3_98,
 	Cs3_c0,

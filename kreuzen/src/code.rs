@@ -320,6 +320,14 @@ fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Res
 					read_parts(args, f, &[P::U32, P::U32, P::U32])?;
 				}
 			}
+			P::Tx_isforceload => {
+				if f.scena == "a0005" && f.check(b"isforceload").is_ok() {
+					// for some reason this one put the name of the flag rather than value
+					args.push(Arg::Str("isforceload".to_string()));
+				} else {
+					read_parts(args, f, &[P::U8])?;
+				}
+			}
 
 			P::Cs3_98 => {
 				let Arg::U16(v) = args[0] else {
