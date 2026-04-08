@@ -232,13 +232,18 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 		}
 	};
 
-	let mut args = Vec::new();
+	let mut op = Op {
+		name: spec.names.get(&opcode).unwrap(),
+		meta,
+		args: Vec::new(),
+	};
 
 	loop {
-		read_parts(&mut args, f, &op_spec.parts)?;
+		read_parts(&mut op, f, &op_spec.parts)?;
 		if op_spec.has_children() {
 			code = f.u8()?;
 			opcode.push(code);
+			op.name = spec.names.get(&opcode).unwrap();
 
 			op_spec = match op_spec.child(code) {
 				Some(it) => it,
@@ -251,125 +256,119 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 		}
 	}
 
-	let mut op = Op {
-		name: spec.names.get(&opcode).unwrap(),
-		meta,
-		args,
-	};
-
 	Ok(FlatOp::Op(op))
 }
 
-fn read_parts(args: &mut Vec<Arg>, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> {
+fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> {
 	use Part as P;
 	for p in parts {
 		match p {
-			P::U8 => args.push(f.u8()?.into()),
-			P::U16 => args.push(f.u16()?.into()),
-			P::U32 => args.push(f.u32()?.into()),
-			P::I8 => args.push(f.i8()?.into()),
-			P::I16 => args.push(f.i16()?.into()),
-			P::I32 => args.push(f.i32()?.into()),
-			P::F32 => args.push(f.f32()?.into()),
-			P::Str => args.push(f.str()?.into()),
+			P::U8 => op.args.push(f.u8()?.into()),
+			P::U16 => op.args.push(f.u16()?.into()),
+			P::U32 => op.args.push(f.u32()?.into()),
+			P::I8 => op.args.push(f.i8()?.into()),
+			P::I16 => op.args.push(f.i16()?.into()),
+			P::I32 => op.args.push(f.i32()?.into()),
+			P::F32 => op.args.push(f.f32()?.into()),
+			P::Str => op.args.push(f.str()?.into()),
 
-			P::Char => args.push(Char(f.u16()?).into()),
-			P::Item => args.push(Item(f.u16()?).into()),
-			P::Magic => args.push(Magic(f.u16()?).into()),
-			P::Flag => args.push(Flag(f.u16()?).into()),
-			P::Global => args.push(Global(f.u8()?).into()),
-			P::Var => args.push(Var(f.u8()?).into()),
-			P::FuncArg => args.push(FuncArg(f.u8()?).into()),
-			P::NumReg => args.push(NumReg(f.u8()?).into()),
-			P::StrReg => args.push(StrReg(f.u8()?).into()),
-			P::Attr => args.push(Attr(f.u8()?).into()),
-			P::CharAttr => args.push(CharAttr(Char(f.u16()?), f.u8()?).into()),
+			P::Char => op.args.push(Char(f.u16()?).into()),
+			P::Item => op.args.push(Item(f.u16()?).into()),
+			P::Magic => op.args.push(Magic(f.u16()?).into()),
+			P::Flag => op.args.push(Flag(f.u16()?).into()),
+			P::Global => op.args.push(Global(f.u8()?).into()),
+			P::Var => op.args.push(Var(f.u8()?).into()),
+			P::FuncArg => op.args.push(FuncArg(f.u8()?).into()),
+			P::NumReg => op.args.push(NumReg(f.u8()?).into()),
+			P::StrReg => op.args.push(StrReg(f.u8()?).into()),
+			P::Attr => op.args.push(Attr(f.u8()?).into()),
+			P::CharAttr => op.args.push(CharAttr(Char(f.u16()?), f.u8()?).into()),
 
-			P::Flags8 => args.push(Arg::Flags8(f.u8()?.into())),
-			P::Flags16 => args.push(Arg::Flags16(f.u16()?.into())),
-			P::Flags32 => args.push(Arg::Flags32(f.u32()?.into())),
+			P::Flags8 => op.args.push(Arg::Flags8(f.u8()?.into())),
+			P::Flags16 => op.args.push(Arg::Flags16(f.u16()?.into())),
+			P::Flags32 => op.args.push(Arg::Flags32(f.u32()?.into())),
 
-			P::Expr => args.push(self::Expr::read(f)?.into()),
-			P::Text => args.push(self::Text::read(f)?.into()),
-			P::Dyn => args.push(read_dyn(f)?),
+			P::Expr => op.args.push(self::Expr::read(f)?.into()),
+			P::Text => op.args.push(self::Text::read(f)?.into()),
+			P::Dyn => op.args.push(read_dyn(f)?),
 			P::Ndyn => {
 				for _ in 0..f.u8()? {
-					args.push(read_dyn(f)?);
+					op.args.push(read_dyn(f)?);
 				}
 			}
 
 			P::Cs1_36 => {
-				if matches!(args[1], Arg::Char(Char(0xFE02..=0xFE03))) {
-					read_parts(args, f, &[P::F32])?;
+				if matches!(op.args[1], Arg::Char(Char(0xFE02..=0xFE03))) {
+					read_parts(op, f, &[P::F32])?;
 				}
 			}
 			P::Cs1_3C => {
-				if matches!(args[1], Arg::Char(Char(0xFFFF))) {
-					read_parts(args, f, &[P::U32, P::U32, P::U32])?;
+				if matches!(op.args[1], Arg::Char(Char(0xFFFF))) {
+					read_parts(op, f, &[P::U32, P::U32, P::U32])?;
 				}
 			}
 
 			P::Cs2_37 => {
-				if matches!(args[1], Arg::Char(Char(0xFE04))) {
-					read_parts(args, f, &[P::Str])?;
+				if matches!(op.args[1], Arg::Char(Char(0xFE04))) {
+					read_parts(op, f, &[P::Str])?;
 				}
 			}
 
 			P::Tx_3C => {
-				if matches!(args[0], Arg::U16(1)) {
-					read_parts(args, f, &[P::U32, P::U32, P::U32])?;
+				if matches!(op.args[0], Arg::U16(1)) {
+					read_parts(op, f, &[P::U32, P::U32, P::U32])?;
 				}
 			}
 			P::Tx_isforceload => {
 				if f.scena == "a0005" && f.check(b"isforceload").is_ok() {
 					// for some reason this one put the name of the flag rather than value
-					args.push(Arg::Str("isforceload".to_string()));
+					op.args.push(Arg::Str("isforceload".to_string()));
 				} else {
-					read_parts(args, f, &[P::U8])?;
+					read_parts(op, f, &[P::U8])?;
 				}
 			}
 
 			P::Cs3_98 => {
-				let Arg::U16(v) = args[0] else {
+				let Arg::U16(v) = op.args[0] else {
 					eyre::bail!("Expected U16 for Cs3_c0 part");
 				};
-				read_parts(args, f, op_98(v, f.game))?;
+				read_parts(op, f, op_98(v, f.game))?;
 			}
 			P::Cs3_c0 => {
-				let Arg::U16(v) = args[0] else {
+				let Arg::U16(v) = op.args[0] else {
 					eyre::bail!("Expected U16 for Cs3_c0 part");
 				};
-				read_parts(args, f, op_c0(v))?;
+				read_parts(op, f, op_c0(v))?;
 			}
 
 			P::Cs4_40 => {
-				let Arg::Char(v) = args[1] else {
+				let Arg::Char(v) = op.args[1] else {
 					eyre::bail!("Expected Char");
 				};
-				read_parts(args, f, op_40(v))?;
+				read_parts(op, f, op_40(v))?;
 			}
 			
 			P::Rev_3E => {
-				match args[1] {
-					Arg::Char(Char(0xFE12)) => read_parts(args, f, &[P::U8])?,
-					Arg::Char(Char(0xFE13)) => read_parts(args, f, &[P::F32])?,
-					Arg::Char(Char(0xFFFF)) => read_parts(args, f, &[P::U8, P::U8, P::U8])?,
+				match op.args[1] {
+					Arg::Char(Char(0xFE12)) => read_parts(op, f, &[P::U8])?,
+					Arg::Char(Char(0xFE13)) => read_parts(op, f, &[P::F32])?,
+					Arg::Char(Char(0xFFFF)) => read_parts(op, f, &[P::U8, P::U8, P::U8])?,
 					_ => {}
 				}
 			}
 			P::Rev_D2 => {
-				let Arg::I16(v) = args[0] else {
+				let Arg::I16(v) = op.args[0] else {
 					eyre::bail!("Expected I16");
 				};
-				read_parts(args, f, op_d2(v))?;
+				read_parts(op, f, op_d2(v))?;
 			}
 			P::Rev_79 => {
-				if matches!(args[0], Arg::U8(7)) {
-					read_parts(args, f, &[P::U8, P::U8])?;
+				if matches!(op.args[0], Arg::U8(7)) {
+					read_parts(op, f, &[P::U8, P::U8])?;
 				}
 			}
 
-			P::Print => println!("{args:?}"),
+			P::Print => println!("{op:?}"),
 			P::Fail => eyre::bail!("Fail"),
 		}
 	}
