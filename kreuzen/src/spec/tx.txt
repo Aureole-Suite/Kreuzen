@@ -38,6 +38,11 @@
 1F06 u8 u16
 1F07 u8 u16
 1F08 u8 str u16 u32 u32
+1F09 u8 str u32
+1F0A u8
+1F0B u8 u16
+1F0C u8
+1F0D u8 flags32
 
 20   u8 char str str u8
 2100 u32 u8 u8 i32 u8 i32 u8
@@ -61,6 +66,7 @@
 2501 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 2503 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 2504 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+2505 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 2506 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 2507 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16
 26   u8 str
@@ -74,33 +80,41 @@
 2710 char u8
 2712 char u8 u16
 2713 char u8 f32 f32 f32 f32
+271A char
 
-2800 f32 f32 f32 f32
-2801 f32 f32 f32 f32
-2802 f32 f32 f32 f32
-
+28   u8 f32 f32 f32 f32
 29   char
 2A   char flags32
 2B   char flags32
+2C 'Cam'
 2C00
-2C02 u8 f32 f32 f32 u16
-2C03 u8 char str f32 f32 f32 u16 u8
-2C04 u8 f32 f32 f32 u16 u8
-2C05 u8 f32 u16
+2C02 'CamLookAt' u8 f32 f32 f32 u16
+2C03 'CamLookAtChar' u8 char str f32 f32 f32 u16 u8
+2C04 'CamRotate' u8 f32 f32 f32 u16 u8
+2C05 'CamDistance' u8 f32 u16
 2C07 u16
 2C08 u8 u16
-2C09 f32 f32 f32
-2C0B u8 f32 u16
+2C09 'CamVibrate' f32 f32 f32
+2C0B 'CamFov' u8 f32 u16
+2C0C u8 f32 f32 f32 u16
 2C0D u8 f32 f32 f32 u16
+2C0F u16 f32 f32 f32
 2C10
 2C11 u8 f32 f32 f32 u16 u8
-2C12 u32
+2C12 flags32
 2C13 char u8 f32 f32 f32 u16 u8
-2C14 u8 char str f32 f32 f32 u16 u8
+2C14 'CamLookAtChar2' u8 char str f32 f32 f32 u16 u8
+2C15 u8 f32 i32 u8
+2C16 u8 f32 u16
 2C17 u32
+2C1B f32 f32
 2C1F f32 f32 f32
 2C20 f32
 2C21 f32
+2C22 f32 f32 f32
+2C23
+2C25 u8 f32 f32
+2C26 u8 u16
 
 2D   char f32 f32 f32 f32
 2E   char
@@ -119,26 +133,38 @@
 3006 u16
 3007
 
-3100 u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
-3101 u16 u16
+31 'Sound'
+3100 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
+3101 'SoundStop' u16 u16
+3102 u16
 3103 u16 f32 u16
-3132 u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
-313A char u16 u16 u16 u16 u16
+3132 'SoundPlayVoice' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3133 u16 u16
+3134 u16
+3137 u16
+313A 'SoundPlayRandom' char u16 u16 u16 u16 u16
 313B u16
 3196 u16
-31FF f32 f32 f32
+3197 u16 u16
+31FE u16
+31FF 'ControllerRumble' f32 f32 f32
 
+32 'CharFace'
 3202 char u16 u16
 3203 char str str str str
 3204 char str
 320A char
 320B char
 
-33   char f32 f32 u8
-34   char u16 f32 u8
+33   'CharTurnDir' char f32 f32 u8
+34   char char f32 u8
 35   char
 36   char char f32 f32 f32 cs1_36 f32 u8 u16 cs2_37
 37   char u8
+3800 char f32 f32 f32 f32 f32 u8 u16
+3801 char f32 f32 f32 f32 f32 u8 u16
+
+39 'Fade'
 3900 u16 f32 u16
 3903 u16 f32 u16
 3905 u16
@@ -147,11 +173,13 @@
 390C u16
 3964 u16 f32 u16
 3965 u16 f32 u16
+3967 u16 f32 u16
 3969 u16
 39FE u16
 39FF u16 u16
-3A   char u8 f32 u16 f32
-3B   char f32 f32 f32 u16 u16
+
+3A   'CharEmote' char u8 f32 u16 f32
+3B   'CharLookDir' char f32 f32 f32 u16 u16
 3C0000 char u16 u16
 3C0100 char u16 u16 u32 u32 u32
 3D00 str u16
@@ -159,14 +187,28 @@
 3E00 u16 u16 u16
 
 3F00 u16
+3F01 u16
 3F02
+3F03
 3F04 u16
 3F05 u16
 3F06 u16
 3F07
 3F0A u16
+3F0B u16
+3F0E u8
 3F0F
+3F11
+3F12
+3F16 u8
+3F17
+3F18
+3F19 u16 u16
+3F1A u8
+3F1B
+3F1C
 
+40   f32 f32 f32 f32 u16 u8
 41   char f32 f32 f32 f32 u16 u8
 42   char u8
 43   f32
@@ -175,31 +217,54 @@
 4403 char f32 f32 f32 f32 u16 u8
 4406 char u8 f32 f32 f32 f32
 4407 char f32 f32
+4408 char f32
 45   str str
 4600 f32 f32 f32 f32 f32 u16
 4601 u16
+4602 f32 u16
+4603 u16
+47   u8 u16
+48   u8
 
+4901 u32 f32 f32 f32 f32 f32 f32 f32
 4902 u32 u32 u32 u32 u32 u32 u32 u32
 4903 u32 u32 u32 u32 u32 u32 u32 u32
 4904 u32 u32 u32 u32 u32 u32 u32 u32
 490B char
 490D 'MapPlaceTbox' str str u16 u16 u32 u16 u32 u16 u16 u32
+490E u8
+490F
+4910
 4911
+4912
 4914 'MapPlaceBreakObj' str str u16 u16 u8 u32 u16
+4915 str
 4917 u8 u32
 4918 char u8
 491A u32
 491B u32
+491E
+4920
+4921 char f32
+4925
 4927
 492A
+492D
 492E
+492F
 4930 flags32
 4933 u16
+4934 flags32
 4935 u16 u32 str str str
 4936
 493B u16 u16 f32 f32 u32
+493E u8 str u32
 493F
-4948 u16 u32 u8
+4944 f32 f32 f32
+4945 f32
+4946 f32
+4947 u8 i16 u16
+4948 char u32 u8
 
 4A   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str
 4B   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
@@ -209,13 +274,16 @@
 
 50   char u8 expr
 51   char u8 str
+52   char str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16
 5300 u16 u16 f32 u16 u16
 5301 u16 u16 f32
-55   char u8 u8
+55   char u8 str
 56   str u8 u16 str f32 f32 f32 f32 f32 f32 f32 u16
 57
 58   char u8
-5A   u8 str u16
+5A00 str u16
+5A01 str u16
+5A02 str u32
 5B00 u16 u16
 5B01 u16 u16
 5B02 u16 u32
@@ -225,23 +293,48 @@
 5B06 u16 u16
 5D00 str u32
 5D01 str u32
+5D02 str f32 f32 f32
+5D03 str f32 f32 f32
+5D04 str f32 f32 f32
 5D05 str
+5D06 str
+5D07 str f32 f32 f32 f32 u16 u8
+5D08 str f32 f32 f32 u16 u8
+5D0B str u16
 5D0C str u8
+5D0D str u8
 5D0E str f32 f32 f32 f32
 5D0F str u16 u16 u16 f32 u8
+5D10 str str
 5D11 str u16 f32
+5D12 str u16
+5D13 str
 5D14 str u16 f32 f32 f32 f32 f32 f32
+5D15 str u16
+5D16 str str u8 u8 u8
 5D18 str u32
+5D19 str
 5E00 u16 u16 u8
 5E01 u16 u16
 5E02 u16 u8
+5E03 u16 u16 u8
 5E04 u16 u16 u32
+5E05 u16
 5E06 u16
 5E0A u16
 5E0B u16
 5E0C u16
+5F char
+5F00 f32 u8 u16
+5F01
+5F02 f32 f32 f32
+5F03 f32 u8 u16
+5F04 f32 f32 f32 f32 f32 u8 u16
+5F05 f32 f32 f32 f32 f32 f32 f32
 
+60   u8 u16 u16 f32 f32 f32
 61   char f32
+63   u16 f32 u32 f32 f32 u8
 6400 u16 u32
 6401 u16 u32
 6402 u16 u32
@@ -250,19 +343,28 @@
 6405 u16 u32
 6407 u16 u32
 640C u16 u32
+640F u16 u32 u32
+6410 u16 u32
+6411 u16 u32 u32 u16
 6412 u16 u32
 6413 u16 u32
-6414 u16 u32
+6414 u16 u32 f32 f32 f32
+6415 u16 u32
+6416 u16 u32 u8
 6417 u16 u32
 6418 u16 u32
-6500 u16 u16 u8
-6501 u16 u8
-6504 u16 u8 u8
-6506 u16 u8 u8 u8 u8
+6500 char u16 u8
+6501 char u8
+6502 char u16
+6503 char u16 u8 u8
+6504 char u8 u8
+6506 char u8 u8 u8 u8
+6507 char u8
 6508 char u8
 66   f32 u16
 
 67   u16
+6700
 6701 u16 u8
 6702 u16 u8
 6703 u8 u8
@@ -280,6 +382,8 @@
 6903 str f32 u16 u16 str u16 f32
 6904
 6914 u32
+6916
+6932
 
 6A 'Menu2'
 6A00 u8 u16 f32
@@ -289,34 +393,58 @@
 6A04 u8 u8
 6A06 u8 u16
 6A07 u8 u16
+6A08 u8
+6A09 u8 u16
+
 6B   char str str u8 f32 u8
+6C   char
 6D00 str
 6D01 str f32 u16 u16 u16 u16
 6D02 str f32 u16
 6D03 str str str f32 f32 f32 u8 u8
 6E00 u16
+6E01 u16
+6E02 u16
+6E04 u16
+6E06 u16
 6E07 u16
+6E09 u16
 6E0A u16
-6E69 str
+6E0B u16
+6E0C u16 str
+6E0D u16
+6E0F u16
+6E10 u16
 6F00 str
 6F01 u16 str
 7001 str u8 u8 u8
 7002
 7009
+700A
 72   u16 u32 u16
 7300
+7301
 7302 u16
+7303 f32 f32 f32
 7304 u16
 7305 f32
 7306 u16
 7307 u8 u32
+7308
+7309
+73FB f32
+73FC f32
+# 73FD f32
 73FE u32
 73FF u16
 7400 u8
 7401
+7402
+7403
 7404
 75   f32
 7900 f32 f32 f32 f32
+7901 f32 f32 f32 f32
 7902 f32 f32 f32 f32
 7903 u16 str u8
 7B   u8 u16 u16 u16 u16 u16 u16 f32 f32 f32 str
@@ -325,55 +453,114 @@
 7F00 char char str str
 7F01 char char str str
 7F02 char
+7F03 char f32 f32 f32 f32 f32 f32 f32 f32 f32
+7FFE char str f32
+7FFF char str f32
 80   f32 f32 f32 f32 u32 u8
 8100 u16
 8101
 8102
 8103 u32
+82   u16 f32 f32 f32 f32
 83   u16 u16 u16 u16 u16 u16 u16 u16
 84
+85   str u32
 8600 u16 u16
+8601 u16 u16
 8602 str u8
+860A u16
+860B u16
 8663 u8
 8664 u16 u8
+87   u16 u16
 8800 u8
 8801
+8802
+8803
+8804
+8900 u32
+8901
 890A u16 u32 i16 i16 i16
 890B
+890C
+8914 u32
+8915
 8A00 str str u8 u16
 8A01
 8C   u8 u16 u8
 8D01 u8 f32
 8D02 u8 f32
 8E   u16
+8F   u16 f32 f32 f32
+9000 u16
+9001
+9002
+9003
+9004
 92   u8 u8
 9301 u8 u8 u32
 9302 u8
 9303 u8 u8 u8
+9304 u8
+9305 u8 u8 u8 u8 u8 u8
+9306 u8
+9309 u8
+930A u8
+930B u8
+930D u8 u16
 930E u8
+930F u8
+9310 u8 str str str
+9311 u8
+9312 u8 u8
+9313 u8
+9314 u8 u8
+9315 u8
+9316 u8
+9317 u8 str
+9318 u8
+94   f32 f32 f32 f32
+95
+96   f32 f32 f32 u16 u16
+97   u16
+9B   char f32 f32 f32
 9D   flags32
 9E   u8
 
+9F   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
+A000 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
+A001
+A002 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+A003 f32 f32 f32
+A004 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
+A005 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 A100 u8
 A101 u16
 A102 u16
+A103 u16
+A104 u16
+A105
+A106
+A107
 A200 u16 u8
 A3   str u16
 A4   u8
-A600 u16 flags32
-A601 u16 u32
-A705 char
+A6   u8 char flags32
+A7   u8 char
+A8   f32 f32 f32 f32 u16 u16
 A9
 AA   char u8 f32 f32 f32
 AB   char u8
-AC00 u8 u16
-AC01 u8 u16
+AC   u8 u8 char
+AD   u16 u8 str
 AF64
 AF65 str u32 u32 u32 u32 u32
 AF66 i32 i32
 AF67 u8
 AF68
+AF69 u32 u32 u32 u32
 
+B0   char
 B101 u8 u16 f32 f32 f32 f32 f32 f32 f32
 B102 u8
 B103 u8 f32
@@ -403,12 +590,19 @@ B20F char u32
 B210
 B212 u16 u16 u16
 B3  char u8 f32 f32
+
+# Here be dragons and u16 discriminators
+B50000 u16 str
+B50100
+B56400 u8 u16 u32 u16 u32 u16 u32 u16 u32
 B60000 char u16 u32 u8
 B60100 char
 B60200 char
 B60300 char
 B60400 char
-B8   char f32
+B60600 char char
+B70000 char str
+B8     char f32
 
 B90000 char f32 f32 u8 f32 f32 f32
 B90100 char f32 f32 u8
@@ -423,14 +617,14 @@ B90B00 char u32 u8 u8 f32
 B90C00 char u16 u32
 B90D00 char char u32
 B90E00 char u16 u16 u16 f32
-# B90F00 u16 print
+B90F00 char
 B91400 char
 B91500 f32
 B91600 char u16
 B91700 char u16
 B91800 char flags32
 B91900 char flags32
-# B91A00 u16 u16 print
+B91A00 char char
 B91B00 char char
 B91D00 char
 B91E00 char
@@ -443,96 +637,121 @@ B92400 char
 B92700 char u32
 B92800 char u32
 B92900 char
-# B92A00 u16 u16 u8 f32 f32 print
+B92A00 char u16 u8 f32 f32
 B92B00 char u16
-# B92C00 u16 print
+B92C00 char
 B92D00 char u16
-# B92E00 u16 u16 print
+B92E00 char u16
 B93000 char f32
 B93100 char f32 f32 f32
 B93200
-# B93400 u16 print
+B93400 char
 B93600 char str f32 f32 f32 f32 f32 f32 f32
 B93700 char char
 B93800 char
 B93900 char u8 char f32 f32
-# B93A00 u16 u16 print
+B93A00 char char
 B93B00 char char
 B93C00 char
 B93D00 char u16 u16 u32 u8
-# B93E00 f32 print
+B93E00 f32
 B93F00 char f32 f32 f32
 B94000 char u32
 B94100 char
 B94200 char f32 f32
 B94300 char
 B94400 char u8
-# B94500 u16 print
-# B94600 u16 u8 print
+B94500 char
+B94600 char u8
 B94700 char char
 B94800 char u16
 B94900 char
 B94A00 char u8
 B95400 char f32
 
+BA0000 str u32
+BA0100 str u32
 BA0200 str u8 u8
 BA0300
 BA0400
 BA0500
-BA0600 u32 u32 u16 u8
+BA0600 i32 i32 u16 u8
 BA0700
-BB   char f32 f32 f32 u16 u8
+BA0800
+BA0A00 u8
+BA0B00
+BB     char f32 f32 f32 u16 u8
 
-# BC0000 u16 u8
+BC0000 u16 u8
 BC0100 u16 u8 u16
 BC0200 u16
 BC0300 u16 u16
-# BC0400 u16
+BC0400 u16
 BC0500
+BC0600
 BC0700 u16 u8
 BC0800 u16 u8
 BC0900
 BC0A00 u16
 BC0B00
-# BC1400 u16 u16
+BC0C00
+BC1400 u16 u16
 BC1500 u16 u16
 # BC1600 u16
-# BC1700 u16
+BC1700 u16
 # BC1800 u16 u16
 BC1E00 char str
-# BC2800 u16
-# BC2900 u16
+BC2800 u16
+BC2900 u16
 BC2D00 u8
 # BC2E00 u16 u8
-# BC3500 u8 u8
+BC2F00
+BC3200
+BC3300
+BC3400
+BC3500 u8 u8
+BC3600
 BC3700
-# BC3800 u16
-# BC3A00 u16 u8
-# BC3B00 u16
-# BC3C00 u16 u8
-# BC3D00 u16
-# BC3F00 u16 u8
-# BC4000 u16 u16 u16
-# BC4100 u16 u16 u16
+BC3800 u16
+BC3900
+BC3A00 u16 u8
+BC3B00 u16
+BC3C00 u16 u8
+BC3D00 u16
+BC3E00
+BC3F00 u16 u8
+BC4000 u16 u16 u16
+BC4100 u16 u16 u16
 BC4200
 BC4300
-# BC4400 u8
-# BC4500 u8
-# BC4700 u16
-# BC4800 u16
-# BC4900 u16
+BC4400 u8
+BC4500 u8
+BC4600
+BC4700 u16
+BC4800 u16
+BC4900 u16
 BC4A00 u16
 BC4B00
 BC4C00
-# BC4D00 u16
+BC4D00 u16
+BC5A00
 BC5B00 u8
+BC5C00
+BC5D00
+BC5E00
 BC5F00 u8
 
+# Welcome back to u8 land
 BE   char flags32
 BF   char flags32
 C0   u8
 C1   char u8
-C300 u16 f32 f32 f32 f32
-C500 char u16
+C2   char u16
+C3   u8 u16 f32 f32 f32 f32
+C4   u8 char char
+C5   u8 char u16
+C7   u8
 C8   u8 u16
+C900 u32
+C901 u16 u16
 CA
