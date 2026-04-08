@@ -243,9 +243,13 @@ fn build_names(
 
 	let mut names = BTreeMap::new();
 	let mut by_name = BTreeMap::new();
-	let mut put = |op: Opcode, name: String| {
-		if leaves.contains(&op) && let Some(prev) = by_name.insert(name.clone(), op) {
-			panic!("Duplicate name in spec: {prev} and {op} are both named {name}");
+	let mut put = |op: Opcode, mut name: String| {
+		if leaves.contains(&op) {
+			if let Some(prev) = by_name.insert(name.clone(), op) {
+				panic!("Duplicate name in spec: {prev} and {op} are both named {name}");
+			}
+		} else {
+			name.push('_');
 		}
 		names.insert(op, name);
 	};
