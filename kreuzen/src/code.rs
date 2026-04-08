@@ -327,6 +327,14 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 					read_parts(op, f, &[P::U8])?;
 				}
 			}
+			P::Tx_2F => {
+				if f.scena == "t5110" && f.check(b"AniWvWait\xFF").is_ok() {
+					op.args.push(Arg::Str("AniWvWait".to_string()));
+					op.args.push(Arg::U8(0xFF));
+					read_parts(op, f, &[P::U8, P::F32, P::F32, P::F32])?;
+					break;
+				}
+			}
 
 			P::Cs3_98 => {
 				let Arg::U16(v) = op.args[0] else {

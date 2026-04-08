@@ -105,6 +105,7 @@ pub enum Part {
 
 	Tx_3C,
 	Tx_isforceload,
+	Tx_2F,
 
 	Cs3_98,
 	Cs3_c0,

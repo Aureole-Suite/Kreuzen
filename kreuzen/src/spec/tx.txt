@@ -122,7 +122,7 @@
 2E01 u8 str
 2E03 u8 str u8 u8
 
-2F   char u8 str f32 f32 u32
+2F   char tx_2f u8 str f32 f32 u32
 
 3000 u16 f32 u16 u32 u8
 3001 u16 u8
