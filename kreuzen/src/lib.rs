@@ -171,6 +171,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	if f.game <= Game::Cs2 && n == "mon999"
 		|| f.game == Game::Cs2 && n == "title"
 		|| f.game == Game::Tx && n == "a1019"
+		|| f.game == Game::Cs1 && n == "t0600"
 	{
 		f.enc = Enc::Sjis;
 	}
