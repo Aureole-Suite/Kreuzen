@@ -498,7 +498,7 @@
 5E00 'BlurOn' u16 f32 u16 u16 u16 f32 char str f32 f32 f32
 5E01 'BlurOff' u16
 60   char u8 str
-6100 str u8 char f32 f32 f32 f32 f32 f32 f32 u16
+61   u8 str u8 char f32 f32 f32 f32 f32 f32 f32 u16
 62   u16 u16
 63   char u8
 6400 f32
