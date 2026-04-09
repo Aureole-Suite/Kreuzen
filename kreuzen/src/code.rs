@@ -243,14 +243,12 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 		if op_spec.has_children() {
 			code = f.u8()?;
 			opcode.push(code);
-			op.name = spec.names.get(&opcode).unwrap();
 
 			op_spec = match op_spec.child(code) {
 				Some(it) => it,
-				None => {
-					eyre::bail!("_Unknown opcode {opcode}")
-				}
+				None => eyre::bail!("_Unknown opcode {opcode}"),
 			};
+			op.name = spec.names.get(&opcode).unwrap();
 		} else {
 			break;
 		}
