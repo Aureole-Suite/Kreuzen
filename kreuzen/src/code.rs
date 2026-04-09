@@ -370,7 +370,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 			}
 			P::Rev_79 => {
 				if matches!(op.args[0], Arg::U8(7)) {
-					read_parts(op, f, &[P::U8, P::U8])?;
+					read_parts(op, f, &[P::U8])?;
 				}
 			}
 

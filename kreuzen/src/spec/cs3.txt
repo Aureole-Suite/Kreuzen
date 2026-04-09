@@ -623,16 +623,7 @@
 76   char str str u16 f32 f32 f32 f32
 77   'CharDelete' char
 7800 str
-7900 u16
-7901 u16
-7902 u16
-7903 u16
-7904 u16
-7907 u16 u8
-7908 u16
-7909 u16
-790A u16
-790D u16
+79   u8 u16 rev_79
 7801 str u8
 7A00 'ScenaIs' str
 7A01 'CharIsModel' char str

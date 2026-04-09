@@ -280,6 +280,7 @@ fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
 		|| f.entry.starts_with("FC_auto")
 		|| f.entry.starts_with("BookData")
 		|| f.entry.starts_with("BTLSET")
+		|| f.entry.starts_with("StyleName")
 		|| f.entry.starts_with("_");
 	static SHADOW_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^_a[0-9]_").unwrap());
 	let is_shadow = SHADOW_REGEX.is_match(f.entry);
