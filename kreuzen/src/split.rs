@@ -75,10 +75,10 @@ pub fn parse(list: &[String]) -> Split {
 
 	{
 		let mut main_iter = entries.iter_mut();
-		for (offset, s) in preload.iter().enumerate() {
+		for (s, offset) in preload.iter().zip(preload_start..) {
 			let base = &s[1..];
 			match main_iter.find(|a| a.name == base) {
-				Some(e) => e.preload = Some(preload_start + offset),
+				Some(e) => e.preload = Some(offset),
 				None => panic!("preload {s:?} has no matching main entry"),
 			}
 		}
@@ -87,9 +87,8 @@ pub fn parse(list: &[String]) -> Split {
 	{
 		let mut main_iter = entries.iter_mut();
 		let mut cur = None;
-		for (offset, s) in shadow.iter().enumerate() {
+		for (s, offset) in shadow.iter().zip(shadow_start..) {
 			let (n, base) = strip_shadow_prefix(s).expect("shadow element lacks _aN_ prefix");
-			let abs_idx = shadow_start + offset;
 			if n == 0 {
 				match main_iter.find(|a| a.name == base) {
 					Some(e) => cur = Some(e),
@@ -98,7 +97,7 @@ pub fn parse(list: &[String]) -> Split {
 			}
 			let e = cur.as_mut().expect("shadow levels must be filled in ascending N order");
 			assert_eq!(e.shadow.len(), n as usize, "shadow levels must be filled in ascending N order");
-			e.shadow.push(abs_idx);
+			e.shadow.push(offset);
 		}
 	}
 
