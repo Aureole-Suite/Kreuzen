@@ -70,6 +70,18 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 	if labels.remove(&endl) {
 		ops2.push(FlatOp::Label(endl));
 	}
+
+	const WEIRD_LABEL: Label = Label(0x299B);
+	if labels.len() == 1
+	&& f.game == Game::Cs3
+	&& f.scena == "system"
+	&& let Some(if_loc) = ops2.iter().position(|op| matches!(op, FlatOp::If(_, _, WEIRD_LABEL)))
+	&& labels.remove(&WEIRD_LABEL)
+	{
+		tracing::warn!("Fixing up broken label");
+		ops2.insert(if_loc + 2, FlatOp::Label(WEIRD_LABEL));
+	}
+
 	eyre::ensure!(labels.is_empty(), "Some labels were not used: {labels:?}");
 	// let decomp = decompile::decompile(&ops2).context(DecompileSnafu { code: ops2 })?;
 	// Ok(decomp)
