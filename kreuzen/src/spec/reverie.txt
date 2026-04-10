@@ -60,7 +60,7 @@
 2906 u8 u16
 2907 'MenuDisable' u8 u16
 2908 'MenuAddCheckbox' u8 str u32 dyn dyn
-# 2909 u8 str dyn
+2909 u8 str dyn
 290A u8
 290B u8 dyn
 # 290C u8 u16
@@ -68,15 +68,16 @@
 290E u8 u32
 290F u8
 2910 u8
-# 2911 u8 str u16 u8 u8 u32
+2911 u8 str u16 u8 u8 u32
 2912 u8 str u16 u32
 2913 u8 f32 f32 f32
 2914 u8 f32 f32 f32
 2915 u8 f32 f32 f32
-# 2916 'MenuVr' u8 f32 f32 f32 f32 u8
+2916 'MenuVr' u8 f32 f32 f32 f32 u8
 
-2A   u8 char str str u8
-# 2A02 char str str u8
+2A00 char str str u8
+2A01 char str str u8
+2A02 char str str u8
 2A03 char str str u8
 2A04 char str str str
 2A05 char str str
@@ -146,7 +147,7 @@
 321F char u16
 3221 char u16 u8
 3222 char u32 str
-# 3223
+3223
 3224 char dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
 
 33 'Btl'
@@ -192,7 +193,7 @@
 3326 u8
 3327 f32 f32
 # End combat shells
-# 332A char
+332A char
 332D # used in BattleLinkLevelUpCelineVoice
 332E char
 332F char
@@ -227,7 +228,7 @@
 3353 str
 3354 char u8 f32 f32 f32
 3355 char
-# 3356 u8 # used in BtlWinGroup
+3356 u8 # used in BtlWinGroup
 335A 'BtlCharSetAtDelay' char u32
 335B u8 u32
 335C 'BtlGetCount' u8 # 10 is number of players
@@ -363,12 +364,12 @@
 3616 'CamSetHeight' u8 f32 u16
 3617 flags16
 # 3618 u8 str f32 f32 f32 u16
-# 3619 u8 str f32 f32 f32 u16
-# 361A str u8 f32 f32 f32 u16 u8
+3619 u8 str f32 f32 f32 u16
+361A str u8 f32 f32 f32 u16 u8
 361B f32 f32
 361C u8
 361D u8
-# 361F u8 f32 f32 u8
+361F u8 f32 f32 u8
 3620
 3621 char str
 3628 f32 f32 f32
@@ -378,7 +379,7 @@
 362C u16
 # 362D u16
 362E u8
-# 362F u8
+362F u8
 
 37   'CharSetPos' char f32 f32 f32 f32
 38   'CharAniPlay' char u8 u8 str
@@ -446,9 +447,9 @@
 430A u16
 430B u16
 430C u16
-# 430D u16 u16
+430D u16 u16
 # 430E u16 u16
-# 430F u16 u16 u8
+430F u16 u16 u8
 4364 u16 f32 u16
 4365 u16 f32 u16
 4367 u16 f32 u16
@@ -506,7 +507,7 @@
 491C 'SoloActionMode' u8
 491D u8
 491E u16
-# 491F u32
+491F u32
 
 4A   u8 f32 f32 f32 f32 u32 u8
 4B   'CharSetColor' char f32 f32 f32 f32 u16 u8
@@ -556,8 +557,8 @@
 5430 dyn
 543100 u16 char f32 f32 u8 u8 u16
 543101 u16
-# 543102 u16
-# 543103
+543102 u16
+543103
 5434 u32
 5435 u8 char str u16 u16 str str str
 5436 u8
@@ -594,33 +595,33 @@
 5450 f32
 5451 u16 str
 5452 u16 u16 u8
-# 5453 char
+5453 char
 5454 u16 u32
 5455
 # 5456 u16
 5457 u8
-# 5458 char str f32 f32 f32 f32 u8
-# 545A dyn dyn u8
+5458 char str f32 f32 f32 f32 u8
+545A dyn dyn u8
 # 545B u32
 545C f32
 # 545D char u16
 545F char f32 f32 f32
 5460 char f32
-# 5461 u16 u16 u16
-# 5462 str
-# 5463 str u32 u32 u32
+5461 u16 u16 u16
+5462 str
+5463 str u32 u32 u32
 5465 char u16 f32 f32 f32 f32 f32 f32 f32
 546B char u16 u32 u32 u32 u32 u32 u32 u32
-# 546C char u16 u32 u32 u32 u32 u32 u32 u32
+546C char u16 u32 u32 u32 u32 u32 u32 u32
 546D char u16 u32 u32 u32 u32 u32 u32 u32
 546E char u16 u32 u32 u32 u32 u32 u32 u32
 546F char u16 u32 u32 u32 u32 u32 u32 u32
-# 5470 char u16 u32 u32 u32 u32 u32 u32 u32
-# 5471 char u16 u32 u32 u32 u32 u32 u32 u32
-# 5472 char u16 u32 u32 u32 u32 u32 u32 u32
-# 5473 char u16 u32 u32 u32 u32 u32 u32 u32
-# 5474 char u16 u32 u32 u32 u32 u32 u32 u32
-# 5479 char u16 u32 u32 u32 u32 u32 u32 u32
+5470 char u16 u32 u32 u32 u32 u32 u32 u32
+5471 char u16 u32 u32 u32 u32 u32 u32 u32
+5472 char u16 u32 u32 u32 u32 u32 u32 u32
+5473 char u16 u32 u32 u32 u32 u32 u32 u32
+5474 char u16 u32 u32 u32 u32 u32 u32 u32
+5479 char u16 u32 u32 u32 u32 u32 u32 u32
 
 55   'VisShow' u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 u8 str str
 56   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
@@ -643,8 +644,8 @@
 63   char u8
 6400 f32
 6401 f32
-# 6402
-# 6403
+6402
+6403
 
 65 'Lp'
 6500 str u16
@@ -660,8 +661,8 @@
 6605 char
 6606 'CharCraftHas' char magic
 6607 char
-# 6608 char u16 u8
-# 6609 char u16
+6608 char u16 u8
+6609 char u16
 660A char u16
 660B 'CharOrderAdd' char u32
 660C char
@@ -670,7 +671,7 @@
 660F char magic
 6610 char magic
 6611 char magic
-# 6612 char magic u32
+6612 char magic u32
 
 6700 char u16
 # 6701 char u16
@@ -715,13 +716,13 @@
 6914 'LinkAuto' u8 u8
 6915 u16
 6916
-# 6917 u16
+6917 u16
 6918 u16 u16 u16 u8 u8 u8
 6919 'LinkSetPage' u8
 691A 'LinkClearPage' dyn char
 # 691B u16
 691C u32
-# 691D u16
+691D u16
 
 6A   char
 6A00 f32 u8 u16
@@ -757,15 +758,15 @@
 6F16 'ItemIsLocked' item u32
 6F17 u16 u32
 # 6F18 u16 u32
-# 6F19 u16 u32
+6F19 u16 u32
 6F1A 'InventoryClear' u16 u32
 6F1B 'InventorySwitch' u16
 6F1C 'InventoryMerge' u32 u32 u8 u8
-# 6F1D dyn
-# 6F1E dyn dyn u8 u8
-# 6F1F u16 u32
+6F1D dyn
+6F1E dyn dyn u8 u8
+6F1F u16 u32
 6F20 'ItemsetGetCount' u16 u8
-# 6F21 u16 u32
+6F21 u16 u32
 
 70 'CharEquip'
 7000 'CharEquipItem' char item u8 u8
@@ -782,7 +783,7 @@
 700C char u8 u8
 700D char
 700E 'CharEquipSubMq' char item item
-# 700F 'CharEquipMq' char item u16
+700F 'CharEquipMq' char item u16
 
 7100 'FlagSetRange' flag flag
 7101 'FlagUnsetRange' flag flag
@@ -795,15 +796,15 @@
 7205
 7206 u16
 7207
-# 7208 dyn
+7208 dyn
 7209
-# 720A dyn
-# 720B dyn u8 u8
+720A dyn
+720B dyn u8 u8
 
 73   u16
 7300 u8 u8
 # 7301 u16 u8
-# 7302 dyn u8 u8
+7302 dyn u8 u8
 # 7304 dyn
 
 74   'ActiveVoice' u16
@@ -830,13 +831,13 @@
 # 750C u8 dyn dyn dyn dyn dyn u8
 # 750D u8 dyn dyn dyn dyn
 750E u8 u8
-# 750F u8 u8
-# 7510 u8 u32
+750F u8 u8
+7510 u8 u32
 
 76   char str str u16 f32 f32 f32 f32
 77   'CharDelete' char
 7800 str
-# 7801 str u8
+7801 str u8
 79   u8 u16 rev_79 rev_79
 7A00 'ScenaIs' str
 7A01 'CharIsModel' char str
@@ -845,7 +846,9 @@
 7B01 'MoviePlay' str u8 u8 u8
 7B02 'MovieStop'
 7B09 'MovieWait'
-# 7C02
+7C00 u8 u16 u16 u16 u16 u16 u16 u16
+7C01
+7C02
 7D   'ShopShow' u16 u32 f32
 7E00
 7E01
@@ -884,18 +887,18 @@
 
 8C 'Debug'
 8C00 char
-# 8C01
+8C01
 8C02
 8C03 u8
 # 8C04 u32
 8C06
 8C07
 8C08 u32
-# 8C09
-# 8C0A u8 str str
-# 8C0B
+8C09
+8C0A u8 str str
+8C0B
 # 8C0C str u32
-# 8C0D u32 u32
+8C0D u32 u32
 # 8C0F u32
 # 8C10 u32 u8
 8C11 'DebugWarning' str
@@ -951,79 +954,79 @@
 9D   u8 u8
 # 9E00
 # 9E01
-# 9E02
+9E02
 9E0F u8
 9E10
 9E11 char u8
 9E12 u8 u8
-# 9E13
+9E13
 9E1401 char str
-# 9E1402 char
+9E1402 char
 # 9E1403 u8
 9E1404 u32
 9E1405 char f32 f32 f32 f32
 9E1407 char
 9E1409 u8 char
 9E140B char u16
-# 9E140D u8 u32
-# 9E140E u8 char
-# 9E140F u8
+9E140D u8 u32
+9E140E u8 char
+9E140F u8
 # 9E1410 u16
-# 9E1411 u16 u8
+9E1411 u16 u8
 # 9E1412 u8 u32
-# 9E1413 u8 u32
-# 9E1414 u8
-# 9E1415 char u8 str
+9E1413 u8 u32
+9E1414 u8
+9E1415 char u8 str
 9E1416 u16 u32
-# 9E1417
+9E1417
 # 9E1418 u16
-# 9E1419 u16 str dyn
+9E1419 u16 str dyn
 9E141A u16
 9E141B char
-# 9E32 char str
-# 9E33 char str
-# 9E3400 u32
-# 9E3401 u32
-# 9E3402 u32
-# 9E3403 u32
-# 9E3404 u32
-# 9E3405 u32 str
-# 9E3406 u32
-# 9E35 u8 u16
+9E32 char str
+9E33 char str
+9E3400 u32
+9E3401 u32
+9E3402 u32
+9E3403 u32
+9E3404 u32
+9E3405 u32 str
+9E3406 u32
+9E35 u8 u16
 # 9E36 u8 u32
-# 9E37 u8
+9E37 u8
 # 9E38 u16 u8 str
-# 9E39
+9E39
 9E3A char u16 f32 f32 f32 f32 f32 f32 f32 f32
 9E3B char u8
-# 9E3C u32 u16
+9E3C u32 u16
 9E3D u32 u16
-# 9E3E u16
+9E3E u16
 9E3F u16
-# 9E40
+9E40
 9E41 char u16 u32 u16
 9E42 char u32
 9E43 char u32
 9E44 char u16
 9E45 char u16
 9E46 char i32 u16
-# 9E47
+9E47
 9E48 u8
-# 9E49 u8
+9E49 u8
 9E4A char f32 f32 f32
 9E4B char
-# 9E4C u16 u8
-# 9E4D
-# 9E4E
-# 9E4F
-# 9E50 u16
+9E4C u16 u8
+9E4D
+9E4E
+9E4F
+9E50 u16
 9E51 u16 i32 u8
 9E53 f32 f32
-# 9E54 u8
-# 9E55
-# 9E56 u8
-# 9E59 u32
-# 9E5A
+9E54 u8
+9E55
+9E56 u8
+9E59 u32
+9E5A
 A0
 A1   f32 f32 f32 u16 u16
 A2   char str u32 u32
@@ -1032,7 +1035,7 @@ A4   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u
 A500 char u16 f32 u8
 A6   char f32 f32 f32
 A8   flags32
-# A9   'NoteGetCount' u8
+A9   'NoteGetCount' u8
 AA   u8 u8
 AB00 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
 AB01
@@ -1056,72 +1059,72 @@ AC10
 AC11
 AC12 dyn
 AC13 u16
-# AC14 dyn
-# AC15 u16
-# AC16 dyn
-# AC17 u16
+AC14 dyn
+AC15 u16
+AC16 dyn
+AC17 u16
 AD00 u8
 AD01 u8
 AD02 f32
 AD03 u8
 AE   'SetEndFunc' str u16
 AF   u8
-# B001
-# B002
-# B003
-# B004 u8
+B001
+B002
+B003
+B004 u8
 B007
-# B008
+B008
 B009
 B00A u8
 B00B u8 u8
-# B00C u8
-# B00D
-# B00E
-# B00F
-# B010 dyn
-# B011
-# B012 u8
-# B017
+B00C u8
+B00D
+B00E
+B00F
+B010 dyn
+B011
+B012 u8
+B017
 B018
 # B019 u8
 B01A
-# B01B
-# B01C
-# B01D u8
-# B01E u8
-# B01F
-# B020
-# B021 u8
-# B022
-# B023
-# B024
-# B025 u8
+B01B
+B01C
+B01D u8
+B01E u8
+B01F
+B020
+B021 u8
+B022
+B023
+B024
+B025 u8
 B026
-# B027
-# B028 u8
-# B029
-# B02A
+B027
+B028 u8
+B029
+B02A
 B02B
-# B02C
-# B02D
-# B02E u8
-# B02F u8
+B02C
+B02D
+B02E u8
+B02F u8
 B030
-# B031 u32
-# B032
-# B033
-# B034
+B031 u32
+B032
+B033
+B034
 B035
 B036 u32 u8
-# B037
+B037
 B038
-# B039
-# B03B
-# B03C u8 char u8
-# B03D u32
+B039
+B03B
+B03C u8 char u8
+B03D u32
 # B03E u32
-# B040
+B040
 B100 'PartyCharFlagsSet' char flags32
 B101 'PartyCharFlagsUnset' char flags32
 B102 'PartyCharFlagsToggle' char flags32
@@ -1167,8 +1170,8 @@ BC13 u16 dyn str f32 f32
 BC14 u16 dyn u32
 BC15 u16 dyn u32
 # BC16 u16 dyn u32
-# BC17 u16 dyn f32 f32
-# BC18 u16 dyn f32
+BC17 u16 dyn f32 f32
+BC18 u16 dyn f32
 BC19 u16 dyn str
 BD05 u16 u16 u16
 BE   char u8 f32 f32
@@ -1186,31 +1189,31 @@ C402 'TeamAddChar' dyn char
 C403 'TeamGetChar' char
 C404 u8 dyn f32 f32 f32 f32
 C405 u8 u8
-# C406 dyn u8
+C406 dyn u8
 C407 'TeamGetCount'
-# C408 u8
+C408 u8
 # C409 dyn
-# C40A u8
+C40A u8
 C40B 'TeamCopy' u8 u8
 C40C u8 u16
 C40D 'TeamRemoveChar' u8 char
-# C40E u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
+C40E u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
 C40F u8 u8 u8 u8 u8 u8 u8 u8 u8
 # C410 dyn u16
 
 # Pretty sure C5 has to do with team select menu
 C500 u8 u8
 C501
-# C502
-# C503
+C502
+C503
 C504 u8
-# C505
-# C506 u8
-# C507 u32
-# C508
-# C509 u8 u8 u8 u8 u8 u8 u8 u8
-# C50A u8 u8 u8 u8 u8 u8 u8 u8
-# C50B
+C505
+C506 u8
+C507 u32
+C508
+C509 u8 u8 u8 u8 u8 u8 u8 u8
+C50A u8 u8 u8 u8 u8 u8 u8 u8
+C50B
 C50C u8 u8 u8 u8 u8
 
 C6 'Bond'
@@ -1231,7 +1234,7 @@ C702
 C800 char flag u16
 C801 char flag u16
 C802 char flag u16 char
-# C803 char flag u16 f32 f32 f32
+C803 char flag u16 f32 f32 f32
 C900 char
 C901 char
 C902
@@ -1260,11 +1263,11 @@ CE15 u8 char u32 u8
 CE28 u8 str u8
 # CE32 u8 str u32 u8
 # CE33 u8 str u32 u8
-# CF03
-# CF04
-# CF05
-# CF06
-# CF07
+CF03
+CF04
+CF05
+CF06
+CF07
 CF14 u16
 D000 char str str str str f32 f32 f32
 # D01E str str str str f32 f32 f32
@@ -1284,41 +1287,41 @@ D800 u8
 D9 'Vr'
 D900 'VrEnable' u8
 D902 'IsVr'
-# D904 'VrRotate' u16 f32 f32 f32 f32 f32 f32
-# D905
-# D906 'VrPosition' f32 f32 f32
+D904 'VrRotate' u16 f32 f32 f32 f32 f32 f32
+D905
+D906 'VrPosition' f32 f32 f32
 
 DA00 'RouteMenuShow' u8
 DA01 'RouteMenuWait'
-# DB   u8
+DB   u8
 DC00 char u16 u8
-# DE01 u8 f32
-# DE02
-# DE03 u8 u8 u8
+DE01 u8 f32
+DE02
+DE03 u8 u8 u8
 DF   u32 u8
-# E000
-# E001
-# E002 u8 u16 f32 f32opt f32opt u8 u8
-# E003 u16 f32 f32 f32
-# E004
-# E005 u8
-# E006 str
-# E007
-# E008
-# E100 u16 f32 f32
-# E101
+E000
+E001
+E002 u8 char f32 rev_e002 rev_e002 u8 u8
+E003 u16 f32 f32 f32
+E004
+E005 u8
+E006 str
+E007
+E008
+E100 u16 f32 f32
+E101
 E200 u8 u8
-# E201 u8
-# E202 u8 u16
+E201 u8
+E202 u8 u16
 # E203 u8 u16
-# E204 u8
-# E205 u8 u8
+E204 u8
+E205 u8 u8
 E300
-# E301
+E301
 E302 u16 u8 u16 u16
 # E303 u16 u8 u16
-# E304
-# E305
+E304
+E305
 E500 'Team2Clear' u8
 E501 'Team2Copy' u8 u8
-# E6   u16
+E6   u16

@@ -805,9 +805,9 @@ A1   f32 f32 f32 u16 u16
 A3   'OrbmentSetCover' char item
 A4   u8 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 A6   char f32 f32 f32
+A8   flags32
 A9   'NoteGetCount' u8
 AA   u8 u8
-A8   flags32
 AB00 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
 AB01
 AB02 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
@@ -833,7 +833,7 @@ AD00 u8
 AD01 u8
 AD02 f32
 AD03 u8
-AE   str u16
+AE   'SetEndFunc' str u16
 AF   u8
 B100 'PartyCharFlagsSet' char flags32
 B101 'PartyCharFlagsUnset' char flags32

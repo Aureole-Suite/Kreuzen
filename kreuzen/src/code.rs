@@ -373,6 +373,12 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 					read_parts(op, f, &[P::U8])?;
 				}
 			}
+			P::Rev_E002 => {
+				match op.args[1] {
+					Arg::Char(Char(0xFFFF)) => read_parts(op, f, &[P::I32])?,
+					_ => read_parts(op, f, &[P::F32])?,
+				}
+			}
 
 			P::Print => println!("{op:?}"),
 			P::Fail => eyre::bail!("Fail"),

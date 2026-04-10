@@ -115,6 +115,7 @@ pub enum Part {
 	Rev_3E,
 	Rev_79,
 	Rev_D2,
+	Rev_E002,
 
 	Print,
 	Fail,
