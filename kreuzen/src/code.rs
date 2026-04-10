@@ -27,34 +27,21 @@ impl std::fmt::Display for Label {
 }
 
 pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
+	let orig_end = end;
 	while end > 0 && f.data()[end - 1] == 0 {
 		end -= 1;
 	}
 	let mut ops = Vec::new();
 	while f.pos() < end {
 		let pos = Label(f.pos() as u32);
-		match read_op(f) {
-			Ok(op) => {
-				tracing::trace!("Read op at {pos:?}: {op:?}");
-				ops.push((pos, op))
-			}
-			Err(e) => {
-				let pos2 = f.pos();
-				let name = format!("{:?}/{}:{}", f.game, f.scena, f.entry);
-				let dump = f.at(pos.0 as usize).unwrap()
-					.dump()
-					.num_width_as(0xFFFFF)
-					.mark(pos2)
-					.end(end)
-					.oneline();
-				println!("{e}/{} {dump:#1.40X} {name}", f.variant);
-				Err(e).with_context(|| format!("Failed to read op at {pos:?}"))?;
-			}
-		}
+		let op = read_op(f).with_context(|| format!("Failed to read op at {pos:?}"))?;
+		tracing::trace!("Read op at {pos:?}: {op:?}");
+		ops.push((pos, op))
 	}
 	if f.pos() != end {
 		tracing::warn!("Expected to end at {end:X} but ended at {:X}", f.pos());
 	}
+	f.seek(orig_end)?;
 
 	let mut labels = BTreeSet::new();
 	for (_, op) in &ops {
@@ -354,7 +341,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 				read_parts(op, f, op_40(v))?;
 			}
 			P::Cs4_wtf_are_you_doing => {
-				if f.scena == "mg11" && f.entry == "Mg11_Init_char_function" && f.check_u32(0).is_ok() {
+				if f.scena == "mg11" && f.check_u32(0).is_ok() {
 					op.args.push(Arg::U32(0)); // This one is only there in the japanese version
 				}
 			}

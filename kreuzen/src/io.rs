@@ -65,6 +65,4 @@ pub struct CReader<'a, 'b> {
 	pub scena: &'b str,
 	pub oddness: u32,
 	pub variant: u8,
-	pub entry: &'b str,
-	pub entry_start: usize,
 }

@@ -110,9 +110,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		eyre::ensure!(pad > 0);
 		oddness += pad as u32;
 	}
-
-	let mut chunks = Vec::with_capacity(names.len());
-
+	
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
 	let cs2_special = ["e2230", "e4501", "e4701", "m5010"];
 	let cs3_special_1 = ["mon037_c00", "mon042_c00", "mon042_c01", "mon046_c00", "ply000", "ply001"];
@@ -210,30 +208,52 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		_ => 0,
 	};
 
-	for (name, (start, end)) in names.into_iter().zip(starts.iter().copied().zip(iter)) {
-		let _span =
-			tracing::error_span!("chunk", %name, start = format_args!("{start:X}")).entered();
-		eyre::ensure!(f.pos() == start);
-		eyre::ensure!(start <= end && end <= f.len());
-		let mut cr = CReader {
-			reader: &mut f,
-			scena: &script_name,
-			variant,
-			oddness,
-			entry: &name,
-			entry_start: start,
-		};
-		match read_entry(&mut cr, end) {
-			Ok(it) => it,
-			Err(e) => {
-				tracing::error!("{e:#}");
-				f.seek(end)?;
-				continue;
-			}
-		};
+	let tables = [
+		"",
+		"ActionTable",
+		"AddCollision",
+		"AlgoTable",
+		"AnimeClipTable",
+		"FieldMonsterData",
+		"PartTable",
+		"ReactionTable",
+		"SummonTable",
+		"ConditionTable",
+		"BreakTable",
+		"WeaponAttTable",
+		"FieldFollowData",
+		"ShinigPomBtlset",
+	];
 
+	let mut cr = CReader {
+		reader: &mut f,
+		scena: &script_name,
+		variant,
+		oddness,
+	};
+
+	let ranges = starts.iter().copied().zip(iter).collect::<Vec<_>>();
+	let split = split::parse(&names);
+	let mut chunks = Vec::with_capacity(split.entries.len());
+	for e in split.entries {
+		let _span = tracing::error_span!("entry", name=%e.name).entered();
+		let is_table = tables.contains(&e.name.as_str())
+			|| e.name.starts_with("FC_auto")
+			|| e.name.starts_with("BookData")
+			|| e.name.starts_with("BTLSET")
+			|| e.name.starts_with("StyleName");
+		if !is_table {
+			decompile(&mut cr, ranges[e.main])?;
+		}
+		for (a, &s) in e.shadow.iter().enumerate() {
+			let _span = tracing::error_span!("shadow", a).entered();
+			decompile(&mut cr, ranges[s])?;
+		}
 	}
-	eyre::ensure!(f.pos() == f.len());
+	if let Some(i) = split.charater_section {
+		let _span = tracing::error_span!("charater section").entered();
+		decompile(&mut cr, ranges[i])?;
+	}
 
 	Ok(Scena {
 		name: script_name,
@@ -261,37 +281,10 @@ fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)
 	Ok((names, starts))
 }
 
-fn read_entry(f: &mut CReader, end: usize) -> eyre::Result<()> {
-	let tables = [
-		"",
-		"ActionTable",
-		"AddCollision",
-		"AlgoTable",
-		"AnimeClipTable",
-		"FieldMonsterData",
-		"PartTable",
-		"ReactionTable",
-		"SummonTable",
-		"ConditionTable",
-		"BreakTable",
-		"WeaponAttTable",
-		"FieldFollowData",
-		"ShinigPomBtlset",
-	];
-	let is_table = tables.contains(&f.entry)
-		|| f.entry.starts_with("FC_auto")
-		|| f.entry.starts_with("BookData")
-		|| f.entry.starts_with("BTLSET")
-		|| f.entry.starts_with("StyleName")
-		|| f.entry.starts_with("_");
-	static SHADOW_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^_a[0-9]_").unwrap());
-	let is_shadow = SHADOW_REGEX.is_match(f.entry);
-	if !is_table || is_shadow {
-		let code = code::decompile(f, end)?;
-		f.seek(end)?;
-	} else {
-		let pos = f.pos();
-		let slice = f.slice(end - pos)?;
-	}
+fn decompile(f: &mut CReader, s: (usize, usize)) -> eyre::Result<()> {
+	let (start, end) = s;
+	eyre::ensure!(start <= end && end <= f.reader.len());
+	f.seek(start)?;
+	let code = code::decompile(f, end)?;
 	Ok(())
 }
