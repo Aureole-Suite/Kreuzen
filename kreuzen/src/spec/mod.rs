@@ -111,6 +111,7 @@ pub enum Part {
 	Cs3_c0,
 
 	Cs4_40,
+	Cs4_wtf_are_you_doing,
 
 	Rev_3E,
 	Rev_79,

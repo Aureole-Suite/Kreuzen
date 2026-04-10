@@ -214,7 +214,7 @@
 333D char char f32 f32 f32 f32 f32 u8
 333E 'Btl_CharSetPosAsync' char char f32 f32 f32 f32 u8 u8
 333F char
-3340 char char f32 f32
+3340 char u8
 3341 'BtlCharTurnToChar' char char f32 f32
 3342 char u8 f32 f32 f32 u8 u8
 3346 f32 f32 f32

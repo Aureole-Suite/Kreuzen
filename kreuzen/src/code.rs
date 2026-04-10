@@ -353,11 +353,17 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 				};
 				read_parts(op, f, op_40(v))?;
 			}
+			P::Cs4_wtf_are_you_doing => {
+				if f.scena == "mg11" && f.entry == "Mg11_Init_char_function" && f.check_u32(0).is_ok() {
+					op.args.push(Arg::U32(0)); // This one is only there in the japanese version
+				}
+			}
 			
 			P::Rev_3E => {
 				match op.args[1] {
 					Arg::Char(Char(0xFE12)) => read_parts(op, f, &[P::U8])?,
 					Arg::Char(Char(0xFE13)) => read_parts(op, f, &[P::F32])?,
+					Arg::Char(Char(0xFFFF)) if f.scena == "btlcom" => {} // why
 					Arg::Char(Char(0xFFFF)) => read_parts(op, f, &[P::U8, P::U8, P::U8])?,
 					_ => {}
 				}

@@ -108,7 +108,7 @@
 3102 'PkgIsLoaded' str
 
 32 'Eff'
-320A 'EffLoad' char u8 str
+320A 'EffLoad' char u8 str cs4_wtf_are_you_doing
 320B 'EffUnload' char u8
 320C 'EffPlay' char dyn char   flags32 dyn  dyn dyn dyn f32  f32  f32  dyn    dyn    dyn    u8
 #              char eff target unk     node x   y   z   rotx roty rotz scalex scaley scalez slot
