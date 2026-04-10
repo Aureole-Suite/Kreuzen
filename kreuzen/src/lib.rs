@@ -12,6 +12,8 @@ mod code;
 mod spec;
 mod types;
 
+mod split;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
 pub enum Game {
 	Cs1,
