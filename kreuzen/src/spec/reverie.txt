@@ -693,7 +693,7 @@
 680F str char
 6810 str char u8 str f32 f32 f32 f32 f32 f32
 6818 str u32
-# 6819 str
+6819 str
 # 681B str f32 f32 f32
 
 69 'Link'
