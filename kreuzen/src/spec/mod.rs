@@ -15,10 +15,10 @@ macro_rules! spec {
 
 		static $name: LazyLock<Spec> = LazyLock::new(|| {
 			#[cfg(not(feature = "live"))]
-			let source = include_str!($file);
+			let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../spec/", $file));
 			#[cfg(feature = "live")]
 			let source =
-				std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/src/spec/", $file))
+				std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../spec/", $file))
 					.unwrap();
 			Spec::parse(&source)
 		});
