@@ -1,14 +1,14 @@
-use super::{Entry, parse};
+use super::{Entry, Split, parse};
 
 fn s<'a>(names: impl IntoIterator<Item=&'a str>) -> Vec<Entry> {
 	let names = names.into_iter().map(|n| n.to_owned()).collect::<Vec<_>>();
 	let entries = parse(&names);
 	validate(&names, &entries);
-	entries
+	entries.entries
 }
 
-fn validate(names: &[String], entries: &[Entry]) {
-	for (i, e) in entries.iter().enumerate() {
+fn validate(names: &[String], split: &Split) {
+	for (i, e) in split.entries.iter().enumerate() {
 		assert_eq!(names[e.main], e.name, "main name mismatch at {i}");
 		if let Some(p) = e.preload {
 			assert_eq!(names[p], format!("_{}", e.name), "preload name mismatch for {:?}", e.name);
@@ -17,12 +17,16 @@ fn validate(names: &[String], entries: &[Entry]) {
 			assert_eq!(names[s], format!("_a{j}_{}", e.name), "shadow[{j}] name mismatch for {:?}", e.name);
 		}
 	}
+	if let Some(i) = split.charater_section {
+		assert_eq!(names[i], "_a0_CharaterSection", "charater section name mismatch");
+	}
 
-	let mut parts = entries
+	let mut parts = split.entries
 		.iter()
 		.map(|e| e.main)
-		.chain(entries.iter().filter_map(|e| e.preload))
-		.chain(entries.iter().flat_map(|e| e.shadow.iter().copied()))
+		.chain(split.entries.iter().filter_map(|e| e.preload))
+		.chain(split.charater_section)
+		.chain(split.entries.iter().flat_map(|e| e.shadow.iter().copied()))
 		.collect::<Vec<_>>();
 	assert!((0..names.len()).eq(parts.iter().copied()), "bad indices: {parts:?}");
 }
