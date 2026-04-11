@@ -1,4 +1,4 @@
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone)]
 pub struct Opcode([u8; 4], u8);
 
 impl std::fmt::Display for Opcode {
@@ -13,6 +13,26 @@ impl std::fmt::Debug for Opcode {
 			write!(f, "{byte:02X}")?;
 		}
 		Ok(())
+	}
+}
+
+impl PartialEq for Opcode {
+	fn eq(&self, other: &Self) -> bool {
+		self.as_slice() == other.as_slice()
+	}
+}
+
+impl Eq for Opcode {}
+
+impl PartialOrd for Opcode {
+	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+		Some(self.cmp(other))
+	}
+}
+
+impl Ord for Opcode {
+	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+		self.as_slice().cmp(other.as_slice())
 	}
 }
 
