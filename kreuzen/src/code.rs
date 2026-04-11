@@ -132,12 +132,7 @@ impl std::fmt::Debug for Op {
 #[derive(Clone, PartialEq, derive_more::From, derive_more::Debug)]
 pub enum Arg {
 	#[debug("{_0:?}")] Str(String),
-	#[debug("{_0:?}")] U8(u8),
-	#[debug("{_0:?}")] U16(u16),
-	#[debug("{_0:?}")] U32(u32),
-	#[debug("{_0:?}")] I8(i8),
-	#[debug("{_0:?}")] I16(i16),
-	#[debug("{_0:?}")] I32(i32),
+	#[from(skip)] #[debug("{_0:?}")] Int(i64), // i64 becase it can contain both i32 and u32
 	#[debug("{_0:?}")] F32(f32),
 
 	// There's way too many cases where the data should be f32 but the data is a i32.
@@ -163,6 +158,19 @@ pub enum Arg {
 	#[debug("{_0:?}")] Expr(Expr),
 	#[debug("{_0:?}")] Text(Text),
 }
+
+macro_rules! from_int {
+	($($t:ty),*) => {
+		$(
+			impl From<$t> for Arg {
+				fn from(value: $t) -> Self {
+					Self::Int(value as i64)
+				}
+			}
+		)*
+	};
+}
+from_int!(u8, u16, u32, i8, i16, i32);
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum FlatOp {
@@ -308,7 +316,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 			}
 
 			P::Tx_3C => {
-				if matches!(op.args[0], Arg::U16(1)) {
+				if matches!(op.args[0], Arg::Int(1)) {
 					read_parts(op, f, &[P::U32, P::U32, P::U32])?;
 				}
 			}
@@ -323,23 +331,23 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 			P::Tx_2F => {
 				if f.scena == "t5110" && f.check(b"AniWvWait\xFF").is_ok() {
 					op.args.push(Arg::Str("AniWvWait".to_string()));
-					op.args.push(Arg::U8(0xFF));
+					op.args.push(Arg::Int(0xFF));
 					read_parts(op, f, &[P::U8, P::F32, P::F32, P::F32])?;
 					break;
 				}
 			}
 
 			P::Cs3_98 => {
-				let Arg::U16(v) = op.args[0] else {
+				let Arg::Int(v) = op.args[0] else {
 					eyre::bail!("Expected U16 for Cs3_c0 part");
 				};
-				read_parts(op, f, op_98(v, f.game))?;
+				read_parts(op, f, op_98(v as u16, f.game))?;
 			}
 			P::Cs3_c0 => {
-				let Arg::U16(v) = op.args[0] else {
+				let Arg::Int(v) = op.args[0] else {
 					eyre::bail!("Expected U16 for Cs3_c0 part");
 				};
-				read_parts(op, f, op_c0(v))?;
+				read_parts(op, f, op_c0(v as u16))?;
 			}
 
 			P::Cs4_40 => {
@@ -350,7 +358,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 			}
 			P::Cs4_wtf_are_you_doing => {
 				if f.scena == "mg11" && f.check_u32(0).is_ok() {
-					op.args.push(Arg::U32(0)); // This one is only there in the japanese version
+					op.args.push(Arg::Int(0)); // This one is only there in the japanese version
 				}
 			}
 			
@@ -364,13 +372,13 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 				}
 			}
 			P::Rev_D2 => {
-				let Arg::I16(v) = op.args[0] else {
+				let Arg::Int(v) = op.args[0] else {
 					eyre::bail!("Expected I16");
 				};
-				read_parts(op, f, op_d2(v))?;
+				read_parts(op, f, op_d2(v as i16))?;
 			}
 			P::Rev_79 => {
-				if matches!(op.args[0], Arg::U8(7)) {
+				if matches!(op.args[0], Arg::Int(7)) {
 					read_parts(op, f, &[P::U8])?;
 				}
 			}
@@ -478,7 +486,7 @@ fn read_dyn(f: &mut CReader) -> eyre::Result<Arg> {
 			if v.abs() > 0x1000000 {
 				Arg::I32Munged(f32::from_bits(v as u32))
 			} else {
-				Arg::I32(v)
+				Arg::Int(v as i64)
 			}
 		}
 		code => eyre::bail!("Unknown dyn code: {code:02X}"),
