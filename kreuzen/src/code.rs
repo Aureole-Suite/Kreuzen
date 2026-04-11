@@ -178,7 +178,14 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 	let mut opcode = Opcode::new(&[code]);
 
 	let spec = crate::spec::for_game(f.game, f.variant);
-	let name = spec.names.get(&opcode).map(|s| s.as_str());
+	let mut op_spec = match spec.ops[code as usize].as_ref() {
+		Some(it) => it,
+		None => {
+			eyre::bail!("_Unknown opcode {opcode}")
+		}
+	};
+
+	let name = spec.names.get(&opcode).unwrap().as_str();
 
 	let mut line = 0;
 	let mut width = 0xFF;
@@ -194,16 +201,16 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 	};
 
 	match name {
-		Some("if") => {
+		"if" => {
 			let expr = Expr::read(f)?;
 			let label = Label(f.u32()?);
 			return Ok(FlatOp::If(meta, expr, label));
 		}
-		Some("goto") => {
+		"goto" => {
 			let label = Label(f.u32()?);
 			return Ok(FlatOp::Goto(meta, label));
 		}
-		Some("switch") => {
+		"switch" => {
 			let expr = Expr::read(f)?;
 			let mut cases = Vec::new();
 			for _ in 0..f.u8()? {
@@ -219,15 +226,8 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 		_ => {}
 	}
 
-	let mut op_spec = match spec.ops[code as usize].as_ref() {
-		Some(it) => it,
-		None => {
-			eyre::bail!("_Unknown opcode {opcode}")
-		}
-	};
-
 	let mut op = Op {
-		name: spec.names.get(&opcode).unwrap(),
+		name,
 		meta,
 		args: Vec::new(),
 	};
