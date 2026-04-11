@@ -164,9 +164,8 @@ pub enum Arg {
 	#[debug("{_0:?}")] Text(Text),
 }
 
-#[derive(Clone, PartialEq, derive_more::Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum FlatOp {
-	#[debug("{_0:?}")]
 	Op(Op),
 	Label(Label),
 	Goto(OpMeta, Label),
