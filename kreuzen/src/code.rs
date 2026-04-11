@@ -193,8 +193,6 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 		}
 	};
 
-	let name = spec.names.get(&opcode).unwrap().as_str();
-
 	let mut line = 0;
 	let mut width = 0xFF;
 	if !matches!(code, 0x01 | 0x04) && f.game == crate::Game::Reverie {
@@ -208,7 +206,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 		has_width: width != 0xFF,
 	};
 
-	match name {
+	match op_spec.name.as_str() {
 		"if" => {
 			let expr = Expr::read(f)?;
 			let label = Label(f.u32()?);
@@ -235,7 +233,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 	}
 
 	let mut op = Op {
-		name,
+		name: op_spec.name.as_str(),
 		meta,
 		args: Vec::new(),
 	};
@@ -250,7 +248,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 				Some(it) => it,
 				None => eyre::bail!("_Unknown opcode {opcode}"),
 			};
-			op.name = spec.names.get(&opcode).unwrap();
+			op.name = op_spec.name.as_str();
 		} else {
 			break;
 		}
