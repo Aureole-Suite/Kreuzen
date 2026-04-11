@@ -1,10 +1,6 @@
-#![expect(unused)]
-use std::sync::LazyLock;
-
 use gospel::read::{Le as _, Reader};
 mod io;
 use io::VReader;
-use regex::Regex;
 
 use crate::io::CReader;
 

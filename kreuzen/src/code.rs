@@ -396,18 +396,6 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 	Ok(())
 }
 
-fn cs4_weird_sound_play() -> &'static [Part] {
-	use Part::*;
-	&[
-		Dyn, F32, Dyn, F32,
-		F32, U16, Char, F32,
-		F32, F32, F32, Str,
-		U16, U16, U16, U16,
-		U16, I16, I16, U16,
-		F32,
-	]
-}
-
 #[rustfmt::skip]
 fn op_40(a: crate::types::Char) -> &'static [Part] {
 	use Part::*;
