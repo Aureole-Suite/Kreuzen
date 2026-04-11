@@ -66,10 +66,6 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 		}
 		ops2.push(op);
 	}
-	let endl = Label(f.pos() as u32);
-	if labels.remove(&endl) {
-		ops2.push(FlatOp::Label(endl));
-	}
 
 	const WEIRD_LABEL: Label = Label(0x299B);
 	if labels.len() == 1
