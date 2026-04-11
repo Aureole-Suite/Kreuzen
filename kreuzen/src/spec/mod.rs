@@ -1,5 +1,5 @@
 mod opcode;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 use std::sync::LazyLock;
 
@@ -125,7 +125,6 @@ pub enum Part {
 #[derive(Debug)]
 pub struct Spec {
 	pub ops: [Option<Op>; 256],
-	pub names: HashMap<Opcode, String>,
 	pub by_name: BTreeMap<String, Opcode>,
 }
 
@@ -203,12 +202,11 @@ fn parse_spec(text: &str) -> Spec {
 		ops.insert(line.code, (line.name, line.parts));
 	}
 
-	let (names, by_name) = build_names(&ops);
+	let by_name = build_names(&ops);
 
 	Spec {
 		ops: build_ops(ops),
 		by_name,
-		names,
 	}
 }
 
@@ -251,7 +249,7 @@ fn fill_name(op: &mut Op, byte: u8, prefix: &str, parent_has_name: bool) {
 
 fn build_names(
 	inp: &BTreeMap<Opcode, (String, Vec<Part>)>,
-) -> (HashMap<Opcode, String>, BTreeMap<String, Opcode>) {
+) -> BTreeMap<String, Opcode> {
 	let mut all = BTreeSet::new();
 	let mut leaves = BTreeSet::new();
 	for op in inp.keys() {
@@ -262,7 +260,6 @@ fn build_names(
 		leaves.insert(*op);
 	}
 
-	let mut names = HashMap::new();
 	let mut by_name = BTreeMap::new();
 	let mut put = |op: Opcode, mut name: String| {
 		if leaves.contains(&op) {
@@ -272,7 +269,6 @@ fn build_names(
 		} else {
 			name.push('_');
 		}
-		names.insert(op, name);
 	};
 
 	for op in all {
@@ -298,5 +294,5 @@ fn build_names(
 		}
 	}
 
-	(names, by_name)
+	by_name
 }
