@@ -224,9 +224,29 @@ fn build_ops(ops: BTreeMap<Opcode, (String, Vec<Part>)>) -> [Option<Op>; 256] {
 			}
 			op = op.children.last_mut().unwrap();
 		}
+		op.name = name;
 		op.parts = parts;
 	}
+	for (i, op) in out.iter_mut().enumerate() {
+		if let Some(op) = op {
+			fill_name(op, i as u8, "op", false);
+		}
+	}
 	out
+}
+
+fn fill_name(op: &mut Op, byte: u8, prefix: &str, parent_has_name: bool) {
+	let has_name = !op.name.is_empty();
+	if !has_name {
+		if parent_has_name {
+			op.name = format!("{}_{:02X}", prefix, byte);
+		} else {
+			op.name = format!("{}{:02X}", prefix, byte);
+		}
+	}
+	for (child_key, child) in op.child_keys.iter().zip(op.children.iter_mut()) {
+		fill_name(child, *child_key, &op.name, has_name);
+	}
 }
 
 fn build_names(
