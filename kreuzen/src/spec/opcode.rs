@@ -36,6 +36,12 @@ impl Ord for Opcode {
 	}
 }
 
+impl std::hash::Hash for Opcode {
+	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+		self.as_slice().hash(state);
+	}
+}
+
 impl std::str::FromStr for Opcode {
 	type Err = hex::FromHexError;
 

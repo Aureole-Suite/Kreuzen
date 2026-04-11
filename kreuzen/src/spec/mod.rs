@@ -1,5 +1,5 @@
 mod opcode;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fmt::Write;
 use std::sync::LazyLock;
 
@@ -125,7 +125,7 @@ pub enum Part {
 #[derive(Debug)]
 pub struct Spec {
 	pub ops: [Option<Op>; 256],
-	pub names: BTreeMap<Opcode, String>,
+	pub names: HashMap<Opcode, String>,
 	pub by_name: BTreeMap<String, Opcode>,
 }
 
@@ -233,7 +233,7 @@ fn build_ops(ops: BTreeMap<Opcode, Vec<Part>>) -> [Option<Op>; 256] {
 
 fn build_names(
 	inp: &BTreeMap<Opcode, String>,
-) -> (BTreeMap<Opcode, String>, BTreeMap<String, Opcode>) {
+) -> (HashMap<Opcode, String>, BTreeMap<String, Opcode>) {
 	let mut all = BTreeSet::new();
 	let mut leaves = BTreeSet::new();
 	for op in inp.keys() {
@@ -244,7 +244,7 @@ fn build_names(
 		leaves.insert(*op);
 	}
 
-	let mut names = BTreeMap::new();
+	let mut names = HashMap::new();
 	let mut by_name = BTreeMap::new();
 	let mut put = |op: Opcode, mut name: String| {
 		if leaves.contains(&op) {
