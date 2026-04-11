@@ -252,6 +252,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 }
 
 fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> {
+	op.args.reserve(parts.len());
 	use Part as P;
 	for p in parts {
 		match p {
