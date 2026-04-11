@@ -185,7 +185,6 @@ fn parse_line(line: &str) -> Option<Line> {
 }
 
 fn parse_spec(text: &str) -> Spec {
-	let mut names = BTreeMap::new();
 	let mut ops = BTreeMap::new();
 	for line0 in text.lines() {
 		let line = line0.split('#').next().unwrap().trim();
@@ -201,11 +200,10 @@ fn parse_spec(text: &str) -> Spec {
 			"Duplicate code in spec: {}",
 			&line.code
 		);
-		names.insert(line.code, line.name);
-		ops.insert(line.code, line.parts);
+		ops.insert(line.code, (line.name, line.parts));
 	}
 
-	let (names, by_name) = build_names(&names);
+	let (names, by_name) = build_names(&ops);
 
 	Spec {
 		ops: build_ops(ops),
@@ -214,9 +212,9 @@ fn parse_spec(text: &str) -> Spec {
 	}
 }
 
-fn build_ops(ops: BTreeMap<Opcode, Vec<Part>>) -> [Option<Op>; 256] {
+fn build_ops(ops: BTreeMap<Opcode, (String, Vec<Part>)>) -> [Option<Op>; 256] {
 	let mut out = std::array::from_fn(|_| None);
-	for (k, v) in ops {
+	for (k, (name, parts)) in ops {
 		assert!(!k.is_empty(), "Empty code in spec");
 		let mut op = out[k[0] as usize].get_or_insert_with(Op::default);
 		for byte in k.iter().skip(1) {
@@ -226,13 +224,13 @@ fn build_ops(ops: BTreeMap<Opcode, Vec<Part>>) -> [Option<Op>; 256] {
 			}
 			op = op.children.last_mut().unwrap();
 		}
-		op.parts = v;
+		op.parts = parts;
 	}
 	out
 }
 
 fn build_names(
-	inp: &BTreeMap<Opcode, String>,
+	inp: &BTreeMap<Opcode, (String, Vec<Part>)>,
 ) -> (HashMap<Opcode, String>, BTreeMap<String, Opcode>) {
 	let mut all = BTreeSet::new();
 	let mut leaves = BTreeSet::new();
@@ -267,7 +265,7 @@ fn build_names(
 
 	for op in inp.keys() {
 		for p in op.prefixes() {
-			if let Some(s) = inp.get(&p) && !s.is_empty() {
+			if let Some((s, _)) = inp.get(&p) && !s.is_empty() {
 				let mut s = s.clone();
 				if p.len() < op.len() {
 					s.push('_');
