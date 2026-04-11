@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 derive_more = { version = "2.1.1", features = ["from", "deref", "deref_mut", "from_str", "debug", "display", "try_from"] }
 eyre = "0.6.12"
-falcom-sjis = "0.1.2"
+falcom-sjis = "0.2.0"
 gospel = { version = "0.4.0", path = "../../Gospel" }
 hex = "0.4.3"
 regex = { version = "1.12.3", default-features = false, features = ["std", "perf"] }
