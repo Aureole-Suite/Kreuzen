@@ -1,5 +1,5 @@
-#![expect(unused)]
 use eyre_span::Emit;
+use std::fmt::Write;
 use kreuzen::{Enc, Game};
 use std::path::{Path, PathBuf};
 
@@ -61,6 +61,24 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 fn process(game: Game, enc: Enc, script: &Path) -> eyre::Result<String> {
 	let bytes = std::fs::read(script)?;
 	let scena = kreuzen::parse(game, enc, &bytes)?;
-	let v = format!("{scena:#?}");
-	Ok(v)
+	let mut s = format!("scena {} oddness={}\n", scena.name, scena.oddness);
+	for chunk in scena.chunks {
+		s.push('\n');
+		write!(s, "{:?} ", chunk.name)?;
+		match &chunk.func {
+			kreuzen::CodeOrTable::Code(code) => {
+				writeln!(s, "{:#?}", code.ops)?;
+			}
+			kreuzen::CodeOrTable::Table(table) => {
+				writeln!(s, "{table:#?}")?;
+			}
+		}
+		if let Some(preload) = chunk.preload {
+			writeln!(s, "preload={preload:#?}")?;
+		}
+		for (a, shadow) in chunk.shadow.iter().enumerate() {
+			writeln!(s, "a{a} {:#?}", shadow.ops)?;
+		}
+	}
+	Ok(s)
 }
