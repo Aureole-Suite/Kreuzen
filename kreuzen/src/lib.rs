@@ -31,7 +31,6 @@ pub struct Scena {
 	pub name: String,
 	pub oddness: u32,
 	pub chunks: Vec<Chunk>,
-	pub charater_section: Option<Code>,
 }
 
 #[derive(Debug, Clone)]
@@ -298,18 +297,18 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		});
 	}
 
-	let charater_section = if let Some(i) = split.charater_section {
-		let _span = tracing::error_span!("charater section").entered();
-		Some(decompile(&mut cr, ranges[i])?)
-	} else {
-		None
-	};
+	if let Some(i) = split.charater_section {
+		eyre::ensure!(cr.game == Game::Reverie);
+		eyre::ensure!(oddness == 0);
+		oddness = 3;
+		let cs = read_table(&mut cr, ranges[i])?;
+		eyre::ensure!(cs.bytes == [1, 0, 0, 0], "strange charater section: {:02X?}", cs.bytes);
+	}
 
 	Ok(Scena {
 		name: script_name,
 		oddness,
 		chunks,
-		charater_section,
 	})
 }
 
