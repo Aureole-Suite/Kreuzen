@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 use eyre::Context as _;
 use gospel::read::Le as _;
@@ -11,7 +11,7 @@ pub use expr::Expr;
 pub use text::Text;
 use crate::{Game, types::*};
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Label(u32);
 
 impl std::fmt::Debug for Label {
@@ -43,6 +43,17 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 	}
 	f.seek(orig_end)?;
 
+	let wtf = (f.game, f.scena) == (Game::Cs3, "system");
+	let mut ops2 = insert_labels(ops, wtf)?;
+	remap_labels(&mut ops2);
+
+	// let decomp = decompile::decompile(&ops2).context(DecompileSnafu { code: ops2 })?;
+	// Ok(decomp)
+
+	Ok(())
+}
+
+fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> eyre::Result<Vec<FlatOp>> {
 	let mut labels = BTreeSet::new();
 	for (_, op) in &ops {
 		match op {
@@ -68,9 +79,8 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 	}
 
 	const WEIRD_LABEL: Label = Label(0x299B);
-	if labels.len() == 1
-	&& f.game == Game::Cs3
-	&& f.scena == "system"
+	if wtf
+	&& labels.len() == 1
 	&& let Some(if_loc) = ops2.iter().position(|op| matches!(op, FlatOp::If(_, _, WEIRD_LABEL)))
 	&& labels.remove(&WEIRD_LABEL)
 	{
@@ -79,10 +89,30 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 	}
 
 	eyre::ensure!(labels.is_empty(), "Some labels were not used: {labels:?}");
-	// let decomp = decompile::decompile(&ops2).context(DecompileSnafu { code: ops2 })?;
-	// Ok(decomp)
+	Ok(ops2)
+}
 
-	Ok(())
+fn remap_labels(ops2: &mut [FlatOp]) {
+	let mut order = HashMap::new();
+	for op in ops2.iter_mut() {
+		if let FlatOp::Label(l) = op {
+			order.insert(*l, Label(order.len() as _));
+		}
+	}
+	let remap = |l: &mut Label| *l = order[l];
+	for op in ops2.iter_mut() {
+		match op {
+			FlatOp::Op(_) => {}
+			FlatOp::Label(l) => remap(l),
+			FlatOp::Goto(_, l) | FlatOp::If(_, _, l) => remap(l),
+			FlatOp::Switch(_, _, ls, l) => {
+				for (_, l) in ls {
+					remap(l);
+				}
+				remap(l);
+			}
+		}
+	}
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
