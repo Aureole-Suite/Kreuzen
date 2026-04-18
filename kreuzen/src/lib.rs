@@ -26,10 +26,42 @@ pub enum Enc {
 	Utf8,
 }
 
+#[derive(Debug, Clone)]
 pub struct Scena {
 	pub name: String,
 	pub oddness: u32,
-	pub chunks: Vec<(String, Vec<u8>)>,
+	pub chunks: Vec<Chunk>,
+	pub charater_section: Option<Code>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Chunk {
+	pub name: String,
+	pub func: CodeOrTable,
+	pub preload: Option<Opaque>,
+	pub shadow: Vec<Code>,
+}
+
+#[derive(Debug, Clone)]
+pub enum CodeOrTable {
+	Code(Code),
+	Table(Opaque),
+}
+
+#[derive(Clone)]
+pub struct Opaque {
+	pub bytes: Vec<u8>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Code {
+	pub ops: Vec<code::FlatOp>,
+}
+
+impl std::fmt::Debug for Opaque {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "[{} bytes]", self.bytes.len())
+	}
 }
 
 pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
@@ -233,28 +265,51 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	let mut chunks = Vec::with_capacity(split.entries.len());
 	for e in split.entries {
 		let _span = tracing::error_span!("entry", name=%e.name).entered();
+
 		let is_table = tables.contains(&e.name.as_str())
 			|| e.name.starts_with("FC_auto")
 			|| e.name.starts_with("BookData")
 			|| e.name.starts_with("BTLSET")
 			|| e.name.starts_with("StyleName");
-		if !is_table {
-			decompile(&mut cr, ranges[e.main])?;
-		}
+		let func = if !is_table {
+			CodeOrTable::Code(decompile(&mut cr, ranges[e.main])?)
+		} else {
+			CodeOrTable::Table(read_table(&mut cr, ranges[e.main])?)
+		};
+
+		let preload = if let Some(i) = e.preload {
+			let _span = tracing::error_span!("preload").entered();
+			Some(read_table(&mut cr, ranges[i])?)
+		} else {
+			None
+		};
+
+		let mut shadow = Vec::with_capacity(e.shadow.len());
 		for (a, &s) in e.shadow.iter().enumerate() {
 			let _span = tracing::error_span!("shadow", a).entered();
-			decompile(&mut cr, ranges[s])?;
+			shadow.push(decompile(&mut cr, ranges[s])?);
 		}
+
+		chunks.push(Chunk {
+			name: e.name,
+			func,
+			preload,
+			shadow,
+		});
 	}
-	if let Some(i) = split.charater_section {
+
+	let charater_section = if let Some(i) = split.charater_section {
 		let _span = tracing::error_span!("charater section").entered();
-		decompile(&mut cr, ranges[i])?;
-	}
+		Some(decompile(&mut cr, ranges[i])?)
+	} else {
+		None
+	};
 
 	Ok(Scena {
 		name: script_name,
 		oddness,
 		chunks,
+		charater_section,
 	})
 }
 
@@ -277,10 +332,18 @@ fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)
 	Ok((names, starts))
 }
 
-fn decompile(f: &mut CReader, s: (usize, usize)) -> eyre::Result<()> {
+fn decompile(f: &mut CReader, s: (usize, usize)) -> eyre::Result<Code> {
 	let (start, end) = s;
 	eyre::ensure!(start <= end && end <= f.reader.len());
 	f.seek(start)?;
-	let code = code::decompile(f, end)?;
-	Ok(())
+	let ops = code::decompile(f, end)?;
+	Ok(Code { ops })
+}
+
+fn read_table(f: &mut CReader, s: (usize, usize)) -> eyre::Result<Opaque> {
+	let (start, end) = s;
+	eyre::ensure!(start <= end && end <= f.reader.len());
+	f.seek(start)?;
+	let bytes = f.reader.slice(end - start)?.to_vec();
+	Ok(Opaque { bytes })
 }

@@ -26,7 +26,7 @@ impl std::fmt::Display for Label {
 	}
 }
 
-pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
+pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<Vec<FlatOp>> {
 	let orig_end = end;
 	while end > 0 && f.data()[end - 1] == 0 {
 		end -= 1;
@@ -50,7 +50,7 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<()> {
 	// let decomp = decompile::decompile(&ops2).context(DecompileSnafu { code: ops2 })?;
 	// Ok(decomp)
 
-	Ok(())
+	Ok(ops2)
 }
 
 fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> eyre::Result<Vec<FlatOp>> {
