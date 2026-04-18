@@ -48,14 +48,19 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 		for file in ls(path.join(&dir).join(folder)) {
 			let script = path.join(&dir).join(folder).join(&file);
 			let scriptname = format!("{game:?}/{dir}/{folder}/{file:<26}");
+			let outfile = PathBuf::from("out").join(format!("{game:?}/{folder}/{dir}/{file}"));
 			let _span = tracing::error_span!("script", name = %scriptname).entered();
-			process(game, enc, &script).emit();
+			if let Some(s) = process(game, enc, &script).emit() {
+				std::fs::create_dir_all(outfile.parent().unwrap()).unwrap();
+				std::fs::write(outfile, s).unwrap();
+			}
 		}
 	}
 }
 
-fn process(game: Game, enc: Enc, script: &Path) -> eyre::Result<()> {
+fn process(game: Game, enc: Enc, script: &Path) -> eyre::Result<String> {
 	let bytes = std::fs::read(script)?;
 	let scena = kreuzen::parse(game, enc, &bytes)?;
-	Ok(())
+	let v = format!("{scena:#?}");
+	Ok(v)
 }
