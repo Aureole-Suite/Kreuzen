@@ -26,11 +26,7 @@ impl std::fmt::Display for Label {
 	}
 }
 
-pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<Vec<FlatOp>> {
-	let orig_end = end;
-	while end > 0 && f.data()[end - 1] == 0 {
-		end -= 1;
-	}
+pub fn decompile(f: &mut CReader, end: usize) -> eyre::Result<Vec<FlatOp>> {
 	let mut ops = Vec::new();
 	while f.pos() < end {
 		let pos = Label(f.pos() as u32);
@@ -38,10 +34,6 @@ pub fn decompile(f: &mut CReader, mut end: usize) -> eyre::Result<Vec<FlatOp>> {
 		tracing::trace!("Read op at {pos:?}: {op:?}");
 		ops.push((pos, op))
 	}
-	if f.pos() != end {
-		tracing::warn!("Expected to end at {end:X} but ended at {:X}", f.pos());
-	}
-	f.seek(orig_end)?;
 
 	let wtf = (f.game, f.scena) == (Game::Cs3, "system");
 	let mut ops2 = insert_labels(ops, wtf)?;

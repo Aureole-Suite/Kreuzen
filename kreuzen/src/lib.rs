@@ -270,15 +270,21 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 			|| e.name.starts_with("BookData")
 			|| e.name.starts_with("BTLSET")
 			|| e.name.starts_with("StyleName");
-		let func = if !is_table {
-			CodeOrTable::Code(decompile(&mut cr, ranges[e.main])?)
-		} else {
-			CodeOrTable::Table(read_table(&mut cr, ranges[e.main])?)
-		};
+		let func = read_chunk(&mut cr, ranges[e.main], |f, end| {
+			if !is_table {
+				Ok(CodeOrTable::Code(Code { ops: code::decompile(f, end)? }))
+			} else {
+				let pos = f.pos();
+				Ok(CodeOrTable::Table(Opaque { bytes: f.slice(end - pos)?.to_vec() }))
+			}
+		})?;
 
 		let preload = if let Some(i) = e.preload {
 			let _span = tracing::error_span!("preload").entered();
-			Some(read_table(&mut cr, ranges[i])?)
+			Some(read_chunk(&mut cr, ranges[i], |f, end| {
+				let pos = f.pos();
+				Ok(Opaque { bytes: f.slice(end - pos)?.to_vec() })
+			})?)
 		} else {
 			None
 		};
@@ -286,7 +292,9 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		let mut shadow = Vec::with_capacity(e.shadow.len());
 		for (a, &s) in e.shadow.iter().enumerate() {
 			let _span = tracing::error_span!("shadow", a).entered();
-			shadow.push(decompile(&mut cr, ranges[s])?);
+			shadow.push(read_chunk(&mut cr, ranges[s], |f, end| {
+				Ok(Code { ops: code::decompile(f, end)? })
+			})?);
 		}
 
 		chunks.push(Chunk {
@@ -301,8 +309,10 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		eyre::ensure!(cr.game == Game::Reverie);
 		eyre::ensure!(oddness == 0);
 		oddness = 3;
-		let cs = read_table(&mut cr, ranges[i])?;
-		eyre::ensure!(cs.bytes == [1, 0, 0, 0], "strange charater section: {:02X?}", cs.bytes);
+		read_chunk(&mut cr, ranges[i], |f, _| {
+			f.check_u8(1)?;
+			Ok(())
+		})?;
 	}
 
 	Ok(Scena {
@@ -331,18 +341,19 @@ fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)
 	Ok((names, starts))
 }
 
-fn decompile(f: &mut CReader, s: (usize, usize)) -> eyre::Result<Code> {
-	let (start, end) = s;
-	eyre::ensure!(start <= end && end <= f.reader.len());
-	f.seek(start)?;
-	let ops = code::decompile(f, end)?;
-	Ok(Code { ops })
-}
 
-fn read_table(f: &mut CReader, s: (usize, usize)) -> eyre::Result<Opaque> {
+fn read_chunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut CReader, usize) -> eyre::Result<T>) -> eyre::Result<T> {
 	let (start, end) = s;
 	eyre::ensure!(start <= end && end <= f.reader.len());
 	f.seek(start)?;
-	let bytes = f.reader.slice(end - start)?.to_vec();
-	Ok(Opaque { bytes })
+	let mut actual_end = end;
+	while actual_end > 0 && f.data()[actual_end - 1] == 0 {
+		actual_end -= 1;
+	}
+	let v = body(f, actual_end)?;
+	if f.pos() != actual_end {
+		tracing::warn!("Expected to end at {actual_end:X} but ended at {:X}", f.pos());
+	}
+	f.seek(end)?;
+	Ok(v)
 }
