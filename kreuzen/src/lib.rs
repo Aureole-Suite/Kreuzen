@@ -30,7 +30,10 @@ pub enum Enc {
 #[derive(Debug, Clone)]
 pub struct Scena {
 	pub name: String,
-	pub oddness: u32,
+	pub game: Game,
+	pub enc: Enc,
+	pub oddness: u8,
+	pub variant: u8,
 	pub chunks: Vec<Chunk>,
 }
 
@@ -136,7 +139,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	if pad != 0 {
 		eyre::ensure!(oddness == 0);
 		eyre::ensure!(pad > 0);
-		oddness += pad as u32;
+		oddness += pad as u8;
 	}
 	
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
@@ -257,7 +260,6 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		reader: &mut f,
 		scena: &script_name,
 		variant,
-		oddness,
 	};
 
 	let ranges = starts.iter().copied().zip(iter).collect::<Vec<_>>();
@@ -319,7 +321,10 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 
 	Ok(Scena {
 		name: script_name,
+		game: f.game,
+		enc: f.enc,
 		oddness,
+		variant,
 		chunks,
 	})
 }

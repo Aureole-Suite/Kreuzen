@@ -61,7 +61,7 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 fn process(game: Game, enc: Enc, script: &Path) -> eyre::Result<String> {
 	let bytes = std::fs::read(script)?;
 	let scena = kreuzen::parse(game, enc, &bytes)?;
-	let mut s = format!("scena {} oddness={}\n", scena.name, scena.oddness);
+	let mut s = format!("scena {} game={:?} enc={:?} oddness={} variant={}\n", scena.name, scena.game, scena.enc, scena.oddness, scena.variant);
 	for chunk in scena.chunks {
 		s.push('\n');
 		write!(s, "{:?} ", chunk.name)?;

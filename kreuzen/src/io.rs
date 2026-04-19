@@ -63,6 +63,5 @@ pub struct CReader<'a, 'b> {
 	#[deref_mut]
 	pub reader: &'b mut VReader<'a>,
 	pub scena: &'b str,
-	pub oddness: u32,
 	pub variant: u8,
 }
