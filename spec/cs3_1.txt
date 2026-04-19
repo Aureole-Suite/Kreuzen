@@ -15,3 +15,4 @@ import cs3 3B02..3B32
 import cs3 3B33..540A
 540A u32 u32 u32 u32 u32 u32 u32 u32
 import cs3 540B..FFFFFFFF
+# vim: ft=config

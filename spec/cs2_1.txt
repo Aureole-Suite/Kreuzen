@@ -1,3 +1,4 @@
 import cs2 00..7C
 7C   u8 u16 u16 u16 u16 u16 f32 f32 f32 str
 import cs2 7D..FFFFFFFF
+# vim: ft=config

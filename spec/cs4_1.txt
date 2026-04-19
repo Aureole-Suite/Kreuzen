@@ -13,3 +13,4 @@ import cs4 3B01..3B32
 import cs4 3B33..5E00
 5E00 'BlurOn' u16 f32 u16 u16 u16 f32 char f32 f32 f32
 import cs4 5E01..FFFFFFFF
+# vim: ft=config

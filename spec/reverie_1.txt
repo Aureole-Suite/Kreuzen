@@ -5,3 +5,4 @@ import reverie 40..4E
 import reverie 4F..6C
 6C   'CharAniSpeed' char f32
 import reverie 6D..FFFFFFFF
+# vim: ft=config

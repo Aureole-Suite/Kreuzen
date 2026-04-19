@@ -1,3 +1,4 @@
 import cs1_2 00..22
 22   'CharAniclipPlay' char str u8 u8 u8 f32 f32 f32 f32
 import cs1_2 23..FFFFFFFF
+# vim: ft=config
