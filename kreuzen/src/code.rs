@@ -16,13 +16,13 @@ pub struct Label(u32);
 
 impl std::fmt::Debug for Label {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "@{:X}", self.0)
+		write!(f, "@{}", self.0)
 	}
 }
 
 impl std::fmt::Display for Label {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "@{:X}", self.0)
+		write!(f, "@{}", self.0)
 	}
 }
 
@@ -78,7 +78,7 @@ fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> eyre::Result<Vec<FlatO
 		ops2.push(op);
 	}
 
-	const WEIRD_LABEL: Label = Label(0x299B);
+	const WEIRD_LABEL: Label = Label(10651);
 	if wtf
 	&& labels.len() == 1
 	&& let Some(if_loc) = ops2.iter().position(|op| matches!(op, FlatOp::If(_, _, WEIRD_LABEL)))
