@@ -128,19 +128,9 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	let mut iter = starts.iter().copied().chain([f.len()]);
 	let first = iter.next().unwrap(); // chain ensures it's nonempty
 	eyre::ensure!(first >= f.pos());
-	if !names.is_empty() {
-		f.align_zeroed(4)?;
-	}
 	let pos = f.pos();
 	let pad = f.slice(first - pos)?;
 	eyre::ensure!(pad.iter().all(|b| *b == 0));
-	eyre::ensure!(pad.len().is_multiple_of(4));
-	let pad = pad.len() / 4;
-	if pad != 0 {
-		eyre::ensure!(oddness == 0);
-		eyre::ensure!(pad > 0);
-		oddness += pad as u8;
-	}
 	
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
 	let cs2_special = ["e2230", "e4501", "e4701", "m5010"];
