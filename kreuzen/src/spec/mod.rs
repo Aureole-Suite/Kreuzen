@@ -7,53 +7,70 @@ use crate::Game;
 pub use opcode::Opcode;
 
 macro_rules! spec {
-	($name:ident, $test:ident, $file:expr) => {
-		#[test]
-		fn $test() {
-			LazyLock::force(&$name);
+	($($name:ident),* $(,)?) => {
+		#[cfg(test)]
+		mod parse_test {
+			use super::*;
+			$(#[test] fn $name() {
+				LazyLock::force(&lines::$name);
+			})*
 		}
 
-		static $name: LazyLock<Spec> = LazyLock::new(|| {
-			#[cfg(not(feature = "live"))]
-			let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../spec/", $file));
-			#[cfg(feature = "live")]
-			let source =
-				std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../spec/", $file))
-					.unwrap();
-			Spec::parse(&source)
-		});
+		#[allow(non_upper_case_globals)]
+		#[cfg(not(feature = "live"))]
+		mod text {
+			$(pub static $name: &str =
+				include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../spec/", stringify!($name), ".txt"));)*
+		}
+
+		#[allow(non_upper_case_globals)]
+		#[cfg(feature = "live")]
+		mod text {
+			use super::*;
+			$(pub static $name: LazyLock<String> = LazyLock::new(|| {
+				std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../spec/", stringify!($name), ".txt"))
+					.unwrap()
+			});)*
+		}
+
+		#[allow(non_upper_case_globals)]
+		mod lines {
+			use super::*;
+			$(pub static $name: LazyLock<Lines> = LazyLock::new(|| parse_lines(&text::$name));)*
+		}
+
+		#[allow(non_upper_case_globals)]
+		mod specs {
+			use super::*;
+			$(pub static $name: LazyLock<Spec> = LazyLock::new(|| parse_spec(&lines::$name));)*
+		}
 	};
 }
 
-spec!(CS1, test_ed81, "cs1.txt");
-spec!(CS1_MENU, test_ed81_menu, "cs1_menu.txt");
-spec!(CS2, test_ed82, "cs2.txt");
-spec!(CS2_MENU, test_ed82_menu, "cs2_menu.txt");
-spec!(CS3, test_ed83, "cs3.txt");
-spec!(CS3_1, test_ed83_1, "cs3_1.txt");
-spec!(CS3_2, test_ed83_2, "cs3_2.txt");
-spec!(CS3_3, test_ed83_3, "cs3_3.txt");
-spec!(CS4, test_ed84, "cs4.txt");
-spec!(CS4_1, test_ed84_1, "cs4_1.txt");
-spec!(REVERIE, test_reverie, "reverie.txt");
-spec!(REVERIE_1, test_reverie_1, "reverie_1.txt");
-spec!(TX, test_tx, "tx.txt");
+spec! {
+	cs1, cs1_menu,
+	cs2, cs2_menu,
+	cs3, cs3_1, cs3_2, cs3_3,
+	cs4, cs4_1,
+	reverie, reverie_1,
+	tx,
+}
 
 pub fn for_game(game: Game, variant: u8) -> &'static Spec {
 	match game {
-		Game::Cs1 if variant == 100 => &CS1_MENU,
-		Game::Cs1 => &CS1,
-		Game::Cs2 if variant == 100 => &CS2_MENU,
-		Game::Cs2 => &CS2,
-		Game::Cs3 if variant == 0 => &CS3,
-		Game::Cs3 if variant == 1 => &CS3_1,
-		Game::Cs3 if variant == 2 => &CS3_2,
-		Game::Cs3 if variant == 3 => &CS3_3,
-		Game::Cs4 if variant == 0 => &CS4,
-		Game::Cs4 if variant == 1 => &CS4_1,
-		Game::Reverie if variant == 0 => &REVERIE,
-		Game::Reverie if variant == 1 => &REVERIE_1,
-		Game::Tx => &TX,
+		Game::Cs1 if variant == 100 => &specs::cs1_menu,
+		Game::Cs1 => &specs::cs1,
+		Game::Cs2 if variant == 100 => &specs::cs2_menu,
+		Game::Cs2 => &specs::cs2,
+		Game::Cs3 if variant == 0 => &specs::cs3,
+		Game::Cs3 if variant == 1 => &specs::cs3_1,
+		Game::Cs3 if variant == 2 => &specs::cs3_2,
+		Game::Cs3 if variant == 3 => &specs::cs3_3,
+		Game::Cs4 if variant == 0 => &specs::cs4,
+		Game::Cs4 if variant == 1 => &specs::cs4_1,
+		Game::Reverie if variant == 0 => &specs::reverie,
+		Game::Reverie if variant == 1 => &specs::reverie_1,
+		Game::Tx => &specs::tx,
 		_ => panic!("Unsupported game or variant: {game:?}/{variant}"),
 	}
 }
@@ -125,12 +142,6 @@ pub struct Spec {
 	pub by_name: BTreeMap<String, Opcode>,
 }
 
-impl Spec {
-	pub fn parse(text: &str) -> Self {
-		parse_spec(text)
-	}
-}
-
 #[derive(Debug, Clone, Default)]
 pub struct Op {
 	pub parts: Vec<Part>,
@@ -159,6 +170,7 @@ struct Line {
 	name: String,
 	parts: Vec<Part>,
 }
+type Lines = BTreeMap<Opcode, (String, Vec<Part>)>;
 
 fn parse_line(line: &str) -> Option<Line> {
 	let mut words = line.split_whitespace();
@@ -180,7 +192,7 @@ fn parse_line(line: &str) -> Option<Line> {
 	Some(Line { code, name, parts })
 }
 
-fn parse_spec(text: &str) -> Spec {
+fn parse_lines(text: &str) -> Lines {
 	let mut ops = BTreeMap::new();
 	for line0 in text.lines() {
 		let line = line0.split('#').next().unwrap().trim();
@@ -198,16 +210,17 @@ fn parse_spec(text: &str) -> Spec {
 		);
 		ops.insert(line.code, (line.name, line.parts));
 	}
+	ops
+}
 
-	let by_name = build_names(&ops);
-
+fn parse_spec(ops: &Lines) -> Spec {
 	Spec {
 		ops: build_ops(ops),
-		by_name,
+		by_name: build_names(ops),
 	}
 }
 
-fn build_ops(ops: BTreeMap<Opcode, (String, Vec<Part>)>) -> [Option<Op>; 256] {
+fn build_ops(ops: &Lines) -> [Option<Op>; 256] {
 	let mut out = std::array::from_fn(|_| None);
 	for (k, (name, parts)) in ops {
 		assert!(!k.is_empty(), "Empty code in spec");
@@ -219,8 +232,8 @@ fn build_ops(ops: BTreeMap<Opcode, (String, Vec<Part>)>) -> [Option<Op>; 256] {
 			}
 			op = op.children.last_mut().unwrap();
 		}
-		op.name = name;
-		op.parts = parts;
+		op.name = name.clone();
+		op.parts = parts.clone();
 	}
 	for (i, op) in out.iter_mut().enumerate() {
 		if let Some(op) = op {
