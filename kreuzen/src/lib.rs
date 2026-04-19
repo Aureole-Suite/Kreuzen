@@ -7,6 +7,7 @@ use crate::io::CReader;
 mod code;
 mod spec;
 mod types;
+mod tables;
 
 mod split;
 
@@ -37,7 +38,7 @@ pub struct Scena {
 pub struct Chunk {
 	pub name: String,
 	pub func: CodeOrTable,
-	pub preload: Option<Opaque>,
+	pub preload: Vec<tables::preload::Preload>,
 	pub shadow: Vec<Code>,
 }
 
@@ -281,12 +282,13 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 
 		let preload = if let Some(i) = e.preload {
 			let _span = tracing::error_span!("preload").entered();
-			Some(read_chunk(&mut cr, ranges[i], |f, end| {
-				let pos = f.pos();
-				Ok(Opaque { bytes: f.slice(end - pos)?.to_vec() })
-			})?)
+			let v = read_chunk(&mut cr, ranges[i], |f, end| tables::preload::read(f, end))?;
+			if v.is_empty() {
+				tracing::warn!("preload is empty");
+			}
+			v
 		} else {
-			None
+			Vec::new()
 		};
 
 		let mut shadow = Vec::with_capacity(e.shadow.len());

@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, derive_more::From)]
 pub struct Char(pub u16);
 
 struct Tagged<A, B>(A, Option<B>);

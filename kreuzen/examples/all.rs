@@ -73,8 +73,8 @@ fn process(game: Game, enc: Enc, script: &Path) -> eyre::Result<String> {
 				writeln!(s, "{table:#?}")?;
 			}
 		}
-		if let Some(preload) = chunk.preload {
-			writeln!(s, "preload={preload:#?}")?;
+		if !chunk.preload.is_empty() {
+			writeln!(s, "preload={:#?}", chunk.preload)?;
 		}
 		for (a, shadow) in chunk.shadow.iter().enumerate() {
 			writeln!(s, "a{a} {:#?}", shadow.ops)?;
