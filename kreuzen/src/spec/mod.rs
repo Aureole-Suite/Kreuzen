@@ -172,32 +172,7 @@ impl Op {
 	}
 }
 
-struct Line {
-	code: Opcode,
-	name: String,
-	parts: Vec<Part>,
-}
 type Lines = BTreeMap<Opcode, (String, Vec<Part>)>;
-
-fn parse_line(line: &str) -> Option<Line> {
-	let mut words = line.split_whitespace();
-
-	let code = words.next().unwrap().parse().unwrap();
-
-	let mut name = String::new();
-	let mut parts = Vec::<Part>::new();
-	for word in words {
-		if word.starts_with('\'') != word.ends_with('\'') || word == "''" {
-			panic!("Invalid name in spec: {line}");
-		}
-		if word.starts_with('\'') {
-			name.push_str(&word[1..word.len() - 1])
-		} else {
-			parts.push(word.parse().ok()?);
-		};
-	}
-	Some(Line { code, name, parts })
-}
 
 fn parse_lines(text: &str) -> Lines {
 	let mut ops = BTreeMap::new();
@@ -208,33 +183,45 @@ fn parse_lines(text: &str) -> Lines {
 		);
 		ops.insert(code, (name, parts));
 	};
-	for line0 in text.lines() {
-		let line = line0.split('#').next().unwrap().trim();
-		let mut words = line.split_whitespace();
-		let Some(first) = words.next() else {
-			continue;
-		};
-
-		if first == "import" {
-			let from = words.next().unwrap();
-			let range = words.next().unwrap();
-			assert!(words.next().is_none());
-			let (a, b) = range.split_once("..").unwrap();
-			let a = a.parse::<Opcode>().unwrap();
-			let b = b.parse::<Opcode>().unwrap();
-			let include = lines_for(from);
-			for (code, (name, parts)) in include.range(a..b) {
-				add(*code, name.clone(), parts.clone());
-			}
-			continue;
-		}
-
-		let line = parse_line(line).unwrap_or_else(|| {
-			panic!("Failed to parse spec: {line0}");
-		});
-		add(line.code, line.name, line.parts);
+	for line in text.lines() {
+		parse_line(line, &mut add);
 	}
 	ops
+}
+
+fn parse_line(line0: &str, add: &mut impl FnMut(Opcode, String, Vec<Part>)) {
+	let line = line0.split('#').next().unwrap().trim();
+	let mut words = line.split_whitespace();
+	let Some(first) = words.next() else {
+		return;
+	};
+	if first == "import" {
+		let from = words.next().unwrap();
+		let range = words.next().unwrap();
+		assert!(words.next().is_none());
+		let (a, b) = range.split_once("..").unwrap();
+		let a = a.parse::<Opcode>().unwrap();
+		let b = b.parse::<Opcode>().unwrap();
+		let include = lines_for(from);
+		for (code, (name, parts)) in include.range(a..b) {
+			add(*code, name.clone(), parts.clone());
+		}
+	} else {
+		let code = first.parse().unwrap();
+		let mut name = String::new();
+		let mut parts = Vec::<Part>::new();
+		for word in words {
+			if word.starts_with('\'') != word.ends_with('\'') || word == "''" {
+				panic!("Invalid name in spec: {line}");
+			}
+			if word.starts_with('\'') {
+				name.push_str(&word[1..word.len() - 1])
+			} else {
+				parts.push(word.parse().unwrap());
+			};
+		}
+		add(code, name, parts);
+	}
 }
 
 fn parse_spec(ops: &Lines) -> Spec {
