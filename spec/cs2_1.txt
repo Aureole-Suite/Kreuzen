@@ -58,13 +58,14 @@
 25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
 26   u8 str
 
-270A char u8 str
-270B char u8
-270C char u16 u16 char u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u8
-270D char u8
+27 'Eff'
+270A 'EffLoad' char u8 str
+270B 'EffUnload' char u8
+270C 'EffPlay' char u16 u16 char u16 str f32 f32 f32 f32 f32 f32 f32 f32 f32 u8
+270D 'EffStop' char u8
 270E char u8
 270F char u8
-2710 char u16
+2710 'EffWait' char u16
 2711 char u16
 2712 char u8 u16
 2713 char u8 f32 f32 f32 f32
