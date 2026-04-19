@@ -56,7 +56,10 @@
 240D char
 240E char u32 str str
 25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
-26   u8 str
+
+2600 'PkgLoad' str
+2601 'PkgUnload' str
+2602 'PkgIsLoaded' str
 
 27 'Eff'
 270A 'EffLoad' char u8 str

@@ -69,7 +69,10 @@
 2505 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 2506 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 2507 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16
-26   u8 str
+
+2600 'PkgLoad' str
+2601 'PkgUnload' str
+2602 'PkgIsLoaded' str
 
 27 'Eff'
 270A 'EffLoad' char u8 str
