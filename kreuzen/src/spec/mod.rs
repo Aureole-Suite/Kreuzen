@@ -39,6 +39,13 @@ macro_rules! spec {
 			$(pub static $name: LazyLock<Lines> = LazyLock::new(|| parse_lines(&text::$name));)*
 		}
 
+		fn lines_for(name: &str) -> &'static Lines {
+			match name {
+				$(stringify!($name) => &lines::$name,)*
+				_ => panic!("Unknown spec: {name}"),
+			}
+		}
+
 		#[allow(non_upper_case_globals)]
 		mod specs {
 			use super::*;
@@ -194,21 +201,38 @@ fn parse_line(line: &str) -> Option<Line> {
 
 fn parse_lines(text: &str) -> Lines {
 	let mut ops = BTreeMap::new();
+	let mut add = |code: Opcode, name: String, parts: Vec<Part>| {
+		assert!(
+			!ops.contains_key(&code),
+			"Duplicate code in spec: {code} and {name}"
+		);
+		ops.insert(code, (name, parts));
+	};
 	for line0 in text.lines() {
 		let line = line0.split('#').next().unwrap().trim();
-		if line.is_empty() {
+		let mut words = line.split_whitespace();
+		let Some(first) = words.next() else {
+			continue;
+		};
+
+		if first == "import" {
+			let from = words.next().unwrap();
+			let range = words.next().unwrap();
+			assert!(words.next().is_none());
+			let (a, b) = range.split_once("..").unwrap();
+			let a = a.parse::<Opcode>().unwrap();
+			let b = b.parse::<Opcode>().unwrap();
+			let include = lines_for(from);
+			for (code, (name, parts)) in include.range(a..b) {
+				add(*code, name.clone(), parts.clone());
+			}
 			continue;
 		}
 
 		let line = parse_line(line).unwrap_or_else(|| {
 			panic!("Failed to parse spec: {line0}");
 		});
-		assert!(
-			!ops.contains_key(&line.code),
-			"Duplicate code in spec: {}",
-			&line.code
-		);
-		ops.insert(line.code, (line.name, line.parts));
+		add(line.code, line.name, line.parts);
 	}
 	ops
 }
