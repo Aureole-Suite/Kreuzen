@@ -1325,3 +1325,4 @@ E305
 E500 'Team2Clear' u8
 E501 'Team2Copy' u8 u8
 E6   u16
+# vim: ft=config

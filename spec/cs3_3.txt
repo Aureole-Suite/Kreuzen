@@ -74,3 +74,4 @@
 7702 'CharIsAni' char str
 7D   f32 # 80
 88   f32 f32 f32 f32 u32 u8 # 8B
+# vim: ft=config

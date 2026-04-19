@@ -953,3 +953,4 @@ D502
 D6   char dyn dyn dyn dyn
 D7   u8 u32
 D800 u8
+# vim: ft=config

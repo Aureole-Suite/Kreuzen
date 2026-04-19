@@ -704,3 +704,4 @@ B30C
 B30D
 B4   char u8 f32 f32
 B5   char u16 f32 u8 f32
+# vim: ft=config

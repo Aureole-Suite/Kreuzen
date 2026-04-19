@@ -782,3 +782,4 @@ D000 char str str str str f32 f32 f32
 D20000 u8
 D2FFFF dyn
 D300 f32 f32 f32 f32 u16 u8 u8 u8
+# vim: ft=config

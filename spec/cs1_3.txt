@@ -484,3 +484,4 @@
 9D   u32
 9E   u8
 9F   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
+# vim: ft=config
