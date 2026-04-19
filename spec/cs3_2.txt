@@ -568,15 +568,15 @@ B0   str u16
 # BA14 u8 u8
 # BA15
 # BB   u16
-# BC01 u16 dyn u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
-# BC02 u16 dyn u8
-# BC03 u16 dyn
-# BC04 u16 dyn u16 u16
-# BC05 u16 dyn u16 u16
-# BC08 u16 dyn u32
-# BC06 u16 dyn
-# BC09 u16 dyn f32 f32 f32 f32 f32 f32 u16 u16
-# BC0F u16 dyn u16 u32 str
+# BC01 u16 dync u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
+# BC02 u16 dync u8
+# BC03 u16 dync
+# BC04 u16 dync u16 u16
+# BC05 u16 dync u16 u16
+# BC08 u16 dync u32
+# BC06 u16 dync
+# BC09 u16 dync f32 f32 f32 f32 f32 f32 u16 u16
+# BC0F u16 dync u16 u32 str
 # BE   char u8 f32 f32
 # C0   u16 cs3_c0
 # C200 'HelpShow'

@@ -325,6 +325,10 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 					op.args.push(read_dyn(f)?);
 				}
 			}
+			P::Dync => op.args.push(match read_dyn(f)? {
+				Arg::Int(v) => Arg::Char(Char(v.try_into()?)),
+				a => a,
+			}),
 
 			P::Cs1_36 => {
 				if matches!(op.args[1], Arg::Char(Char(0xFE02..=0xFE03))) {

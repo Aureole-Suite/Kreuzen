@@ -97,6 +97,7 @@ pub enum Part {
 	Text,
 	Dyn,
 	Ndyn,
+	Dync,
 
 	Cs1_36,
 	Cs1_3C,
