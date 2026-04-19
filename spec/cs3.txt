@@ -262,7 +262,7 @@
 3502 'CharFlagGet' char flags32
 350A 'CharFlag2Set' char flags32
 350B 'CharFlag2Unset' char flags32
-# 350C 'CharFlag2Get' char flags32
+350C 'CharFlag2Get' char flags32
 
 36 'Cam'
 3600
