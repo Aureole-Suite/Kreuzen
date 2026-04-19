@@ -28,7 +28,6 @@ macro_rules! spec {
 spec!(CS1, test_ed81, "cs1.txt");
 spec!(CS1_MENU, test_ed81_menu, "cs1_menu.txt");
 spec!(CS2, test_ed82, "cs2.txt");
-spec!(CS2_1, test_ed82_1, "cs2_1.txt");
 spec!(CS2_MENU, test_ed82_menu, "cs2_menu.txt");
 spec!(CS3, test_ed83, "cs3.txt");
 spec!(CS3_1, test_ed83_1, "cs3_1.txt");
@@ -44,9 +43,8 @@ pub fn for_game(game: Game, variant: u8) -> &'static Spec {
 	match game {
 		Game::Cs1 if variant == 100 => &CS1_MENU,
 		Game::Cs1 => &CS1,
-		Game::Cs2 if variant == 0 => &CS2,
-		Game::Cs2 if variant == 1 => &CS2_1,
 		Game::Cs2 if variant == 100 => &CS2_MENU,
+		Game::Cs2 => &CS2,
 		Game::Cs3 if variant == 0 => &CS3,
 		Game::Cs3 if variant == 1 => &CS3_1,
 		Game::Cs3 if variant == 2 => &CS3_2,
@@ -100,6 +98,7 @@ pub enum Part {
 	Cs1_3C,
 
 	Cs2_37,
+	Cs2_7C,
 
 	Tx_3C,
 	Tx_isforceload,

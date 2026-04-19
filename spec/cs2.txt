@@ -308,7 +308,6 @@
 3A69 u16
 3AFE u16
 3AFF u16
-
 3B   'CharEmote' char u8 f32 u16
 3C   'CharLookDir' char f32 f32 f32 u16 u16
 3D   char char u16 cs1_3c
@@ -577,7 +576,7 @@
 7A02 u32 u32 u32 u32
 7A1B flags32
 7B   u8 u8
-7C   u8 u16 u16 u16 u32 u16 f32 f32 f32 str
+7C   u8 u16 u16 u16 u16 u16 cs2_7C f32 f32 f32 str
 7E   u16 u16
 7F   u16
 8000 char char str str

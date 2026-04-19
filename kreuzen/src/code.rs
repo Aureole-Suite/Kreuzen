@@ -356,6 +356,11 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 					read_parts(op, f, &[P::Str])?;
 				}
 			}
+			P::Cs2_7C => {
+				if f.variant == 0 {
+					read_parts(op, f, &[P::U16])?;
+				}
+			}
 
 			P::Tx_3C => {
 				if matches!(op.args[0], Arg::Int(1)) {
