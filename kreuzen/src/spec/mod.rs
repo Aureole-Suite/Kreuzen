@@ -56,7 +56,7 @@ macro_rules! spec {
 
 spec! {
 	cs1, cs1_menu,
-	cs2, cs2_menu,
+	cs2, cs2_1, cs2_menu,
 	cs3, cs3_1, cs3_2, cs3_3,
 	cs4, cs4_1,
 	reverie, reverie_1,
@@ -67,8 +67,9 @@ pub fn for_game(game: Game, variant: u8) -> &'static Spec {
 	match game {
 		Game::Cs1 if variant == 100 => &specs::cs1_menu,
 		Game::Cs1 => &specs::cs1,
+		Game::Cs2 if variant == 0 => &specs::cs2,
+		Game::Cs2 if variant == 1 => &specs::cs2_1,
 		Game::Cs2 if variant == 100 => &specs::cs2_menu,
-		Game::Cs2 => &specs::cs2,
 		Game::Cs3 if variant == 0 => &specs::cs3,
 		Game::Cs3 if variant == 1 => &specs::cs3_1,
 		Game::Cs3 if variant == 2 => &specs::cs3_2,
@@ -122,7 +123,6 @@ pub enum Part {
 	Cs1_3C,
 
 	Cs2_37,
-	Cs2_7C,
 
 	Tx_3C,
 	Tx_isforceload,
