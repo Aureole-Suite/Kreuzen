@@ -211,8 +211,8 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 
 	let variant = match f.game {
 		Game::Cs1 if cs1_menu.contains(&n) => 100,
-		Game::Cs1 if n == "npcx01" => 3,
-		Game::Cs1 if cs1_special.contains(&n) => 2,
+		Game::Cs1 if cs1_special.contains(&n) => 3,
+		Game::Cs1 if n == "npcx01" => 2,
 		Game::Cs1 if oddness == 1 => 1,
 		Game::Cs1 => 0,
 		Game::Cs2 if cs1_menu.contains(&n) => 100,

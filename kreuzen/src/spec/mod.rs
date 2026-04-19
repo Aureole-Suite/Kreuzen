@@ -55,7 +55,7 @@ macro_rules! spec {
 }
 
 spec! {
-	cs1, cs1_menu,
+	cs1, cs1_1, cs1_2, cs1_3, cs1_menu,
 	cs2, cs2_1, cs2_menu,
 	cs3, cs3_1, cs3_2, cs3_3,
 	cs4, cs4_1,
@@ -65,8 +65,11 @@ spec! {
 
 pub fn for_game(game: Game, variant: u8) -> &'static Spec {
 	match game {
+		Game::Cs1 if variant == 0 => &specs::cs1,
+		Game::Cs1 if variant == 1 => &specs::cs1_1,
+		Game::Cs1 if variant == 2 => &specs::cs1_2,
+		Game::Cs1 if variant == 3 => &specs::cs1_3,
 		Game::Cs1 if variant == 100 => &specs::cs1_menu,
-		Game::Cs1 => &specs::cs1,
 		Game::Cs2 if variant == 0 => &specs::cs2,
 		Game::Cs2 if variant == 1 => &specs::cs2_1,
 		Game::Cs2 if variant == 100 => &specs::cs2_menu,
@@ -116,9 +119,6 @@ pub enum Part {
 	Ndyn,
 	Dync,
 
-	Cs1_CharCreate,
-	Cs1_CharAniclipPlay,
-	Cs1_2834,
 	Cs1_36,
 	Cs1_3C,
 

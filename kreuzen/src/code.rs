@@ -322,24 +322,6 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 				a => a,
 			}),
 
-			P::Cs1_CharCreate => {
-				if f.variant == 0 {
-					read_parts(op, f, &[P::F32, P::U16])?;
-				}
-			}
-			P::Cs1_CharAniclipPlay => {
-				match f.variant {
-					0 => read_parts(op, f, &[P::U8, P::U8])?,
-					1 | 2 => read_parts(op, f, &[P::U8])?,
-					3 => read_parts(op, f, &[])?,
-					_ => {}
-				}
-			}
-			P::Cs1_2834 => {
-				if f.variant < 2 {
-					read_parts(op, f, &[P::U32])?;
-				}
-			}
 			P::Cs1_36 => {
 				if matches!(op.args[1], Arg::Char(Char(0xFE02..=0xFE03))) {
 					read_parts(op, f, &[P::F32])?;
