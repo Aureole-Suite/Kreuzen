@@ -64,7 +64,7 @@ fn process(game: Game, enc: Enc, script: &Path) -> eyre::Result<String> {
 	let mut s = format!("scena {} game={:?} enc={:?} oddness={} variant={}\n", scena.name, scena.game, scena.enc, scena.oddness, scena.variant);
 	for chunk in scena.chunks {
 		s.push('\n');
-		write!(s, "{:?} ", chunk.name)?;
+		write!(s, "{} ", chunk.name)?;
 		match &chunk.func {
 			kreuzen::CodeOrTable::Code(code) => {
 				writeln!(s, "{:#?}", code.ops)?;
@@ -74,10 +74,10 @@ fn process(game: Game, enc: Enc, script: &Path) -> eyre::Result<String> {
 			}
 		}
 		if !chunk.preload.is_empty() {
-			writeln!(s, "preload={:#?}", chunk.preload)?;
+			writeln!(s, "_{}={:#?}", chunk.name, chunk.preload)?;
 		}
 		for (a, shadow) in chunk.shadow.iter().enumerate() {
-			writeln!(s, "a{a} {:#?}", shadow.ops)?;
+			writeln!(s, "_a{a}_{} {:#?}", chunk.name, shadow.ops)?;
 		}
 	}
 	Ok(s)
