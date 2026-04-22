@@ -243,6 +243,52 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		_ => 0,
 	};
 
+	let mut cr = CReader {
+		reader: &mut f,
+		scena: &script_name,
+		variant,
+	};
+
+	let ranges = starts.iter().copied().zip(iter).collect::<Vec<_>>();
+	let split = split::parse(&names);
+	let mut chunks = Vec::with_capacity(split.entries.len());
+	let mut errors = rootcause::report_collection::ReportCollection::new();
+	for entry in split.entries {
+		let _span = tracing::error_span!("entry", name=%entry.name).entered();
+		match parse_chunk(&mut cr, &ranges, &entry) {
+			Ok(chunk) => chunks.push(chunk),
+			Err(e) => errors.push(e.context(format!("error parsing chunk {}", entry.name)).into_cloneable())
+		}
+	}
+
+	if let Some(i) = split.charater_section {
+		crate::ensure!(cr.game == Game::Reverie);
+		crate::ensure!(oddness == 0);
+		oddness = 3;
+		match read_chunk(&mut cr, ranges[i], |f, _| {
+			f.check_u8(1)?;
+			Ok(())
+		}) {
+			Ok(()) => {}
+			Err(e) => errors.push(e.context("error parsing charater section".to_owned()).into_cloneable()),
+		}
+	}
+
+	if !errors.is_empty() {
+		return Err(errors.context("error parsing chunks").into());
+	}
+
+	Ok(Scena {
+		name: script_name,
+		game: f.game,
+		enc: f.enc,
+		oddness,
+		variant,
+		chunks,
+	})
+}
+
+fn parse_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
 	let tables = [
 		"",
 		"ActionTable",
@@ -260,77 +306,43 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		"ShinigPomBtlset",
 	];
 
-	let mut cr = CReader {
-		reader: &mut f,
-		scena: &script_name,
-		variant,
-	};
-
-	let ranges = starts.iter().copied().zip(iter).collect::<Vec<_>>();
-	let split = split::parse(&names);
-	let mut chunks = Vec::with_capacity(split.entries.len());
-	for e in split.entries {
-		let _span = tracing::error_span!("entry", name=%e.name).entered();
-
-		let is_table = tables.contains(&e.name.as_str())
-			|| e.name.starts_with("FC_auto")
-			|| e.name.starts_with("BookData")
-			|| e.name.starts_with("BTLSET")
-			|| e.name.starts_with("StyleName");
-		let func = read_chunk(&mut cr, ranges[e.main], |f, end| {
-			if !is_table {
-				Ok(CodeOrTable::Code(Code { ops: code::decompile(f, end)? }))
-			} else {
-				let pos = f.pos();
-				Ok(CodeOrTable::Table(Opaque { bytes: f.slice(end - pos)?.to_vec() }))
-			}
-		})?;
-
-		let preload = if let Some(i) = e.preload {
-			let _span = tracing::error_span!("preload").entered();
-			let v = read_chunk(&mut cr, ranges[i], |f, end| tables::preload::read(f, end))?;
-			if v.is_empty() {
-				tracing::warn!("preload is empty");
-			}
-			v
+	let is_table = tables.contains(&e.name.as_str())
+		|| e.name.starts_with("FC_auto")
+		|| e.name.starts_with("BookData")
+		|| e.name.starts_with("BTLSET")
+		|| e.name.starts_with("StyleName");
+	let func = read_chunk(cr, ranges[e.main], |f, end| {
+		if !is_table {
+			Ok(CodeOrTable::Code(Code { ops: code::decompile(f, end)? }))
 		} else {
-			Vec::new()
-		};
-
-		let mut shadow = Vec::with_capacity(e.shadow.len());
-		for (a, &s) in e.shadow.iter().enumerate() {
-			let _span = tracing::error_span!("shadow", a).entered();
-			shadow.push(read_chunk(&mut cr, ranges[s], |f, end| {
-				Ok(Code { ops: code::decompile(f, end)? })
-			})?);
+			let pos = f.pos();
+			Ok(CodeOrTable::Table(Opaque { bytes: f.slice(end - pos)?.to_vec() }))
 		}
-
-		chunks.push(Chunk {
-			name: e.name,
-			func,
-			preload,
-			shadow,
-		});
+	})?;
+	let preload = if let Some(i) = e.preload {
+		let _span = tracing::error_span!("preload").entered();
+		let v = read_chunk(cr, ranges[i], |f, end| tables::preload::read(f, end))?;
+		if v.is_empty() {
+			tracing::warn!("preload is empty");
+		}
+		v
+	} else {
+		Vec::new()
+	};
+	let mut shadow = Vec::with_capacity(e.shadow.len());
+	for (a, &s) in e.shadow.iter().enumerate() {
+		let _span = tracing::error_span!("shadow", a).entered();
+		shadow.push(read_chunk(cr, ranges[s], |f, end| {
+			Ok(Code { ops: code::decompile(f, end)? })
+		})?);
 	}
-
-	if let Some(i) = split.charater_section {
-		crate::ensure!(cr.game == Game::Reverie);
-		crate::ensure!(oddness == 0);
-		oddness = 3;
-		read_chunk(&mut cr, ranges[i], |f, _| {
-			f.check_u8(1)?;
-			Ok(())
-		})?;
-	}
-
-	Ok(Scena {
-		name: script_name,
-		game: f.game,
-		enc: f.enc,
-		oddness,
-		variant,
-		chunks,
-	})
+	let chunk = Chunk {
+		name: e.name.clone(),
+		func,
+		preload,
+		shadow,
+	};
+	Ok(chunk)
 }
 
 // This function corresponds to the /asm/ files. Cursed.
