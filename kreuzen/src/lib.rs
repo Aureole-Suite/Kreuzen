@@ -8,6 +8,7 @@ mod code;
 mod spec;
 mod types;
 mod tables;
+pub mod decompile;
 
 mod split;
 

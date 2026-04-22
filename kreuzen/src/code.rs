@@ -149,7 +149,7 @@ pub struct OpMeta {
 }
 
 impl OpMeta {
-	fn fmt<'a, 'b>(&self, f: &'a mut std::fmt::Formatter<'b>) -> Result<&'a mut std::fmt::Formatter<'b>, std::fmt::Error> {
+	pub(crate) fn fmt<'a, 'b>(&self, f: &'a mut std::fmt::Formatter<'b>) -> Result<&'a mut std::fmt::Formatter<'b>, std::fmt::Error> {
 		write!(f, "{self:?}:")?;
 		Ok(f)
 	}

@@ -70,7 +70,7 @@ fn process(game: Game, enc: Enc, script: &Path) -> rootcause::Result<String> {
 		write!(s, "{} ", chunk.name)?;
 		match &chunk.func {
 			kreuzen::CodeOrTable::Code(code) => {
-				writeln!(s, "{:#?}", code.ops)?;
+				write_dec(&mut s, code)?;
 			}
 			kreuzen::CodeOrTable::Table(table) => {
 				writeln!(s, "{table:#?}")?;
@@ -80,8 +80,20 @@ fn process(game: Game, enc: Enc, script: &Path) -> rootcause::Result<String> {
 			writeln!(s, "_{}={:#?}", chunk.name, chunk.preload)?;
 		}
 		for (a, shadow) in chunk.shadow.iter().enumerate() {
-			writeln!(s, "_a{a}_{} {:#?}", chunk.name, shadow.ops)?;
+			write!(s, "_a{a}_{}", chunk.name)?;
+			write_dec(&mut s, shadow)?;
 		}
 	}
 	Ok(s)
+}
+
+fn write_dec(s: &mut String, code: &kreuzen::Code) -> rootcause::Result<()> {
+	match kreuzen::decompile::decompile(&code.ops) {
+		Ok(stmts) => writeln!(s, "{:#?}", stmts)?,
+		Err(e) => {
+			writeln!(s, "Error decompiling: {e}")?;
+			writeln!(s, "{:#?}", code.ops)?;
+		}
+	}
+	Ok(())
 }
