@@ -1,6 +1,6 @@
-use eyre::ContextCompat as _;
 use gospel::read::Le as _;
-use crate::types::*;
+use rootcause::prelude::ResultExt as _;
+use crate::{io::CReader, types::*};
 
 #[rustfmt::skip]
 #[derive(Clone, PartialEq, derive_more::Debug, derive_more::From)]
@@ -71,50 +71,88 @@ pub enum AssOp {
 	#[display("|=")] OrAss = 0x1B,
 }
 
-impl Expr {
-	pub(crate) fn read(f: &mut crate::io::CReader) -> eyre::Result<Expr> {
-		let mut stack = Vec::new();
-		loop {
-			let pos = f.pos();
-			match f.u8()? {
-				0x00 => stack.push(Expr::Int(f.i32()?)),
-				0x01 => break,
-				0x1C => {
-					match super::read_op(f)? {
-						super::FlatOp::Op(op) => stack.push(Expr::Op(op)),
-						op => eyre::bail!("expr can't contain {op:?}"),
-					}
-				}
-				0x1E => stack.push(Flag(f.u16()?).into()),
-				0x1F => stack.push(Var(f.u8()?).into()),
-				0x20 => stack.push(Attr(f.u8()?).into()),
-				0x21 => stack.push(CharAttr(Char(f.u16()?), f.u8()?).into()),
-				0x22 => stack.push(Expr::Rand),
-				0x23 => stack.push(Global(f.u8()?).into()),
-				0x24 => stack.push(Expr::SystemFlags(f.u32()?.into())),
-				0x25 => {
-					stack.push(NumReg(f.u8()?).into());
-					f.check_u8(0)?; // Reg is 2 bytes here but 1 in op0E, weird
-				}
-
-				v if let Ok(v) = BinOp::try_from(v) => {
-					let b = stack.pop().context("stack is empty")?;
-					let a = stack.pop().context("stack is empty")?;
-					stack.push(Expr::Bin(v, Box::new(a), Box::new(b)));
-				}
-				v if let Ok(v) = UnOp::try_from(v) => {
-					let a = stack.pop().context("stack is empty")?;
-					stack.push(Expr::Un(v, Box::new(a)));
-				}
-				v if let Ok(v) = AssOp::try_from(v) => {
-					let a = stack.pop().context("stack is empty")?;
-					stack.push(Expr::Ass(v, Box::new(a)));
-				}
-
-				code => eyre::bail!("unknown expr op: {code:02X}")
-			}
+struct StackView;
+impl rootcause::handlers::AttachmentHandler<Vec<Expr>> for StackView {
+	fn display(value: &Vec<Expr>, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		if value.is_empty() {
+			writeln!(f, "Stack: (empty)")?;
 		}
-		eyre::ensure!(stack.len() == 1, "stack is overfull");
-		Ok(stack.pop().unwrap())
+		for val in value {
+			writeln!(f, "Stack:")?;
+			writeln!(f, "  {val:?}")?;
+		}
+		Ok(())
 	}
+
+	fn debug(value: &Vec<Expr>, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		std::fmt::Debug::fmt(value, f)
+	}
+}
+
+impl Expr {
+	pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Expr> {
+		let pos = f.pos();
+		let mut stack = Vec::new();
+		read_inner(f, &mut stack)
+			.attach_custom_with::<StackView, _, _>(|| std::mem::take(&mut stack))
+			.context_with(|| format!("failed to read expr at {pos:04X}"))?;
+
+		if stack.len() == 1 {
+			Ok(stack.pop().unwrap())
+		} else {
+			Err(rootcause::report!("stack is overfull").attach_custom::<StackView, _>(stack))
+		}
+	}
+}
+
+fn read_inner(f: &mut CReader, stack: &mut Vec<Expr>) -> Result<(), rootcause::Report> {
+	loop {
+		match f.u8()? {
+			0x00 => stack.push(Expr::Int(f.i32()?)),
+			0x01 => break,
+			0x1C => {
+				match super::read_op(f)? {
+					super::FlatOp::Op(op) => stack.push(Expr::Op(op)),
+					op => rootcause::bail!("expr can't contain {op:?}"),
+				}
+			}
+			0x1E => stack.push(Flag(f.u16()?).into()),
+			0x1F => stack.push(Var(f.u8()?).into()),
+			0x20 => stack.push(Attr(f.u8()?).into()),
+			0x21 => stack.push(CharAttr(Char(f.u16()?), f.u8()?).into()),
+			0x22 => stack.push(Expr::Rand),
+			0x23 => stack.push(Global(f.u8()?).into()),
+			0x24 => stack.push(Expr::SystemFlags(f.u32()?.into())),
+			0x25 => {
+				stack.push(NumReg(f.u8()?).into());
+				f.check_u8(0)?; // Reg is 2 bytes here but 1 in op0E, weird
+			}
+
+			v if let Ok(v) = BinOp::try_from(v) => {
+				if stack.len() < 2 {
+					rootcause::bail!("not enough args for binary {v}");
+				}
+				let b = stack.pop().unwrap();
+				let a = stack.pop().unwrap();
+				stack.push(Expr::Bin(v, Box::new(a), Box::new(b)));
+			}
+			v if let Ok(v) = UnOp::try_from(v) => {
+				if stack.is_empty() {
+					rootcause::bail!("not enough args for unary {v}");
+				}
+				let a = stack.pop().unwrap();
+				stack.push(Expr::Un(v, Box::new(a)));
+			}
+			v if let Ok(v) = AssOp::try_from(v) => {
+				if stack.is_empty() {
+					rootcause::bail!("not enough args for {v}");
+				}
+				let a = stack.pop().unwrap();
+				stack.push(Expr::Ass(v, Box::new(a)));
+			}
+
+			code => rootcause::bail!("unknown expr op: {code:02X}")
+		}
+	}
+	Ok(())
 }

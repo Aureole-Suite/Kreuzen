@@ -37,7 +37,7 @@ pub enum TextControl {
 }
 
 impl Text {
-	pub(crate) fn read(f: &mut crate::VReader) -> eyre::Result<Text> {
+	pub(crate) fn read(f: &mut crate::VReader) -> rootcause::Result<Text> {
 		let mut out = Vec::new();
 		let mut scratch = Vec::new();
 		loop {
@@ -72,7 +72,7 @@ impl Text {
 					0x1A => TextControl::_1A,
 					byte => {
 						f.rewind();
-						eyre::bail!("Unknown text control byte: {byte:02X}");
+						rootcause::bail!("Unknown text control byte: {byte:02X}");
 					}
 				};
 				out.push(TextPart::Control(c));

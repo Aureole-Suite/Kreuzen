@@ -13,25 +13,25 @@ pub struct VReader<'a> {
 }
 
 impl<'a> VReader<'a> {
-	pub fn str(&mut self) -> eyre::Result<String> {
+	pub fn str(&mut self) -> rootcause::Result<String> {
 		let cstr = self.cstr()?;
 		let s = self.decode(cstr.to_bytes())?;
 		Ok(s)
 	}
 
-	pub fn sstr(&mut self, s: usize) -> eyre::Result<String> {
+	pub fn sstr(&mut self, s: usize) -> rootcause::Result<String> {
 		let pos = self.pos();
 		let str = self.slice(s)?;
 		let len = str.iter().position(|&b| b == 0).unwrap_or(s);
 		let cstr = &str[..len];
 		let s = self.decode(cstr)?;
 		if !str[len..].iter().all(|&b| b == 0) {
-			eyre::bail!("Nonzero padding on sized string at {pos:X}: {s:?}");
+			rootcause::bail!("Nonzero padding on sized string at {pos:X}: {s:?}");
 		}
 		Ok(s)
 	}
 
-	pub fn decode(&self, bytes: &[u8]) -> eyre::Result<String> {
+	pub fn decode(&self, bytes: &[u8]) -> rootcause::Result<String> {
 		match self.enc {
 			Enc::Utf8 => match String::from_utf8_lossy(bytes) {
 				Cow::Borrowed(text) => Ok(text.to_owned()),
@@ -41,13 +41,13 @@ impl<'a> VReader<'a> {
 						s.insert(0, '\u{FFFD}');
 						Ok(s)
 					} else {
-						eyre::bail!("Invalid UTF-8 in text: {e:?}");
+						rootcause::bail!("Invalid UTF-8 in text: {e:?}");
 					}
 				}
 			}
 			Enc::Sjis => match falcom_sjis::decode(bytes) {
 				Ok(text) => Ok(text),
-				Err(_) => eyre::bail!("Invalid Shift-JIS in text: {e:?}", e = falcom_sjis::decode_lossy(bytes)),
+				Err(_) => rootcause::bail!("Invalid Shift-JIS in text: {e:?}", e = falcom_sjis::decode_lossy(bytes)),
 			}
 		}
 	}

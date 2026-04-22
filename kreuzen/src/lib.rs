@@ -11,6 +11,20 @@ mod tables;
 
 mod split;
 
+macro_rules! ensure_ {
+	($cond:expr) => {
+		if !$cond {
+			rootcause::bail!("{}", stringify!($cond));
+		}
+	};
+	($cond:expr, $($arg:tt)*) => {
+		if !$cond {
+			rootcause::bail!($($arg)*);
+		}
+	};
+}
+use ensure_ as ensure;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
 pub enum Game {
 	Cs1,
@@ -67,7 +81,7 @@ impl std::fmt::Debug for Opaque {
 	}
 }
 
-pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
+pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let mut f = VReader {
 		game,
 		enc,
@@ -81,8 +95,8 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	let function_name_table_top = f.u32()? as usize;
 	let nfunc = f.u32()? as usize;
 	let asm_end = f.u32()? as usize;
-	eyre::ensure!(table_top + table_size == function_name_table_top);
-	eyre::ensure!(table_size == nfunc * 4);
+	crate::ensure!(table_top + table_size == function_name_table_top);
+	crate::ensure!(table_size == nfunc * 4);
 
 	f.check_u32(0xABCDEF00)?;
 	let script_name = if name_start == 0x20 {
@@ -114,23 +128,23 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 		_ => {}
 	}
 
-	eyre::ensure!(f.pos() == table_top);
+	crate::ensure!(f.pos() == table_top);
 	let (names, starts) = read_asm(&mut f, nfunc)?;
 	let script_name = if name_start == 0x20 {
 		script_name
 	} else {
-		eyre::ensure!(f.game == Game::Cs1);
-		eyre::ensure!(f.pos() == name_start);
+		crate::ensure!(f.game == Game::Cs1);
+		crate::ensure!(f.pos() == name_start);
 		f.str()?
 	};
-	eyre::ensure!(f.pos() == asm_end);
+	crate::ensure!(f.pos() == asm_end);
 
 	let mut iter = starts.iter().copied().chain([f.len()]);
 	let first = iter.next().unwrap(); // chain ensures it's nonempty
-	eyre::ensure!(first >= f.pos());
+	crate::ensure!(first >= f.pos());
 	let pos = f.pos();
 	let pad = f.slice(first - pos)?;
-	eyre::ensure!(pad.iter().all(|b| *b == 0));
+	crate::ensure!(pad.iter().all(|b| *b == 0));
 	
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
 	let cs2_special = ["e2230", "e4501", "e4701", "m5010"];
@@ -300,8 +314,8 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 	}
 
 	if let Some(i) = split.charater_section {
-		eyre::ensure!(cr.game == Game::Reverie);
-		eyre::ensure!(oddness == 0);
+		crate::ensure!(cr.game == Game::Reverie);
+		crate::ensure!(oddness == 0);
 		oddness = 3;
 		read_chunk(&mut cr, ranges[i], |f, _| {
 			f.check_u8(1)?;
@@ -320,7 +334,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> eyre::Result<Scena> {
 }
 
 // This function corresponds to the /asm/ files. Cursed.
-fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)> {
+fn read_asm(f: &mut VReader, n: usize) -> rootcause::Result<(Vec<String>, Vec<usize>)> {
 	let mut starts = Vec::with_capacity(n);
 	for _ in 0..n {
 		starts.push(f.u32()? as usize);
@@ -339,9 +353,9 @@ fn read_asm(f: &mut VReader, n: usize) -> eyre::Result<(Vec<String>, Vec<usize>)
 }
 
 
-fn read_chunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut CReader, usize) -> eyre::Result<T>) -> eyre::Result<T> {
+fn read_chunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut CReader, usize) -> rootcause::Result<T>) -> rootcause::Result<T> {
 	let (start, end) = s;
-	eyre::ensure!(start <= end && end <= f.reader.len());
+	crate::ensure!(start <= end && end <= f.reader.len());
 	f.seek(start)?;
 	let mut actual_end = end;
 	while actual_end > 0 && f.data()[actual_end - 1] == 0 {

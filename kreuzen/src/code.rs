@@ -1,7 +1,7 @@
 use std::collections::{BTreeSet, HashMap};
 
-use eyre::Context as _;
 use gospel::read::Le as _;
+use rootcause::prelude::ResultExt as _;
 
 use crate::io::CReader;
 use crate::spec::{Opcode, Part};
@@ -26,11 +26,11 @@ impl std::fmt::Display for Label {
 	}
 }
 
-pub fn decompile(f: &mut CReader, end: usize) -> eyre::Result<Vec<FlatOp>> {
+pub fn decompile(f: &mut CReader, end: usize) -> rootcause::Result<Vec<FlatOp>> {
 	let mut ops = Vec::new();
 	while f.pos() < end {
 		let pos = Label(f.pos() as u32);
-		let op = read_op(f).with_context(|| format!("Failed to read op at {pos:?}"))?;
+		let op = read_op(f).context_with(|| format!("Failed to read op at {pos:?}"))?;
 		tracing::trace!("Read op at {pos:?}: {op:?}");
 		ops.push((pos, op))
 	}
@@ -45,7 +45,7 @@ pub fn decompile(f: &mut CReader, end: usize) -> eyre::Result<Vec<FlatOp>> {
 	Ok(ops2)
 }
 
-fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> eyre::Result<Vec<FlatOp>> {
+fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> rootcause::Result<Vec<FlatOp>> {
 	let mut labels = BTreeSet::new();
 	for (_, op) in &ops {
 		match op {
@@ -80,7 +80,7 @@ fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> eyre::Result<Vec<FlatO
 		ops2.insert(if_loc + 2, FlatOp::Label(WEIRD_LABEL));
 	}
 
-	eyre::ensure!(labels.is_empty(), "Some labels were not used: {labels:?}");
+	crate::ensure!(labels.is_empty(), "Some labels were not used: {labels:?}");
 	Ok(ops2)
 }
 
@@ -203,7 +203,7 @@ pub enum FlatOp {
 	Switch(OpMeta, Expr, Vec<(i32, Label)>, Label),
 }
 
-fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
+fn read_op(f: &mut CReader) -> rootcause::Result<FlatOp> {
 	let mut code = f.u8()?;
 	let mut opcode = Opcode::new(&[code]);
 
@@ -211,7 +211,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 	let mut op_spec = match spec.ops[code as usize].as_ref() {
 		Some(it) => it,
 		None => {
-			eyre::bail!("_Unknown opcode {opcode}")
+			rootcause::bail!("_Unknown opcode {opcode}")
 		}
 	};
 
@@ -268,7 +268,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 
 			op_spec = match op_spec.child(code) {
 				Some(it) => it,
-				None => eyre::bail!("_Unknown opcode {opcode}"),
+				None => rootcause::bail!("_Unknown opcode {opcode}"),
 			};
 			op.name = op_spec.name.as_str();
 		} else {
@@ -279,7 +279,7 @@ fn read_op(f: &mut CReader) -> eyre::Result<FlatOp> {
 	Ok(FlatOp::Op(op))
 }
 
-fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> {
+fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result<()> {
 	op.args.reserve(parts.len());
 	use Part as P;
 	for p in parts {
@@ -363,20 +363,20 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 
 			P::Cs3_98 => {
 				let Arg::Int(v) = op.args[0] else {
-					eyre::bail!("Expected U16 for Cs3_c0 part");
+					rootcause::bail!("Expected U16 for Cs3_c0 part");
 				};
 				read_parts(op, f, op_98(v as u16, f.game))?;
 			}
 			P::Cs3_c0 => {
 				let Arg::Int(v) = op.args[0] else {
-					eyre::bail!("Expected U16 for Cs3_c0 part");
+					rootcause::bail!("Expected U16 for Cs3_c0 part");
 				};
 				read_parts(op, f, op_c0(v as u16))?;
 			}
 
 			P::Cs4_40 => {
 				let Arg::Char(v) = op.args[1] else {
-					eyre::bail!("Expected Char");
+					rootcause::bail!("Expected Char");
 				};
 				read_parts(op, f, op_40(v))?;
 			}
@@ -397,7 +397,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 			}
 			P::Rev_D2 => {
 				let Arg::Int(v) = op.args[0] else {
-					eyre::bail!("Expected I16");
+					rootcause::bail!("Expected I16");
 				};
 				read_parts(op, f, op_d2(v as i16))?;
 			}
@@ -414,7 +414,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> eyre::Result<()> 
 			}
 
 			P::Print => println!("{op:?}"),
-			P::Fail => eyre::bail!("Fail"),
+			P::Fail => rootcause::bail!("Fail"),
 		}
 	}
 	Ok(())
@@ -484,7 +484,7 @@ fn op_d2(a: i16) -> &'static [Part] {
 }
 
 #[rustfmt::skip]
-fn read_dyn(f: &mut CReader) -> eyre::Result<Arg> {
+fn read_dyn(f: &mut CReader) -> rootcause::Result<Arg> {
 	Ok(match f.u8()? {
 		0x11 => { let v = f.u8()?; f.check_u32(0)?; Var(v).into() }
 		0x33 => { let v = f.u8()?; f.check_u32(0)?; NumReg(v).into() }
@@ -501,6 +501,6 @@ fn read_dyn(f: &mut CReader) -> eyre::Result<Arg> {
 				Arg::Int(v as i64)
 			}
 		}
-		code => eyre::bail!("Unknown dyn code: {code:02X}"),
+		code => rootcause::bail!("Unknown dyn code: {code:02X}"),
 	})
 }

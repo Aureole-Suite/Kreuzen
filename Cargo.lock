@@ -183,7 +183,6 @@ version = "0.1.0"
 dependencies = [
  "compact-debug",
  "derive_more",
- "eyre",
  "eyre-span",
  "falcom-sjis",
  "gospel",

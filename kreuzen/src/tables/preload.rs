@@ -28,7 +28,7 @@ impl RawPreload {
 	fn u32(&mut self) -> u32 { self.u32.take().unwrap() }
 	fn str(&mut self) -> String { self.str.take().unwrap() }
 
-	fn finish(self, null: Char) -> eyre::Result<()> {
+	fn finish(self, null: Char) -> rootcause::Result<()> {
 		let mut errs = Vec::new();
 		if let Some(v) = self.charid && v != null {
 			errs.push(format!("{v:?}"));
@@ -40,13 +40,13 @@ impl RawPreload {
 			errs.push(format!("{v:?}"));
 		}
 		if !errs.is_empty() {
-			eyre::bail!("unexpected fields in preload {:02X}: {}", self.kind, errs.join(", "));
+			rootcause::bail!("unexpected fields in preload {:02X}: {}", self.kind, errs.join(", "));
 		}
 		Ok(())
 	}
 }
 
-pub(crate) fn read(f: &mut VReader, _: usize) -> eyre::Result<Vec<Preload>> {
+pub(crate) fn read(f: &mut VReader, _: usize) -> rootcause::Result<Vec<Preload>> {
 	let mut table = Vec::new();
 	loop {
 		let mut preload = RawPreload {
@@ -73,7 +73,7 @@ pub(crate) fn read(f: &mut VReader, _: usize) -> eyre::Result<Vec<Preload>> {
 			8 => Preload::op4F(preload.str()),
 			9 => Preload::CharAniclipPlay(preload.charid(), preload.str()),
 			10 => Preload::opCE02(preload.str()),
-			_ => eyre::bail!("unknown preload kind {:02X}", preload.kind),
+			_ => rootcause::bail!("unknown preload kind {:02X}", preload.kind),
 		});
 		preload.finish(null)?;
 	}
