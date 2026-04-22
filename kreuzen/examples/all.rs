@@ -1,11 +1,9 @@
-use eyre_span::Emit;
 use std::fmt::Write;
 use kreuzen::{Enc, Game};
 use std::path::{Path, PathBuf};
 
 fn main() {
 	unsafe { compact_debug::enable(true) };
-	eyre_span::install().unwrap();
 
 	tracing_subscriber::fmt::init();
 
