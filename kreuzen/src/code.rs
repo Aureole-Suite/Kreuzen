@@ -16,13 +16,13 @@ pub struct Label(u32);
 
 impl std::fmt::Debug for Label {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "@{}", self.0)
+		write!(f, "@{:04X}", self.0)
 	}
 }
 
 impl std::fmt::Display for Label {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "@{}", self.0)
+		write!(f, "@{:04X}", self.0)
 	}
 }
 
@@ -45,6 +45,19 @@ impl std::fmt::Display for OpContext {
 	}
 }
 
+#[derive(Clone)]
+struct Hexdump(String);
+impl std::fmt::Display for Hexdump {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		self.0.fmt(f)
+	}
+}
+impl std::fmt::Debug for Hexdump {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "Hexdump(..)")
+	}
+}
+
 pub fn decompile(f: &mut CReader, end: usize) -> rootcause::Result<Vec<FlatOp>> {
 	let mut ops = Vec::new();
 	while f.pos() < end {
@@ -52,6 +65,7 @@ pub fn decompile(f: &mut CReader, end: usize) -> rootcause::Result<Vec<FlatOp>> 
 		let op = read_op(f)
 			.context_with(|| format!("Failed to read op at {pos:04X}"))
 			.attach_with(|| OpContext(std::mem::take(&mut ops)))
+			.attach_with(|| Hexdump(format!("{:#2.48X}", f.dump().start(pos).mark(f.pos()))))
 			?;
 		ops.push((Label(pos as u32), op))
 	}
