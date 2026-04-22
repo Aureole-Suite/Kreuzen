@@ -26,13 +26,34 @@ impl std::fmt::Display for Label {
 	}
 }
 
+#[derive(Debug, Clone)]
+pub struct OpContext(pub Vec<(Label, FlatOp)>);
+impl std::fmt::Display for OpContext {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		const MAX: usize = 5;
+		if let Some(more) = self.0.len().checked_sub(MAX) {
+			writeln!(f, "Context: (omitting {more} ops)")?;
+			for (Label(l), op) in self.0.iter().rev().take(MAX).rev() {
+				writeln!(f, "  {l:04X} {op:?}")?;
+			}
+		} else if self.0.is_empty() {
+			writeln!(f, "Context: (empty)")?;
+		} else {
+			writeln!(f, "Context:")?;
+		}
+		Ok(())
+	}
+}
+
 pub fn decompile(f: &mut CReader, end: usize) -> rootcause::Result<Vec<FlatOp>> {
 	let mut ops = Vec::new();
 	while f.pos() < end {
-		let pos = Label(f.pos() as u32);
-		let op = read_op(f).context_with(|| format!("Failed to read op at {pos:?}"))?;
-		tracing::trace!("Read op at {pos:?}: {op:?}");
-		ops.push((pos, op))
+		let pos = f.pos();
+		let op = read_op(f)
+			.context_with(|| format!("Failed to read op at {pos:04X}"))
+			.attach_with(|| OpContext(std::mem::take(&mut ops)))
+			?;
+		ops.push((Label(pos as u32), op))
 	}
 
 	let wtf = (f.game, f.scena) == (Game::Cs3, "system");
