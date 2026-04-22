@@ -35,16 +35,23 @@ macro_rules! spec {
 			});)*
 		}
 
+		fn text_for(name: &str) -> Option<&'static str> {
+			match name {
+				$(stringify!($name) => Some(&text::$name),)*
+				_ => None,
+			}
+		}
+
 		#[allow(non_upper_case_globals)]
 		mod lines {
 			use super::*;
-			$(pub static $name: LazyLock<Lines> = LazyLock::new(|| parse_lines(&text::$name));)*
+			$(pub static $name: LazyLock<Lines> = LazyLock::new(|| parse_lines(stringify!($name)));)*
 		}
 
-		fn lines_for(name: &str) -> &'static Lines {
+		fn lines_for(name: &str) -> Option<&'static Lines> {
 			match name {
-				$(stringify!($name) => &lines::$name,)*
-				_ => panic!("Unknown spec: {name}"),
+				$(stringify!($name) => Some(&lines::$name),)*
+				_ => None,
 			}
 		}
 

@@ -1,10 +1,24 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
+use rootcause::option_ext::OptionExt as _;
+use rootcause::prelude::{IteratorExt as _, ResultExt as _};
+
 use crate::spec::{Op, Opcode, Part, Spec};
 
 pub type Lines = BTreeMap<Opcode, (String, Vec<Part>)>;
 
-pub fn parse_lines(text: &str) -> Lines {
+pub fn parse_lines(name: &str) -> Lines {
+	match try_parse_lines(name) {
+		Ok(lines) => lines,
+		Err(e) => {
+			eprintln!("{e}");
+			std::process::exit(1);
+		}
+	}
+}
+
+pub fn try_parse_lines(name: &str) -> rootcause::Result<Lines> {
+	let text = super::text_for(name).context_with(|| format!("unknown spec: {name}"))?;
 	let mut ops = BTreeMap::new();
 	let mut add = |code: Opcode, name: String, parts: Vec<Part>| {
 		assert!(
@@ -13,45 +27,45 @@ pub fn parse_lines(text: &str) -> Lines {
 		);
 		ops.insert(code, (name, parts));
 	};
-	for line in text.lines() {
-		parse_line(line, &mut add);
-	}
-	ops
+	() = text.lines()
+		.map(|line| parse_line(line, &mut add).context_with(|| format!("error parsing line: {line:?}")))
+		.collect_reports()
+		.context_with(|| format!("error parsing spec: {name}"))?;
+	Ok(ops)
 }
 
-fn parse_line(line0: &str, add: &mut impl FnMut(Opcode, String, Vec<Part>)) {
+fn parse_line(line0: &str, add: &mut impl FnMut(Opcode, String, Vec<Part>)) -> rootcause::Result<()> {
 	let line = line0.split('#').next().unwrap().trim();
 	let mut words = line.split_whitespace();
 	let Some(first) = words.next() else {
-		return;
+		return Ok(());
 	};
 	if first == "import" {
-		let from = words.next().unwrap();
-		let range = words.next().unwrap();
+		let from = words.next().context("import missing source")?;
+		let range = words.next().context("import missing range")?;
 		assert!(words.next().is_none());
-		let (a, b) = range.split_once("..").unwrap();
-		let a = a.parse::<Opcode>().unwrap();
-		let b = b.parse::<Opcode>().unwrap();
-		let include = super::lines_for(from);
+		let (a, b) = range.split_once("..").context("invalid import range")?;
+		let a = a.parse::<Opcode>().context("invalid import range start")?;
+		let b = b.parse::<Opcode>().context("invalid import range end")?;
+		let include = super::lines_for(from).context_with(|| format!("unknown import source: {from}"))?;
 		for (code, (name, parts)) in include.range(a..b) {
 			add(*code, name.clone(), parts.clone());
 		}
-	} else {
-		let code = first.parse().unwrap();
+	} else if let Ok(code) = first.parse() {
 		let mut name = String::new();
 		let mut parts = Vec::<Part>::new();
 		for word in words {
-			if word.starts_with('\'') != word.ends_with('\'') || word == "''" {
-				panic!("Invalid name in spec: {line}");
-			}
-			if word.starts_with('\'') {
+			if word.starts_with('\'') && word.ends_with('\'') {
 				name.push_str(&word[1..word.len() - 1])
 			} else {
-				parts.push(word.parse().unwrap());
+				parts.push(word.parse().context_with(|| format!("invalid part: {word}"))?);
 			};
 		}
 		add(code, name, parts);
+	} else {
+		rootcause::bail!("invalid line start: {first}");
 	}
+	Ok(())
 }
 
 pub fn parse_spec(ops: &Lines) -> Spec {

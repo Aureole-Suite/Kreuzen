@@ -10,6 +10,7 @@ falcom-sjis = "0.2.0"
 gospel = { version = "0.4.0", path = "../../Gospel" }
 hex = "0.4.3"
 regex = { version = "1.12.3", default-features = false, features = ["std", "perf"] }
+rootcause = "0.12.1"
 tracing = "0.1.44"
 
 [dev-dependencies]
