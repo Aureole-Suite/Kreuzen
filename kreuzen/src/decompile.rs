@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
@@ -244,20 +244,14 @@ fn parse_switch(
 	cases.insert(default_index, (Case::Default, default));
 
 	let last_pos = pos.last().copied().max(Some(default_pos)).unwrap();
-	let mut unresolved = BTreeSet::new();
+	let mut brk = None;
 	for stmt in &ctx.gctx.stmts[ctx.pos..last_pos] {
 		if let FlatOp::Goto(_, goto) = stmt
 		&& ctx.lookup(*goto)? >= last_pos
 		{
-			unresolved.insert(*goto);
+			brk = brk.max(Some(*goto));
 		}
 	}
-
-	if unresolved.len() > 1 {
-		rootcause::bail!("multiple unresolved goto targets at end of switch: {:?}", unresolved);
-	}
-
-	let brk = unresolved.into_iter().next();
 
 	let mut cases2 = Vec::with_capacity(cases.len());
 
@@ -269,16 +263,20 @@ fn parse_switch(
 	}
 
 	let ends = cases.iter().skip(1).map(|i| i.1).chain(brk);
+	let mut has_brk = false;
 	for (&(key, target), end) in std::iter::zip(&cases, ends) {
 		let target = ctx.gctx.lookup(target)?;
 		assert_eq!(ctx.pos, target);
 		let mut sub = ctx.sub(end)?;
 		sub.brk = brk;
 		let (body, _) = sub.block("switch body", GotoAllowed::No)?;
+		if body.last().is_some_and(|s| matches!(s, Stmt::Break(_))) {
+			has_brk = true;
+		}
 		cases2.push((key, body));
 	}
 
-	if brk.is_some() {
+	if has_brk {
 		// we know where the break is, so no need for that bullshit
 		if cases2.last().is_some_and(|(k, v)| *k == Case::Default && v.is_empty()) {
 			cases2.pop();
@@ -313,5 +311,3 @@ fn parse_switch(
 
 	Ok(())
 }
-
-
