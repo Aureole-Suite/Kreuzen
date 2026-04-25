@@ -45,7 +45,7 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 	for dir in ls(&path) {
 		for file in ls(path.join(&dir).join(folder)) {
 			let script = path.join(&dir).join(folder).join(&file);
-			let scriptname = format!("{game:?}/{dir}/{folder}/{file:<26}");
+			let scriptname = format!("{game:?}/{dir}/{folder}/{file}");
 			let outfile = PathBuf::from("out").join(format!("{game:?}/{folder}/{dir}/{file}"));
 			let _span = tracing::error_span!("script", name = %scriptname).entered();
 			match process(game, enc, &script) {
@@ -66,6 +66,7 @@ fn process(game: Game, enc: Enc, script: &Path) -> rootcause::Result<String> {
 	let scena = kreuzen::parse(game, enc, &bytes)?;
 	let mut s = format!("scena {} game={:?} enc={:?} oddness={} variant={}\n", scena.name, scena.game, scena.enc, scena.oddness, scena.variant);
 	for chunk in scena.chunks {
+		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
 		s.push('\n');
 		write!(s, "{} ", chunk.name)?;
 		match &chunk.func {
@@ -91,8 +92,11 @@ fn write_dec(s: &mut String, code: &kreuzen::Code) -> rootcause::Result<()> {
 	match kreuzen::decompile::decompile(&code.ops) {
 		Ok(stmts) => writeln!(s, "{:#?}", stmts)?,
 		Err(e) => {
-			writeln!(s, "Error decompiling: {e}")?;
-			writeln!(s, "{:#?}", code.ops)?;
+			write!(s, "Error decompiling:{e}")?;
+			for (i, op) in code.ops.iter().enumerate() {
+				writeln!(s, "{i}: {op:?}")?;
+			}
+			print!("Error decompiling:{e}"); // has a newline on its own
 		}
 	}
 	Ok(())
