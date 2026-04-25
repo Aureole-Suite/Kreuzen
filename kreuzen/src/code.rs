@@ -5,10 +5,8 @@ use rootcause::prelude::ResultExt as _;
 
 use crate::io::CReader;
 use crate::spec::{Opcode, Part};
-pub mod expr;
-pub mod text;
-pub use expr::Expr;
-pub use text::Text;
+use crate::expr::Expr;
+use crate::text::Text;
 use crate::{Game, types::*};
 
 mod to_dot;
@@ -241,7 +239,7 @@ pub enum FlatOp {
 	Switch(OpMeta, Expr, Vec<(i32, Label)>, Label),
 }
 
-fn read_op(f: &mut CReader) -> rootcause::Result<FlatOp> {
+pub(crate) fn read_op(f: &mut CReader) -> rootcause::Result<FlatOp> {
 	let mut code = f.u8()?;
 	let mut opcode = Opcode::new(&[code]);
 

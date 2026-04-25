@@ -4,7 +4,8 @@ use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
 
 use crate::types::Char;
-use crate::code::{Expr, FlatOp, Label, Op, OpMeta};
+use crate::code::{FlatOp, Label, Op, OpMeta};
+use crate::expr::Expr;
 
 #[derive(Clone, PartialEq)]
 pub enum Stmt {

@@ -5,6 +5,8 @@ use io::VReader;
 use crate::io::CReader;
 
 pub mod code;
+pub mod expr;
+pub mod text;
 mod spec;
 mod types;
 mod tables;

@@ -6,7 +6,7 @@ use crate::{io::CReader, types::*};
 #[derive(Clone, PartialEq, derive_more::Debug, derive_more::From)]
 pub enum Expr {
 	#[debug("{_0:?}")] Int(i32),
-	#[debug("{_0:?}")] Op(super::Op),
+	#[debug("{_0:?}")] Op(crate::code::Op),
 	#[debug("{_0:?}")] Flag(Flag),
 	#[debug("{_0:?}")] Var(Var),
 	#[debug("{_0:?}")] Attr(Attr),
@@ -111,8 +111,8 @@ fn read_inner(f: &mut CReader, stack: &mut Vec<Expr>) -> Result<(), rootcause::R
 			0x00 => stack.push(Expr::Int(f.i32()?)),
 			0x01 => break,
 			0x1C => {
-				match super::read_op(f)? {
-					super::FlatOp::Op(op) => stack.push(Expr::Op(op)),
+				match crate::code::read_op(f)? {
+					crate::code::FlatOp::Op(op) => stack.push(Expr::Op(op)),
 					op => rootcause::bail!("expr can't contain {op:?}"),
 				}
 			}
