@@ -4,7 +4,7 @@ use io::VReader;
 
 use crate::io::CReader;
 
-mod code;
+pub mod code;
 mod spec;
 mod types;
 mod tables;

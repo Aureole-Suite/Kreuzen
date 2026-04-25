@@ -11,6 +11,9 @@ pub use expr::Expr;
 pub use text::Text;
 use crate::{Game, types::*};
 
+mod to_dot;
+pub use to_dot::to_dot;
+
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Label(u32);
 
