@@ -199,7 +199,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	})
 }
 
-fn resolve_game(n: &str, game: Game, enc: Enc, oddness: u8) -> (Game, Enc, u8) {
+fn resolve_game(n: &str, mut game: Game, mut enc: Enc, oddness: u8) -> (Game, Enc, u8) {
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
 	let cs2_special = ["e2230", "e4501", "e4701", "m5010"];
 	let cs3_special_1 = ["mon037_c00", "mon042_c00", "mon042_c01", "mon046_c00", "ply000", "ply001"];
