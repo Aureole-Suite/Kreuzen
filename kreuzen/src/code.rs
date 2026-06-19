@@ -59,7 +59,7 @@ impl std::fmt::Debug for Hexdump {
 	}
 }
 
-pub fn decompile(f: &mut CReader, end: usize) -> rootcause::Result<Vec<FlatOp>> {
+pub fn read(f: &mut CReader, end: usize) -> rootcause::Result<Vec<FlatOp>> {
 	let mut ops = Vec::new();
 	while f.pos() < end {
 		let pos = f.pos();
@@ -74,9 +74,6 @@ pub fn decompile(f: &mut CReader, end: usize) -> rootcause::Result<Vec<FlatOp>> 
 	let wtf = (f.game, f.scena) == (Game::Cs3, "system");
 	let mut ops2 = insert_labels(ops, wtf)?;
 	remap_labels(&mut ops2);
-
-	// let decomp = decompile::decompile(&ops2).context(DecompileSnafu { code: ops2 })?;
-	// Ok(decomp)
 
 	Ok(ops2)
 }

@@ -84,7 +84,7 @@ impl std::fmt::Debug for Opaque {
 	}
 }
 
-pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
+pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let mut f = Reader::new(bytes);
 	f.check_u32(0x20)?;
 	let mut oddness = 0;
@@ -170,7 +170,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let mut errors = rootcause::report_collection::ReportCollection::new();
 	for entry in split.entries {
 		let _span = tracing::error_span!("entry", name=%entry.name).entered();
-		match parse_chunk(&mut cr, &ranges, &entry) {
+		match read_chunk(&mut cr, &ranges, &entry) {
 			Ok(chunk) => chunks.push(chunk),
 			Err(e) => errors.push(e.context(format!("error parsing chunk {}", entry.name)).into_cloneable())
 		}
@@ -180,7 +180,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		crate::ensure!(cr.game == Game::Reverie);
 		crate::ensure!(oddness == 0);
 		oddness = 3;
-		match read_chunk(&mut cr, ranges[i], |f, _| {
+		match read_subchunk(&mut cr, ranges[i], |f, _| {
 			f.check_u8(1)?;
 			Ok(())
 		}) {
@@ -307,7 +307,7 @@ fn resolve_game(
 	(game, enc, variant)
 }
 
-fn parse_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
+fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
 	let tables = [
 		"",
 		"ActionTable",
@@ -330,9 +330,9 @@ fn parse_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::E
 		|| e.name.starts_with("BookData")
 		|| e.name.starts_with("BTLSET")
 		|| e.name.starts_with("StyleName");
-	let func = read_chunk(cr, ranges[e.main], |f, end| {
+	let func = read_subchunk(cr, ranges[e.main], |f, end| {
 		if !is_table {
-			Ok(CodeOrTable::Code(Code { ops: code::decompile(f, end)? }))
+			Ok(CodeOrTable::Code(Code { ops: code::read(f, end)? }))
 		} else {
 			let pos = f.pos();
 			Ok(CodeOrTable::Table(Opaque { bytes: f.slice(end - pos)?.to_vec() }))
@@ -340,7 +340,7 @@ fn parse_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::E
 	})?;
 	let preload = if let Some(i) = e.preload {
 		let _span = tracing::error_span!("preload").entered();
-		let v = read_chunk(cr, ranges[i], |f, end| tables::preload::read(f, end))?;
+		let v = read_subchunk(cr, ranges[i], |f, end| tables::preload::read(f, end))?;
 		if v.is_empty() {
 			tracing::warn!("preload is empty");
 		}
@@ -351,8 +351,8 @@ fn parse_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::E
 	let mut shadow = Vec::with_capacity(e.shadow.len());
 	for (a, &s) in e.shadow.iter().enumerate() {
 		let _span = tracing::error_span!("shadow", a).entered();
-		shadow.push(read_chunk(cr, ranges[s], |f, end| {
-			Ok(Code { ops: code::decompile(f, end)? })
+		shadow.push(read_subchunk(cr, ranges[s], |f, end| {
+			Ok(Code { ops: code::read(f, end)? })
 		})?);
 	}
 	let chunk = Chunk {
@@ -384,7 +384,7 @@ fn read_asm(f: &mut VReader, n: usize) -> rootcause::Result<(Vec<String>, Vec<us
 }
 
 
-fn read_chunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut CReader, usize) -> rootcause::Result<T>) -> rootcause::Result<T> {
+fn read_subchunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut CReader, usize) -> rootcause::Result<T>) -> rootcause::Result<T> {
 	let (start, end) = s;
 	crate::ensure!(start <= end && end <= f.reader.len());
 	f.seek(start)?;
