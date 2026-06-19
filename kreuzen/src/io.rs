@@ -4,6 +4,16 @@ use crate::{Enc, Game};
 use gospel::read::Reader;
 use gospel::write::{Writer, Label};
 
+fn encode(enc: Enc, s: &str) -> rootcause::Result<Vec<u8>> {
+	match enc {
+		Enc::Utf8 => Ok(s.as_bytes().to_vec()),
+		Enc::Sjis => match falcom_sjis::encode(s) {
+			Ok(bytes) => Ok(bytes),
+			Err(pos) => rootcause::bail!("invalid Shift-JIS at byte {pos}: {s:?}"),
+		}
+	}
+}
+
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 pub struct VReader<'a> {
 	pub game: Game,
@@ -79,13 +89,27 @@ pub trait WriterExt {
 	fn sstr(&mut self, len: usize, enc: Enc, s: &str) -> rootcause::Result<()>;
 }
 
-#[expect(unused)]
 impl WriterExt for Writer {
-    fn str(&mut self, enc: Enc, s: &str) -> rootcause::Result<()> {
-        todo!()
-    }
+	fn str(&mut self, enc: Enc, s: &str) -> rootcause::Result<()> {
+		let bytes = encode(enc, s)?;
+		if bytes.contains(&0) {
+			rootcause::bail!("string contains NUL: {s:?}");
+		}
+		self.slice(&bytes);
+		self.slice(&[0]);
+		Ok(())
+	}
 
-    fn sstr(&mut self, len: usize, enc: Enc, s: &str) -> rootcause::Result<()> {
-        todo!()
-    }
+	fn sstr(&mut self, len: usize, enc: Enc, s: &str) -> rootcause::Result<()> {
+		let bytes = encode(enc, s)?;
+		if bytes.contains(&0) {
+			rootcause::bail!("string contains NUL: {s:?}");
+		}
+		if bytes.len() > len {
+			rootcause::bail!("string too long for sstr({len}): {s:?} encodes to {} bytes", bytes.len());
+		}
+		self.slice(&bytes);
+		self.slice(&vec![0; len - bytes.len()]);
+		Ok(())
+	}
 }
