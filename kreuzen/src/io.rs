@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use crate::{Enc, Game};
 use gospel::read::Reader;
+use gospel::write::{Writer, Label};
 
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 pub struct VReader<'a> {
@@ -64,4 +65,27 @@ pub struct CReader<'a, 'b> {
 	pub reader: &'b mut VReader<'a>,
 	pub scena: &'b str,
 	pub variant: u8,
+}
+
+pub struct OData {
+	pub start: Label,
+	pub game: Game,
+	pub enc: Enc,
+	pub variant: u8,
+}
+
+pub trait WriterExt {
+	fn str(&mut self, enc: Enc, s: &str) -> rootcause::Result<()>;
+	fn sstr(&mut self, len: usize, enc: Enc, s: &str) -> rootcause::Result<()>;
+}
+
+#[expect(unused)]
+impl WriterExt for Writer {
+    fn str(&mut self, enc: Enc, s: &str) -> rootcause::Result<()> {
+        todo!()
+    }
+
+    fn sstr(&mut self, len: usize, enc: Enc, s: &str) -> rootcause::Result<()> {
+        todo!()
+    }
 }

@@ -1,8 +1,9 @@
 use gospel::read::Le as _;
+use gospel::write::{Le as _, Writer};
 
 use crate::Game;
 use crate::code::{Arg, FlatOp};
-use crate::io::VReader;
+use crate::io::{OData, VReader, WriterExt as _};
 use crate::text::{TextControl, TextPart};
 use crate::types::Char;
 
@@ -83,6 +84,36 @@ pub(crate) fn read(f: &mut VReader, _: usize) -> rootcause::Result<Vec<Preload>>
 	}
 	f.check_u8(1)?;
 	Ok(table)
+}
+
+pub(crate) fn write(d: &OData, preload: &[Preload]) -> Writer {
+	let ref charid = match d.game {
+		Game::Cs1 | Game::Cs2 => Char(0xFFFD),
+		_ => Char(0xFFFF),
+	};
+	let ref u32 = 0;
+	let ref str = String::new();
+
+	let mut f = Writer::new();
+	for p in preload {
+		let (kind, charid, u32, str) = match p {
+			Preload::Call(u32, str) => (1, charid, u32, str),
+			Preload::PkgLoad(str) => (2, charid, u32, str),
+			Preload::EffLoad(str) => (3, charid, u32, str),
+			Preload::SoundPlay(u32) => (4, charid, u32, str),
+			Preload::SoundPlayVoice(u32) => (5, charid, u32, str),
+			Preload::Voiceline(u32) => (7, charid, u32, str),
+			Preload::NameplateShow(str) => (8, charid, u32, str),
+			Preload::CharAniclipPlay(charid, str) => (9, charid, u32, str),
+			Preload::opCE02(str) => (10, charid, u32, str),
+		};
+		f.u16(kind);
+		f.u16(charid.0);
+		f.u32(*u32);
+		f.sstr(32, d.enc, str);
+	}
+	f.u8(1);
+	f
 }
 
 const NO_PRELOAD: &[&str] = &["Init", "Init_Replay"];

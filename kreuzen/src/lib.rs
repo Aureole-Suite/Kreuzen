@@ -1,4 +1,5 @@
 use gospel::read::{Le as _, Reader};
+use gospel::write::{Le as _, Writer, Label};
 mod io;
 use io::VReader;
 
@@ -197,6 +198,65 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		variant,
 		chunks,
 	})
+}
+
+
+pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
+	let mut f = Writer::new();
+	let start = f.here();
+
+	let mut write_chunk = |align: usize, name: &str, body: Writer| {
+		todo!();
+	};
+
+	let d = io::OData {
+		start,
+		game: scena.game,
+		enc: scena.enc,
+		variant: scena.variant,
+	};
+
+	for c in &scena.chunks {
+		let body = match &c.func {
+			CodeOrTable::Code(code) => {
+				let f = code::write(&d, code);
+				write_chunk(4, &c.name, f);
+			}
+			CodeOrTable::Table(opaque) => {
+				let mut f = Writer::new();
+				f.slice(&opaque.bytes);
+				write_chunk(4, &c.name.clone(), f);
+			}
+		};
+	}
+	for c in &scena.chunks {
+		if !c.preload.is_empty() {
+			let f = tables::preload::write(&d, &c.preload);
+			write_chunk(4, &format!("_{}", c.name), f);
+		}
+	}
+	if scena.game == Game::Reverie && scena.oddness == 3 {
+		let mut f = Writer::new();
+		f.u8(1);
+		write_chunk(4, "_a0_CharaterSection", f);
+	}
+	for c in &scena.chunks {
+		for (i, code) in c.shadow.iter().enumerate() {
+			let f = code::write(&d, code);
+			write_chunk(4, &format!("_a{i}_{}", c.name), f);
+		}
+	}
+
+	// let header_start = f.here();
+	// f.u32(0x20);
+	// f.label32(header_start, name_start);
+	// f.label32(header_start, table_top);
+	// f.u32(chunks.len() as u32 * 4);
+	// f.label32(header_start, table_end);
+	// f.u32(chunks.len() as u32);
+	// f.label32(header_start, asm_end);
+
+	Ok(f.finish()?)
 }
 
 fn resolve_game(

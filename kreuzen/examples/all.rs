@@ -61,6 +61,7 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Result<()> {
 	let bytes = std::fs::read(script)?;
 	let scena = kreuzen::read(game, enc, &bytes)?;
+	let bytes2 = kreuzen::write(&scena)?;
 
 	let s = to_string(scena)?;
 	std::fs::create_dir_all(outfile.parent().unwrap())?;
