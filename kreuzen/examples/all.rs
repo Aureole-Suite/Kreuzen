@@ -48,11 +48,8 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 			let scriptname = format!("{game:?}/{dir}/{folder}/{file}");
 			let outfile = PathBuf::from("out").join(format!("{game:?}/{folder}/{dir}/{file}"));
 			let _span = tracing::error_span!("script", name = %scriptname).entered();
-			match process(game, enc, &script) {
-				Ok(s) => {
-					std::fs::create_dir_all(outfile.parent().unwrap()).unwrap();
-					std::fs::write(outfile, s).unwrap();
-				}
+			match process(game, enc, &script, &outfile) {
+				Ok(()) => {}
 				Err(e) => {
 					println!("Error processing {scriptname}: {e}");
 				}
@@ -61,9 +58,20 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 	}
 }
 
-fn process(game: Game, enc: Enc, script: &Path) -> rootcause::Result<String> {
+fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Result<()> {
 	let bytes = std::fs::read(script)?;
 	let scena = kreuzen::parse(game, enc, &bytes)?;
+
+	let s = to_string(scena)?;
+	std::fs::create_dir_all(outfile.parent().unwrap())?;
+	std::fs::write(outfile, s)?;
+
+	// check_preload(&scena);
+
+	Ok(())
+}
+
+fn to_string(scena: kreuzen::Scena) -> Result<String, rootcause::Report> {
 	let mut s = format!("scena {} game={:?} enc={:?} oddness={} variant={}\n", scena.name, scena.game, scena.enc, scena.oddness, scena.variant);
 	for chunk in &scena.chunks {
 		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
@@ -85,9 +93,6 @@ fn process(game: Game, enc: Enc, script: &Path) -> rootcause::Result<String> {
 			write_dec(&mut s, shadow)?;
 		}
 	}
-
-	// check_preload(&scena);
-
 	Ok(s)
 }
 
