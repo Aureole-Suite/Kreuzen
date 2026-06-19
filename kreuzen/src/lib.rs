@@ -85,11 +85,7 @@ impl std::fmt::Debug for Opaque {
 }
 
 pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
-	let mut f = VReader {
-		game,
-		enc,
-		reader: Reader::new(bytes),
-	};
+	let mut f = Reader::new(bytes);
 	f.check_u32(0x20)?;
 	let mut oddness = 0;
 	let name_start = f.u32()? as usize;
@@ -102,15 +98,20 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	crate::ensure!(table_size == nfunc * 4);
 
 	f.check_u32(0xABCDEF00)?;
-	let script_name = if name_start == 0x20 {
-		f.str()?
+	let script_name = f.at(name_start)?.cstr()?;
+	if !script_name.to_bytes().iter().all(|b| (0x20..=0x7E).contains(b)) {
+		rootcause::bail!("invalid name: {script_name:?}");
+	}
+	let script_name = std::str::from_utf8(script_name.to_bytes()).unwrap().to_owned();
+
+	if name_start == 0x20 {
+		f.cstr()?;
 	} else {
 		oddness += 1;
-		String::new()
 	};
 
 	// TODO how does this interact with resolve_game?
-	match f.game {
+	match game {
 		Game::Cs4 => {
 			if f.pos() != table_top {
 				f.align_zeroed(4)?;
@@ -132,15 +133,20 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		_ => {}
 	}
 
+	let (game, enc, variant) = resolve_game(&script_name, game, enc, oddness);
+	let mut f = VReader {
+		game,
+		enc,
+		reader: f,
+	};
+
 	crate::ensure!(f.pos() == table_top);
 	let (names, starts) = read_asm(&mut f, nfunc)?;
-	let script_name = if name_start == 0x20 {
-		script_name
-	} else {
+	if name_start != 0x20 {
 		crate::ensure!(f.game == Game::Cs1);
 		crate::ensure!(f.pos() == name_start);
-		f.str()?
-	};
+		f.cstr()?;
+	}
 	crate::ensure!(f.pos() == asm_end);
 
 	let mut iter = starts.iter().copied().chain([f.len()]);
@@ -149,10 +155,6 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let pos = f.pos();
 	let pad = f.slice(first - pos)?;
 	crate::ensure!(pad.iter().all(|b| *b == 0));
-	
-	let (game, enc, variant) = resolve_game(&script_name, f.game, f.enc, oddness);
-	f.game = game;
-	f.enc = enc;
 
 	let mut cr = CReader {
 		reader: &mut f,
