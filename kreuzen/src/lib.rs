@@ -106,11 +106,20 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 
 	if name_start == 0x20 {
 		f.cstr()?;
-	} else {
-		oddness += 1;
 	};
 
-	// TODO how does this interact with resolve_game?
+	let (game, enc, variant) = resolve_game(
+		&script_name,
+		game,
+		enc,
+		name_start != 0x20,
+	);
+	let mut f = VReader {
+		game,
+		enc,
+		reader: f,
+	};
+
 	match game {
 		Game::Cs4 => {
 			if f.pos() != table_top {
@@ -132,13 +141,6 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		}
 		_ => {}
 	}
-
-	let (game, enc, variant) = resolve_game(&script_name, game, enc, oddness);
-	let mut f = VReader {
-		game,
-		enc,
-		reader: f,
-	};
 
 	crate::ensure!(f.pos() == table_top);
 	let (names, starts) = read_asm(&mut f, nfunc)?;
@@ -201,7 +203,12 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	})
 }
 
-fn resolve_game(n: &str, mut game: Game, mut enc: Enc, oddness: u8) -> (Game, Enc, u8) {
+fn resolve_game(
+	n: &str,
+	mut game: Game,
+	mut enc: Enc,
+	weird_start: bool,
+) -> (Game, Enc, u8) {
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
 	let cs2_special = ["e2230", "e4501", "e4701", "m5010"];
 	let cs3_special_1 = ["mon037_c00", "mon042_c00", "mon042_c01", "mon046_c00", "ply000", "ply001"];
@@ -282,7 +289,7 @@ fn resolve_game(n: &str, mut game: Game, mut enc: Enc, oddness: u8) -> (Game, En
 		Game::Cs1 if cs1_menu.contains(&n) => 100,
 		Game::Cs1 if n == "npcx01" => 3,
 		Game::Cs1 if cs1_special.contains(&n) => 2,
-		Game::Cs1 if oddness == 1 => 1,
+		Game::Cs1 if weird_start => 1,
 		Game::Cs1 => 0,
 		Game::Cs2 if cs1_menu.contains(&n) => 100,
 		Game::Cs2 if cs2_special.contains(&n) => 1,
@@ -294,8 +301,8 @@ fn resolve_game(n: &str, mut game: Game, mut enc: Enc, oddness: u8) -> (Game, En
 		Game::Cs3 => 0,
 		Game::Cs4 if cs4_special.contains(&n) => 1,
 		Game::Cs4 => 0,
-		Game::Reverie if oddness == 2 => 1,
-		_ => 0,
+		Game::Reverie if n == "chr003_mg16" => 1,
+		Game::Reverie => 0,
 	};
 	(game, enc, variant)
 }
