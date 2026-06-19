@@ -219,7 +219,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	for c in &scena.chunks {
 		let body = match &c.func {
 			CodeOrTable::Code(code) => {
-				let f = code::write(&d, code);
+				let f = code::write(&d, code)?;
 				write_chunk(4, &c.name, f);
 			}
 			CodeOrTable::Table(opaque) => {
@@ -231,7 +231,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	}
 	for c in &scena.chunks {
 		if !c.preload.is_empty() {
-			let f = tables::preload::write(&d, &c.preload);
+			let f = tables::preload::write(&d, &c.preload)?;
 			write_chunk(4, &format!("_{}", c.name), f);
 		}
 	}
@@ -242,7 +242,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	}
 	for c in &scena.chunks {
 		for (i, code) in c.shadow.iter().enumerate() {
-			let f = code::write(&d, code);
+			let f = code::write(&d, code)?;
 			write_chunk(4, &format!("_a{i}_{}", c.name), f);
 		}
 	}

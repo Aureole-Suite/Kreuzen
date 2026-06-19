@@ -86,7 +86,7 @@ pub(crate) fn read(f: &mut VReader, _: usize) -> rootcause::Result<Vec<Preload>>
 	Ok(table)
 }
 
-pub(crate) fn write(d: &OData, preload: &[Preload]) -> Writer {
+pub(crate) fn write(d: &OData, preload: &[Preload]) -> rootcause::Result<Writer> {
 	let ref charid = match d.game {
 		Game::Cs1 | Game::Cs2 => Char(0xFFFD),
 		_ => Char(0xFFFF),
@@ -110,10 +110,10 @@ pub(crate) fn write(d: &OData, preload: &[Preload]) -> Writer {
 		f.u16(kind);
 		f.u16(charid.0);
 		f.u32(*u32);
-		f.sstr(32, d.enc, str);
+		f.sstr(32, d.enc, str)?;
 	}
 	f.u8(1);
-	f
+	Ok(f)
 }
 
 const NO_PRELOAD: &[&str] = &["Init", "Init_Replay"];
