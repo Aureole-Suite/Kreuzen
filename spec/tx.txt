@@ -274,7 +274,7 @@
 4B   'VisSet' u8 u8 u8 f32 f32 f32 f32 f32
 4C   'VisWait' u8 u8
 4D   'VisHide' u8
-4F   u16 u16 str u8 u16
+4F   'NameplateShow' u16 u16 str u8 u16
 
 50   char u8 expr
 51   char u8 str

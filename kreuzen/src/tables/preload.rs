@@ -9,10 +9,10 @@ pub enum Preload {
 	PkgLoad(String),
 	EffLoad(String),
 	SoundPlay(u32),
-	SoundPlayRandom(u32),
+	SoundPlayVoice(u32),
 	Voiceline(u32), // dialogue Voiceline, not an opcode
 	CharAniclipPlay(Char, String),
-	op4F(String), // 4F in cs1/tx, 50 in cs2
+	NameplateShow(String),
 	opCE02(String),
 }
 
@@ -68,9 +68,9 @@ pub(crate) fn read(f: &mut VReader, _: usize) -> rootcause::Result<Vec<Preload>>
 			2 => Preload::PkgLoad(preload.str()),
 			3 => Preload::EffLoad(preload.str()),
 			4 => Preload::SoundPlay(preload.u32()),
-			5 => Preload::SoundPlayRandom(preload.u32()),
+			5 => Preload::SoundPlayVoice(preload.u32()),
 			7 => Preload::Voiceline(preload.u32()),
-			8 => Preload::op4F(preload.str()),
+			8 => Preload::NameplateShow(preload.str()),
 			9 => Preload::CharAniclipPlay(preload.charid(), preload.str()),
 			10 => Preload::opCE02(preload.str()),
 			_ => rootcause::bail!("unknown preload kind {:02X}", preload.kind),

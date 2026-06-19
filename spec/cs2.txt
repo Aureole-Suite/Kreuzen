@@ -415,7 +415,7 @@
 4D   'VisWait' u8 u8
 4E   'VisHide' u8
 4F   u8
-50   u16 u16 str u8 u16
+50   'NameplateShow' u16 u16 str u8 u16
 
 51   char u8 expr
 52   char u8 str
