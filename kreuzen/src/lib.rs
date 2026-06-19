@@ -2,6 +2,7 @@ use gospel::read::{Le as _, Reader};
 mod io;
 use io::VReader;
 
+use crate::code::Code;
 use crate::io::CReader;
 
 pub mod code;
@@ -71,11 +72,6 @@ pub enum CodeOrTable {
 #[derive(Clone)]
 pub struct Opaque {
 	pub bytes: Vec<u8>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Code {
-	pub ops: Vec<code::FlatOp>,
 }
 
 impl std::fmt::Debug for Opaque {
@@ -332,7 +328,7 @@ fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::En
 		|| e.name.starts_with("StyleName");
 	let func = read_subchunk(cr, ranges[e.main], |f, end| {
 		if !is_table {
-			Ok(CodeOrTable::Code(Code { ops: code::read(f, end)? }))
+			Ok(CodeOrTable::Code(code::read(f, end)?))
 		} else {
 			let pos = f.pos();
 			Ok(CodeOrTable::Table(Opaque { bytes: f.slice(end - pos)?.to_vec() }))
@@ -352,7 +348,7 @@ fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::En
 	for (a, &s) in e.shadow.iter().enumerate() {
 		let _span = tracing::error_span!("shadow", a).entered();
 		shadow.push(read_subchunk(cr, ranges[s], |f, end| {
-			Ok(Code { ops: code::read(f, end)? })
+			Ok(code::read(f, end)?)
 		})?);
 	}
 	let chunk = Chunk {

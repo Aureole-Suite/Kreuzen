@@ -59,7 +59,12 @@ impl std::fmt::Debug for Hexdump {
 	}
 }
 
-pub fn read(f: &mut CReader, end: usize) -> rootcause::Result<Vec<FlatOp>> {
+#[derive(Debug, Clone)]
+pub struct Code {
+	pub ops: Vec<code::FlatOp>,
+}
+
+pub fn read(f: &mut CReader, end: usize) -> rootcause::Result<Code> {
 	let mut ops = Vec::new();
 	while f.pos() < end {
 		let pos = f.pos();
@@ -72,10 +77,10 @@ pub fn read(f: &mut CReader, end: usize) -> rootcause::Result<Vec<FlatOp>> {
 	}
 
 	let wtf = (f.game, f.scena) == (Game::Cs3, "system");
-	let mut ops2 = insert_labels(ops, wtf)?;
-	remap_labels(&mut ops2);
+	let mut ops = insert_labels(ops, wtf)?;
+	remap_labels(&mut ops);
 
-	Ok(ops2)
+	Ok(Code { ops })
 }
 
 fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> rootcause::Result<Vec<FlatOp>> {
