@@ -109,6 +109,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		String::new()
 	};
 
+	// TODO how does this interact with resolve_game?
 	match f.game {
 		Game::Cs4 => {
 			if f.pos() != table_top {
@@ -149,6 +150,56 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let pad = f.slice(first - pos)?;
 	crate::ensure!(pad.iter().all(|b| *b == 0));
 	
+	let (game, enc, variant) = resolve_game(&script_name, f.game, f.enc, oddness);
+	f.game = game;
+	f.enc = enc;
+
+	let mut cr = CReader {
+		reader: &mut f,
+		scena: &script_name,
+		variant,
+	};
+
+	let ranges = starts.iter().copied().zip(iter).collect::<Vec<_>>();
+	let split = split::parse(&names);
+	let mut chunks = Vec::with_capacity(split.entries.len());
+	let mut errors = rootcause::report_collection::ReportCollection::new();
+	for entry in split.entries {
+		let _span = tracing::error_span!("entry", name=%entry.name).entered();
+		match parse_chunk(&mut cr, &ranges, &entry) {
+			Ok(chunk) => chunks.push(chunk),
+			Err(e) => errors.push(e.context(format!("error parsing chunk {}", entry.name)).into_cloneable())
+		}
+	}
+
+	if let Some(i) = split.charater_section {
+		crate::ensure!(cr.game == Game::Reverie);
+		crate::ensure!(oddness == 0);
+		oddness = 3;
+		match read_chunk(&mut cr, ranges[i], |f, _| {
+			f.check_u8(1)?;
+			Ok(())
+		}) {
+			Ok(()) => {}
+			Err(e) => errors.push(e.context("error parsing charater section".to_owned()).into_cloneable()),
+		}
+	}
+
+	if !errors.is_empty() {
+		return Err(errors.context("error parsing chunks").into());
+	}
+
+	Ok(Scena {
+		name: script_name,
+		game: f.game,
+		enc: f.enc,
+		oddness,
+		variant,
+		chunks,
+	})
+}
+
+fn resolve_game(n: &str, game: Game, enc: Enc, oddness: u8) -> (Game, Enc, u8) {
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
 	let cs2_special = ["e2230", "e4501", "e4701", "m5010"];
 	let cs3_special_1 = ["mon037_c00", "mon042_c00", "mon042_c01", "mon046_c00", "ply000", "ply001"];
@@ -203,30 +254,29 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		"title_menu_v",
 	];
 
-	let n = script_name.as_str();
 	let cs3_special = cs3_special_1.contains(&n) || cs3_special_2.contains(&n) || cs3_special_3.contains(&n);
 
-	if f.game <= Game::Cs2 && n == "mon999"
-		|| f.game == Game::Cs2 && n == "title"
-		|| f.game == Game::Tx && n == "a1019"
-		|| f.game == Game::Cs1 && n == "t0600"
+	if game <= Game::Cs2 && n == "mon999"
+		|| game == Game::Cs2 && n == "title"
+		|| game == Game::Tx && n == "a1019"
+		|| game == Game::Cs1 && n == "t0600"
 	{
-		f.enc = Enc::Sjis;
+		enc = Enc::Sjis;
 	}
 
-	if f.game == Game::Cs2 && n == "t4720" {
-		f.game = Game::Cs1
+	if game == Game::Cs2 && n == "t4720" {
+		game = Game::Cs1
 	}
 
-	if f.game == Game::Reverie && (rev_is_cs4.contains(&n) || cs3_special) {
-		f.game = Game::Cs4
+	if game == Game::Reverie && (rev_is_cs4.contains(&n) || cs3_special) {
+		game = Game::Cs4
 	}
 
-	if f.game == Game::Cs4 && (cs4_is_cs3.contains(&n) || cs3_special) {
-		f.game = Game::Cs3
+	if game == Game::Cs4 && (cs4_is_cs3.contains(&n) || cs3_special) {
+		game = Game::Cs3
 	}
 
-	let variant = match f.game {
+	let variant = match game {
 		Game::Cs1 if cs1_menu.contains(&n) => 100,
 		Game::Cs1 if n == "npcx01" => 3,
 		Game::Cs1 if cs1_special.contains(&n) => 2,
@@ -245,50 +295,7 @@ pub fn parse(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		Game::Reverie if oddness == 2 => 1,
 		_ => 0,
 	};
-
-	let mut cr = CReader {
-		reader: &mut f,
-		scena: &script_name,
-		variant,
-	};
-
-	let ranges = starts.iter().copied().zip(iter).collect::<Vec<_>>();
-	let split = split::parse(&names);
-	let mut chunks = Vec::with_capacity(split.entries.len());
-	let mut errors = rootcause::report_collection::ReportCollection::new();
-	for entry in split.entries {
-		let _span = tracing::error_span!("entry", name=%entry.name).entered();
-		match parse_chunk(&mut cr, &ranges, &entry) {
-			Ok(chunk) => chunks.push(chunk),
-			Err(e) => errors.push(e.context(format!("error parsing chunk {}", entry.name)).into_cloneable())
-		}
-	}
-
-	if let Some(i) = split.charater_section {
-		crate::ensure!(cr.game == Game::Reverie);
-		crate::ensure!(oddness == 0);
-		oddness = 3;
-		match read_chunk(&mut cr, ranges[i], |f, _| {
-			f.check_u8(1)?;
-			Ok(())
-		}) {
-			Ok(()) => {}
-			Err(e) => errors.push(e.context("error parsing charater section".to_owned()).into_cloneable()),
-		}
-	}
-
-	if !errors.is_empty() {
-		return Err(errors.context("error parsing chunks").into());
-	}
-
-	Ok(Scena {
-		name: script_name,
-		game: f.game,
-		enc: f.enc,
-		oddness,
-		variant,
-		chunks,
-	})
+	(game, enc, variant)
 }
 
 fn parse_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
