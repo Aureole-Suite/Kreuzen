@@ -202,11 +202,15 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 
 
 pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
-	let mut f = Writer::new();
-	let start = f.here();
+	let start = Label::new();
 
-	let mut write_chunk = |align: usize, name: &str, body: Writer| {
-		todo!();
+	let mut errors = rootcause::report_collection::ReportCollection::new();
+	let mut chunks = Vec::new();
+	let mut chunk = |align: usize, name: &str, body: rootcause::Result<Writer>| {
+		match body {
+			Ok(body) => chunks.push((align, name.to_owned(), body)),
+			Err(e) => errors.push(e.context(format!("error writing chunk {}", name)).into_cloneable()),
+		}
 	};
 
 	let d = io::OData {
@@ -217,36 +221,35 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	};
 
 	for c in &scena.chunks {
-		let body = match &c.func {
+		match &c.func {
 			CodeOrTable::Code(code) => {
-				let f = code::write(&d, code)?;
-				write_chunk(4, &c.name, f);
+				chunk(4, &c.name, code::write(&d, code));
 			}
 			CodeOrTable::Table(opaque) => {
 				let mut f = Writer::new();
 				f.slice(&opaque.bytes);
-				write_chunk(4, &c.name.clone(), f);
+				chunk(4, &c.name.clone(), Ok(f));
 			}
 		};
 	}
 	for c in &scena.chunks {
 		if !c.preload.is_empty() {
-			let f = tables::preload::write(&d, &c.preload)?;
-			write_chunk(4, &format!("_{}", c.name), f);
+			chunk(4, &format!("_{}", c.name), tables::preload::write(&d, &c.preload));
 		}
 	}
 	if scena.game == Game::Reverie && scena.oddness == 3 {
 		let mut f = Writer::new();
 		f.u8(1);
-		write_chunk(4, "_a0_CharaterSection", f);
+		chunk(4, "_a0_CharaterSection", Ok(f));
 	}
 	for c in &scena.chunks {
 		for (i, code) in c.shadow.iter().enumerate() {
-			let f = code::write(&d, code)?;
-			write_chunk(4, &format!("_a{i}_{}", c.name), f);
+			chunk(4, &format!("_a{i}_{}", c.name), code::write(&d, code));
 		}
 	}
 
+	let mut f = Writer::new();
+	f.place(start);
 	// let header_start = f.here();
 	// f.u32(0x20);
 	// f.label32(header_start, name_start);
