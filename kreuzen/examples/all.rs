@@ -65,7 +65,7 @@ fn process(game: Game, enc: Enc, script: &Path) -> rootcause::Result<String> {
 	let bytes = std::fs::read(script)?;
 	let scena = kreuzen::parse(game, enc, &bytes)?;
 	let mut s = format!("scena {} game={:?} enc={:?} oddness={} variant={}\n", scena.name, scena.game, scena.enc, scena.oddness, scena.variant);
-	for chunk in scena.chunks {
+	for chunk in &scena.chunks {
 		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
 		s.push('\n');
 		write!(s, "{} ", chunk.name)?;
@@ -85,7 +85,35 @@ fn process(game: Game, enc: Enc, script: &Path) -> rootcause::Result<String> {
 			write_dec(&mut s, shadow)?;
 		}
 	}
+
+	// check_preload(&scena);
+
 	Ok(s)
+}
+
+fn check_preload(scena: &kreuzen::Scena) {
+	let has_preload = scena.chunks.iter()
+		.filter(|c| match &c.func {
+			kreuzen::CodeOrTable::Code(code) => !kreuzen::tables::preload::from_code(&code.ops, &c.name, &[]).is_empty(),
+			_ => false,
+		})
+	.map(|x| x.name.as_str())
+		.collect::<Vec<_>>();
+	for chunk in &scena.chunks {
+		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
+		let kreuzen::CodeOrTable::Code(code) = &chunk.func else {
+			if !chunk.preload.is_empty() {
+				tracing::error!("chunk {} has a preload but is not code", chunk.name);
+			}
+			continue;
+		};
+		let preload2 = kreuzen::tables::preload::from_code(&code.ops, &chunk.name, &has_preload);
+		if preload2 != chunk.preload {
+			let diff = pretty_assertions::Comparison::new(&preload2, &chunk.preload);
+			tracing::error!("preload mismatch {:?} {} {}", scena.game, scena.variant, scena.oddness);
+			println!("{}", diff);
+		}
+	}
 }
 
 fn write_dec(s: &mut String, code: &kreuzen::Code) -> rootcause::Result<()> {

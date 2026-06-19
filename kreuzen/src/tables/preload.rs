@@ -1,6 +1,10 @@
 use gospel::read::Le as _;
 
-use crate::{Game, io::VReader, types::Char};
+use crate::Game;
+use crate::code::{Arg, FlatOp};
+use crate::io::VReader;
+use crate::text::{TextControl, TextPart};
+use crate::types::Char;
 
 #[expect(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,4 +83,48 @@ pub(crate) fn read(f: &mut VReader, _: usize) -> rootcause::Result<Vec<Preload>>
 	}
 	f.check_u8(1)?;
 	Ok(table)
+}
+
+const NO_PRELOAD: &[&str] = &["Init", "Init_Replay"];
+
+pub fn from_code(ops: &[FlatOp], name: &str, functions: &[&str]) -> Vec<Preload> {
+	if NO_PRELOAD.contains(&name) {
+		return Vec::new();
+	}
+	let mut out = Vec::new();
+	for op in ops {
+		let FlatOp::Op(op) = op else { continue };
+		match (op.name, op.args.as_slice()) {
+			("call", [Arg::Int(n), Arg::Str(s)]) if functions.contains(&s.as_str()) => out.push(Preload::Call(*n as u32, s.clone())),
+			("PkgLoad", [Arg::Str(s)]) => out.push(Preload::PkgLoad(s.clone())),
+			("EffLoad", [_, _, Arg::Str(s)]) => out.push(Preload::EffLoad(s.clone())),
+			("SoundPlay", [Arg::Int(id), ..]) => out.push(Preload::SoundPlay(*id as u32)),
+			("SoundPlayVoice", [Arg::Int(id), ..]) => out.push(Preload::SoundPlayVoice(*id as u32)),
+			("SoundPlayRandom", [_, args@..]) => {
+				let mut n = 0;
+				for (i, v) in args.iter().enumerate() {
+					let Arg::Int(id) = v else { continue };
+					if *id != 0 {
+						n = i + 1;
+					}
+				}
+				for v in &args[..n] {
+					if let Arg::Int(id) = v {
+						out.push(Preload::SoundPlayVoice(*id as u32));
+					}
+				}
+			}
+			("TextTalk"|"TextShow", [_, Arg::Text(text)]) => {
+				for part in &text.0 {
+					if let TextPart::Control(TextControl::Voiceline(id)) = part {
+						out.push(Preload::Voiceline(*id));
+					}
+				}
+			}
+			("NameplateShow", [_, _, Arg::Str(s), _, _]) => out.push(Preload::NameplateShow(s.clone())),
+			("CharAniclipPlay", [Arg::Char(c), Arg::Str(s), ..]) if s != "_stop_" => out.push(Preload::CharAniclipPlay(*c, s.clone())),
+			_ => {},
+		}
+	}
+	out
 }

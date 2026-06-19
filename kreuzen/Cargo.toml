@@ -14,6 +14,7 @@ tracing = "0.1.44"
 
 [dev-dependencies]
 compact-debug = "0.1.4"
+pretty_assertions = "1.4.1"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 [features]

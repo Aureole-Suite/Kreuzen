@@ -9,7 +9,7 @@ pub mod expr;
 pub mod text;
 mod spec;
 mod types;
-mod tables;
+pub mod tables;
 pub mod decompile;
 
 mod split;
