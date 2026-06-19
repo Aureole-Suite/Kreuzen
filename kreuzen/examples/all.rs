@@ -63,7 +63,25 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 	let scena = kreuzen::read(game, enc, &bytes)?;
 	let bytes2 = kreuzen::write(&scena)?;
 
-	let s = to_string(scena)?;
+	match kreuzen::read(game, enc, &bytes2) {
+		Ok(scena2) => {
+			let s1 = to_string(&scena)?;
+			let s2 = to_string(&scena2)?;
+			if s1 != s2 {
+				tracing::error!("decoded mismatch after roundtrip");
+				print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
+			}
+		}
+		Err(e) => {
+			tracing::error!("re-read failed after roundtrip: {e}");
+		}
+	}
+
+	if bytes != bytes2 {
+		tracing::error!("bytes differ ({} -> {} bytes)", bytes.len(), bytes2.len());
+	}
+
+	let s = to_string(&scena)?;
 	std::fs::create_dir_all(outfile.parent().unwrap())?;
 	std::fs::write(outfile, s)?;
 
@@ -72,7 +90,7 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 	Ok(())
 }
 
-fn to_string(scena: kreuzen::Scena) -> Result<String, rootcause::Report> {
+fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
 	let mut s = format!("scena {} game={:?} enc={:?} oddness={} variant={}\n", scena.name, scena.game, scena.enc, scena.oddness, scena.variant);
 	for chunk in &scena.chunks {
 		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
@@ -122,7 +140,7 @@ fn check_preload(scena: &kreuzen::Scena) {
 	}
 }
 
-fn write_dec(s: &mut String, code: &kreuzen::Code) -> rootcause::Result<()> {
+fn write_dec(s: &mut String, code: &kreuzen::code::Code) -> rootcause::Result<()> {
 	match kreuzen::decompile::decompile(&code.ops) {
 		Ok(stmts) => writeln!(s, "{:#?}", stmts)?,
 		Err(e) => {

@@ -4,7 +4,7 @@ mod io;
 use io::VReader;
 
 use crate::code::Code;
-use crate::io::CReader;
+use crate::io::{CReader, WriterExt as _};
 
 pub mod code;
 pub mod expr;
@@ -84,7 +84,6 @@ impl std::fmt::Debug for Opaque {
 pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let mut f = Reader::new(bytes);
 	f.check_u32(0x20)?;
-	let mut oddness = 0;
 	let name_start = f.u32()? as usize;
 	let table_top = f.u32()? as usize;
 	let table_size = f.u32()? as usize;
@@ -95,13 +94,14 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	crate::ensure!(table_size == nfunc * 4);
 
 	f.check_u32(0xABCDEF00)?;
+	let old_cs1 = name_start != 0x20;
 	let script_name = f.at(name_start)?.cstr()?;
 	if !script_name.to_bytes().iter().all(|b| (0x20..=0x7E).contains(b)) {
 		rootcause::bail!("invalid name: {script_name:?}");
 	}
 	let script_name = std::str::from_utf8(script_name.to_bytes()).unwrap().to_owned();
 
-	if name_start == 0x20 {
+	if !old_cs1 {
 		f.cstr()?;
 	};
 
@@ -109,7 +109,7 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		&script_name,
 		game,
 		enc,
-		name_start != 0x20,
+		old_cs1,
 	);
 	let mut f = VReader {
 		game,
@@ -117,31 +117,28 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		reader: f,
 	};
 
-	match game {
+	let mut oddness = match game {
+		Game::Cs4 if f.pos() == table_top => 1,
 		Game::Cs4 => {
-			if f.pos() != table_top {
-				f.align_zeroed(4)?;
-			} else {
-				oddness += 1;
-			}
+			f.align_zeroed(4)?;
+			0
 		}
+		Game::Reverie if f.pos() == table_top => 1,
 		Game::Reverie => {
-			if f.pos() != table_top {
-				f.align_zeroed(4)?;
-				f.check_u32(0xFF000000)?;
-				if f.check_u32(0xFF000000).is_ok() {
-					oddness += 2;
-				}
+			f.align_zeroed(4)?;
+			f.check_u32(0xFF000000)?;
+			if f.check_u32(0xFF000000).is_ok() {
+				2
 			} else {
-				oddness += 1;
+				0
 			}
 		}
-		_ => {}
-	}
+		_ => 0
+	};
 
 	crate::ensure!(f.pos() == table_top);
 	let (names, starts) = read_asm(&mut f, nfunc)?;
-	if name_start != 0x20 {
+	if old_cs1 {
 		crate::ensure!(f.game == Game::Cs1);
 		crate::ensure!(f.pos() == name_start);
 		f.cstr()?;
@@ -208,7 +205,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	let mut chunks = Vec::new();
 	let mut chunk = |align: usize, name: &str, body: rootcause::Result<Writer>| {
 		match body {
-			Ok(body) => chunks.push((align, name.to_owned(), body)),
+			Ok(body) => chunks.push((Label::new(), align, name.to_owned(), body)),
 			Err(e) => errors.push(e.context(format!("error writing chunk {}", name)).into_cloneable()),
 		}
 	};
@@ -248,16 +245,69 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 		}
 	}
 
+	if !errors.is_empty() {
+		return Err(errors.context("error writing chunks").into());
+	}
+
 	let mut f = Writer::new();
 	f.place(start);
-	// let header_start = f.here();
-	// f.u32(0x20);
-	// f.label32(header_start, name_start);
-	// f.label32(header_start, table_top);
-	// f.u32(chunks.len() as u32 * 4);
-	// f.label32(header_start, table_end);
-	// f.u32(chunks.len() as u32);
-	// f.label32(header_start, asm_end);
+	f.u32(0x20);
+	let name_start = f.ptr32(start);
+	let table_top = f.ptr32(start);
+	f.u32(chunks.len() as u32 * 4);
+	let function_name_table_top = f.ptr32(start);
+	f.u32(chunks.len() as u32);
+	let asm_end = f.ptr32(start);
+
+	f.u32(0xABCDEF00);
+	let old_cs1 = scena.game == Game::Cs1 && scena.variant == 1;
+	if !old_cs1 {
+		f.place(name_start);
+		f.str(scena.enc, &scena.name)?;
+	}
+
+	match (scena.game, scena.oddness) {
+		(Game::Cs4, 0) => f.align(4),
+		(Game::Reverie, 0) => {
+			f.align(4);
+			f.u32(0xFF000000);
+		}
+		(Game::Reverie, 2) => {
+			f.align(4);
+			f.u32(0xFF000000);
+			f.u32(0xFF000000);
+		}
+		_ => {}
+	}
+
+	{
+		// write_asm
+		f.place(table_top);
+		for c in &chunks {
+			f.label32(start, c.0);
+		}
+		f.place(function_name_table_top);
+		let mut name_pos = Vec::with_capacity(chunks.len());
+		for _ in &chunks {
+			name_pos.push(f.ptr16(start));
+		}
+		for (c, l) in chunks.iter().zip(name_pos) {
+			f.place(l);
+			f.str(scena.enc, &c.2)?;
+		}
+	}
+
+	if old_cs1 {
+		f.place(name_start);
+		f.str(scena.enc, &scena.name)?;
+	}
+	f.place(asm_end);
+
+	for c in chunks {
+		f.align(c.1);
+		f.place(c.0);
+		f += c.3;
+	}
 
 	Ok(f.finish()?)
 }
@@ -266,7 +316,7 @@ fn resolve_game(
 	n: &str,
 	mut game: Game,
 	mut enc: Enc,
-	weird_start: bool,
+	old_cs1: bool,
 ) -> (Game, Enc, u8) {
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
 	let cs2_special = ["e2230", "e4501", "e4701", "m5010"];
@@ -348,7 +398,7 @@ fn resolve_game(
 		Game::Cs1 if cs1_menu.contains(&n) => 100,
 		Game::Cs1 if n == "npcx01" => 3,
 		Game::Cs1 if cs1_special.contains(&n) => 2,
-		Game::Cs1 if weird_start => 1,
+		Game::Cs1 if old_cs1 => 1,
 		Game::Cs1 => 0,
 		Game::Cs2 if cs1_menu.contains(&n) => 100,
 		Game::Cs2 if cs2_special.contains(&n) => 1,
