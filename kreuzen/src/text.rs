@@ -1,5 +1,7 @@
 use gospel::read::Le as _;
+use gospel::write::{Le as _, Writer};
 
+use crate::Enc;
 use crate::types::Item;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -79,5 +81,46 @@ impl Text {
 			}
 		}
 		Ok(Text(out))
+	}
+
+	pub(crate) fn write(&self, enc: Enc, f: &mut Writer) -> rootcause::Result<()> {
+		for part in &self.0 {
+			match part {
+				TextPart::String(s) => f.slice(&encode(enc, s)?),
+				TextPart::Control(c) => match *c {
+					TextControl::Line => f.u8(0x01),
+					TextControl::Page => f.u8(0x02),
+					TextControl::_03 => f.u8(0x03),
+					TextControl::_06 => f.u8(0x06),
+					TextControl::_07 => f.u8(0x07),
+					TextControl::_08 => f.u8(0x08),
+					TextControl::_09 => f.u8(0x09),
+					TextControl::_0B => f.u8(0x0B),
+					TextControl::_0C => f.u8(0x0C),
+					TextControl::_0F => f.u8(0x0F),
+					TextControl::Item(Item(v)) => { f.u8(0x10); f.u16(v); }
+					TextControl::Voiceline(v) => { f.u8(0x11); f.u32(v); }
+					TextControl::_12(v) => { f.u8(0x12); f.u32(v); }
+					TextControl::_13 => f.u8(0x13),
+					TextControl::_16 => f.u8(0x16),
+					TextControl::_17(v) => { f.u8(0x17); f.u16(v); }
+					TextControl::_18 => f.u8(0x18),
+					TextControl::_19(v) => { f.u8(0x19); f.u16(v); }
+					TextControl::_1A => f.u8(0x1A),
+				}
+			}
+		}
+		f.u8(0x00);
+		Ok(())
+	}
+}
+
+fn encode(enc: Enc, s: &str) -> rootcause::Result<Vec<u8>> {
+	match enc {
+		Enc::Utf8 => Ok(s.as_bytes().to_vec()),
+		Enc::Sjis => match falcom_sjis::encode(s) {
+			Ok(bytes) => Ok(bytes),
+			Err(pos) => rootcause::bail!("invalid Shift-JIS in text at byte {pos}: {s:?}"),
+		}
 	}
 }

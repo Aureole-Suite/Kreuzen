@@ -1,6 +1,7 @@
 use gospel::read::Le as _;
+use gospel::write::{Le as _, Writer};
 use rootcause::prelude::ResultExt as _;
-use crate::{io::CReader, types::*};
+use crate::{io::{CReader, OData}, types::*};
 
 #[rustfmt::skip]
 #[derive(Clone, PartialEq, derive_more::Debug, derive_more::From)]
@@ -90,6 +91,12 @@ impl rootcause::handlers::AttachmentHandler<Vec<Expr>> for StackView {
 }
 
 impl Expr {
+	pub(crate) fn write(&self, d: &OData, f: &mut Writer) -> rootcause::Result<()> {
+		write_inner(self, d, f)?;
+		f.u8(0x01);
+		Ok(())
+	}
+
 	pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Expr> {
 		let pos = f.pos();
 		let mut stack = Vec::new();
@@ -103,6 +110,35 @@ impl Expr {
 			Err(rootcause::report!("stack is overfull").attach_custom::<StackView, _>(stack))
 		}
 	}
+}
+
+fn write_inner(e: &Expr, d: &OData, f: &mut Writer) -> rootcause::Result<()> {
+	match e {
+		Expr::Int(v) => { f.u8(0x00); f.i32(*v); }
+		Expr::Op(op) => { f.u8(0x1C); crate::code::write_op(d, f, op)?; }
+		Expr::Flag(Flag(v)) => { f.u8(0x1E); f.u16(*v); }
+		Expr::Var(Var(v)) => { f.u8(0x1F); f.u8(*v); }
+		Expr::Attr(Attr(v)) => { f.u8(0x20); f.u8(*v); }
+		Expr::CharAttr(CharAttr(Char(c), a)) => { f.u8(0x21); f.u16(*c); f.u8(*a); }
+		Expr::Rand => { f.u8(0x22); }
+		Expr::Global(Global(v)) => { f.u8(0x23); f.u8(*v); }
+		Expr::SystemFlags(Flags32(v)) => { f.u8(0x24); f.u32(*v); }
+		Expr::NumReg(NumReg(v)) => { f.u8(0x25); f.u8(*v); f.u8(0); }
+		Expr::Bin(op, a, b) => {
+			write_inner(a, d, f)?;
+			write_inner(b, d, f)?;
+			f.u8(*op as u8);
+		}
+		Expr::Un(op, a) => {
+			write_inner(a, d, f)?;
+			f.u8(*op as u8);
+		}
+		Expr::Ass(op, a) => {
+			write_inner(a, d, f)?;
+			f.u8(*op as u8);
+		}
+	}
+	Ok(())
 }
 
 fn read_inner(f: &mut CReader, stack: &mut Vec<Expr>) -> Result<(), rootcause::Report> {

@@ -1,9 +1,11 @@
 use std::collections::{BTreeSet, HashMap};
 
 use gospel::read::Le as _;
+use gospel::write::{Le as _, Writer, Label as WLabel};
+use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
 
-use crate::io::CReader;
+use crate::io::{CReader, OData, WriterExt as _};
 use crate::spec::{Opcode, Part};
 use crate::expr::Expr;
 use crate::text::Text;
@@ -61,7 +63,7 @@ impl std::fmt::Debug for Hexdump {
 
 #[derive(Debug, Clone)]
 pub struct Code {
-	pub ops: Vec<code::FlatOp>,
+	pub ops: Vec<FlatOp>,
 }
 
 pub fn read(f: &mut CReader, end: usize) -> rootcause::Result<Code> {
@@ -541,4 +543,259 @@ fn read_dyn(f: &mut CReader) -> rootcause::Result<Arg> {
 		}
 		code => rootcause::bail!("Unknown dyn code: {code:02X}"),
 	})
+}
+
+pub fn write(d: &OData, code: &Code) -> rootcause::Result<Writer> {
+	let mut f = Writer::new();
+	let labels: HashMap<Label, WLabel> = code.ops.iter()
+		.filter_map(|op| if let FlatOp::Label(l) = op { Some((*l, WLabel::new())) } else { None })
+		.collect();
+	for op in &code.ops {
+		write_flatop(d, &mut f, op, &labels)?;
+	}
+	Ok(f)
+}
+
+fn write_flatop(d: &OData, f: &mut Writer, op: &FlatOp, labels: &HashMap<Label, WLabel>) -> rootcause::Result<()> {
+	let spec = crate::spec::for_game(d.game, d.variant);
+	match op {
+		FlatOp::Label(l) => {
+			f.place(labels[l]);
+		}
+		FlatOp::Goto(meta, l) => {
+			let opcode = spec.by_name.get("goto").copied().context("no opcode for goto")?;
+			f.u8(opcode[0]);
+			write_meta(d, f, opcode[0], *meta);
+			f.label32(d.start, labels[l]);
+		}
+		FlatOp::If(meta, expr, l) => {
+			let opcode = spec.by_name.get("if").copied().context("no opcode for if")?;
+			f.u8(opcode[0]);
+			write_meta(d, f, opcode[0], *meta);
+			expr.write(d, f)?;
+			f.label32(d.start, labels[l]);
+		}
+		FlatOp::Switch(meta, expr, cases, default) => {
+			let opcode = spec.by_name.get("switch").copied().context("no opcode for switch")?;
+			f.u8(opcode[0]);
+			write_meta(d, f, opcode[0], *meta);
+			expr.write(d, f)?;
+			f.u8(cases.len() as u8);
+			for (v, l) in cases {
+				match d.game {
+					Game::Cs1 | Game::Cs2 | Game::Tx => f.i16(*v as i16),
+					_ => f.i32(*v),
+				}
+				f.label32(d.start, labels[l]);
+			}
+			f.label32(d.start, labels[default]);
+		}
+		FlatOp::Op(op) => write_op(d, f, op)?,
+	}
+	Ok(())
+}
+
+fn write_meta(d: &OData, f: &mut Writer, code: u8, meta: OpMeta) {
+	if !matches!(code, 0x01 | 0x04) && d.game == Game::Reverie {
+		f.u16(meta.line);
+		f.u8(0);
+		f.u8(if meta.has_width { 0 } else { 0xFF });
+	}
+}
+
+pub(crate) fn write_op(d: &OData, f: &mut Writer, op: &Op) -> rootcause::Result<()> {
+	let spec = crate::spec::for_game(d.game, d.variant);
+	let opcode = spec.by_name.get(op.name).copied()
+		.context_with(|| format!("no opcode for {:?}", op.name))?;
+	crate::ensure!(!opcode.is_empty(), "empty opcode for {:?}", op.name);
+
+	f.u8(opcode[0]);
+	write_meta(d, f, opcode[0], op.meta);
+
+	let mut op_spec = spec.ops[opcode[0] as usize].as_ref()
+		.context_with(|| format!("opcode {opcode} not in spec"))?;
+	let mut cursor = 0usize;
+	write_parts(d, f, op, &mut cursor, &op_spec.parts)?;
+	for &byte in &opcode[1..] {
+		f.u8(byte);
+		op_spec = op_spec.child(byte).context_with(|| format!("opcode {opcode} not in spec"))?;
+		write_parts(d, f, op, &mut cursor, &op_spec.parts)?;
+	}
+	crate::ensure!(cursor == op.args.len(), "wrote {} args but op has {}: {op:?}", cursor, op.args.len());
+	Ok(())
+}
+
+fn take_arg<'a>(op: &'a Op, cursor: &mut usize) -> rootcause::Result<&'a Arg> {
+	let arg = op.args.get(*cursor).context_with(|| format!("not enough args in {op:?} at {}", *cursor))?;
+	*cursor += 1;
+	Ok(arg)
+}
+
+fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[Part]) -> rootcause::Result<()> {
+	use Part as P;
+	for p in parts {
+		match p {
+			P::U8 => match take_arg(op, cursor)? { Arg::Int(v) => f.u8(*v as u8), a => rootcause::bail!("expected Int for U8, got {a:?}") },
+			P::U16 => match take_arg(op, cursor)? { Arg::Int(v) => f.u16(*v as u16), a => rootcause::bail!("expected Int for U16, got {a:?}") },
+			P::U32 => match take_arg(op, cursor)? { Arg::Int(v) => f.u32(*v as u32), a => rootcause::bail!("expected Int for U32, got {a:?}") },
+			P::I8 => match take_arg(op, cursor)? { Arg::Int(v) => f.i8(*v as i8), a => rootcause::bail!("expected Int for I8, got {a:?}") },
+			P::I16 => match take_arg(op, cursor)? { Arg::Int(v) => f.i16(*v as i16), a => rootcause::bail!("expected Int for I16, got {a:?}") },
+			P::I32 => match take_arg(op, cursor)? { Arg::Int(v) => f.i32(*v as i32), a => rootcause::bail!("expected Int for I32, got {a:?}") },
+			P::F32 => match take_arg(op, cursor)? { Arg::F32(v) => f.f32(*v), a => rootcause::bail!("expected F32, got {a:?}") },
+			P::Str => match take_arg(op, cursor)? { Arg::Str(s) => f.str(d.enc, s)?, a => rootcause::bail!("expected Str, got {a:?}") },
+
+			P::Char => match take_arg(op, cursor)? { Arg::Char(Char(v)) => f.u16(*v), a => rootcause::bail!("expected Char, got {a:?}") },
+			P::Item => match take_arg(op, cursor)? { Arg::Item(Item(v)) => f.u16(*v), a => rootcause::bail!("expected Item, got {a:?}") },
+			P::Magic => match take_arg(op, cursor)? { Arg::Magic(Magic(v)) => f.u16(*v), a => rootcause::bail!("expected Magic, got {a:?}") },
+			P::Flag => match take_arg(op, cursor)? { Arg::Flag(Flag(v)) => f.u16(*v), a => rootcause::bail!("expected Flag, got {a:?}") },
+			P::Global => match take_arg(op, cursor)? { Arg::Global(Global(v)) => f.u8(*v), a => rootcause::bail!("expected Global, got {a:?}") },
+			P::Var => match take_arg(op, cursor)? { Arg::Var(Var(v)) => f.u8(*v), a => rootcause::bail!("expected Var, got {a:?}") },
+			P::FuncArg => match take_arg(op, cursor)? { Arg::FuncArg(FuncArg(v)) => f.u8(*v), a => rootcause::bail!("expected FuncArg, got {a:?}") },
+			P::NumReg => match take_arg(op, cursor)? { Arg::NumReg(NumReg(v)) => f.u8(*v), a => rootcause::bail!("expected NumReg, got {a:?}") },
+			P::StrReg => match take_arg(op, cursor)? { Arg::StrReg(StrReg(v)) => f.u8(*v), a => rootcause::bail!("expected StrReg, got {a:?}") },
+			P::Attr => match take_arg(op, cursor)? { Arg::Attr(Attr(v)) => f.u8(*v), a => rootcause::bail!("expected Attr, got {a:?}") },
+			P::CharAttr => match take_arg(op, cursor)? { Arg::CharAttr(CharAttr(Char(c), a)) => { f.u16(*c); f.u8(*a); }, a => rootcause::bail!("expected CharAttr, got {a:?}") },
+
+			P::Flags8 => match take_arg(op, cursor)? { Arg::Flags8(Flags8(v)) => f.u8(*v), a => rootcause::bail!("expected Flags8, got {a:?}") },
+			P::Flags16 => match take_arg(op, cursor)? { Arg::Flags16(Flags16(v)) => f.u16(*v), a => rootcause::bail!("expected Flags16, got {a:?}") },
+			P::Flags32 => match take_arg(op, cursor)? { Arg::Flags32(Flags32(v)) => f.u32(*v), a => rootcause::bail!("expected Flags32, got {a:?}") },
+
+			P::Expr => match take_arg(op, cursor)? { Arg::Expr(e) => e.write(d, f)?, a => rootcause::bail!("expected Expr, got {a:?}") },
+			P::Text => match take_arg(op, cursor)? { Arg::Text(t) => t.write(d.enc, f)?, a => rootcause::bail!("expected Text, got {a:?}") },
+			P::Dyn => write_dyn(f, d, take_arg(op, cursor)?)?,
+			P::Ndyn => {
+				let n = op.args.len() - *cursor;
+				f.u8(n as u8);
+				for _ in 0..n {
+					write_dyn(f, d, take_arg(op, cursor)?)?;
+				}
+			}
+			P::Dync => {
+				let arg = take_arg(op, cursor)?;
+				match arg {
+					Arg::Char(Char(v)) => write_dyn(f, d, &Arg::Int(*v as i64))?,
+					_ => write_dyn(f, d, arg)?,
+				}
+			}
+
+			P::Cs1_36 => {
+				if matches!(op.args[1], Arg::Char(Char(0xFE02..=0xFE03))) {
+					write_parts(d, f, op, cursor, &[P::F32])?;
+				}
+			}
+			P::Cs1_3C => {
+				if matches!(op.args[1], Arg::Char(Char(0xFFFF))) {
+					write_parts(d, f, op, cursor, &[P::U32, P::U32, P::U32])?;
+				}
+			}
+
+			P::Cs2_37 => {
+				if matches!(op.args[1], Arg::Char(Char(0xFE04))) {
+					write_parts(d, f, op, cursor, &[P::Str])?;
+				}
+			}
+
+			P::Tx_3C => {
+				if matches!(op.args[0], Arg::Int(1)) {
+					write_parts(d, f, op, cursor, &[P::U32, P::U32, P::U32])?;
+				}
+			}
+			P::Tx_isforceload => {
+				if matches!(op.args.get(*cursor), Some(Arg::Str(s)) if s == "isforceload") {
+					f.slice(b"isforceload");
+					*cursor += 1;
+				} else {
+					write_parts(d, f, op, cursor, &[P::U8])?;
+				}
+			}
+			P::Tx_2F => {
+				if matches!(op.args.get(*cursor), Some(Arg::Str(s)) if s == "AniWvWait") {
+					f.slice(b"AniWvWait\xFF");
+					*cursor += 2;
+					write_parts(d, f, op, cursor, &[P::U8, P::F32, P::F32, P::F32])?;
+					break;
+				}
+			}
+
+			P::Cs3_98 => {
+				let Arg::Int(v) = op.args[0] else {
+					rootcause::bail!("Expected Int for Cs3_98 dispatch");
+				};
+				write_parts(d, f, op, cursor, op_98(v as u16, d.game))?;
+			}
+			P::Cs3_c0 => {
+				let Arg::Int(v) = op.args[0] else {
+					rootcause::bail!("Expected Int for Cs3_c0 dispatch");
+				};
+				write_parts(d, f, op, cursor, op_c0(v as u16))?;
+			}
+
+			P::Cs4_40 => {
+				let Arg::Char(v) = op.args[1] else {
+					rootcause::bail!("Expected Char for Cs4_40 dispatch");
+				};
+				write_parts(d, f, op, cursor, op_40(v))?;
+			}
+			P::Cs4_wtf_are_you_doing => {
+				if *cursor < op.args.len() {
+					match op.args[*cursor] {
+						Arg::Int(0) => { f.u32(0); *cursor += 1; }
+						_ => {}
+					}
+				}
+			}
+
+			P::Rev_3E => {
+				match op.args[1] {
+					Arg::Char(Char(0xFE12)) => write_parts(d, f, op, cursor, &[P::U8])?,
+					Arg::Char(Char(0xFE13)) => write_parts(d, f, op, cursor, &[P::F32])?,
+					Arg::Char(Char(0xFFFF)) => {
+						if *cursor < op.args.len() {
+							write_parts(d, f, op, cursor, &[P::U8, P::U8, P::U8])?;
+						}
+					}
+					_ => {}
+				}
+			}
+			P::Rev_D2 => {
+				let Arg::Int(v) = op.args[0] else {
+					rootcause::bail!("Expected Int for Rev_D2 dispatch");
+				};
+				write_parts(d, f, op, cursor, op_d2(v as i16))?;
+			}
+			P::Rev_79 => {
+				if matches!(op.args[0], Arg::Int(7)) {
+					write_parts(d, f, op, cursor, &[P::U8])?;
+				}
+			}
+			P::Rev_E002 => {
+				match op.args[1] {
+					Arg::Char(Char(0xFFFF)) => write_parts(d, f, op, cursor, &[P::I32])?,
+					_ => write_parts(d, f, op, cursor, &[P::F32])?,
+				}
+			}
+
+			P::Print | P::Fail => {}
+		}
+	}
+	Ok(())
+}
+
+fn write_dyn(f: &mut Writer, _d: &OData, arg: &Arg) -> rootcause::Result<()> {
+	match arg {
+		Arg::Var(Var(v)) => { f.u8(0x11); f.u8(*v); f.u32(0); }
+		Arg::NumReg(NumReg(v)) => { f.u8(0x33); f.u8(*v); f.u32(0); }
+		Arg::StrReg(StrReg(v)) => { f.u8(0x44); f.u8(*v); f.u32(0); }
+		Arg::Global(Global(v)) => { f.u8(0x55); f.u8(*v); f.u32(0); }
+		Arg::Str(s) => {
+			f.u8(0xDD);
+			f.slice(s.as_bytes());
+			f.u8(0);
+		}
+		Arg::F32(v) => { f.u8(0xEE); f.f32(*v); f.u8(0); }
+		Arg::Int(v) => { f.u8(0xFF); f.i32(*v as i32); f.u8(0); }
+		Arg::I32Munged(v) => { f.u8(0xFF); f.i32(v.to_bits() as i32); f.u8(0); }
+		other => rootcause::bail!("can't write {other:?} as dyn"),
+	}
+	Ok(())
 }
