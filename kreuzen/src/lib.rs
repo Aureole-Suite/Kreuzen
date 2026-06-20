@@ -218,14 +218,12 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	};
 
 	for c in &scena.chunks {
-		let align = if c.name == "ReactionTable"
-			|| c.name == "ShinigPomBtlset"
-			|| c.name.starts_with("FC_auto")
-			|| scena.name == "effect"
-		{
-			16
-		} else {
-			4
+		let align = match (c.name.as_str(), scena.game) {
+			_ if c.name.starts_with("FC_auto") => 16,
+			("Init", Game::Cs1) if scena.name == "effect" => 16,
+			("ReactionTable", Game::Cs1 | Game::Cs2) => 16,
+			("ShinigPomBtlset", Game::Cs2) => 16,
+			_ => 4,
 		};
 		match &c.func {
 			CodeOrTable::Code(code) => {
