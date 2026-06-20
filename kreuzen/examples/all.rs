@@ -79,9 +79,32 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path, outfile2: &Path)
 	std::fs::create_dir_all(outfile2.parent().unwrap())?;
 	std::fs::write(outfile2, s2)?;
 
+	for c in &scena.chunks {
+		if let kreuzen::CodeOrTable::Code(code) = &c.func {
+			check_decompile(&c.name, code);
+		}
+		for (i, code) in c.shadow.iter().enumerate() {
+			check_decompile(&format!("_a{i}_{}", c.name), code);
+		}
+	}
+
 	// check_preload(&scena);
 
 	Ok(())
+}
+
+fn check_decompile(name: &str, code: &kreuzen::code::Code)  {
+	match kreuzen::decompile::decompile(code) {
+		Ok(stmts) => {
+			let v = kreuzen::decompile::compile(&stmts).unwrap();
+			if v != *code {
+				let diff = pretty_assertions::Comparison::new(&v, code);
+				tracing::error!("recompile mismatch in {name}");
+				println!("{}", diff);
+			}
+		}
+		Err(e) => tracing::error!("Error decompiling {name}:{e}"),
+	}
 }
 
 fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
@@ -135,7 +158,7 @@ fn check_preload(scena: &kreuzen::Scena) {
 }
 
 fn write_dec(s: &mut String, code: &kreuzen::code::Code) -> rootcause::Result<()> {
-	match kreuzen::decompile::decompile(&code.ops) {
+	match kreuzen::decompile::decompile(code) {
 		Ok(stmts) => writeln!(s, "{:#?}", stmts)?,
 		Err(e) => {
 			write!(s, "Error decompiling:{e}")?;

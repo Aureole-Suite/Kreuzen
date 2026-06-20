@@ -3,8 +3,7 @@ use std::collections::BTreeMap;
 use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
 
-use crate::types::Char;
-use crate::code::{FlatOp, Label, Op, OpMeta};
+use crate::code::{Code, FlatOp, Label, Op, OpMeta};
 use crate::expr::Expr;
 
 #[derive(Clone, PartialEq)]
@@ -15,7 +14,6 @@ pub enum Stmt {
 	Break(OpMeta),
 	Continue(OpMeta),
 	Switch(OpMeta, Expr, Vec<(Case, Vec<Stmt>)>),
-	ForkLambda(OpMeta, Char, u8, Vec<Stmt>),
 }
 
 impl std::fmt::Debug for Stmt {
@@ -44,7 +42,6 @@ impl std::fmt::Debug for Stmt {
 			Self::Break(m) => m.fmt(f)?.debug_tuple("Break").finish(),
 			Self::Continue(m) => m.fmt(f)?.debug_tuple("Continue").finish(),
 			Self::Switch(m, a, b) => m.fmt(f)?.debug_tuple("Switch").field(a).field(b).finish(),
-			Self::ForkLambda(m, a, b, c) => m.fmt(f)?.debug_tuple("ForkLambda").field(a).field(b).field(c).finish(),
 		}
 	}
 }
@@ -57,7 +54,8 @@ pub enum Case {
 	None,
 }
 
-pub fn decompile(stmts: &[FlatOp]) -> rootcause::Result<Vec<Stmt>> {
+pub fn decompile(code: &Code) -> rootcause::Result<Vec<Stmt>> {
+	let stmts = &code.ops;
 	let mut labels = BTreeMap::new();
 	for (i, stmt) in stmts.iter().enumerate() {
 		if let FlatOp::Label(l) = stmt {
@@ -67,6 +65,83 @@ pub fn decompile(stmts: &[FlatOp]) -> rootcause::Result<Vec<Stmt>> {
 
 	let (body, _) = Ctx::new(&Gctx { stmts, labels }).block("body", GotoAllowed::No)?;
 	Ok(body)
+}
+
+pub fn compile(stmts: &[Stmt]) -> rootcause::Result<Code> {
+	let mut ops = Vec::new();
+	compile_inner(&mut ops, &mut 0, stmts, None, None)?;
+	crate::code::remap_labels(&mut ops);
+	Ok(Code { ops })
+}
+
+fn compile_inner(
+	out: &mut Vec<FlatOp>,
+	l: &mut u32,
+	stmts: &[Stmt],
+	brk: Option<Label>,
+	cont: Option<Label>,
+) -> rootcause::Result<()> {
+	fn label(l: &mut u32) -> Label {
+		let n = *l;
+		*l += 1;
+		Label(n)
+	}
+
+	for stmt in stmts {
+		match stmt {
+			Stmt::Op(op) => out.push(FlatOp::Op(op.clone())),
+			Stmt::If(m, expr, yes, None) => {
+				let l1 = label(l);
+				out.push(FlatOp::If(*m, expr.clone(), l1));
+				compile_inner(out, l, yes, brk, cont)?;
+				out.push(FlatOp::Label(l1));
+			}
+			Stmt::If(m, expr, yes, Some((m2, no))) => {
+				let l1 = label(l);
+				let l2 = label(l);
+				out.push(FlatOp::If(*m, expr.clone(), l1));
+				compile_inner(out, l, yes, brk, cont)?;
+				out.push(FlatOp::Goto(*m2, l2));
+				out.push(FlatOp::Label(l1));
+				compile_inner(out, l, no, brk, cont)?;
+				out.push(FlatOp::Label(l2));
+			}
+			Stmt::While(m, expr, body, m2) => {
+				let brk = label(l);
+				let cont = label(l);
+				out.push(FlatOp::Label(cont));
+				out.push(FlatOp::If(*m, expr.clone(), brk));
+				compile_inner(out, l, body, Some(brk), Some(cont))?;
+				out.push(FlatOp::Goto(*m2, cont));
+				out.push(FlatOp::Label(brk));
+			}
+			Stmt::Break(m) => out.push(FlatOp::Goto(*m, brk.context("no brk")?)),
+			Stmt::Continue(m) => out.push(FlatOp::Goto(*m, cont.context("no cont")?)),
+			Stmt::Switch(m, expr, items) => {
+				let brk = label(l);
+				let labels = items.iter().map(|_| label(l)).collect::<Vec<_>>();
+
+				let mut def = None;
+				let mut cases = Vec::with_capacity(items.len() - 1);
+				for (&l1, case) in std::iter::zip(&labels, items) {
+					match case.0 {
+						Case::Default => def = Some(l1),
+						Case::Case(v) => cases.push((v, l1)),
+						Case::None => {}
+					}
+				}
+
+				out.push(FlatOp::Switch(*m, expr.clone(), cases, def.unwrap_or(brk)));
+				for (&l1, case) in std::iter::zip(&labels, items) {
+					out.push(FlatOp::Label(l1));
+					compile_inner(out, l, &case.1, Some(brk), cont)?;
+				}
+				out.push(FlatOp::Label(brk));
+			}
+		}
+	}
+
+	Ok(())
 }
 
 struct Gctx<'a> {

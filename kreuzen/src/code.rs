@@ -17,7 +17,7 @@ mod to_dot;
 pub use to_dot::to_dot;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Label(u32);
+pub struct Label(pub u32);
 
 impl std::fmt::Debug for Label {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -63,7 +63,7 @@ impl std::fmt::Debug for Hexdump {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Code {
 	pub ops: Vec<FlatOp>,
 }
