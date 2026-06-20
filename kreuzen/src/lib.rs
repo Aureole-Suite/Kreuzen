@@ -219,6 +219,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 
 	for c in &scena.chunks {
 		let align = if c.name == "ReactionTable"
+			|| c.name == "ShinigPomBtlset"
 			|| c.name.starts_with("FC_auto")
 			|| scena.name == "effect"
 		{
