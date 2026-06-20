@@ -6,6 +6,7 @@
 06   'switch'
 07    u32
 08   'SetAttr' attr expr
+09   'nop'
 0A   'SetVar' var expr
 0C   'FlagSet' flag
 0D   'FlagUnset' flag

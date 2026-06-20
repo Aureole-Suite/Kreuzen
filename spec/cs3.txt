@@ -8,6 +8,7 @@
 0701 'DebugInt_2' dyn # maybe DebugFloat? Only used in ArgumentTest1
 0702 'DebugStr' dyn
 08   'SetAttr' attr expr
+09   'nop'
 0A   'SetVar' var expr
 0C00 'NewNumReg' u8
 0C01 'NewStrReg' u8
