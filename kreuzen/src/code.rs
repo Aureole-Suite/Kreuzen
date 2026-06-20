@@ -372,7 +372,14 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 			P::I8 => op.args.push(f.i8()?.into()),
 			P::I16 => op.args.push(f.i16()?.into()),
 			P::I32 => op.args.push(f.i32()?.into()),
-			P::F32 => op.args.push(f.f32()?.into()),
+			P::F32 => {
+				let v = f.i32()?;
+				op.args.push(if v == 0 || v.abs() > 0x1000000 {
+					Arg::F32(f32::from_bits(v as u32))
+				} else {
+					Arg::F32Munged(v)
+				});
+			}
 			P::Str => op.args.push(f.str()?.into()),
 
 			P::Char => op.args.push(Char(f.u16()?).into()),
@@ -710,7 +717,11 @@ fn write_parts(
 			P::I8 => f.i8(int!(i8)),
 			P::I16 => f.i16(int!(i16)),
 			P::I32 => f.i32(int!(i32)),
-			P::F32 => f.f32(*arg!(F32)),
+			P::F32 => match take_arg(op, cursor)? {
+				Arg::F32(v) => f.f32(*v),
+				Arg::F32Munged(v) => f.i32(*v),
+				a => rootcause::bail!("expected F32 in {}, got {a:?}", op.name),
+			},
 			P::Str => f.str(d.enc, arg!(Str))?,
 
 			P::Char => f.u16(arg!(Char).0),
