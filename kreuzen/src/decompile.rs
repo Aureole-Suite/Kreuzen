@@ -122,7 +122,7 @@ fn compile_inner(
 				let labels = items.iter().map(|_| label(l)).collect::<Vec<_>>();
 
 				let mut def = None;
-				let mut cases = Vec::with_capacity(items.len() - 1);
+				let mut cases = Vec::with_capacity(items.len());
 				for (&l1, case) in std::iter::zip(&labels, items) {
 					match case.0 {
 						Case::Default => def = Some(l1),
