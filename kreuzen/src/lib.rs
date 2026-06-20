@@ -275,7 +275,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 
 	match (scena.game, scena.oddness) {
 		(Game::Cs4, 0) => f.align(4),
-		(Game::Reverie, 0) => {
+		(Game::Reverie, 0 | 3) => {
 			f.align(4);
 			f.u32(0xFF000000);
 		}
