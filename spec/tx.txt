@@ -14,7 +14,7 @@
 10   'Sleep' u16
 11   u16 u16
 12   'SetGlobal' global expr
-13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 f32 f32
+13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str f32 f32 u32
 14   'Fork' char u8 u8 str
 15   'ForkKill' char u8
 16   u8 u16
@@ -77,7 +77,7 @@
 27 'Eff'
 270A 'EffLoad' char u8 str
 270B 'EffUnload' char u8
-270C 'EffPlay' char u32 char u32 str f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u8 f32
+270C 'EffPlay' char u32 char u32 str f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u32 u16 u8 u32
 270D 'EfFStop' char u16 u8
 270E char u16
 270F char u16
@@ -128,13 +128,14 @@
 
 2F   char tx_2f u8 str f32 f32 u32
 
-3000 u16 f32 u16 u32 u8
+30 'Bgm'
+3000 'BgmPlay' u16 f32 u16 u32 u8
 3001 u16 u8
 3002 u8
-3003 f32 u16 u8
-3004 u16 f32 u16 f32 u8
-3005 u16 u16
-3006 u16
+3003 'BgmVolume' f32 u16 u8
+3004 'BgmPlay2' u16 f32 u16 f32 u8
+3005 'BgmReplace' u16 u16
+3006 'BgmRestore' u16
 3007
 
 31 'Sound'

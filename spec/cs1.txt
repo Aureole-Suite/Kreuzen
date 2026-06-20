@@ -190,7 +190,7 @@
 3007
 
 31 'Sound'
-3100 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3100 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
 3101 'SoundStop' u16 u16
 3102 u16
 3103 u16 f32 u16
@@ -234,8 +234,8 @@
 3969 u16
 39FE u16
 39FF u16
-3A   char u8 f32 u16
-3B   char f32 f32 f32 u16 u16
+3A   'CharEmote' char u8 f32 u16
+3B   'CharLookDir' char f32 f32 f32 u16 u16
 3C   char char u16 cs1_3c
 3D00 str u16
 3D01 str u16

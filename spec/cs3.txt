@@ -27,7 +27,7 @@
 1901 'SystemSaveFlagUnset' u16
 1902 'SystemSaveFlagGet' u16
 1A00 'GetIntArg' funcarg
-1D   'CharCreate' char str str str u8 flags32 u32 f32 f32 f32 f32 f32 f32 f32 str str u32 u8 f32 f32 u16
+1D   'CharCreate' char str str str u8 flags32 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 1E   'Fork' char u8 u8 str
 1F   'ForkKill' char u8
 20   u8 dyn dyn dyn
@@ -185,7 +185,7 @@
 3352 char u8
 335A 'BtlCharSetAtDelay' char u32
 335B u8 u32
-335C u8
+335C 'BtlGetCount' u8 # 10 is number of players
 3361 char u8 u32 u32 u32 u32
 3362 'BtlCharGetStat' char u8 # 0 is hp, 27 and 28 are charids for target
 3363 char
@@ -254,7 +254,7 @@
 33C0 char
 33C1 u32
 33C2 char
-33C3
+33C3 'BtlItem'
 
 34   u8 f32 f32 f32 f32
 3500 'CharFlagSet' char flags32 # might be reverse
