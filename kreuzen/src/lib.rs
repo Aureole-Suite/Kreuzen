@@ -239,7 +239,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	}
 	for c in &scena.chunks {
 		if !c.preload.is_empty() {
-			chunk(4, &format!("_{}", c.name), tables::preload::write(&d, &c.preload));
+			chunk(16, &format!("_{}", c.name), tables::preload::write(&d, &c.preload));
 		}
 	}
 	if scena.game == Game::Reverie && scena.oddness == 3 {
