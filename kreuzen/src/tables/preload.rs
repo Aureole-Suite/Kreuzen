@@ -87,12 +87,12 @@ pub(crate) fn read(f: &mut VReader, _: usize) -> rootcause::Result<Vec<Preload>>
 }
 
 pub(crate) fn write(d: &OData, preload: &[Preload]) -> rootcause::Result<Writer> {
-	let ref charid = match d.game {
+	let charid = &match d.game {
 		Game::Cs1 | Game::Cs2 => Char(0xFFFD),
 		_ => Char(0xFFFF),
 	};
-	let ref u32 = 0;
-	let ref str = String::new();
+	let u32 = &0;
+	let str = &String::new();
 
 	let mut f = Writer::new();
 	for p in preload {
@@ -112,6 +112,12 @@ pub(crate) fn write(d: &OData, preload: &[Preload]) -> rootcause::Result<Writer>
 		f.u32(*u32);
 		f.sstr(32, d.enc, str)?;
 	}
+
+	f.u16(0);
+	f.u16(charid.0);
+	f.u32(*u32);
+	f.sstr(32, d.enc, str)?;
+
 	f.u8(1);
 	Ok(f)
 }
