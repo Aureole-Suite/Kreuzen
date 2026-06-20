@@ -268,7 +268,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	let asm_end = f.ptr32(start);
 
 	f.u32(0xABCDEF00);
-	let old_cs1 = scena.game == Game::Cs1 && scena.variant == 1;
+	let old_cs1 = scena.game == Game::Cs1 && (1..100).contains(&scena.variant);
 	if !old_cs1 {
 		f.place(name_start);
 		f.str(scena.enc, &scena.name)?;
