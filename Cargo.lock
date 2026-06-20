@@ -85,9 +85,7 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "falcom-sjis"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d4b191420fae6e27b757aeeb9ee16a7ee9be2e53ec865f90ec400c21b963015"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "phf",
