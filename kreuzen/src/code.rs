@@ -126,13 +126,46 @@ fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> rootcause::Result<Vec<
 	Ok(ops2)
 }
 
-fn remap_labels(ops2: &mut [FlatOp]) {
-	let mut order = HashMap::new();
-	for op in ops2.iter_mut() {
-		if let FlatOp::Label(l) = op {
-			order.insert(*l, Label(order.len() as _));
+pub(crate) fn remap_labels(ops2: &mut Vec<FlatOp>) {
+	use std::collections::HashSet;
+
+	let mut used = HashSet::new();
+	for op in ops2.iter() {
+		match op {
+			FlatOp::Op(_) | FlatOp::Label(_) => {}
+			FlatOp::Goto(_, l) | FlatOp::If(_, _, l) => { used.insert(*l); }
+			FlatOp::Switch(_, _, ls, l) => {
+				for (_, l) in ls { used.insert(*l); }
+				used.insert(*l);
+			}
 		}
 	}
+
+	let mut order = HashMap::<Label, Label>::new();
+	let mut n = 0;
+	let mut current = None;
+	ops2.retain_mut(|op| match op {
+		FlatOp::Label(l) => {
+			if !used.contains(l) {
+				false
+			} else if let Some(current) = current {
+				order.insert(*l, current);
+				false
+			} else {
+				let new = Label(n);
+				n += 1;
+				order.insert(*l, new);
+				current = Some(new);
+				true
+			}
+		},
+		_ => {
+			current = None;
+			true
+		}
+	});
+
+
 	let remap = |l: &mut Label| *l = order[l];
 	for op in ops2.iter_mut() {
 		match op {
@@ -141,10 +174,10 @@ fn remap_labels(ops2: &mut [FlatOp]) {
 			FlatOp::Goto(_, l) | FlatOp::If(_, _, l) => remap(l),
 			FlatOp::Switch(_, _, ls, l) => {
 				for (_, l) in ls {
-					remap(l);
-				}
-				remap(l);
-			}
+ 					remap(l);
+ 				}
+ 				remap(l);
+ 			}
 		}
 	}
 }
