@@ -532,28 +532,6 @@ fn op_d2(a: i16) -> &'static [Part] {
 	}
 }
 
-#[rustfmt::skip]
-fn read_dyn(f: &mut CReader) -> rootcause::Result<Arg> {
-	Ok(match f.u8()? {
-		0x11 => { let v = f.u8()?; f.check_u32(0)?; Var(v).into() }
-		0x33 => { let v = f.u8()?; f.check_u32(0)?; NumReg(v).into() }
-		0x44 => { let v = f.u8()?; f.check_u32(0)?; StrReg(v).into() }
-		0x55 => { let v = f.u8()?; f.check_u32(0)?; Global(v).into() }
-		0xDD => { let v = f.str()?; Arg::Str(v) }
-		0xEE => { let v = f.f32()?; f.check_u8(0)?; Arg::F32(v) }
-		0xFF => {
-			let v = f.i32()?;
-			f.check_u8(0)?;
-			if v.abs() > 0x1000000 {
-				Arg::I32Munged(f32::from_bits(v as u32))
-			} else {
-				Arg::Int(v as i64)
-			}
-		}
-		code => rootcause::bail!("Unknown dyn code: {code:02X}"),
-	})
-}
-
 pub fn write(d: &OData, code: &Code) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
 	let labels: HashMap<Label, WLabel> = code.ops.iter()
@@ -826,17 +804,36 @@ fn write_parts(
 	Ok(())
 }
 
+#[rustfmt::skip]
+fn read_dyn(f: &mut CReader) -> rootcause::Result<Arg> {
+	Ok(match f.u8()? {
+		0x11 => { let v = f.u8()?; f.check_u32(0)?; Var(v).into() }
+		0x33 => { let v = f.u8()?; f.check_u32(0)?; NumReg(v).into() }
+		0x44 => { let v = f.u8()?; f.check_u32(0)?; StrReg(v).into() }
+		0x55 => { let v = f.u8()?; f.check_u32(0)?; Global(v).into() }
+		0xDD => { let v = f.str()?; Arg::Str(v) }
+		0xEE => { let v = f.f32()?; f.check_u8(0)?; Arg::F32(v) }
+		0xFF => {
+			let v = f.i32()?;
+			f.check_u8(0)?;
+			if v.abs() > 0x1000000 {
+				Arg::I32Munged(f32::from_bits(v as u32))
+			} else {
+				Arg::Int(v as i64)
+			}
+		}
+		code => rootcause::bail!("Unknown dyn code: {code:02X}"),
+	})
+}
+
+#[rustfmt::skip]
 fn write_dyn(f: &mut Writer, _d: &OData, arg: &Arg) -> rootcause::Result<()> {
 	match arg {
 		Arg::Var(Var(v)) => { f.u8(0x11); f.u8(*v); f.u32(0); }
 		Arg::NumReg(NumReg(v)) => { f.u8(0x33); f.u8(*v); f.u32(0); }
 		Arg::StrReg(StrReg(v)) => { f.u8(0x44); f.u8(*v); f.u32(0); }
 		Arg::Global(Global(v)) => { f.u8(0x55); f.u8(*v); f.u32(0); }
-		Arg::Str(s) => {
-			f.u8(0xDD);
-			f.slice(s.as_bytes());
-			f.u8(0);
-		}
+		Arg::Str(s) => { f.u8(0xDD); f.slice(s.as_bytes()); f.u8(0); }
 		Arg::F32(v) => { f.u8(0xEE); f.f32(*v); f.u8(0); }
 		Arg::Int(v) => { f.u8(0xFF); f.i32(*v as i32); f.u8(0); }
 		Arg::I32Munged(v) => { f.u8(0xFF); f.i32(v.to_bits() as i32); f.u8(0); }
