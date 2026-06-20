@@ -652,39 +652,55 @@ fn write_parts(
 	parts: &[Part],
 	op_end: &mut usize,
 ) -> rootcause::Result<()> {
+	macro_rules! arg {
+		($variant:ident) => {
+			match take_arg(op, cursor)? {
+				Arg::$variant(v) => v,
+				a => rootcause::bail!("expected {} in {}, got {a:?}", stringify!($variant), op.name),
+			}
+		};
+	}
+	macro_rules! int {
+		($ty:ty) => {{
+			let v = *arg!(Int);
+			<$ty>::try_from(v)
+				.context_with(|| format!("{v} out of range for {} in {}", stringify!($ty), op.name))?
+		}};
+	}
+
 	use Part as P;
 	for p in parts {
 		match p {
-			P::U8 => match take_arg(op, cursor)? { Arg::Int(v) => f.u8(*v as u8), a => rootcause::bail!("expected Int for U8, got {a:?}") },
-			P::U16 => match take_arg(op, cursor)? { Arg::Int(v) => f.u16(*v as u16), a => rootcause::bail!("expected Int for U16, got {a:?}") },
-			P::U32 => match take_arg(op, cursor)? { Arg::Int(v) => f.u32(*v as u32), a => rootcause::bail!("expected Int for U32, got {a:?}") },
-			P::I8 => match take_arg(op, cursor)? { Arg::Int(v) => f.i8(*v as i8), a => rootcause::bail!("expected Int for I8, got {a:?}") },
-			P::I16 => match take_arg(op, cursor)? { Arg::Int(v) => f.i16(*v as i16), a => rootcause::bail!("expected Int for I16, got {a:?}") },
-			P::I32 => match take_arg(op, cursor)? { Arg::Int(v) => f.i32(*v as i32), a => rootcause::bail!("expected Int for I32, got {a:?}") },
-			P::F32 => match take_arg(op, cursor)? { Arg::F32(v) => f.f32(*v), a => rootcause::bail!("expected F32, got {a:?}") },
-			P::Str => match take_arg(op, cursor)? { Arg::Str(s) => f.str(d.enc, s)?, a => rootcause::bail!("expected Str, got {a:?}") },
+			P::U8 => f.u8(int!(u8)),
+			P::U16 => f.u16(int!(u16)),
+			P::U32 => f.u32(int!(u32)),
+			P::I8 => f.i8(int!(i8)),
+			P::I16 => f.i16(int!(i16)),
+			P::I32 => f.i32(int!(i32)),
+			P::F32 => f.f32(*arg!(F32)),
+			P::Str => f.str(d.enc, arg!(Str))?,
 
-			P::Char => match take_arg(op, cursor)? { Arg::Char(Char(v)) => f.u16(*v), a => rootcause::bail!("expected Char, got {a:?}") },
-			P::Item => match take_arg(op, cursor)? { Arg::Item(Item(v)) => f.u16(*v), a => rootcause::bail!("expected Item, got {a:?}") },
-			P::Magic => match take_arg(op, cursor)? { Arg::Magic(Magic(v)) => f.u16(*v), a => rootcause::bail!("expected Magic, got {a:?}") },
-			P::Flag => match take_arg(op, cursor)? { Arg::Flag(Flag(v)) => f.u16(*v), a => rootcause::bail!("expected Flag, got {a:?}") },
-			P::Global => match take_arg(op, cursor)? { Arg::Global(Global(v)) => f.u8(*v), a => rootcause::bail!("expected Global, got {a:?}") },
-			P::Var => match take_arg(op, cursor)? { Arg::Var(Var(v)) => f.u8(*v), a => rootcause::bail!("expected Var, got {a:?}") },
-			P::FuncArg => match take_arg(op, cursor)? { Arg::FuncArg(FuncArg(v)) => f.u8(*v), a => rootcause::bail!("expected FuncArg, got {a:?}") },
-			P::NumReg => match take_arg(op, cursor)? { Arg::NumReg(NumReg(v)) => f.u8(*v), a => rootcause::bail!("expected NumReg, got {a:?}") },
-			P::StrReg => match take_arg(op, cursor)? { Arg::StrReg(StrReg(v)) => f.u8(*v), a => rootcause::bail!("expected StrReg, got {a:?}") },
-			P::Attr => match take_arg(op, cursor)? { Arg::Attr(Attr(v)) => f.u8(*v), a => rootcause::bail!("expected Attr, got {a:?}") },
-			P::CharAttr => match take_arg(op, cursor)? { Arg::CharAttr(CharAttr(Char(c), a)) => { f.u16(*c); f.u8(*a); }, a => rootcause::bail!("expected CharAttr, got {a:?}") },
+			P::Char => f.u16(arg!(Char).0),
+			P::Item => f.u16(arg!(Item).0),
+			P::Magic => f.u16(arg!(Magic).0),
+			P::Flag => f.u16(arg!(Flag).0),
+			P::Global => f.u8(arg!(Global).0),
+			P::Var => f.u8(arg!(Var).0),
+			P::FuncArg => f.u8(arg!(FuncArg).0),
+			P::NumReg => f.u8(arg!(NumReg).0),
+			P::StrReg => f.u8(arg!(StrReg).0),
+			P::Attr => f.u8(arg!(Attr).0),
+			P::CharAttr => { let v = arg!(CharAttr); f.u16(v.0.0); f.u8(v.1); }
 
-			P::Flags8 => match take_arg(op, cursor)? { Arg::Flags8(Flags8(v)) => f.u8(*v), a => rootcause::bail!("expected Flags8, got {a:?}") },
-			P::Flags16 => match take_arg(op, cursor)? { Arg::Flags16(Flags16(v)) => f.u16(*v), a => rootcause::bail!("expected Flags16, got {a:?}") },
-			P::Flags32 => match take_arg(op, cursor)? { Arg::Flags32(Flags32(v)) => f.u32(*v), a => rootcause::bail!("expected Flags32, got {a:?}") },
+			P::Flags8 => f.u8(arg!(Flags8).0),
+			P::Flags16 => f.u16(arg!(Flags16).0),
+			P::Flags32 => f.u32(arg!(Flags32).0),
 
-			P::Expr => match take_arg(op, cursor)? { Arg::Expr(e) => {
+			P::Expr => {
 				*op_end = f.len();
-				e.write(d, f)?;
-			}, a => rootcause::bail!("expected Expr, got {a:?}") },
-			P::Text => match take_arg(op, cursor)? { Arg::Text(t) => t.write(d.enc, f)?, a => rootcause::bail!("expected Text, got {a:?}") },
+				arg!(Expr).write(d, f)?
+			}
+			P::Text => arg!(Text).write(d.enc, f)?,
 			P::Dyn => write_dyn(f, d, take_arg(op, cursor)?)?,
 			P::Ndyn => {
 				let n = op.args.len() - *cursor;
@@ -694,10 +710,9 @@ fn write_parts(
 				}
 			}
 			P::Dync => {
-				let arg = take_arg(op, cursor)?;
-				match arg {
+				match take_arg(op, cursor)? {
 					Arg::Char(Char(v)) => write_dyn(f, d, &Arg::Int(*v as i64))?,
-					_ => write_dyn(f, d, arg)?,
+					arg => write_dyn(f, d, arg)?,
 				}
 			}
 
@@ -829,10 +844,10 @@ fn read_dyn(f: &mut CReader) -> rootcause::Result<Arg> {
 #[rustfmt::skip]
 fn write_dyn(f: &mut Writer, _d: &OData, arg: &Arg) -> rootcause::Result<()> {
 	match arg {
-		Arg::Var(Var(v)) => { f.u8(0x11); f.u8(*v); f.u32(0); }
-		Arg::NumReg(NumReg(v)) => { f.u8(0x33); f.u8(*v); f.u32(0); }
-		Arg::StrReg(StrReg(v)) => { f.u8(0x44); f.u8(*v); f.u32(0); }
-		Arg::Global(Global(v)) => { f.u8(0x55); f.u8(*v); f.u32(0); }
+		Arg::Var(v) => { f.u8(0x11); f.u8(v.0); f.u32(0); }
+		Arg::NumReg(v) => { f.u8(0x33); f.u8(v.0); f.u32(0); }
+		Arg::StrReg(v) => { f.u8(0x44); f.u8(v.0); f.u32(0); }
+		Arg::Global(v) => { f.u8(0x55); f.u8(v.0); f.u32(0); }
 		Arg::Str(s) => { f.u8(0xDD); f.slice(s.as_bytes()); f.u8(0); }
 		Arg::F32(v) => { f.u8(0xEE); f.f32(*v); f.u8(0); }
 		Arg::Int(v) => { f.u8(0xFF); f.i32(*v as i32); f.u8(0); }
