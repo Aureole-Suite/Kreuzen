@@ -218,14 +218,22 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	};
 
 	for c in &scena.chunks {
+		let align = if c.name == "ReactionTable"
+			|| c.name.starts_with("FC_auto")
+			|| scena.name == "effect"
+		{
+			16
+		} else {
+			4
+		};
 		match &c.func {
 			CodeOrTable::Code(code) => {
-				chunk(4, &c.name, code::write(&d, code));
+				chunk(align, &c.name, code::write(&d, code));
 			}
 			CodeOrTable::Table(opaque) => {
 				let mut f = Writer::new();
 				f.slice(&opaque.bytes);
-				chunk(4, &c.name.clone(), Ok(f));
+				chunk(align, &c.name.clone(), Ok(f));
 			}
 		};
 	}
