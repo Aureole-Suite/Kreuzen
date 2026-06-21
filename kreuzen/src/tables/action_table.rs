@@ -2,7 +2,7 @@ use gospel::read::Le as _;
 use gospel::write::{Le as _, Writer};
 
 use crate::{Enc, Game};
-use crate::io::{OData, CReader};
+use crate::io::{CReader, OData, WriterExt as _};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Action {
@@ -158,17 +158,101 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 
 fn write_cs1(d: &OData, table: &[Action]) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
-	f.u8(table.len() as u8);
-	for _ in table {
-		todo!()
+	let namelen = match d.enc {
+		Enc::Sjis => 32,
+		Enc::Utf8 => 48,
+	};
+	let n = u8::try_from(table.len()).map_err(|_| rootcause::report!("ActionTable too large: {}", table.len()))?;
+	f.u8(n);
+	for a in table {
+		crate::ensure!(a.effects.len() <= 2, "Cs1 action has more than 2 effects: {a:?}");
+		crate::ensure!(a.target.2 <= 0xFF, "Cs1 target.2 doesn't fit in u8: {}", a.target.2);
+		crate::ensure!(a.cast_time <= 0xFF, "Cs1 cast_time doesn't fit in u8: {}", a.cast_time);
+
+		f.u16(a.id);
+		f.u8(a.kind.0);
+		f.u8(a.kind.1);
+		f.u8(a.target.0);
+		f.u8(a.target.1);
+		f.u8(a.target.2 as u8);
+		f.u8(a.cast_time as u8);
+		f.u16(a.recovery_time);
+
+		let e0 = a.effects.first().copied().unwrap_or((0, 0, 0, 0));
+		let e1 = a.effects.get(1).copied().unwrap_or((0, 0, 0, 0));
+		crate::ensure!(e0.0 <= 0xFF, "Cs1 effect id too large: {}", e0.0);
+		crate::ensure!(e1.0 <= 0xFF, "Cs1 effect id too large: {}", e1.0);
+		f.u8(e0.0 as u8);
+		f.u8(e1.0 as u8);
+
+		let mut w = |v: u32| -> rootcause::Result<()> {
+			if d.game == Game::Cs1 {
+				f.u16(u16::try_from(v).map_err(|_| rootcause::report!("Cs1 word out of range: {v}"))?);
+			} else {
+				f.u32(v);
+			}
+			Ok(())
+		};
+
+
+		w(e0.1)?;
+		w(e0.2)?;
+		w(e0.3)?;
+		w(e1.1)?;
+		w(e1.2)?;
+		w(e1.3)?;
+		w(a.cp_cost)?;
+
+		f.sstr(16, d.enc, &a.flags)?;
+		f.sstr(32, d.enc, &a.ani)?;
+		f.sstr(namelen, d.enc, &a.name)?;
 	}
 	Ok(f)
 }
 
 fn write_cs3(d: &OData, table: &[Action]) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
-	for _ in table {
-		todo!()
+	for a in table {
+		write_cs3_action(&mut f, d, a)?;
+	}
+	if d.game == Game::Reverie {
+		write_cs3_action(&mut f, d, &Action::dummy())?;
+	} else {
+		f.u16(0xFFFF);
+		f.slice(&[0; 193]);
 	}
 	Ok(f)
+}
+
+fn write_cs3_action(f: &mut Writer, d: &OData, a: &Action) -> rootcause::Result<()> {
+	crate::ensure!(a.effects.len() <= 5, "Cs3 action has more than 5 effects: {a:?}");
+	f.u16(a.id);
+	f.u8(a.kind.0);
+	f.u8(a.kind.1);
+	f.u8(a.target.0);
+	f.u8(a.target.1);
+	f.u16(a.target.2);
+	f.f32(a.u2.0);
+	f.f32(a.u2.1);
+	f.f32(a.u2.2);
+	f.u16(a.cast_time);
+	f.u16(a.recovery_time);
+
+	for i in 0..5 {
+		let e = a.effects.get(i).unwrap_or(&(0, 0, 0, 0));
+		f.u16(e.0);
+	}
+	f.u16(0);
+	for i in 0..5 {
+		let e = a.effects.get(i).unwrap_or(&(0, 0, 0, 0));
+		f.u32(e.1);
+		f.u32(e.2);
+		f.u32(e.3);
+	}
+
+	f.u32(a.cp_cost);
+	f.sstr(16, d.enc, &a.flags)?;
+	f.sstr(32, d.enc, &a.ani)?;
+	f.sstr(64, d.enc, &a.name)?;
+	Ok(())
 }
