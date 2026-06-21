@@ -3,7 +3,7 @@ use gospel::write::{Le as _, Writer};
 
 use crate::Game;
 use crate::code::{Arg, FlatOp};
-use crate::io::{OData, VReader, WriterExt as _};
+use crate::io::{OData, CReader, WriterExt as _};
 use crate::text::{TextControl, TextPart};
 use crate::types::Char;
 
@@ -51,7 +51,7 @@ impl RawPreload {
 	}
 }
 
-pub(crate) fn read(f: &mut VReader, _: usize) -> rootcause::Result<Vec<Preload>> {
+pub(crate) fn read(f: &mut CReader, _: usize) -> rootcause::Result<Vec<Preload>> {
 	let mut table = Vec::new();
 	loop {
 		let mut preload = RawPreload {

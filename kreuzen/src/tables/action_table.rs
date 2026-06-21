@@ -1,0 +1,114 @@
+use gospel::read::Le as _;
+use gospel::write::{Le as _, Writer};
+
+use crate::io::{OData, CReader, WriterExt as _};
+
+// There's always an Action::dummy() in each table, but in one case it's not the last entry.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Action {
+	pub id: u16,
+	pub u1: (u8, u8),
+	pub target: (u8, u8, u16),
+	pub u2: (f32, f32, f32),
+	pub time: (u16, u16),
+	pub effects: Vec<(u16, u32, u32, u32)>,
+	pub u3: (u16, u16),
+	pub flags: String,
+	pub ani: String,
+	pub name: String,
+}
+
+impl Action {
+	pub fn dummy() -> Self {
+		Self {
+			id: 0xFFFF,
+			u1: (0, 0),
+			target: (0, 0, 0),
+			u2: (0.0, 0.0, 0.0),
+			time: (0, 0),
+			effects: vec![
+				(1, 0, 0, 0),
+				(2, 0, 0, 0),
+				(3, 0, 0, 0),
+				(4, 0, 0, 0),
+				(5, 0, 0, 0),
+			],
+			u3: (0, 0),
+			flags: String::new(),
+			ani: String::new(),
+			name: String::new(),
+		}
+	}
+}
+
+pub(crate) fn read(f: &mut CReader, end: usize) -> rootcause::Result<Vec<Action>> {
+	let mut table = Vec::new();
+	while f.pos() + 1 < end {
+		let id = f.u16()?;
+		let u1 = (f.u8()?, f.u8()?);
+		let target = (f.u8()?, f.u8()?, f.u16()?);
+		let u2 = (f.f32()?, f.f32()?, f.f32()?);
+		let time = (f.u16()?, f.u16()?);
+		let u4 = (f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?);
+		f.check_u16(0)?;
+		let mut effects = vec![
+			(u4.0, f.u32()?, f.u32()?, f.u32()?),
+			(u4.1, f.u32()?, f.u32()?, f.u32()?),
+			(u4.2, f.u32()?, f.u32()?, f.u32()?),
+			(u4.3, f.u32()?, f.u32()?, f.u32()?),
+			(u4.4, f.u32()?, f.u32()?, f.u32()?),
+		];
+		while effects.last().is_some_and(|v| *v == (0, 0, 0, 0)) {
+			effects.pop();
+		}
+		let u3 = (f.u16()?, f.u16()?);
+		let flags = f.sstr(16)?;
+		let ani = f.sstr(32)?;
+		let name = f.sstr(64)?;
+		table.push(Action { id, u1, target, u2, time, effects, u3, flags, ani, name });
+	}
+	f.check_u8(1)?;
+	Ok(table)
+}
+
+pub(crate) fn write(d: &OData, table: &[Action]) -> rootcause::Result<Writer> {
+	let mut f = Writer::new();
+	for action in table {
+		f.u16(action.id);
+		f.u8(action.u1.0);
+		f.u8(action.u1.1);
+		f.u8(action.target.0);
+		f.u8(action.target.1);
+		f.u16(action.target.2);
+		f.f32(action.u2.0);
+		f.f32(action.u2.1);
+		f.f32(action.u2.2);
+		f.u16(action.time.0);
+		f.u16(action.time.1);
+		for &(effect_id, ..) in &action.effects {
+			f.u16(effect_id);
+		}
+		for _ in action.effects.len()..5 {
+			f.u16(0);
+		}
+		f.u16(0);
+		for &(.., u32_1, u32_2, u32_3) in &action.effects {
+			f.u32(u32_1);
+			f.u32(u32_2);
+			f.u32(u32_3);
+		}
+		for _ in action.effects.len()..5 {
+			f.u32(0);
+			f.u32(0);
+			f.u32(0);
+		}
+		f.u16(action.u3.0);
+		f.u16(action.u3.1);
+		f.sstr(16, d.enc, &action.flags)?;
+		f.sstr(32, d.enc, &action.ani)?;
+		f.sstr(64, d.enc, &action.name)?;
+	}
+	f.u8(1);
+	Ok(f)
+}
+

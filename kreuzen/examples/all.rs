@@ -1,5 +1,5 @@
 use std::fmt::Write;
-use kreuzen::{Enc, Game};
+use kreuzen::{Body, Enc, Game};
 use std::path::{Path, PathBuf};
 
 fn main() {
@@ -80,7 +80,7 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path, outfile2: &Path)
 	std::fs::write(outfile2, s2)?;
 
 	for c in &scena.chunks {
-		if let kreuzen::CodeOrTable::Code(code) = &c.func {
+		if let Body::Code(code) = &c.func {
 			check_decompile(&c.name, code);
 		}
 		for (i, code) in c.shadow.iter().enumerate() {
@@ -114,12 +114,9 @@ fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
 		s.push('\n');
 		write!(s, "{} ", chunk.name)?;
 		match &chunk.func {
-			kreuzen::CodeOrTable::Code(code) => {
-				write_dec(&mut s, code)?;
-			}
-			kreuzen::CodeOrTable::Table(table) => {
-				writeln!(s, "{table:#?}")?;
-			}
+			Body::Code(code) => write_dec(&mut s, code)?,
+			Body::ActionTable(table) => writeln!(s, "{table:#?}")?,
+			Body::Table(table) => writeln!(s, "{table:#?}")?,
 		}
 		if !chunk.preload.is_empty() {
 			writeln!(s, "_{}={:#?}", chunk.name, chunk.preload)?;
@@ -135,14 +132,14 @@ fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
 fn check_preload(scena: &kreuzen::Scena) {
 	let has_preload = scena.chunks.iter()
 		.filter(|c| match &c.func {
-			kreuzen::CodeOrTable::Code(code) => !kreuzen::tables::preload::from_code(&code.ops, &c.name, &[]).is_empty(),
+			Body::Code(code) => !kreuzen::tables::preload::from_code(&code.ops, &c.name, &[]).is_empty(),
 			_ => false,
 		})
 	.map(|x| x.name.as_str())
 		.collect::<Vec<_>>();
 	for chunk in &scena.chunks {
 		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
-		let kreuzen::CodeOrTable::Code(code) = &chunk.func else {
+		let Body::Code(code) = &chunk.func else {
 			if !chunk.preload.is_empty() {
 				tracing::error!("chunk {} has a preload but is not code", chunk.name);
 			}

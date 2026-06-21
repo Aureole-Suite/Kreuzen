@@ -24,12 +24,14 @@ pub struct VReader<'a> {
 }
 
 impl<'a> VReader<'a> {
+	#[track_caller]
 	pub fn str(&mut self) -> rootcause::Result<String> {
 		let cstr = self.cstr()?;
 		let s = self.decode(cstr.to_bytes())?;
 		Ok(s)
 	}
 
+	#[track_caller]
 	pub fn sstr(&mut self, s: usize) -> rootcause::Result<String> {
 		let pos = self.pos();
 		let str = self.slice(s)?;
@@ -42,6 +44,7 @@ impl<'a> VReader<'a> {
 		Ok(s)
 	}
 
+	#[track_caller]
 	pub fn decode(&self, bytes: &[u8]) -> rootcause::Result<String> {
 		match self.enc {
 			Enc::Utf8 => match String::from_utf8_lossy(bytes) {

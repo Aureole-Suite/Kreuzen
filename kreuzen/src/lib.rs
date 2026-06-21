@@ -59,14 +59,15 @@ pub struct Scena {
 #[derive(Debug, Clone)]
 pub struct Chunk {
 	pub name: String,
-	pub func: CodeOrTable,
+	pub func: Body,
 	pub preload: Vec<tables::preload::Preload>,
 	pub shadow: Vec<Code>,
 }
 
 #[derive(Debug, Clone)]
-pub enum CodeOrTable {
+pub enum Body {
 	Code(Code),
+	ActionTable(Vec<tables::action_table::Action>),
 	Table(Opaque),
 }
 
@@ -226,10 +227,13 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 			_ => 4,
 		};
 		match &c.func {
-			CodeOrTable::Code(code) => {
+			Body::Code(code) => {
 				chunk(align, &c.name, code::write(&d, code));
 			}
-			CodeOrTable::Table(opaque) => {
+			Body::ActionTable(table) => {
+				chunk(align, &c.name, tables::action_table::write(&d, table));
+			}
+			Body::Table(opaque) => {
 				let mut f = Writer::new();
 				f.slice(&opaque.bytes);
 				chunk(align, &c.name.clone(), Ok(f));
@@ -446,17 +450,19 @@ fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::En
 		|| e.name.starts_with("BookData")
 		|| e.name.starts_with("BTLSET")
 		|| e.name.starts_with("StyleName");
-	let func = read_subchunk(cr, ranges[e.main], |f, end| {
-		if !is_table {
-			Ok(CodeOrTable::Code(code::read(f, end)?))
-		} else {
+	let func = if !is_table {
+		Body::Code(read_subchunk(cr, ranges[e.main], code::read)?)
+	} else if e.name == "ActionTable" {
+		Body::ActionTable(read_subchunk(cr, ranges[e.main], tables::action_table::read)?)
+	} else {
+		Body::Table(read_subchunk(cr, ranges[e.main], |f, end| {
 			let pos = f.pos();
-			Ok(CodeOrTable::Table(Opaque { bytes: f.slice(end - pos)?.to_vec() }))
-		}
-	})?;
+			Ok(Opaque { bytes: f.slice(end - pos)?.to_vec() })
+		})?)
+	};
 	let preload = if let Some(i) = e.preload {
 		let _span = tracing::error_span!("preload").entered();
-		let v = read_subchunk(cr, ranges[i], |f, end| tables::preload::read(f, end))?;
+		let v = read_subchunk(cr, ranges[i], tables::preload::read)?;
 		if v.is_empty() {
 			tracing::warn!("preload is empty");
 		}
@@ -467,9 +473,7 @@ fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::En
 	let mut shadow = Vec::with_capacity(e.shadow.len());
 	for (a, &s) in e.shadow.iter().enumerate() {
 		let _span = tracing::error_span!("shadow", a).entered();
-		shadow.push(read_subchunk(cr, ranges[s], |f, end| {
-			Ok(code::read(f, end)?)
-		})?);
+		shadow.push(read_subchunk(cr, ranges[s], code::read)?);
 	}
 	let chunk = Chunk {
 		name: e.name.clone(),
