@@ -51,7 +51,7 @@ impl RawPreload {
 	}
 }
 
-pub(crate) fn read(f: &mut CReader, _: usize) -> rootcause::Result<Vec<Preload>> {
+pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Preload>> {
 	let mut table = Vec::new();
 	loop {
 		let mut preload = RawPreload {

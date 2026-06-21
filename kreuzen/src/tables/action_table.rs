@@ -41,9 +41,9 @@ impl Action {
 	}
 }
 
-pub(crate) fn read(f: &mut CReader, end: usize) -> rootcause::Result<Vec<Action>> {
+pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 	let mut table = Vec::new();
-	while f.pos() < end {
+	while !f.remaining().is_empty() {
 		let id = f.u16()?;
 		let u1 = (f.u8()?, f.u8()?);
 		let target = (f.u8()?, f.u8()?, f.u16()?);
