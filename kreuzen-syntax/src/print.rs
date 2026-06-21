@@ -127,7 +127,7 @@ impl Ctx {
 
 pub fn print_function(stmts: &[Stmt]) -> String {
 	let mut ctx = Ctx::new();
-	ctx.block(stmts, Stmt::print);
+	stmts.print(&mut ctx);
 	ctx.out
 }
 
@@ -168,14 +168,14 @@ impl Print for Stmt {
 				ctx.meta(*m);
 				ctx.word("if");
 				e.print(ctx);
-				ctx.block(then, Stmt::print);
+				then.print(ctx);
 				if let Some((m2, els)) = els {
 					ctx.meta(*m2);
 					ctx.word("else");
 					if let [stmt @ Stmt::If(..)] = els.as_slice() {
 						stmt.print(ctx);
 					} else {
-						ctx.block(els, Stmt::print);
+						els.print(ctx);
 					}
 				}
 			}
@@ -183,7 +183,7 @@ impl Print for Stmt {
 				ctx.meta(*m);
 				ctx.word("while");
 				e.print(ctx);
-				ctx.block(body, Stmt::print);
+				body.print(ctx);
 			}
 			Stmt::Switch(m, e, cases) => {
 				ctx.meta(*m);
@@ -211,6 +211,12 @@ impl Print for Stmt {
 				});
 			}
 		}
+	}
+}
+
+impl Print for [Stmt] {
+	fn print(&self, ctx: &mut Ctx) {
+		ctx.block(self, Stmt::print);
 	}
 }
 
