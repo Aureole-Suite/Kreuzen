@@ -10,7 +10,7 @@ pub mod code;
 pub mod expr;
 pub mod text;
 mod spec;
-mod types;
+pub mod types;
 pub mod tables;
 pub mod decompile;
 

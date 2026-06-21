@@ -3,7 +3,8 @@ use std::borrow::Cow;
 use kreuzen::code::{Arg, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
-use kreuzen::text::{Text, TextPart};
+use kreuzen::text::{Text, TextControl, TextPart};
+use kreuzen::types;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 enum Space {
@@ -209,12 +210,49 @@ impl Print for Op {
 	}
 }
 
+macro_rules! print_via_debug {
+	($($t:ty),* $(,)?) => {
+		$(
+			impl Print for $t {
+				fn print(&self, ctx: &mut Ctx) {
+					ctx.token(format!("{self:?}"));
+				}
+			}
+		)*
+	};
+}
+
+print_via_debug!(
+	String, str, i64, i32, f32,
+	types::Char, types::Item, types::Magic, types::Flag, types::Global, types::Var,
+	types::FuncArg, types::NumReg, types::StrReg, types::Attr, types::CharAttr,
+	types::Flags8, types::Flags16, types::Flags32,
+);
+
 impl Print for Arg {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
+			Arg::Str(v) => v.print(ctx),
+			Arg::Int(v) => v.print(ctx),
+			Arg::F32(v) => v.print(ctx),
+			Arg::F32Munged(v) => { v.print(ctx); ctx.sym("'"); }
+			Arg::I32Munged(v) => { v.print(ctx); ctx.sym("'"); }
+			Arg::Char(v) => v.print(ctx),
+			Arg::Item(v) => v.print(ctx),
+			Arg::Magic(v) => v.print(ctx),
+			Arg::Flag(v) => v.print(ctx),
+			Arg::Global(v) => v.print(ctx),
+			Arg::Var(v) => v.print(ctx),
+			Arg::FuncArg(v) => v.print(ctx),
+			Arg::NumReg(v) => v.print(ctx),
+			Arg::StrReg(v) => v.print(ctx),
+			Arg::Attr(v) => v.print(ctx),
+			Arg::CharAttr(v) => v.print(ctx),
+			Arg::Flags8(v) => v.print(ctx),
+			Arg::Flags16(v) => v.print(ctx),
+			Arg::Flags32(v) => v.print(ctx),
 			Arg::Expr(e) => e.print(ctx),
 			Arg::Text(t) => t.print(ctx),
-			_ => ctx.token(format!("{self:?}")), // TODO
 		}
 	}
 }
@@ -226,14 +264,28 @@ impl Print for Text {
 			match part {
 				TextPart::String(s) => body.push_str(s),
 				TextPart::Control(c) => {
+					let mut sub = Ctx::new();
+					c.print(&mut sub);
 					body.push('{');
-					body.push_str(&format!("{c:?}"));
+					body.push_str(&sub.out);
 					body.push('}');
 				}
 			}
 		}
 		body.push_str("\"\"\"");
 		ctx.token(body);
+	}
+}
+
+impl Print for TextControl {
+	fn print(&self, ctx: &mut Ctx) {
+		match self {
+			TextControl::Line => ctx.word("line"),
+			TextControl::Pause => ctx.word("pause"),
+			TextControl::Clear => ctx.word("clear"),
+			TextControl::Item(v) => v.print(ctx),
+			_ => ctx.token(format!("{self:?}")),
+		}
 	}
 }
 
@@ -245,9 +297,16 @@ impl Print for Expr {
 
 fn print_expr(e: &Expr, ctx: &mut Ctx, prec: u32) {
 	match e {
-		Expr::Int(v) => ctx.token(v.to_string()),
+		Expr::Int(v) => v.print(ctx),
 		Expr::Op(op) => op.print(ctx),
+		Expr::Flag(v) => v.print(ctx),
+		Expr::Var(v) => v.print(ctx),
+		Expr::Attr(v) => v.print(ctx),
+		Expr::CharAttr(v) => v.print(ctx),
 		Expr::Rand => ctx.word("rand"),
+		Expr::Global(v) => v.print(ctx),
+		Expr::SystemFlags(v) => v.print(ctx),
+		Expr::NumReg(v) => v.print(ctx),
 		Expr::Bin(op, a, b) => {
 			let (sym, p) = binop_prio(*op);
 			if p < prec { ctx.sym("("); }
@@ -278,7 +337,6 @@ fn print_expr(e: &Expr, ctx: &mut Ctx, prec: u32) {
 			});
 			print_expr(a, ctx, 0);
 		}
-		_ => ctx.token(format!("{e:?}")), // TODO
 	}
 }
 
