@@ -4,7 +4,7 @@ use crate::Game;
 use crate::io::{CReader, OData};
 
 pub mod preload;
-pub mod action_table;
+pub mod action;
 
 #[derive(Clone)]
 pub struct Opaque {
@@ -21,14 +21,14 @@ impl std::fmt::Debug for Opaque {
 // Preload tables are stored separately from others, so they are not in this enum
 #[derive(Debug, Clone)]
 pub enum Table {
-	ActionTable(Vec<action_table::Action>),
+	ActionTable(Vec<action::Action>),
 	Unknown(Opaque),
 }
 
 // Returns None if the chunk is code
 pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Table>> {
 	if name == "ActionTable" {
-		return Ok(Some(Table::ActionTable(action_table::read(f)?)));
+		return Ok(Some(Table::ActionTable(action::read(f)?)));
 	}
 
 	let tables = [
@@ -72,7 +72,7 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 		_ => 4,
 	};
 	let f = match table {
-		Table::ActionTable(actions) => action_table::write(d, actions)?,
+		Table::ActionTable(actions) => action::write(d, actions)?,
 		Table::Unknown(opaque) => {
 			let mut f = Writer::new();
 			f.slice(&opaque.bytes);
