@@ -366,6 +366,10 @@ fn resolve_game(
 
 	let cs3_special = cs3_special_1.contains(&n) || cs3_special_2.contains(&n) || cs3_special_3.contains(&n);
 
+	if game == Game::Cs1 && matches!(n, "almon146" | "almon148_c00" | "almon143_c00" | "almon118" | "almon046_c02") {
+		enc = Enc::Sjis;
+	}
+
 	if game <= Game::Cs2 && n == "mon999"
 		|| game == Game::Cs2 && n == "title"
 		|| game == Game::Tx && n == "a1019"

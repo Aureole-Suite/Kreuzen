@@ -1,11 +1,21 @@
 use gospel::read::Le as _;
 use gospel::write::{Le as _, Writer};
 
-use crate::io::{OData, CReader, WriterExt as _};
+use crate::{Enc, Game};
+use crate::io::{OData, CReader};
 
-// There's always an Action::dummy() in each table, but in one case it's not the last entry.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Action {
+pub struct Cs1Action {
+	pub id: u16,
+	pub bytes: [u8; 10],
+	pub words: [u32; 7],
+	pub flags: String,
+	pub ani: String,
+	pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Cs3Action {
 	pub id: u16,
 	pub u1: (u8, u8),
 	pub target: (u8, u8, u16),
@@ -18,7 +28,8 @@ pub struct Action {
 	pub name: String,
 }
 
-impl Action {
+impl Cs3Action {
+	// There's always an Action::dummy() in each table, but in one case it's not the last entry.
 	pub fn dummy() -> Self {
 		Self {
 			id: 0xFFFF,
@@ -41,10 +52,50 @@ impl Action {
 	}
 }
 
-pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
-	let mut table = Vec::new();
+pub(crate) fn read_cs1(f: &mut CReader) -> rootcause::Result<Vec<Cs1Action>> {
+	let n = f.u8()? as usize;
+	let namelen = match f.enc {
+		Enc::Sjis => 32,
+		Enc::Utf8 => 48,
+	};
+
+	let mut out = Vec::with_capacity(n);
 	while !f.remaining().is_empty() {
 		let id = f.u16()?;
+		let mut bytes = [0u8; 10];
+		for b in &mut bytes {
+			*b = f.u8()?;
+		}
+		let mut words = [0u32; 7];
+		for w in &mut words {
+			*w = if f.game == Game::Cs1 { f.u16()? as u32 } else { f.u32()? };
+		}
+		let flags = f.sstr(16)?;
+		let ani = f.sstr(32)?;
+		let name = f.sstr(namelen)?;
+		out.push(Cs1Action { id, bytes, words, flags, ani, name });
+	}
+
+	if out.len() != n {
+		tracing::warn!("wrong ActionTable length: {} != {}", out.len(), n);
+	}
+
+	Ok(out)
+}
+
+pub(crate) fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Cs3Action>> {
+	let mut table = Vec::new();
+	let mut has_sep = false;
+	while !f.remaining().is_empty() {
+		if has_sep {
+			tracing::warn!("data after ActionTable terminator");
+		}
+		let id = f.u16()?;
+		if id == 0xFFFF && f.game != Game::Reverie {
+			has_sep = true;
+			f.check(&[0; 193])?;
+			continue;
+		}
 		let u1 = (f.u8()?, f.u8()?);
 		let target = (f.u8()?, f.u8()?, f.u16()?);
 		let u2 = (f.f32()?, f.f32()?, f.f32()?);
@@ -65,48 +116,32 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 		let flags = f.sstr(16)?;
 		let ani = f.sstr(32)?;
 		let name = f.sstr(64)?;
-		table.push(Action { id, u1, target, u2, time, effects, u3, flags, ani, name });
+		let act = Cs3Action { id, u1, target, u2, time, effects, u3, flags, ani, name };
+		if id == 0xFFFF && f.game == Game::Reverie {
+			if act != Cs3Action::dummy() {
+				tracing::error!("malformed ActionTable terminator");
+			}
+			has_sep = true;
+			continue;
+		}
+		table.push(act);
 	}
 	Ok(table)
 }
 
-pub(crate) fn write(d: &OData, table: &[Action]) -> rootcause::Result<Writer> {
+pub(crate) fn write_cs1(d: &OData, table: &[Cs1Action]) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
+	f.u8(table.len() as u8);
 	for action in table {
-		f.u16(action.id);
-		f.u8(action.u1.0);
-		f.u8(action.u1.1);
-		f.u8(action.target.0);
-		f.u8(action.target.1);
-		f.u16(action.target.2);
-		f.f32(action.u2.0);
-		f.f32(action.u2.1);
-		f.f32(action.u2.2);
-		f.u16(action.time.0);
-		f.u16(action.time.1);
-		for &(effect_id, ..) in &action.effects {
-			f.u16(effect_id);
-		}
-		for _ in action.effects.len()..5 {
-			f.u16(0);
-		}
-		f.u16(0);
-		for &(.., u32_1, u32_2, u32_3) in &action.effects {
-			f.u32(u32_1);
-			f.u32(u32_2);
-			f.u32(u32_3);
-		}
-		for _ in action.effects.len()..5 {
-			f.u32(0);
-			f.u32(0);
-			f.u32(0);
-		}
-		f.u16(action.u3.0);
-		f.u16(action.u3.1);
-		f.sstr(16, d.enc, &action.flags)?;
-		f.sstr(32, d.enc, &action.ani)?;
-		f.sstr(64, d.enc, &action.name)?;
+		todo!()
 	}
 	Ok(f)
 }
 
+pub(crate) fn write_cs3(d: &OData, table: &[Cs3Action]) -> rootcause::Result<Writer> {
+	let mut f = Writer::new();
+	for action in table {
+		todo!()
+	}
+	Ok(f)
+}
