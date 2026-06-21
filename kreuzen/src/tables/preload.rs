@@ -82,7 +82,6 @@ pub(crate) fn read(f: &mut CReader, _: usize) -> rootcause::Result<Vec<Preload>>
 		});
 		preload.finish(null)?;
 	}
-	f.check_u8(1)?;
 	Ok(table)
 }
 
@@ -117,8 +116,6 @@ pub(crate) fn write(d: &OData, preload: &[Preload]) -> rootcause::Result<Writer>
 	f.u16(charid.0);
 	f.u32(*u32);
 	f.sstr(32, d.enc, str)?;
-
-	f.u8(1);
 	Ok(f)
 }
 

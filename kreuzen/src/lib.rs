@@ -175,10 +175,7 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		crate::ensure!(cr.game == Game::Reverie);
 		crate::ensure!(oddness == 0);
 		oddness = 3;
-		match read_subchunk(&mut cr, ranges[i], |f, _| {
-			f.check_u8(1)?;
-			Ok(())
-		}) {
+		match read_subchunk(&mut cr, ranges[i], false, |_, _| Ok(())) {
 			Ok(()) => {}
 			Err(e) => errors.push(e.context("error parsing charater section".to_owned()).into_cloneable()),
 		}
@@ -204,9 +201,14 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 
 	let mut errors = rootcause::report_collection::ReportCollection::new();
 	let mut chunks = Vec::new();
-	let mut chunk = |align: usize, name: &str, body: rootcause::Result<Writer>| {
+	let mut chunk = |align: usize, name: &str, raw: bool, body: rootcause::Result<Writer>| {
 		match body {
-			Ok(body) => chunks.push((Label::new(), align, name.to_owned(), body)),
+			Ok(mut body) => {
+				if !raw {
+					body.u8(1);
+				}
+				chunks.push((Label::new(), align, name.to_owned(), body))
+			}
 			Err(e) => errors.push(e.context(format!("error writing chunk {}", name)).into_cloneable()),
 		}
 	};
@@ -228,31 +230,29 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 		};
 		match &c.func {
 			Body::Code(code) => {
-				chunk(align, &c.name, code::write(&d, code));
+				chunk(align, &c.name, true, code::write(&d, code));
 			}
 			Body::ActionTable(table) => {
-				chunk(align, &c.name, tables::action_table::write(&d, table));
+				chunk(align, &c.name, false, tables::action_table::write(&d, table));
 			}
 			Body::Table(opaque) => {
 				let mut f = Writer::new();
 				f.slice(&opaque.bytes);
-				chunk(align, &c.name.clone(), Ok(f));
+				chunk(align, &c.name.clone(), false, Ok(f));
 			}
 		};
 	}
 	for c in &scena.chunks {
 		if !c.preload.is_empty() {
-			chunk(16, &format!("_{}", c.name), tables::preload::write(&d, &c.preload));
+			chunk(16, &format!("_{}", c.name), false, tables::preload::write(&d, &c.preload));
 		}
 	}
 	if scena.game == Game::Reverie && scena.oddness == 3 {
-		let mut f = Writer::new();
-		f.u8(1);
-		chunk(4, "_a0_CharaterSection", Ok(f));
+		chunk(4, "_a0_CharaterSection", false, Ok(Writer::new()));
 	}
 	for c in &scena.chunks {
 		for (i, code) in c.shadow.iter().enumerate() {
-			chunk(4, &format!("_a{i}_{}", c.name), code::write(&d, code));
+			chunk(4, &format!("_a{i}_{}", c.name), true, code::write(&d, code));
 		}
 	}
 
@@ -451,18 +451,18 @@ fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::En
 		|| e.name.starts_with("BTLSET")
 		|| e.name.starts_with("StyleName");
 	let func = if !is_table {
-		Body::Code(read_subchunk(cr, ranges[e.main], code::read)?)
+		Body::Code(read_subchunk(cr, ranges[e.main], true, code::read)?)
 	} else if e.name == "ActionTable" {
-		Body::ActionTable(read_subchunk(cr, ranges[e.main], tables::action_table::read)?)
+		Body::ActionTable(read_subchunk(cr, ranges[e.main], false, tables::action_table::read)?)
 	} else {
-		Body::Table(read_subchunk(cr, ranges[e.main], |f, end| {
+		Body::Table(read_subchunk(cr, ranges[e.main], false, |f, end| {
 			let pos = f.pos();
 			Ok(Opaque { bytes: f.slice(end - pos)?.to_vec() })
 		})?)
 	};
 	let preload = if let Some(i) = e.preload {
 		let _span = tracing::error_span!("preload").entered();
-		let v = read_subchunk(cr, ranges[i], tables::preload::read)?;
+		let v = read_subchunk(cr, ranges[i], false, tables::preload::read)?;
 		if v.is_empty() {
 			tracing::warn!("preload is empty");
 		}
@@ -473,7 +473,7 @@ fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::En
 	let mut shadow = Vec::with_capacity(e.shadow.len());
 	for (a, &s) in e.shadow.iter().enumerate() {
 		let _span = tracing::error_span!("shadow", a).entered();
-		shadow.push(read_subchunk(cr, ranges[s], code::read)?);
+		shadow.push(read_subchunk(cr, ranges[s], true, code::read)?);
 	}
 	let chunk = Chunk {
 		name: e.name.clone(),
@@ -504,12 +504,15 @@ fn read_asm(f: &mut VReader, n: usize) -> rootcause::Result<(Vec<String>, Vec<us
 }
 
 
-fn read_subchunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut CReader, usize) -> rootcause::Result<T>) -> rootcause::Result<T> {
+fn read_subchunk<T>(f: &mut CReader, s: (usize, usize), raw: bool, body: impl FnOnce(&mut CReader, usize) -> rootcause::Result<T>) -> rootcause::Result<T> {
 	let (start, end) = s;
 	crate::ensure!(start <= end && end <= f.reader.len());
 	f.seek(start)?;
 	let mut actual_end = end;
-	while actual_end > 0 && f.data()[actual_end - 1] == 0 {
+	while actual_end > start && f.data()[actual_end - 1] == 0 {
+		actual_end -= 1;
+	}
+	if !raw && actual_end > start && f.data()[actual_end - 1] == 1 {
 		actual_end -= 1;
 	}
 	let v = body(f, actual_end)?;

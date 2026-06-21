@@ -43,7 +43,7 @@ impl Action {
 
 pub(crate) fn read(f: &mut CReader, end: usize) -> rootcause::Result<Vec<Action>> {
 	let mut table = Vec::new();
-	while f.pos() + 1 < end {
+	while f.pos() < end {
 		let id = f.u16()?;
 		let u1 = (f.u8()?, f.u8()?);
 		let target = (f.u8()?, f.u8()?, f.u16()?);
@@ -67,7 +67,6 @@ pub(crate) fn read(f: &mut CReader, end: usize) -> rootcause::Result<Vec<Action>
 		let name = f.sstr(64)?;
 		table.push(Action { id, u1, target, u2, time, effects, u3, flags, ani, name });
 	}
-	f.check_u8(1)?;
 	Ok(table)
 }
 
@@ -108,7 +107,6 @@ pub(crate) fn write(d: &OData, table: &[Action]) -> rootcause::Result<Writer> {
 		f.sstr(32, d.enc, &action.ani)?;
 		f.sstr(64, d.enc, &action.name)?;
 	}
-	f.u8(1);
 	Ok(f)
 }
 
