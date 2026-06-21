@@ -205,8 +205,20 @@ impl Print for Stmt {
 impl Print for Op {
 	fn print(&self, ctx: &mut Ctx) {
 		ctx.meta(self.meta);
-		ctx.token(self.name);
-		ctx.arglist(self.args.iter(), Arg::print);
+		if matches!(self.name, "SetAttr" | "SetVar" | "SetNumReg" | "SetGlobal" | "SetCharAttr") {
+			assert_eq!(self.args.len(), 2);
+			self.args[0].print(ctx);
+			let Arg::Expr(expr) = &self.args[1] else {
+				panic!("setter second arg must be expr");
+			};
+			expr.print(ctx);
+		} else if self.name == "return" {
+			assert!(self.args.is_empty());
+			ctx.token(self.name);
+		} else {
+			ctx.token(self.name);
+			ctx.arglist(self.args.iter(), Arg::print);
+		}
 	}
 }
 
@@ -251,8 +263,8 @@ impl Print for Arg {
 			Arg::Flags8(v) => v.print(ctx),
 			Arg::Flags16(v) => v.print(ctx),
 			Arg::Flags32(v) => v.print(ctx),
-			Arg::Expr(e) => e.print(ctx),
-			Arg::Text(t) => t.print(ctx),
+			Arg::Expr(_) => unreachable!("expr handled separately"),
+			Arg::Text(v) => v.print(ctx),
 		}
 	}
 }

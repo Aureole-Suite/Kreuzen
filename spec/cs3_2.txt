@@ -1,21 +1,4 @@
-01   'return'
-02   'call' u8 str ndyn
-03   'goto'
-04   'fastcall' u8 str
-05   'if'
-06   'switch'
-0A   'SetVar' var expr
-16   'Sleep' u16
-1E   'Fork' char u8 u8 str
-2A   u8 char str str u8
-2C   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
-2D   'CharAniclipWait' char u32 u8
-2F06 'CharAniclipLoadByCatalog' char flags32
-2F07 'CharAniclipReleaseByCatalog' char flags32
-3000 'AttachmentAdd' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
-3001 'AttachmentRemove' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
-3100 'PkgLoad' str
-3101 'PkgUnload' str
+import cs3 00..32
 320A 'EffLoad' char u8 str
 320C 'EffPlay' char dyn char flags32 dyn f32 f32 f32 f32 f32 f32 dyn dyn dyn u8
 33 'Btl'

@@ -418,7 +418,7 @@
 4F   u8
 50   'NameplateShow' u16 u16 str u8 u16
 
-51   char u8 expr
+51   'SetCharAttr' charattr expr
 52   char u8 str
 53   char str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16
 54   u8 u16 u16 f32

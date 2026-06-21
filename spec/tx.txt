@@ -278,7 +278,7 @@
 4D   'VisHide' u8
 4F   'NameplateShow' u16 u16 str u8 u16
 
-50   char u8 expr
+50   'SetCharAttr' charattr expr
 51   char u8 str
 52   char str f32 f32 f32 f32 f32 f32 f32 f32 f32 u16
 5300 u16 u16 f32 u16 u16
