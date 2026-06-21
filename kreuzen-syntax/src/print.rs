@@ -1,8 +1,9 @@
 use std::borrow::Cow;
 
-use kreuzen::code::{Arg, Op, OpMeta};
+use kreuzen::code::{Arg, Code, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
+use kreuzen::tables::preload::Preload;
 use kreuzen::text::{Text, TextControl, TextPart};
 use kreuzen::types;
 
@@ -127,7 +128,18 @@ impl Ctx {
 pub fn print_function(stmts: &[Stmt]) -> String {
 	let mut ctx = Ctx::new();
 	ctx.block(stmts, Stmt::print);
-	ctx.out.push('\n');
+	ctx.out
+}
+
+pub fn print_flat(code: &Code) -> String {
+	let mut ctx = Ctx::new();
+	ctx.block(&code.ops, FlatOp::print);
+	ctx.out
+}
+
+pub fn print_preload(preloads: &[Preload]) -> String {
+	let mut ctx = Ctx::new();
+	ctx.block(preloads, Preload::print);
 	ctx.out
 }
 
@@ -202,6 +214,81 @@ impl Print for Stmt {
 	}
 }
 
+macro_rules! call {
+	($ctx:expr, $name:expr $(, $arg:expr)* $(,)?) => {{
+		let __c: &mut Ctx = $ctx;
+		__c.word($name);
+		__c.sym("(");
+		let mut _first = true;
+		$(
+			if !_first { __c.sym_(","); }
+			_first = false;
+			$arg.print(&mut *__c);
+		)*
+		__c.sym_(")");
+	}};
+}
+
+impl Print for FlatOp {
+	fn print(&self, ctx: &mut Ctx) {
+		match self {
+			FlatOp::Op(op) => {
+				op.print(ctx);
+				ctx.sym_(";");
+				return;
+			}
+			FlatOp::Label(l) => {
+				ctx.indent -= 1;
+				l.print(ctx);
+				ctx.sym_(":");
+				ctx.indent += 1;
+				return;
+			}
+			FlatOp::Goto(m, l) => {
+				ctx.meta(*m);
+				ctx.word("goto");
+				l.print(ctx);
+			}
+			FlatOp::If(m, e, l) => {
+				ctx.meta(*m);
+				ctx.word("if");
+				e.print(ctx);
+				l.print(ctx);
+			}
+			FlatOp::Switch(m, e, cases, default) => {
+				ctx.meta(*m);
+				ctx.word("switch");
+				e.print(ctx);
+				ctx.block(cases, |(value, label), ctx| {
+					ctx.token(value.to_string());
+					ctx._sym_("=>");
+					label.print(ctx);
+					ctx.sym_(";");
+				});
+				default.print(ctx);
+			}
+		}
+		ctx.sym_(";");
+	}
+}
+
+impl Print for Preload {
+	fn print(&self, ctx: &mut Ctx) {
+		match self {
+			Preload::Call(n, s) => call!(ctx, "Call", n, s),
+			Preload::PkgLoad(s) => call!(ctx, "PkgLoad", s),
+			Preload::EffLoad(s) => call!(ctx, "EffLoad", s),
+			Preload::SoundPlay(n) => call!(ctx, "SoundPlay", n),
+			Preload::SoundPlayVoice(n) => call!(ctx, "SoundPlayVoice", n),
+			Preload::Voice(n) => call!(ctx, "Voice", n),
+			Preload::CharAniclipPlay(c, s) => call!(ctx, "CharAniclipPlay", c, s),
+			Preload::NameplateShow(s) => call!(ctx, "NameplateShow", s),
+			Preload::opCE02(s) => call!(ctx, "opCE02", s),
+		}
+		ctx.sym_(";");
+	}
+}
+
 impl Print for Op {
 	fn print(&self, ctx: &mut Ctx) {
 		ctx.meta(self.meta);
@@ -235,7 +322,7 @@ macro_rules! print_via_debug {
 }
 
 print_via_debug!(
-	String, str, i64, i32, f32,
+	String, str, i64, i32, u32, f32,
 	types::Char, types::Item, types::Magic, types::Flag, types::Global, types::Var,
 	types::FuncArg, types::NumReg, types::StrReg, types::Attr, types::CharAttr,
 	types::Flags8, types::Flags16, types::Flags32,
@@ -322,7 +409,7 @@ fn print_expr(e: &Expr, ctx: &mut Ctx, prec: u32) {
 		Expr::NumReg(v) => v.print(ctx),
 		Expr::Bin(op, a, b) => {
 			let (sym, p) = binop_prio(*op);
-			if p < prec { ctx.sym("("); }
+			if p < prec { ctx._sym("("); }
 			print_expr(a, ctx, p);
 			ctx._sym_(sym);
 			print_expr(b, ctx, p + 1);
@@ -371,5 +458,12 @@ fn binop_prio(op: BinOp) -> (&'static str, u32) {
 		Le => ("<=", 2),
 		Ge => (">=", 2),
 		BoolAnd => ("&&", 1),
+	}
+}
+
+impl Print for Label {
+	fn print(&self, ctx: &mut Ctx) {
+		ctx._sym("$");
+		ctx.token(format!("L{}", self.0));
 	}
 }

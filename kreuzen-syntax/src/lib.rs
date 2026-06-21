@@ -1,3 +1,3 @@
 mod print;
 
-pub use print::print_function;
+pub use print::{print_flat, print_function, print_preload};

@@ -117,12 +117,13 @@ fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
 			Body::Table(table) => writeln!(s, "{table:#?}")?,
 		}
 		if !chunk.preload.is_empty() {
-			writeln!(s, "_{}={:#?}", chunk.name, chunk.preload)?;
+			write!(s, " preload {}", kreuzen_syntax::print_preload(&chunk.preload))?;
 		}
 		for (a, shadow) in chunk.shadow.iter().enumerate() {
 			write!(s, "_a{a}_{}", chunk.name)?;
 			write_dec(&mut s, shadow)?;
 		}
+		writeln!(s)?;
 	}
 	Ok(s)
 }
@@ -156,10 +157,8 @@ fn write_dec(s: &mut String, code: &kreuzen::code::Code) -> rootcause::Result<()
 	match kreuzen::decompile::decompile(code) {
 		Ok(stmts) => s.push_str(&kreuzen_syntax::print_function(&stmts)),
 		Err(e) => {
-			write!(s, "Error decompiling:{e}")?;
-			for (i, op) in code.ops.iter().enumerate() {
-				writeln!(s, "{i}: {op:?}")?;
-			}
+			write!(s, "/* Error decompiling:{e} */ ")?;
+			s.push_str(&kreuzen_syntax::print_flat(code));
 			print!("Error decompiling:{e}"); // has a newline on its own
 		}
 	}
