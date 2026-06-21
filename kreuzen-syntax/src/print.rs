@@ -284,6 +284,7 @@ impl Print for TextControl {
 			TextControl::Pause => ctx.word("pause"),
 			TextControl::Clear => ctx.word("clear"),
 			TextControl::Item(v) => v.print(ctx),
+			TextControl::Magic(v) => v.print(ctx),
 			_ => ctx.token(format!("{self:?}")),
 		}
 	}

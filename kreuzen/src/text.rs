@@ -2,7 +2,7 @@ use gospel::read::Le as _;
 use gospel::write::{Le as _, Writer};
 
 use crate::Enc;
-use crate::types::Item;
+use crate::types::{Item, Magic};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text(pub Vec<TextPart>);
@@ -28,13 +28,13 @@ pub enum TextControl {
 	_0C,
 	_0F,
 	Item(Item),
-	Voiceline(u32),
-	_12(u32),
+	Voice(u32),
+	VoiceSilent(u32),
 	_13,
 	_16,
-	_17(u16),
+	Param(u16),
 	_18,
-	_19(u16),
+	Magic(Magic),
 	_1A,
 }
 
@@ -64,13 +64,13 @@ impl Text {
 					0x0C => TextControl::_0C,
 					0x0F => TextControl::_0F,
 					0x10 => TextControl::Item(Item(f.u16()?)),
-					0x11 => TextControl::Voiceline(f.u32()?),
-					0x12 => TextControl::_12(f.u32()?),
+					0x11 => TextControl::Voice(f.u32()?),
+					0x12 => TextControl::VoiceSilent(f.u32()?),
 					0x13 => TextControl::_13,
 					0x16 => TextControl::_16,
-					0x17 => TextControl::_17(f.u16()?),
+					0x17 => TextControl::Param(f.u16()?),
 					0x18 => TextControl::_18,
-					0x19 => TextControl::_19(f.u16()?),
+					0x19 => TextControl::Magic(Magic(f.u16()?)),
 					0x1A => TextControl::_1A,
 					byte => {
 						f.rewind();
@@ -98,14 +98,14 @@ impl Text {
 					TextControl::_0B => f.u8(0x0B),
 					TextControl::_0C => f.u8(0x0C),
 					TextControl::_0F => f.u8(0x0F),
-					TextControl::Item(Item(v)) => { f.u8(0x10); f.u16(v); }
-					TextControl::Voiceline(v) => { f.u8(0x11); f.u32(v); }
-					TextControl::_12(v) => { f.u8(0x12); f.u32(v); }
+					TextControl::Item(v) => { f.u8(0x10); f.u16(v.0); }
+					TextControl::Voice(v) => { f.u8(0x11); f.u32(v); }
+					TextControl::VoiceSilent(v) => { f.u8(0x12); f.u32(v); }
 					TextControl::_13 => f.u8(0x13),
 					TextControl::_16 => f.u8(0x16),
-					TextControl::_17(v) => { f.u8(0x17); f.u16(v); }
+					TextControl::Param(v) => { f.u8(0x17); f.u16(v); }
 					TextControl::_18 => f.u8(0x18),
-					TextControl::_19(v) => { f.u8(0x19); f.u16(v); }
+					TextControl::Magic(v) => { f.u8(0x19); f.u16(v.0); }
 					TextControl::_1A => f.u8(0x1A),
 				}
 			}
