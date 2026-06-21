@@ -47,9 +47,8 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 			let script = path.join(&dir).join(folder).join(&file);
 			let scriptname = format!("{game:?}/{dir}/{folder}/{file}");
 			let outfile = PathBuf::from("out").join(format!("{game:?}/{folder}/{dir}/{file}"));
-			let outfile2 = PathBuf::from("out2").join(format!("{game:?}/{folder}/{dir}/{file}"));
 			let _span = tracing::error_span!("script", name = %scriptname).entered();
-			match process(game, enc, &script, &outfile, &outfile2) {
+			match process(game, enc, &script, &outfile) {
 				Ok(()) => {}
 				Err(e) => {
 					println!("Error processing {scriptname}: {e}");
@@ -59,25 +58,25 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 	}
 }
 
-fn process(game: Game, enc: Enc, script: &Path, outfile: &Path, outfile2: &Path) -> rootcause::Result<()> {
+fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Result<()> {
 	let bytes = std::fs::read(script)?;
 	let scena = kreuzen::read(game, enc, &bytes)?;
 	let bytes2 = kreuzen::write(&scena)?;
-	let scena2 = kreuzen::read(game, enc, &bytes2)?;
-
 	let s1 = to_string(&scena)?;
-	let s2 = to_string(&scena2)?;
-	if s1 != s2 {
-		tracing::error!("decoded mismatch after roundtrip");
-		print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
-	} else if bytes != bytes2 {
-		tracing::error!("bytes differ ({} -> {} bytes)", bytes.len(), bytes2.len());
+	if bytes != bytes2 {
+		let scena2 = kreuzen::read(game, enc, &bytes2)?;
+
+		let s2 = to_string(&scena2)?;
+		if s1 != s2 {
+			tracing::error!("decoded mismatch after roundtrip");
+			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
+		} else {
+			tracing::error!("bytes differ ({} -> {} bytes)", bytes.len(), bytes2.len());
+		}
 	}
 
 	std::fs::create_dir_all(outfile.parent().unwrap())?;
 	std::fs::write(outfile, s1)?;
-	std::fs::create_dir_all(outfile2.parent().unwrap())?;
-	std::fs::write(outfile2, s2)?;
 
 	for c in &scena.chunks {
 		if let Body::Code(code) = &c.func {
