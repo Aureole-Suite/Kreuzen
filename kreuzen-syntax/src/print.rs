@@ -220,21 +220,6 @@ impl Print for [Stmt] {
 	}
 }
 
-macro_rules! call {
-	($ctx:expr, $name:expr $(, $arg:expr)* $(,)?) => {{
-		let __c: &mut Ctx = $ctx;
-		__c.word($name);
-		__c.sym("(");
-		let mut _first = true;
-		$(
-			if !_first { __c.sym_(","); }
-			_first = false;
-			$arg.print(&mut *__c);
-		)*
-		__c.sym_(")");
-	}};
-}
-
 impl Print for FlatOp {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
@@ -280,17 +265,35 @@ impl Print for FlatOp {
 
 impl Print for Preload {
 	fn print(&self, ctx: &mut Ctx) {
-		match self {
-			Preload::Call(n, s) => call!(ctx, "Call", n, s),
-			Preload::PkgLoad(s) => call!(ctx, "PkgLoad", s),
-			Preload::EffLoad(s) => call!(ctx, "EffLoad", s),
-			Preload::SoundPlay(n) => call!(ctx, "SoundPlay", n),
-			Preload::SoundPlayVoice(n) => call!(ctx, "SoundPlayVoice", n),
-			Preload::Voice(n) => call!(ctx, "Voice", n),
-			Preload::CharAniclipPlay(c, s) => call!(ctx, "CharAniclipPlay", c, s),
-			Preload::NameplateShow(s) => call!(ctx, "NameplateShow", s),
-			Preload::opCE02(s) => call!(ctx, "opCE02", s),
+		macro_rules! inner {
+			($($name:ident ( $($arg:ident),* ),)*) => {
+				match self {
+					$(Preload::$name($($arg),*) => {
+						ctx.word(stringify!($name));
+						ctx.sym("(");
+						let mut _first = true;
+						$(
+							if !_first { ctx.sym_(","); }
+							_first = false;
+							Print::print($arg, ctx);
+						)+
+						ctx.sym_(")");
+					})*
+				}
+			}
 		}
+
+		inner! {
+			Call(n, s),
+			PkgLoad(s),
+			EffLoad(s),
+			SoundPlay(n),
+			SoundPlayVoice(n),
+			Voice(n),
+			CharAniclipPlay(c, s),
+			NameplateShow(s),
+			opCE02(s),
+		};
 		ctx.sym_(";");
 	}
 }
