@@ -156,7 +156,7 @@ fn check_preload(scena: &kreuzen::Scena) {
 
 fn write_dec(s: &mut String, code: &kreuzen::code::Code) -> rootcause::Result<()> {
 	match kreuzen::decompile::decompile(code) {
-		Ok(stmts) => writeln!(s, "{:#?}", stmts)?,
+		Ok(stmts) => s.push_str(&kreuzen_syntax::print_function(&stmts)),
 		Err(e) => {
 			write!(s, "Error decompiling:{e}")?;
 			for (i, op) in code.ops.iter().enumerate() {

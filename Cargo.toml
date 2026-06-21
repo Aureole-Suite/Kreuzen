@@ -1,5 +1,5 @@
 [workspace]
-members = ["kreuzen"]
+members = ["kreuzen", "kreuzen-syntax"]
 resolver = "3"
 
 [profile.release]

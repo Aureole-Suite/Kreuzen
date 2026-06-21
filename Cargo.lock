@@ -163,11 +163,19 @@ dependencies = [
  "falcom-sjis",
  "gospel",
  "hex",
+ "kreuzen-syntax",
  "pretty_assertions",
  "regex",
  "rootcause",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "kreuzen-syntax"
+version = "0.1.0"
+dependencies = [
+ "kreuzen",
 ]
 
 [[package]]

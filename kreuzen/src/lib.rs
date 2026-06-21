@@ -452,7 +452,7 @@ fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::En
 		|| e.name.starts_with("StyleName");
 	let func = if !is_table {
 		Body::Code(read_code_chunk(cr, ranges[e.main])?)
-	} else if e.name == "ActionTable" {
+	} else if e.name == "ActionTable" && cr.game == Game::Reverie {
 		Body::ActionTable(read_subchunk(cr, ranges[e.main], tables::action_table::read)?)
 	} else {
 		Body::Table(read_subchunk(cr, ranges[e.main], |f| {
