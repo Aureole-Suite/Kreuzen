@@ -18,8 +18,8 @@ pub enum TextPart {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TextControl {
 	Line,
-	Page,
-	_03,
+	Pause,
+	Clear,
 	_06,
 	_07,
 	_08,
@@ -54,8 +54,8 @@ impl Text {
 				let c = match byte {
 					0x00 => break,
 					0x01 => TextControl::Line,
-					0x02 => TextControl::Page,
-					0x03 => TextControl::_03,
+					0x02 => TextControl::Pause,
+					0x03 => TextControl::Clear,
 					0x06 => TextControl::_06,
 					0x07 => TextControl::_07,
 					0x08 => TextControl::_08,
@@ -89,8 +89,8 @@ impl Text {
 				TextPart::String(s) => f.slice(&encode(enc, s)?),
 				TextPart::Control(c) => match *c {
 					TextControl::Line => f.u8(0x01),
-					TextControl::Page => f.u8(0x02),
-					TextControl::_03 => f.u8(0x03),
+					TextControl::Pause => f.u8(0x02),
+					TextControl::Clear => f.u8(0x03),
 					TextControl::_06 => f.u8(0x06),
 					TextControl::_07 => f.u8(0x07),
 					TextControl::_08 => f.u8(0x08),

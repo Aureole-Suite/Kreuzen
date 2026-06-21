@@ -3,6 +3,7 @@ use std::borrow::Cow;
 use kreuzen::code::{Arg, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
+use kreuzen::text::{Text, TextPart};
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 enum Space {
@@ -212,8 +213,27 @@ impl Print for Arg {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
 			Arg::Expr(e) => e.print(ctx),
+			Arg::Text(t) => t.print(ctx),
 			_ => ctx.token(format!("{self:?}")), // TODO
 		}
+	}
+}
+
+impl Print for Text {
+	fn print(&self, ctx: &mut Ctx) {
+		let mut body = String::from("\"\"\"");
+		for part in &self.0 {
+			match part {
+				TextPart::String(s) => body.push_str(s),
+				TextPart::Control(c) => {
+					body.push('{');
+					body.push_str(&format!("{c:?}"));
+					body.push('}');
+				}
+			}
+		}
+		body.push_str("\"\"\"");
+		ctx.token(body);
 	}
 }
 
