@@ -15,7 +15,7 @@ pub enum Preload {
 	EffLoad(String),
 	SoundPlay(u32),
 	SoundPlayVoice(u32),
-	Voiceline(u32), // dialogue Voiceline, not an opcode
+	Voice(u32), // dialogue Voiceline, not an opcode
 	CharAniclipPlay(Char, String),
 	NameplateShow(String),
 	opCE02(String),
@@ -74,7 +74,7 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Preload>> {
 			3 => Preload::EffLoad(preload.str()),
 			4 => Preload::SoundPlay(preload.u32()),
 			5 => Preload::SoundPlayVoice(preload.u32()),
-			7 => Preload::Voiceline(preload.u32()),
+			7 => Preload::Voice(preload.u32()),
 			8 => Preload::NameplateShow(preload.str()),
 			9 => Preload::CharAniclipPlay(preload.charid(), preload.str()),
 			10 => Preload::opCE02(preload.str()),
@@ -101,7 +101,7 @@ pub(crate) fn write(d: &OData, preload: &[Preload]) -> rootcause::Result<Writer>
 			Preload::EffLoad(str) => (3, charid, u32, str),
 			Preload::SoundPlay(u32) => (4, charid, u32, str),
 			Preload::SoundPlayVoice(u32) => (5, charid, u32, str),
-			Preload::Voiceline(u32) => (7, charid, u32, str),
+			Preload::Voice(u32) => (7, charid, u32, str),
 			Preload::NameplateShow(str) => (8, charid, u32, str),
 			Preload::CharAniclipPlay(charid, str) => (9, charid, u32, str),
 			Preload::opCE02(str) => (10, charid, u32, str),
@@ -150,8 +150,9 @@ pub fn from_code(ops: &[FlatOp], name: &str, functions: &[&str]) -> Vec<Preload>
 			}
 			("TextTalk"|"TextShow", [_, Arg::Text(text)]) => {
 				for part in &text.0 {
-					if let TextPart::Control(TextControl::Voiceline(id)) = part {
-						out.push(Preload::Voiceline(*id));
+					if let TextPart::Control(TextControl::Voice(id)) = part {
+						// Unclear if VoiceSilent should apply this, since that one only exists in CS1 which doesn't have preload
+						out.push(Preload::Voice(*id));
 					}
 				}
 			}
