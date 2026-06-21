@@ -5,6 +5,7 @@ use crate::io::{CReader, OData};
 
 pub mod preload;
 pub mod action;
+pub mod book;
 
 #[derive(Clone)]
 pub struct Opaque {
@@ -22,6 +23,7 @@ impl std::fmt::Debug for Opaque {
 #[derive(Debug, Clone)]
 pub enum Table {
 	ActionTable(Vec<action::Action>),
+	Book(book::Book),
 	Unknown(Opaque),
 }
 
@@ -29,6 +31,9 @@ pub enum Table {
 pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Table>> {
 	if name == "ActionTable" {
 		return Ok(Some(Table::ActionTable(action::read(f)?)));
+	}
+	if name.starts_with("BookData") {
+		return Ok(Some(Table::Book(book::read(f, name)?)));
 	}
 
 	let tables = [
@@ -49,7 +54,6 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 
 	let is_table = tables.contains(&name)
 		|| name.starts_with("FC_auto")
-		|| name.starts_with("BookData")
 		|| name.starts_with("BTLSET")
 		|| name.starts_with("StyleName");
 	if is_table {
@@ -73,6 +77,7 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 	};
 	let f = match table {
 		Table::ActionTable(actions) => action::write(d, actions)?,
+		Table::Book(b) => book::write(d, b)?,
 		Table::Unknown(opaque) => {
 			let mut f = Writer::new();
 			f.slice(&opaque.bytes);
