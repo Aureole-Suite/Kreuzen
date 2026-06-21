@@ -67,19 +67,7 @@ pub struct Chunk {
 #[derive(Debug, Clone)]
 pub enum Body {
 	Code(Code),
-	ActionTable(Vec<tables::action_table::Action>),
-	Table(Opaque),
-}
-
-#[derive(Clone)]
-pub struct Opaque {
-	pub bytes: Vec<u8>,
-}
-
-impl std::fmt::Debug for Opaque {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "[{} bytes]", self.bytes.len())
-	}
+	Table(tables::Table),
 }
 
 pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
@@ -221,23 +209,16 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	};
 
 	for c in &scena.chunks {
-		let align = match (c.name.as_str(), scena.game) {
-			_ if c.name.starts_with("FC_auto") => 16,
-			("Init", Game::Cs1) if scena.name == "effect" => 16,
-			("ReactionTable", Game::Cs1 | Game::Cs2) => 16,
-			("ShinigPomBtlset", Game::Cs2) => 16,
-			_ => 4,
-		};
 		match &c.func {
 			Body::Code(code) => {
+				let align = match (c.name.as_str(), scena.game) {
+					("Init", Game::Cs1) if scena.name == "effect" => 16,
+					_ => 4,
+				};
 				chunk(align, &c.name, true, code::write(&d, code));
 			}
-			Body::ActionTable(table) => {
-				chunk(align, &c.name, false, tables::action_table::write(&d, table));
-			}
-			Body::Table(opaque) => {
-				let mut f = Writer::new();
-				f.slice(&opaque.bytes);
+			Body::Table(table) => {
+				let (align, f) = tables::write(&d, c.name.as_str(), table)?;
 				chunk(align, &c.name.clone(), false, Ok(f));
 			}
 		};
@@ -428,37 +409,9 @@ fn resolve_game(
 }
 
 fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
-	let tables = [
-		"",
-		"ActionTable",
-		"AddCollision",
-		"AlgoTable",
-		"AnimeClipTable",
-		"FieldMonsterData",
-		"PartTable",
-		"ReactionTable",
-		"SummonTable",
-		"ConditionTable",
-		"BreakTable",
-		"WeaponAttTable",
-		"FieldFollowData",
-		"ShinigPomBtlset",
-	];
-
-	let is_table = tables.contains(&e.name.as_str())
-		|| e.name.starts_with("FC_auto")
-		|| e.name.starts_with("BookData")
-		|| e.name.starts_with("BTLSET")
-		|| e.name.starts_with("StyleName");
-	let func = if !is_table {
-		Body::Code(read_code_chunk(cr, ranges[e.main])?)
-	} else if e.name == "ActionTable" && cr.game == Game::Reverie {
-		Body::ActionTable(read_subchunk(cr, ranges[e.main], tables::action_table::read)?)
-	} else {
-		Body::Table(read_subchunk(cr, ranges[e.main], |f| {
-			let n = f.remaining().len();
-			Ok(Opaque { bytes: f.slice(n)?.to_vec() })
-		})?)
+	let func = match read_subchunk(cr, ranges[e.main], |f| tables::read(f, &e.name))? {
+		Some(table) => Body::Table(table),
+		None => Body::Code(read_code_chunk(cr, ranges[e.main])?),
 	};
 	let preload = if let Some(i) = e.preload {
 		let _span = tracing::error_span!("preload").entered();

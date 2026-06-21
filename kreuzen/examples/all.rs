@@ -115,7 +115,6 @@ fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
 		write!(s, "{} ", chunk.name)?;
 		match &chunk.func {
 			Body::Code(code) => write_dec(&mut s, code)?,
-			Body::ActionTable(table) => writeln!(s, "{table:#?}")?,
 			Body::Table(table) => writeln!(s, "{table:#?}")?,
 		}
 		if !chunk.preload.is_empty() {
