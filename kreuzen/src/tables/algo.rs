@@ -99,7 +99,7 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Algo>> {
 		table.push(algo);
 	}
 	if !has_sep {
-		tracing::warn!("missing ActionTable terminator");
+		tracing::warn!("missing AlgoTable terminator");
 	}
 	Ok(table)
 }

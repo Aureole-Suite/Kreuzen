@@ -415,7 +415,7 @@ fn resolve_game(
 fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
 	let func = match read_subchunk(cr, ranges[e.main], |f| tables::read(f, &e.name))? {
 		Some(table) => Body::Table(table),
-		None => Body::Code(read_code_chunk(cr, ranges[e.main])?),
+		None => Body::Code(code::read_code_chunk(cr, ranges[e.main])?),
 	};
 	let preload = if let Some(i) = e.preload {
 		let _span = tracing::error_span!("preload").entered();
@@ -430,7 +430,7 @@ fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::En
 	let mut shadow = Vec::with_capacity(e.shadow.len());
 	for (a, &s) in e.shadow.iter().enumerate() {
 		let _span = tracing::error_span!("shadow", a).entered();
-		shadow.push(read_code_chunk(cr, ranges[s])?);
+		shadow.push(code::read_code_chunk(cr, ranges[s])?);
 	}
 	let chunk = Chunk {
 		name: e.name.clone(),
@@ -487,23 +487,6 @@ fn read_subchunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut C
 	let v = body(&mut g)?;
 	if g.pos() != actual_end {
 		tracing::warn!("Expected table to end at {actual_end:X} but ended at {:X}", g.pos());
-	}
-	f.seek(end)?;
-	Ok(v)
-}
-
-fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::Result<Code> {
-	let (start, end) = s;
-	let d = f.data();
-	crate::ensure!(start <= end && end <= d.len());
-	let mut actual_end = end;
-	while actual_end > start && d[actual_end - 1] == 0 {
-		actual_end -= 1;
-	}
-	f.seek(start)?;
-	let v = code::read(f, actual_end)?;
-	if f.pos() != actual_end {
-		tracing::warn!("Expected code to end at {actual_end:X} but ended at {:X}", f.pos());
 	}
 	f.seek(end)?;
 	Ok(v)

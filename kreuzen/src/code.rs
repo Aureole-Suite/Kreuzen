@@ -2,12 +2,12 @@ use std::cell::Cell;
 use std::collections::{BTreeSet, HashMap};
 use std::rc::Rc;
 
-use gospel::read::Le as _;
+use gospel::read::{Le as _, Reader};
 use gospel::write::{Le as _, Writer, Label as WLabel};
 use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
 
-use crate::io::{CReader, OData, WriterExt as _};
+use crate::io::{CReader, OData, VReader, WriterExt as _};
 use crate::spec::{Opcode, Part};
 use crate::expr::Expr;
 use crate::text::Text;
@@ -68,9 +68,12 @@ pub struct Code {
 	pub ops: Vec<FlatOp>,
 }
 
-pub fn read(f: &mut CReader, end: usize) -> rootcause::Result<Code> {
+fn read(f: &mut CReader) -> rootcause::Result<Code> {
 	let mut ops = Vec::new();
-	while f.pos() < end {
+	while !f.remaining().is_empty() {
+		if f.check_u8(0).is_ok() {
+			break;
+		}
 		let pos = f.pos();
 		let op = read_op(f)
 			.context_with(|| format!("Failed to read op at {pos:04X}"))
@@ -85,6 +88,30 @@ pub fn read(f: &mut CReader, end: usize) -> rootcause::Result<Code> {
 	remap_labels(&mut ops);
 
 	Ok(Code { ops })
+}
+
+pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::Result<Code> {
+	let (start, end) = s;
+	let d = f.data();
+	crate::ensure!(start <= end && end <= d.len());
+	let mut g = Reader::new(&d[..end]);
+	g.seek(start)?;
+	let mut g = VReader {
+		game: f.game,
+		enc: f.enc,
+		reader: g,
+	};
+	let mut g = CReader {
+		reader: &mut g,
+		scena: f.scena,
+		variant: f.variant,
+	};
+	let v = read(&mut g)?;
+	if !g.remaining().iter().all(|x| *x == 0) {
+		tracing::warn!("Data remaining after function: {:02X?}", g.remaining());
+	}
+	f.seek(end)?;
+	Ok(v)
 }
 
 fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> rootcause::Result<Vec<FlatOp>> {
