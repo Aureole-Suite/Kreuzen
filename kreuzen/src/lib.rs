@@ -1,11 +1,10 @@
 use gospel::read::{Le as _, Reader};
 use gospel::write::{Le as _, Writer, Label};
-mod io;
-use io::VReader;
 
 use crate::code::Code;
 use crate::io::{CReader, WriterExt as _};
 
+mod io;
 pub mod code;
 pub mod expr;
 pub mod text;
@@ -136,16 +135,12 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let pad = f.slice(first - pos)?;
 	crate::ensure!(pad.iter().all(|b| *b == 0));
 
-	let mut f = VReader {
+	let mut f = CReader {
 		game,
 		enc,
-		reader: f,
-	};
-
-	let mut cr = CReader {
-		reader: &mut f,
 		scena: &name,
 		variant,
+		reader: f,
 	};
 
 	let ranges = starts.iter().copied().zip(iter).collect::<Vec<_>>();
@@ -154,17 +149,17 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let mut errors = rootcause::report_collection::ReportCollection::new();
 	for entry in split.entries {
 		let _span = tracing::error_span!("entry", name=%entry.name).entered();
-		match read_chunk(&mut cr, &ranges, &entry) {
+		match read_chunk(&mut f, &ranges, &entry) {
 			Ok(chunk) => chunks.push(chunk),
 			Err(e) => errors.push(e.context(format!("error parsing chunk {}", entry.name)).into_cloneable())
 		}
 	}
 
 	if let Some(i) = split.charater_section {
-		crate::ensure!(cr.game == Game::Reverie);
+		crate::ensure!(game == Game::Reverie);
 		crate::ensure!(oddness == 0);
 		oddness = 3;
-		match read_subchunk(&mut cr, ranges[i], |_| Ok(())) {
+		match read_subchunk(&mut f, ranges[i], |_| Ok(())) {
 			Ok(()) => {}
 			Err(e) => errors.push(e.context("error parsing charater section".to_owned()).into_cloneable()),
 		}
@@ -413,7 +408,7 @@ fn resolve_game(
 	(game, enc, variant)
 }
 
-fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
+fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
 	let func = match read_subchunk(cr, ranges[e.main], |f| tables::read(f, &e.name))? {
 		Some(table) => Body::Table(table),
 		None => Body::Code(code::read_code_chunk(cr, ranges[e.main])?),
@@ -479,17 +474,9 @@ fn read_subchunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut C
 	if actual_end > start && d[actual_end - 1] == 1 {
 		actual_end -= 1;
 	}
-	let mut g = Reader::new(&d[..actual_end]);
-	g.seek(start)?;
-	let mut g = VReader {
-		game: f.game,
-		enc: f.enc,
-		reader: g,
-	};
 	let mut g = CReader {
-		reader: &mut g,
-		scena: f.scena,
-		variant: f.variant,
+		reader: Reader::new(&d[..actual_end]).at(start)?,
+		..*f
 	};
 	let v = body(&mut g)?;
 	if g.pos() != actual_end {

@@ -7,7 +7,7 @@ use gospel::write::{Le as _, Writer, Label as WLabel};
 use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
 
-use crate::io::{CReader, OData, VReader, WriterExt as _};
+use crate::io::{CReader, OData, WriterExt as _};
 use crate::spec::{Opcode, Part};
 use crate::expr::Expr;
 use crate::text::Text;
@@ -94,17 +94,9 @@ pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::
 	let (start, end) = s;
 	let d = f.data();
 	crate::ensure!(start <= end && end <= d.len());
-	let mut g = Reader::new(&d[..end]);
-	g.seek(start)?;
-	let mut g = VReader {
-		game: f.game,
-		enc: f.enc,
-		reader: g,
-	};
 	let mut g = CReader {
-		reader: &mut g,
-		scena: f.scena,
-		variant: f.variant,
+		reader: Reader::new(&d[..end]).at(start)?,
+		..*f
 	};
 	let v = read(&mut g)?;
 	if !g.remaining().iter().all(|x| *x == 0) {

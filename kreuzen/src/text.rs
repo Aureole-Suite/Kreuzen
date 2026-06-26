@@ -39,7 +39,7 @@ pub enum TextControl {
 }
 
 impl Text {
-	pub(crate) fn read(f: &mut crate::VReader) -> rootcause::Result<Text> {
+	pub(crate) fn read(f: &mut crate::CReader) -> rootcause::Result<Text> {
 		let mut out = Vec::new();
 		let mut scratch = Vec::new();
 		loop {

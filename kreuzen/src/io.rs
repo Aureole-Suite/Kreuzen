@@ -15,15 +15,17 @@ fn encode(enc: Enc, s: &str) -> rootcause::Result<Vec<u8>> {
 }
 
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
-pub struct VReader<'a> {
+pub struct CReader<'a> {
 	pub game: Game,
 	pub enc: Enc,
+	pub scena: &'a str,
+	pub variant: u8,
 	#[deref]
 	#[deref_mut]
 	pub reader: Reader<'a>,
 }
 
-impl<'a> VReader<'a> {
+impl<'a> CReader<'a> {
 	#[track_caller]
 	pub fn str(&mut self) -> rootcause::Result<String> {
 		let cstr = self.cstr()?;
@@ -69,15 +71,6 @@ impl<'a> VReader<'a> {
 	pub fn rewind(&mut self) {
 		self.reader.seek(self.reader.pos() - 1).ok();
 	}
-}
-
-#[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
-pub struct CReader<'a, 'b> {
-	#[deref]
-	#[deref_mut]
-	pub reader: &'b mut VReader<'a>,
-	pub scena: &'b str,
-	pub variant: u8,
 }
 
 pub struct OData {
