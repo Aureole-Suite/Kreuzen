@@ -89,21 +89,26 @@ impl Dummy {
 
 // Returns None if the chunk is code
 pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Table>> {
-	if name == "ActionTable" {
-		return Ok(Some(Table::ActionTable(action::read(f)?)));
+	match name {
+		"ActionTable"      => return Ok(Some(Table::ActionTable(action::read(f)?))),
+		"AddCollision"     => return Ok(Some(Table::AddCollision(add_collision::read(f)?))),
+		"AlgoTable"        => return Ok(Some(Table::AlgoTable(algo::read(f)?))),
+		"AnimeClipTable"   => return Ok(Some(Table::AnimeClipTable(anime_clip::read(f)?))),
+		"BreakTable"       => return Ok(Some(Table::BreakTable(break_::read(f)?))),
+		"ConditionTable"   => return Ok(Some(Table::ConditionTable(condition::read(f)?))),
+		"FieldFollowData"  => return Ok(Some(Table::FieldFollowData(field_follow::read(f)?))),
+		"FieldMonsterData" => return Ok(Some(Table::FieldMonsterData(field_monster::read(f)?))),
+		"PartTable"        => return Ok(Some(Table::PartTable(part::read(f)?))),
+		"ReactionTable"    => return Ok(Some(Table::ReactionTable(reaction::read(f)?))),
+		"SummonTable"      => return Ok(Some(Table::SummonTable(summon::read(f)?))),
+		"WeaponAttTable"   => return Ok(Some(Table::WeaponAttTable(weapon_att::read(f)?))),
+		_ => {}
 	}
-	if name == "AlgoTable" {
-		return Ok(Some(Table::AlgoTable(algo::read(f)?)));
-	}
-	if name == "AnimeClipTable" {
-		return Ok(Some(Table::AnimeClipTable(anime_clip::read(f)?)));
-	}
-	if name == "FieldMonsterData" {
-		return Ok(Some(Table::FieldMonsterData(field_monster::read(f)?)));
-	}
+
 	if name.starts_with("BookData") {
 		return Ok(Some(Table::Book(book::read(f, name)?)));
 	}
+
 	if name.is_empty() {
 		let r = f.remaining();
 		if r.is_empty() {
@@ -128,43 +133,7 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		return Ok(Some(Table::Btlset(btlset::read(f)?)));
 	}
 
-	if name == "BreakTable" {
-		return Ok(Some(Table::BreakTable(break_::read(f)?)));
-	}
-	if name == "WeaponAttTable" {
-		return Ok(Some(Table::WeaponAttTable(weapon_att::read(f)?)));
-	}
-
-	if name == "FieldFollowData" {
-		return Ok(Some(Table::FieldFollowData(field_follow::read(f)?)));
-	}
-
-	if name == "SummonTable" {
-		return Ok(Some(Table::SummonTable(summon::read(f)?)));
-	}
-
-	if name == "PartTable" {
-		return Ok(Some(Table::PartTable(part::read(f)?)));
-	}
-
-	if name == "ReactionTable" {
-		return Ok(Some(Table::ReactionTable(reaction::read(f)?)));
-	}
-
-	if name == "ConditionTable" {
-		return Ok(Some(Table::ConditionTable(condition::read(f)?)));
-	}
-
-	if name == "AddCollision" {
-		return Ok(Some(Table::AddCollision(add_collision::read(f)?)));
-	}
-
-	let tables = [];
-
-	let is_table = tables.contains(&name)
-		|| name.starts_with("FC_auto")
-		|| name.starts_with("StyleName");
-	if is_table {
+	if name.starts_with("FC_auto") || name.starts_with("StyleName") {
 		let n = f.remaining().len();
 		let opaque = Opaque { bytes: f.slice(n)?.to_vec() };
 		return Ok(Some(Table::Unknown(opaque)));
