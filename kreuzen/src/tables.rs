@@ -9,7 +9,9 @@ pub mod algo;
 pub mod anime_clip;
 pub mod book;
 pub mod btlset;
+pub mod break_;
 pub mod field_monster;
+pub mod weapon_att;
 
 #[derive(Clone)]
 pub struct Opaque {
@@ -30,7 +32,9 @@ pub enum Table {
 	AlgoTable(Vec<algo::Algo>),
 	AnimeClipTable(Vec<anime_clip::AnimeClip>),
 	Book(book::Book),
+	BreakTable(Vec<break_::Break>),
 	FieldMonsterData(field_monster::FieldMonster),
+	WeaponAttTable(weapon_att::WeaponAtt),
 	Btlset(btlset::Btlset),
 	Dummy(Dummy),
 	Unknown(Opaque),
@@ -112,14 +116,19 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		return Ok(Some(Table::Btlset(btlset::read(f)?)));
 	}
 
+	if name == "BreakTable" {
+		return Ok(Some(Table::BreakTable(break_::read(f)?)));
+	}
+	if name == "WeaponAttTable" {
+		return Ok(Some(Table::WeaponAttTable(weapon_att::read(f)?)));
+	}
+
 	let tables = [
 		"AddCollision",
 		"PartTable",
 		"ReactionTable",
 		"SummonTable",
 		"ConditionTable",
-		"BreakTable",
-		"WeaponAttTable",
 		"FieldFollowData",
 	];
 
@@ -150,8 +159,10 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 		Table::AlgoTable(algos) => algo::write(d, algos)?,
 		Table::AnimeClipTable(clips) => anime_clip::write(d, clips)?,
 		Table::Book(b) => book::write(d, b)?,
+		Table::BreakTable(t) => break_::write(d, t.as_slice())?,
 		Table::Btlset(b) => btlset::write(d, b)?,
 		Table::FieldMonsterData(fmd) => field_monster::write(d, fmd)?,
+		Table::WeaponAttTable(t) => weapon_att::write(d, t)?,
 		Table::Dummy(d) => {
 			let mut f = Writer::new();
 			f.slice(d.bytes());
