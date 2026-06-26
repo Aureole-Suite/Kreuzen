@@ -10,6 +10,8 @@ pub mod anime_clip;
 pub mod book;
 pub mod btlset;
 pub mod break_;
+pub mod field_follow;
+pub mod summon;
 pub mod field_monster;
 pub mod weapon_att;
 
@@ -33,6 +35,8 @@ pub enum Table {
 	AnimeClipTable(Vec<anime_clip::AnimeClip>),
 	Book(book::Book),
 	BreakTable(Vec<break_::Break>),
+	FieldFollowData(field_follow::FieldFollow),
+	SummonTable(Vec<summon::Summon>),
 	FieldMonsterData(field_monster::FieldMonster),
 	WeaponAttTable(weapon_att::WeaponAtt),
 	Btlset(btlset::Btlset),
@@ -123,13 +127,19 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		return Ok(Some(Table::WeaponAttTable(weapon_att::read(f)?)));
 	}
 
+	if name == "FieldFollowData" {
+		return Ok(Some(Table::FieldFollowData(field_follow::read(f)?)));
+	}
+
+	if name == "SummonTable" {
+		return Ok(Some(Table::SummonTable(summon::read(f)?)));
+	}
+
 	let tables = [
 		"AddCollision",
 		"PartTable",
 		"ReactionTable",
-		"SummonTable",
 		"ConditionTable",
-		"FieldFollowData",
 	];
 
 	let is_table = tables.contains(&name)
@@ -161,6 +171,8 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 		Table::Book(b) => book::write(d, b)?,
 		Table::BreakTable(t) => break_::write(d, t.as_slice())?,
 		Table::Btlset(b) => btlset::write(d, b)?,
+		Table::FieldFollowData(ffd) => field_follow::write(d, ffd)?,
+		Table::SummonTable(t) => summon::write(d, t)?,
 		Table::FieldMonsterData(fmd) => field_monster::write(d, fmd)?,
 		Table::WeaponAttTable(t) => weapon_att::write(d, t)?,
 		Table::Dummy(d) => {
