@@ -3,7 +3,7 @@ use kreuzen::{Body, Enc, Game};
 use std::path::{Path, PathBuf};
 use std::cell::Cell;
 use tracing::Level;
-use tracing_subscriber::prelude::*;
+use tracing_subscriber::{EnvFilter, prelude::*};
 
 thread_local! {
 	static WARNED: Cell<bool> = const { Cell::new(false) };
@@ -23,7 +23,7 @@ fn main() {
 	unsafe { compact_debug::enable(true) };
 
 	tracing_subscriber::registry()
-		.with(tracing_subscriber::fmt::layer())
+		.with(tracing_subscriber::fmt::layer().with_filter(EnvFilter::from_default_env()))
 		.with(WarnDetector)
 		.init();
 
