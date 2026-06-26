@@ -1,11 +1,31 @@
 use std::fmt::Write;
 use kreuzen::{Body, Enc, Game};
 use std::path::{Path, PathBuf};
+use std::cell::Cell;
+use tracing::Level;
+use tracing_subscriber::prelude::*;
+
+thread_local! {
+	static WARNED: Cell<bool> = const { Cell::new(false) };
+}
+
+struct WarnDetector;
+
+impl<S: tracing::Subscriber> tracing_subscriber::Layer<S> for WarnDetector {
+	fn on_event(&self, event: &tracing::Event<'_>, _ctx: tracing_subscriber::layer::Context<'_, S>) {
+		if *event.metadata().level() <= Level::WARN {
+			WARNED.with(|w| w.set(true));
+		}
+	}
+}
 
 fn main() {
 	unsafe { compact_debug::enable(true) };
 
-	tracing_subscriber::fmt::init();
+	tracing_subscriber::registry()
+		.with(tracing_subscriber::fmt::layer())
+		.with(WarnDetector)
+		.init();
 
 	let dir = PathBuf::from(std::env::args().nth(1).expect("Usage: all <dir>"));
 	let cs1 = dir.join("Trails of Cold Steel");
@@ -44,6 +64,10 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 	let path = path.join("data/scripts");
 	for dir in ls(&path) {
 		for file in ls(path.join(&dir).join(folder)) {
+			if game == Game::Tx && file == "magic.dat" {
+				// This file is just garbage data
+				continue;
+			}
 			let script = path.join(&dir).join(folder).join(&file);
 			let scriptname = format!("{game:?}/{dir}/{folder}/{file}");
 			let outfile = PathBuf::from("out").join(format!("{game:?}/{folder}/{dir}/{file}"));
@@ -60,7 +84,9 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 
 fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Result<()> {
 	let bytes = std::fs::read(script)?;
+	WARNED.with(|w| w.set(false));
 	let scena = kreuzen::read(game, enc, &bytes)?;
+	let had_warnings = WARNED.with(|w| w.take());
 	let bytes2 = kreuzen::write(&scena)?;
 	let s1 = to_string(&scena)?;
 	if bytes != bytes2 {
@@ -70,9 +96,11 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		if s1 != s2 {
 			tracing::error!("decoded mismatch after roundtrip");
 			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
-		} else {
+		} else if !had_warnings {
 			tracing::error!("bytes differ ({} -> {} bytes)", bytes.len(), bytes2.len());
 		}
+	} else if had_warnings {
+		tracing::warn!("warnings emitted but bytes are identical");
 	}
 
 	std::fs::create_dir_all(outfile.parent().unwrap())?;

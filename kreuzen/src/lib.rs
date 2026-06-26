@@ -486,7 +486,7 @@ fn read_subchunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut C
 	};
 	let v = body(&mut g)?;
 	if g.pos() != actual_end {
-		tracing::warn!("Expected to end at {actual_end:X} but ended at {:X}", g.pos());
+		tracing::warn!("Expected table to end at {actual_end:X} but ended at {:X}", g.pos());
 	}
 	f.seek(end)?;
 	Ok(v)
@@ -503,7 +503,7 @@ fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::Result<Code
 	f.seek(start)?;
 	let v = code::read(f, actual_end)?;
 	if f.pos() != actual_end {
-		tracing::warn!("Expected to end at {actual_end:X} but ended at {:X}", f.pos());
+		tracing::warn!("Expected code to end at {actual_end:X} but ended at {:X}", f.pos());
 	}
 	f.seek(end)?;
 	Ok(v)
