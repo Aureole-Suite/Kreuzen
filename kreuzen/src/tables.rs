@@ -9,6 +9,7 @@ pub mod algo;
 pub mod anime_clip;
 pub mod book;
 pub mod btlset;
+pub mod field_monster;
 
 #[derive(Clone)]
 pub struct Opaque {
@@ -29,6 +30,7 @@ pub enum Table {
 	AlgoTable(Vec<algo::Algo>),
 	AnimeClipTable(Vec<anime_clip::AnimeClip>),
 	Book(book::Book),
+	FieldMonsterData(field_monster::FieldMonster),
 	Btlset(btlset::Btlset),
 	Dummy(Dummy),
 	Unknown(Opaque),
@@ -80,6 +82,9 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 	if name == "AnimeClipTable" {
 		return Ok(Some(Table::AnimeClipTable(anime_clip::read(f)?)));
 	}
+	if name == "FieldMonsterData" {
+		return Ok(Some(Table::FieldMonsterData(field_monster::read(f)?)));
+	}
 	if name.starts_with("BookData") {
 		return Ok(Some(Table::Book(book::read(f, name)?)));
 	}
@@ -109,7 +114,6 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 
 	let tables = [
 		"AddCollision",
-		"FieldMonsterData",
 		"PartTable",
 		"ReactionTable",
 		"SummonTable",
@@ -147,6 +151,7 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 		Table::AnimeClipTable(clips) => anime_clip::write(d, clips)?,
 		Table::Book(b) => book::write(d, b)?,
 		Table::Btlset(b) => btlset::write(d, b)?,
+		Table::FieldMonsterData(fmd) => field_monster::write(d, fmd)?,
 		Table::Dummy(d) => {
 			let mut f = Writer::new();
 			f.slice(d.bytes());
