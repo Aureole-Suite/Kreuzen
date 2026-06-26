@@ -491,8 +491,8 @@
 890C
 8914 u32
 8915
-8A00 str str u8 u16
-8A01
+8A00 'BookShow' str str u8 u16 # You'd think this was a flag coming from cs2, but nope
+8A01 'BookWait'
 8C   u8 u16 u8
 8D01 u8 f32
 8D02 u8 f32

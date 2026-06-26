@@ -610,8 +610,8 @@
 890B
 8A00 u32
 8A01
-8B00 str str u8 u16
-8B01
+8B00 'BookShow' str str u8 flag
+8B01 'BookWait'
 8D   u16
 8E01 u8 f32
 8E02 u8 f32

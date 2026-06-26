@@ -933,7 +933,7 @@
 9401
 9402
 9403
-9500 'BookShow' str str u8 u16
+9500 'BookShow' str str u8 flag
 9501 'BookWait'
 9600 u32
 9601

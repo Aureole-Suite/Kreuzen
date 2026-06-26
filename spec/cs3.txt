@@ -687,7 +687,7 @@
 9301
 9400 flags32
 9401
-9500 'BookShow' str str u8 u16
+9500 'BookShow' str str u8 flag
 9501 'BookWait'
 9700 u16 flags32
 9702 u16 flags32
