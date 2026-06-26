@@ -5,7 +5,7 @@ use crate::Game;
 use crate::code::{Arg, FlatOp};
 use crate::io::{OData, CReader, WriterExt as _};
 use crate::text::{TextControl, TextPart};
-use crate::types::Char;
+use crate::types::{Char, Sound};
 
 #[expect(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,9 +13,9 @@ pub enum Preload {
 	Call(u32, String),
 	PkgLoad(String),
 	EffLoad(String),
-	SoundPlay(u32),
-	SoundPlayVoice(u32),
-	Voice(u32), // dialogue Voiceline, not an opcode
+	SoundPlay(Sound),
+	SoundPlayVoice(Sound),
+	Voice(Sound), // dialogue Voiceline, not an opcode
 	CharAniclipPlay(Char, String),
 	NameplateShow(String),
 	opCE02(String),
@@ -64,6 +64,9 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Preload>> {
 			Game::Cs1 | Game::Cs2 => Char(0xFFFD),
 			_ => Char(0xFFFF),
 		};
+		let sound = |v: u32| -> rootcause::Result<Sound> {
+			u16::try_from(v).map(Sound).map_err(|_| rootcause::report!("sound id {v:#X} out of bounds"))
+		};
 		table.push(match preload.kind {
 			0 => {
 				preload.finish(null)?;
@@ -72,9 +75,9 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Preload>> {
 			1 => Preload::Call(preload.u32(), preload.str()),
 			2 => Preload::PkgLoad(preload.str()),
 			3 => Preload::EffLoad(preload.str()),
-			4 => Preload::SoundPlay(preload.u32()),
-			5 => Preload::SoundPlayVoice(preload.u32()),
-			7 => Preload::Voice(preload.u32()),
+			4 => Preload::SoundPlay(sound(preload.u32())?),
+			5 => Preload::SoundPlayVoice(sound(preload.u32())?),
+			7 => Preload::Voice(sound(preload.u32())?),
 			8 => Preload::NameplateShow(preload.str()),
 			9 => Preload::CharAniclipPlay(preload.charid(), preload.str()),
 			10 => Preload::opCE02(preload.str()),
@@ -86,36 +89,32 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Preload>> {
 }
 
 pub(crate) fn write(d: &OData, preload: &[Preload]) -> rootcause::Result<Writer> {
-	let charid = &match d.game {
+	let charid = match d.game {
 		Game::Cs1 | Game::Cs2 => Char(0xFFFD),
 		_ => Char(0xFFFF),
 	};
-	let u32 = &0;
-	let str = &String::new();
 
 	let mut f = Writer::new();
-	for p in preload {
-		let (kind, charid, u32, str) = match p {
-			Preload::Call(u32, str) => (1, charid, u32, str),
-			Preload::PkgLoad(str) => (2, charid, u32, str),
-			Preload::EffLoad(str) => (3, charid, u32, str),
-			Preload::SoundPlay(u32) => (4, charid, u32, str),
-			Preload::SoundPlayVoice(u32) => (5, charid, u32, str),
-			Preload::Voice(u32) => (7, charid, u32, str),
-			Preload::NameplateShow(str) => (8, charid, u32, str),
-			Preload::CharAniclipPlay(charid, str) => (9, charid, u32, str),
-			Preload::opCE02(str) => (10, charid, u32, str),
-		};
+	let mut write = |kind: u16, charid: Char, u32: u32, str: &str| -> rootcause::Result<()> {
 		f.u16(kind);
 		f.u16(charid.0);
-		f.u32(*u32);
-		f.sstr(32, d.enc, str)?;
+		f.u32(u32);
+		f.sstr(32, d.enc, str)
+	};
+	for p in preload {
+		match p {
+			Preload::Call(u32, str) => write(1, charid, *u32, str)?,
+			Preload::PkgLoad(str) => write(2, charid, 0, str)?,
+			Preload::EffLoad(str) => write(3, charid, 0, str)?,
+			Preload::SoundPlay(s) => write(4, charid, s.0 as u32, "")?,
+			Preload::SoundPlayVoice(s) => write(5, charid, s.0 as u32, "")?,
+			Preload::Voice(s) => write(7, charid, s.0 as u32, "")?,
+			Preload::NameplateShow(str) => write(8, charid, 0, str)?,
+			Preload::CharAniclipPlay(charid, str) => write(9, *charid, 0, str)?,
+			Preload::opCE02(str) => write(10, charid, 0, str)?,
+		}
 	}
-
-	f.u16(0);
-	f.u16(charid.0);
-	f.u32(*u32);
-	f.sstr(32, d.enc, str)?;
+	write(0, charid, 0, "")?;
 	Ok(f)
 }
 
@@ -132,19 +131,19 @@ pub fn from_code(ops: &[FlatOp], name: &str, functions: &[&str]) -> Vec<Preload>
 			("call", [Arg::Int(n), Arg::Str(s)]) if functions.contains(&s.as_str()) => out.push(Preload::Call(*n as u32, s.clone())),
 			("PkgLoad", [Arg::Str(s)]) => out.push(Preload::PkgLoad(s.clone())),
 			("EffLoad", [_, _, Arg::Str(s)]) => out.push(Preload::EffLoad(s.clone())),
-			("SoundPlay", [Arg::Int(id), ..]) => out.push(Preload::SoundPlay(*id as u32)),
-			("SoundPlayVoice", [Arg::Int(id), ..]) => out.push(Preload::SoundPlayVoice(*id as u32)),
+			("SoundPlay", [Arg::Sound(s), ..]) => out.push(Preload::SoundPlay(*s)),
+			("SoundPlayVoice", [Arg::Sound(s), ..]) => out.push(Preload::SoundPlayVoice(*s)),
 			("SoundPlayRandom", [_, args@..]) => {
 				let mut n = 0;
 				for (i, v) in args.iter().enumerate() {
-					let Arg::Int(id) = v else { continue };
-					if *id != 0 {
+					let Arg::Sound(s) = v else { continue };
+					if s.0 != 0 {
 						n = i + 1;
 					}
 				}
 				for v in &args[..n] {
-					if let Arg::Int(id) = v {
-						out.push(Preload::SoundPlayVoice(*id as u32));
+					if let Arg::Sound(s) = v {
+						out.push(Preload::SoundPlayVoice(*s));
 					}
 				}
 			}

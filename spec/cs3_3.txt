@@ -61,9 +61,9 @@
 3313 'CamRotateChar' char str u8 f32 f32 f32 u16 u8
 35   'CharAniPlay' char u8 u8 str
 38 'Sound'
-3800 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
-3832 'SoundPlayVoice' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
-383A 'SoundPlayRandom' char u16 u16 u16 u16
+3800 'SoundPlay' sound f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
+3832 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+383A 'SoundPlayRandom' char sound sound sound sound
 40 'Fade'
 4065 u16 f32
 40FE u16

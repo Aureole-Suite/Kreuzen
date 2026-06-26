@@ -122,11 +122,15 @@ pub enum Part {
 	Flags16,
 	Flags32,
 
+	Sound,
+	Music,
+
 	Expr,
 	Text,
 	Dyn,
 	Ndyn,
-	Dync,
+	Dyn_Char,
+	Dyn_Sound,
 
 	Cs1_36,
 	Cs1_3C,

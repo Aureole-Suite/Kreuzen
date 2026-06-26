@@ -7,9 +7,9 @@ import cs4 333A..333C
 import cs4 3340..3348
 3348 char
 import cs4 3349..3B00
-3B00 'SoundPlay' dyn f32 dyn f32 f32 u16 char f32 f32 f32 f32 str u16 u16 u16 u16 u16 i16 i16 u16 f32
+3B00 'SoundPlay' dyn_sound f32 dyn f32 f32 u16 char f32 f32 f32 f32 str u16 u16 u16 u16 u16 i16 i16 u16 f32
 import cs4 3B01..3B32
-3B32 'SoundPlayVoice' dyn f32 dyn f32 f32 u16 char f32 f32 f32 f32 str u16 u16 u16 u16 u16 i16 i16 u16 f32
+3B32 'SoundPlayVoice' dyn_sound f32 dyn f32 f32 u16 char f32 f32 f32 f32 str u16 u16 u16 u16 u16 i16 i16 u16 f32
 import cs4 3B33..5E00
 5E00 'BlurOn' u16 f32 u16 u16 u16 f32 char f32 f32 f32
 import cs4 5E01..FFFFFFFF

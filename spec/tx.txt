@@ -130,25 +130,25 @@
 2F   char tx_2f u8 str f32 f32 u32
 
 30 'Bgm'
-3000 'BgmPlay' u16 f32 u16 u32 u8
-3001 u16 u8
+3000 'BgmPlay' music f32 u16 u32 u8
+3001 'BgmStop' music u8
 3002 u8
 3003 'BgmVolume' f32 u16 u8
-3004 'BgmPlay2' u16 f32 u16 f32 u8
-3005 'BgmReplace' u16 u16
+3004 'BgmPlay2' music f32 u16 f32 u8
+3005 'BgmReplace' music music
 3006 'BgmRestore' u16
 3007
 
 31 'Sound'
-3100 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
-3101 'SoundStop' u16 u16
+3100 'SoundPlay' sound f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
+3101 'SoundStop' sound u16
 3102 u16
 3103 u16 f32 u16
-3132 'SoundPlayVoice' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3132 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
 3133 u16 u16
 3134 u16
 3137 u16
-313A 'SoundPlayRandom' char u16 u16 u16 u16 u16
+313A 'SoundPlayRandom' char sound sound sound sound sound
 313B u16
 3196 u16
 3197 u16 u16

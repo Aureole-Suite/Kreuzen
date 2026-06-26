@@ -332,7 +332,8 @@ macro_rules! print_via_debug {
 
 print_via_debug!(
 	String, str, i64, i32, u32, f32,
-	types::Char, types::Item, types::Magic, types::Flag, types::Global, types::Var,
+	types::Char, types::Item, types::Magic, types::Sound, types::Music,
+	types::Flag, types::Global, types::Var,
 	types::FuncArg, types::NumReg, types::StrReg, types::Attr, types::CharAttr,
 	types::Flags8, types::Flags16, types::Flags32,
 );
@@ -348,6 +349,8 @@ impl Print for Arg {
 			Arg::Char(v) => v.print(ctx),
 			Arg::Item(v) => v.print(ctx),
 			Arg::Magic(v) => v.print(ctx),
+			Arg::Sound(v) => v.print(ctx),
+			Arg::Music(v) => v.print(ctx),
 			Arg::Flag(v) => v.print(ctx),
 			Arg::Global(v) => v.print(ctx),
 			Arg::Var(v) => v.print(ctx),

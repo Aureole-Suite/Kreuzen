@@ -255,26 +255,26 @@
 30   'CharAniLoop' char u8 str f32 f32 u32
 
 31 'Bgm'
-3100 'BgmPlay' u16 f32 u16 u32 u8
-3101 u16 u8
+3100 'BgmPlay' music f32 u16 u32 u8
+3101 'BgmStop' music u8
 3102 u8
 3103 'BgmVolume' f32 u16 u8
-3104 'BgmPlay2' u16 f32 u16 f32 u8
-3105 'BgmReplace' u16 u16
+3104 'BgmPlay2' music f32 u16 f32 u8
+3105 'BgmReplace' music music
 3106 'BgmRestore' u16
 3107
 
 32 'Sound'
-3200 'SoundPlay' u16 f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
-3201 'SoundStop' u16 u16
+3200 'SoundPlay' sound f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
+3201 'SoundStop' sound u16
 3202 u16
 3203 u16 f32 u16
-3232 'SoundPlayVoice' u16 f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3232 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
 3233 u16 u16
 3234 u16
 3237 u16
 3239 char
-323A 'SoundPlayRandom' char u16 u16 u16 u16
+323A 'SoundPlayRandom' char sound sound sound sound
 3264 u16 f32
 3296 u16
 32FE u16

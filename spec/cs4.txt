@@ -350,29 +350,29 @@
 39   'CharAniLoop' char u8 str f32 f32 u32
 
 3A 'Bgm'
-3A00 'BgmPlay' u16 f32 u16 u32 u8
-3A01 'BgmStop' u16 u8
+3A00 'BgmPlay' music f32 u16 u32 u8
+3A01 'BgmStop' music u8
 3A02 u8
 3A03 'BgmVolume' f32 u16 u8
-3A04 'BgmPlay2' u16 f32 u16 f32 u8
-3A05 'BgmReplace' u16 u16
+3A04 'BgmPlay2' music f32 u16 f32 u8
+3A05 'BgmReplace' music music
 3A06 'BgmRestore' u16
 3A07
 3A08 u16 u8
 3A09 u8
 
 3B 'Sound'
-3B00 'SoundPlay' dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
-3B01 'SoundStop' dyn dyn
-3B03 'SoundSetVolume' dyn f32 u16
+3B00 'SoundPlay' dyn_sound dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+3B01 'SoundStop' dyn_sound dyn
+3B03 'SoundSetVolume' dyn_sound f32 u16
 3B04 dyn f32 u16 u8
 3B05 u32
-3B32 'SoundPlayVoice' dyn dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
+3B32 'SoundPlayVoice' dyn_sound dyn dyn f32 dyn u16 char f32 f32 f32 dyn str dyn dyn u16 u16 u16 i16 i16 u16 f32
 3B33 dyn dyn
 3B34 dyn
 3B37 u32
 3B39 char
-3B3A 'SoundPlayRandom' char dyn dyn dyn dyn
+3B3A 'SoundPlayRandom' char dyn_sound dyn_sound dyn_sound dyn_sound
 3B3B u32
 3B3C u32
 3B3D
@@ -857,28 +857,28 @@ BA0B
 BA14 u8 u8
 BA15
 BB   char
-BC00 u16 dync u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
-BC01 u16 dync u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
-BC02 u16 dync u8
-BC03 u16 dync
-BC04 u16 dync u16 u16
-BC05 u16 dync u16 u16
-BC06 u16 dync
-BC07 u16 dync f32 f32 u16 u16
-BC08 u16 dync u32
-BC09 u16 dync f32 f32 f32 f32 f32 f32 u16 u16
-BC0A u16 dync f32 f32
-BC0B u16 dync u32
-BC0C u16 dync str f32 f32
-BC0D u16 dync u32
-BC0E u16 dync dyn u16 u16
-BC0F u16 dync u16 u32 str
-BC10 u16 dync u32 u32 u16
-BC11 u16 dync str f32 f32
-BC12 u16 dync str f32 f32
-BC13 u16 dync str f32 f32
-BC14 u16 dync u32
-BC15 u16 dync u32
+BC00 u16 dyn_char u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
+BC01 u16 dyn_char u32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 u16 u16
+BC02 u16 dyn_char u8
+BC03 u16 dyn_char
+BC04 u16 dyn_char u16 u16
+BC05 u16 dyn_char u16 u16
+BC06 u16 dyn_char
+BC07 u16 dyn_char f32 f32 u16 u16
+BC08 u16 dyn_char u32
+BC09 u16 dyn_char f32 f32 f32 f32 f32 f32 u16 u16
+BC0A u16 dyn_char f32 f32
+BC0B u16 dyn_char u32
+BC0C u16 dyn_char str f32 f32
+BC0D u16 dyn_char u32
+BC0E u16 dyn_char dyn u16 u16
+BC0F u16 dyn_char u16 u32 str
+BC10 u16 dyn_char u32 u32 u16
+BC11 u16 dyn_char str f32 f32
+BC12 u16 dyn_char str f32 f32
+BC13 u16 dyn_char str f32 f32
+BC14 u16 dyn_char u32
+BC15 u16 dyn_char u32
 BD05 u16 u16 u16
 BE   char u8 f32 f32
 C0   u16 cs3_c0

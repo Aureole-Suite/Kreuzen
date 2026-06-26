@@ -8,10 +8,10 @@ import cs3 3302..3332
 3334 'BtlCharSavePos'  char u32
 3335 char f32 f32 f32 f32
 import cs3 3337..3B00
-3B00 'SoundPlay' dyn f32 f32 f32 f32 char f32 f32 f32 f32 u8
-3B01 'SoundStop' dyn u16
+3B00 'SoundPlay' dyn_sound f32 f32 f32 f32 char f32 f32 f32 f32 u8
+3B01 'SoundStop' dyn_sound u16
 import cs3 3B02..3B32
-3B32 'SoundPlayVoice' dyn f32 f32 f32 f32 char f32 f32 f32 f32 u8
+3B32 'SoundPlayVoice' dyn_sound f32 f32 f32 f32 char f32 f32 f32 f32 u8
 import cs3 3B33..540A
 540A u32 u32 u32 u32 u32 u32 u32 u32
 import cs3 540B..FFFFFFFF

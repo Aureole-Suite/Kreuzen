@@ -2,7 +2,7 @@ use gospel::read::Le as _;
 use gospel::write::{Le as _, Writer};
 
 use crate::Enc;
-use crate::types::{Item, Magic};
+use crate::types::{Item, Magic, Sound};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text(pub Vec<TextPart>);
@@ -28,8 +28,8 @@ pub enum TextControl {
 	_0C,
 	_0F,
 	Item(Item),
-	Voice(u32),
-	VoiceSilent(u32),
+	Voice(Sound),
+	VoiceSilent(Sound),
 	_13,
 	_16,
 	Param(u16),
@@ -64,8 +64,8 @@ impl Text {
 					0x0C => TextControl::_0C,
 					0x0F => TextControl::_0F,
 					0x10 => TextControl::Item(Item(f.u16()?)),
-					0x11 => TextControl::Voice(f.u32()?),
-					0x12 => TextControl::VoiceSilent(f.u32()?),
+					0x11 => { let v = f.u32()?; TextControl::Voice(Sound(u16::try_from(v).map_err(|_| rootcause::report!("voice id {v:#X} out of bounds"))?)) }
+					0x12 => { let v = f.u32()?; TextControl::VoiceSilent(Sound(u16::try_from(v).map_err(|_| rootcause::report!("voice id {v:#X} out of bounds"))?)) }
 					0x13 => TextControl::_13,
 					0x16 => TextControl::_16,
 					0x17 => TextControl::Param(f.u16()?),
@@ -99,8 +99,8 @@ impl Text {
 					TextControl::_0C => f.u8(0x0C),
 					TextControl::_0F => f.u8(0x0F),
 					TextControl::Item(v) => { f.u8(0x10); f.u16(v.0); }
-					TextControl::Voice(v) => { f.u8(0x11); f.u32(v); }
-					TextControl::VoiceSilent(v) => { f.u8(0x12); f.u32(v); }
+					TextControl::Voice(v) => { f.u8(0x11); f.u32(v.0 as u32); }
+					TextControl::VoiceSilent(v) => { f.u8(0x12); f.u32(v.0 as u32); }
 					TextControl::_13 => f.u8(0x13),
 					TextControl::_16 => f.u8(0x16),
 					TextControl::Param(v) => { f.u8(0x17); f.u16(v); }
