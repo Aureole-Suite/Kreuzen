@@ -10,6 +10,7 @@ pub mod anime_clip;
 pub mod book;
 pub mod btlset;
 pub mod break_;
+pub mod condition;
 pub mod field_follow;
 pub mod part;
 pub mod reaction;
@@ -37,6 +38,7 @@ pub enum Table {
 	AnimeClipTable(Vec<anime_clip::AnimeClip>),
 	Book(book::Book),
 	BreakTable(Vec<break_::Break>),
+	ConditionTable(Vec<condition::Condition>),
 	FieldFollowData(field_follow::FieldFollow),
 	PartTable(Vec<part::Part>),
 	ReactionTable(Vec<reaction::Reaction>),
@@ -147,9 +149,12 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		return Ok(Some(Table::ReactionTable(reaction::read(f)?)));
 	}
 
+	if name == "ConditionTable" {
+		return Ok(Some(Table::ConditionTable(condition::read(f)?)));
+	}
+
 	let tables = [
 		"AddCollision",
-		"ConditionTable",
 	];
 
 	let is_table = tables.contains(&name)
@@ -180,6 +185,7 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 		Table::AnimeClipTable(clips) => anime_clip::write(d, clips)?,
 		Table::Book(b) => book::write(d, b)?,
 		Table::BreakTable(t) => break_::write(d, t.as_slice())?,
+		Table::ConditionTable(t) => condition::write(d, t)?,
 		Table::Btlset(b) => btlset::write(d, b)?,
 		Table::FieldFollowData(ffd) => field_follow::write(d, ffd)?,
 		Table::PartTable(t) => part::write(d, t)?,
