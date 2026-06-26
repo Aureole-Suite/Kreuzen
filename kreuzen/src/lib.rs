@@ -88,23 +88,18 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	if !script_name.to_bytes().iter().all(|b| (0x20..=0x7E).contains(b)) {
 		rootcause::bail!("invalid name: {script_name:?}");
 	}
-	let script_name = std::str::from_utf8(script_name.to_bytes()).unwrap().to_owned();
+	let name = std::str::from_utf8(script_name.to_bytes()).unwrap().to_owned();
 
 	if !old_cs1 {
 		f.cstr()?;
 	};
 
 	let (game, enc, variant) = resolve_game(
-		&script_name,
+		&name,
 		game,
 		enc,
 		old_cs1,
 	);
-	let mut f = VReader {
-		game,
-		enc,
-		reader: f,
-	};
 
 	let mut oddness = match game {
 		Game::Cs4 if f.pos() == table_top => 1,
@@ -128,7 +123,7 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	crate::ensure!(f.pos() == table_top);
 	let (names, starts) = read_asm(&mut f, nfunc)?;
 	if old_cs1 {
-		crate::ensure!(f.game == Game::Cs1);
+		crate::ensure!(game == Game::Cs1);
 		crate::ensure!(f.pos() == name_start);
 		f.cstr()?;
 	}
@@ -141,9 +136,15 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let pad = f.slice(first - pos)?;
 	crate::ensure!(pad.iter().all(|b| *b == 0));
 
+	let mut f = VReader {
+		game,
+		enc,
+		reader: f,
+	};
+
 	let mut cr = CReader {
 		reader: &mut f,
-		scena: &script_name,
+		scena: &name,
 		variant,
 	};
 
@@ -174,9 +175,9 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	}
 
 	Ok(Scena {
-		name: script_name,
-		game: f.game,
-		enc: f.enc,
+		name,
+		game,
+		enc,
 		oddness,
 		variant,
 		chunks,
@@ -442,7 +443,7 @@ fn read_chunk(cr: &mut CReader<'_, '_>, ranges: &[(usize, usize)], e: &split::En
 }
 
 // This function corresponds to the /asm/ files. Cursed.
-fn read_asm(f: &mut VReader, n: usize) -> rootcause::Result<(Vec<String>, Vec<usize>)> {
+fn read_asm(f: &mut Reader, n: usize) -> rootcause::Result<(Vec<String>, Vec<usize>)> {
 	let mut starts = Vec::with_capacity(n);
 	for _ in 0..n {
 		starts.push(f.u32()? as usize);
@@ -455,7 +456,13 @@ fn read_asm(f: &mut VReader, n: usize) -> rootcause::Result<(Vec<String>, Vec<us
 	#[expect(clippy::needless_range_loop)]
 	for i in 0..n {
 		assert_eq!(f.pos(), lengths[i]);
-		names.push(f.str()?);
+
+		let name = f.cstr()?;
+		if !name.to_bytes().iter().all(|b| (0x20..=0x7E).contains(b)) {
+			rootcause::bail!("invalid name: {name:?}");
+		}
+
+		names.push(std::str::from_utf8(name.to_bytes()).unwrap().to_owned());
 	}
 	Ok((names, starts))
 }
