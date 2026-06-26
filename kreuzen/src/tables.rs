@@ -4,6 +4,7 @@ use crate::Game;
 use crate::io::{CReader, OData};
 
 pub mod preload;
+pub mod add_collision;
 pub mod action;
 pub mod algo;
 pub mod anime_clip;
@@ -33,6 +34,7 @@ impl std::fmt::Debug for Opaque {
 // Preload tables are stored separately from others, so they are not in this enum
 #[derive(Debug, Clone)]
 pub enum Table {
+	AddCollision(Vec<add_collision::Collision>),
 	ActionTable(Vec<action::Action>),
 	AlgoTable(Vec<algo::Algo>),
 	AnimeClipTable(Vec<anime_clip::AnimeClip>),
@@ -153,9 +155,11 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		return Ok(Some(Table::ConditionTable(condition::read(f)?)));
 	}
 
-	let tables = [
-		"AddCollision",
-	];
+	if name == "AddCollision" {
+		return Ok(Some(Table::AddCollision(add_collision::read(f)?)));
+	}
+
+	let tables = [];
 
 	let is_table = tables.contains(&name)
 		|| name.starts_with("FC_auto")
@@ -180,6 +184,7 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 		_ => 4,
 	};
 	let f = match table {
+		Table::AddCollision(t) => add_collision::write(d, t)?,
 		Table::ActionTable(actions) => action::write(d, actions)?,
 		Table::AlgoTable(algos) => algo::write(d, algos)?,
 		Table::AnimeClipTable(clips) => anime_clip::write(d, clips)?,
