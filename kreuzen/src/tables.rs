@@ -12,9 +12,11 @@ pub mod book;
 pub mod btlset;
 pub mod break_;
 pub mod condition;
+pub mod fc_auto;
 pub mod field_follow;
 pub mod part;
 pub mod reaction;
+pub mod style_name;
 pub mod summon;
 pub mod field_monster;
 pub mod weapon_att;
@@ -41,15 +43,16 @@ pub enum Table {
 	Book(book::Book),
 	BreakTable(Vec<break_::Break>),
 	ConditionTable(Vec<condition::Condition>),
+	FcAuto(String),
 	FieldFollowData(field_follow::FieldFollow),
 	PartTable(Vec<part::Part>),
 	ReactionTable(Vec<reaction::Reaction>),
+	StyleName(style_name::StyleName),
 	SummonTable(Vec<summon::Summon>),
 	FieldMonsterData(field_monster::FieldMonster),
 	WeaponAttTable(weapon_att::WeaponAtt),
 	Btlset(btlset::Btlset),
 	Dummy(Dummy),
-	Unknown(Opaque),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -102,11 +105,10 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		"ReactionTable"    => return Ok(Some(Table::ReactionTable(reaction::read(f)?))),
 		"SummonTable"      => return Ok(Some(Table::SummonTable(summon::read(f)?))),
 		"WeaponAttTable"   => return Ok(Some(Table::WeaponAttTable(weapon_att::read(f)?))),
+		name if name.starts_with("BookData") => return Ok(Some(Table::Book(book::read(f, name)?))),
+		name if name.starts_with("FC_auto") => return Ok(Some(Table::FcAuto(fc_auto::read(f)?))),
+		name if name.starts_with("StyleName") => return Ok(Some(Table::StyleName(style_name::read(f)?))),
 		_ => {}
-	}
-
-	if name.starts_with("BookData") {
-		return Ok(Some(Table::Book(book::read(f, name)?)));
 	}
 
 	if name.is_empty() {
@@ -133,11 +135,6 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		return Ok(Some(Table::Btlset(btlset::read(f)?)));
 	}
 
-	if name.starts_with("FC_auto") || name.starts_with("StyleName") {
-		let n = f.remaining().len();
-		let opaque = Opaque { bytes: f.slice(n)?.to_vec() };
-		return Ok(Some(Table::Unknown(opaque)));
-	}
 
 	// This is called from read_chunk, so we need to seek to end to prevent errors being reported
 	let len = f.len();
@@ -160,21 +157,18 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 		Table::Book(b) => book::write(d, b)?,
 		Table::BreakTable(t) => break_::write(d, t.as_slice())?,
 		Table::ConditionTable(t) => condition::write(d, t)?,
+		Table::FcAuto(s) => fc_auto::write(d, s)?,
 		Table::Btlset(b) => btlset::write(d, b)?,
 		Table::FieldFollowData(ffd) => field_follow::write(d, ffd)?,
 		Table::PartTable(t) => part::write(d, t)?,
 		Table::ReactionTable(t) => reaction::write(d, t)?,
+		Table::StyleName(s) => style_name::write(d, s)?,
 		Table::SummonTable(t) => summon::write(d, t)?,
 		Table::FieldMonsterData(fmd) => field_monster::write(d, fmd)?,
 		Table::WeaponAttTable(t) => weapon_att::write(d, t)?,
 		Table::Dummy(d) => {
 			let mut f = Writer::new();
 			f.slice(d.bytes());
-			f
-		}
-		Table::Unknown(opaque) => {
-			let mut f = Writer::new();
-			f.slice(&opaque.bytes);
 			f
 		}
 	};
