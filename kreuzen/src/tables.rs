@@ -6,6 +6,7 @@ use crate::io::{CReader, OData};
 pub mod preload;
 pub mod action;
 pub mod algo;
+pub mod anime_clip;
 pub mod book;
 pub mod btlset;
 
@@ -26,6 +27,7 @@ impl std::fmt::Debug for Opaque {
 pub enum Table {
 	ActionTable(Vec<action::Action>),
 	AlgoTable(Vec<algo::Algo>),
+	AnimeClipTable(Vec<anime_clip::AnimeClip>),
 	Book(book::Book),
 	Btlset(btlset::Btlset),
 	Dummy(Dummy),
@@ -75,6 +77,9 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 	if name == "AlgoTable" {
 		return Ok(Some(Table::AlgoTable(algo::read(f)?)));
 	}
+	if name == "AnimeClipTable" {
+		return Ok(Some(Table::AnimeClipTable(anime_clip::read(f)?)));
+	}
 	if name.starts_with("BookData") {
 		return Ok(Some(Table::Book(book::read(f, name)?)));
 	}
@@ -104,7 +109,6 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 
 	let tables = [
 		"AddCollision",
-		"AnimeClipTable",
 		"FieldMonsterData",
 		"PartTable",
 		"ReactionTable",
@@ -140,6 +144,7 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 	let f = match table {
 		Table::ActionTable(actions) => action::write(d, actions)?,
 		Table::AlgoTable(algos) => algo::write(d, algos)?,
+		Table::AnimeClipTable(clips) => anime_clip::write(d, clips)?,
 		Table::Book(b) => book::write(d, b)?,
 		Table::Btlset(b) => btlset::write(d, b)?,
 		Table::Dummy(d) => {
