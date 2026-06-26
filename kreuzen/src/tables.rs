@@ -11,6 +11,7 @@ pub mod book;
 pub mod btlset;
 pub mod break_;
 pub mod field_follow;
+pub mod part;
 pub mod summon;
 pub mod field_monster;
 pub mod weapon_att;
@@ -36,6 +37,7 @@ pub enum Table {
 	Book(book::Book),
 	BreakTable(Vec<break_::Break>),
 	FieldFollowData(field_follow::FieldFollow),
+	PartTable(Vec<part::Part>),
 	SummonTable(Vec<summon::Summon>),
 	FieldMonsterData(field_monster::FieldMonster),
 	WeaponAttTable(weapon_att::WeaponAtt),
@@ -135,9 +137,12 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		return Ok(Some(Table::SummonTable(summon::read(f)?)));
 	}
 
+	if name == "PartTable" {
+		return Ok(Some(Table::PartTable(part::read(f)?)));
+	}
+
 	let tables = [
 		"AddCollision",
-		"PartTable",
 		"ReactionTable",
 		"ConditionTable",
 	];
@@ -172,6 +177,7 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 		Table::BreakTable(t) => break_::write(d, t.as_slice())?,
 		Table::Btlset(b) => btlset::write(d, b)?,
 		Table::FieldFollowData(ffd) => field_follow::write(d, ffd)?,
+		Table::PartTable(t) => part::write(d, t)?,
 		Table::SummonTable(t) => summon::write(d, t)?,
 		Table::FieldMonsterData(fmd) => field_monster::write(d, fmd)?,
 		Table::WeaponAttTable(t) => weapon_att::write(d, t)?,
