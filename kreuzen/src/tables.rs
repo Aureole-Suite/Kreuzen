@@ -151,24 +151,24 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 	};
 	let f = match table {
 		Table::AddCollision(t) => add_collision::write(d, t)?,
-		Table::ActionTable(actions) => action::write(d, actions)?,
-		Table::AlgoTable(algos) => algo::write(d, algos)?,
-		Table::AnimeClipTable(clips) => anime_clip::write(d, clips)?,
-		Table::Book(b) => book::write(d, b)?,
-		Table::BreakTable(t) => break_::write(d, t.as_slice())?,
+		Table::ActionTable(t) => action::write(d, t)?,
+		Table::AlgoTable(t) => algo::write(d, t)?,
+		Table::AnimeClipTable(t) => anime_clip::write(d, t)?,
+		Table::Book(t) => book::write(d, t)?,
+		Table::BreakTable(t) => break_::write(d, t)?,
 		Table::ConditionTable(t) => condition::write(d, t)?,
-		Table::FcAuto(s) => fc_auto::write(d, s)?,
-		Table::Btlset(b) => btlset::write(d, b)?,
-		Table::FieldFollowData(ffd) => field_follow::write(d, ffd)?,
+		Table::FcAuto(t) => fc_auto::write(d, t)?,
+		Table::Btlset(t) => btlset::write(d, t)?,
+		Table::FieldFollowData(t) => field_follow::write(d, t)?,
 		Table::PartTable(t) => part::write(d, t)?,
 		Table::ReactionTable(t) => reaction::write(d, t)?,
-		Table::StyleName(s) => style_name::write(d, s)?,
+		Table::StyleName(t) => style_name::write(d, t)?,
 		Table::SummonTable(t) => summon::write(d, t)?,
-		Table::FieldMonsterData(fmd) => field_monster::write(d, fmd)?,
+		Table::FieldMonsterData(t) => field_monster::write(d, t)?,
 		Table::WeaponAttTable(t) => weapon_att::write(d, t)?,
-		Table::Dummy(d) => {
+		Table::Dummy(t) => {
 			let mut f = Writer::new();
-			f.slice(d.bytes());
+			f.slice(t.bytes());
 			f
 		}
 	};
