@@ -473,6 +473,8 @@ fn read_subchunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut C
 	}
 	if actual_end > start && d[actual_end - 1] == 1 {
 		actual_end -= 1;
+	} else {
+		tracing::warn!("chunk does not end on 01");
 	}
 	let mut g = CReader {
 		reader: Reader::new(&d[..actual_end]).at(start)?,
