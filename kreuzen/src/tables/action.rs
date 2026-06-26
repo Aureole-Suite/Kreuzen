@@ -145,13 +145,13 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 		let name = f.sstr(64)?;
 		let act = Action { id, kind, target, u2, cast_time, recovery_time, effects, cp_cost, flags, ani, name };
 		if id == 0xFFFF && f.game == Game::Reverie {
-			if act != Action::dummy() {
-				tracing::error!("malformed ActionTable terminator");
-			}
 			has_sep = true;
 			continue;
 		}
 		table.push(act);
+	}
+	if !has_sep {
+		tracing::warn!("missing ActionTable terminator");
 	}
 	Ok(table)
 }
