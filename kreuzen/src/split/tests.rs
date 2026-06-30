@@ -21,7 +21,7 @@ fn validate(names: &[String], split: &Split) {
 		assert_eq!(names[i], "_a0_CharaterSection", "charater section name mismatch");
 	}
 
-	let mut parts = split
+	let parts = split
 		.entries
 		.iter()
 		.map(|e| e.main)

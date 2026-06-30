@@ -848,6 +848,7 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 				};
 				write_parts(d, f, op, cursor, op_40(v), op_end)?;
 			}
+			#[expect(clippy::single_match)]
 			P::Cs4_wtf_are_you_doing => {
 				if *cursor < op.args.len() {
 					match op.args[*cursor] {
@@ -860,6 +861,7 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 				}
 			}
 
+			#[expect(clippy::collapsible_match)]
 			P::Rev_3E => match op.args[1] {
 				Arg::Char(Char(0xFE12)) => write_parts(d, f, op, cursor, &[P::U8], op_end)?,
 				Arg::Char(Char(0xFE13)) => write_parts(d, f, op, cursor, &[P::F32], op_end)?,
