@@ -27,7 +27,10 @@ fn main() {
 		.with(WarnDetector)
 		.init();
 
-	let dir = PathBuf::from(std::env::args().nth(1).expect("Usage: all <dir>"));
+	let mut args = std::env::args().skip(1);
+	let dir = PathBuf::from(args.next().expect("Usage: all <dir> [game...]"));
+	let filters: Vec<String> = args.collect();
+
 	let cs1 = dir.join("Trails of Cold Steel");
 	let cs2 = dir.join("Trails of Cold Steel II");
 	let cs3 = dir.join("The Legend of Heroes Trails of Cold Steel III");
@@ -35,17 +38,31 @@ fn main() {
 	let rev = dir.join("The Legend of Heroes Trails into Reverie");
 	let tx = dir.join("Tokyo Xanadu eX+");
 
-	game(Game::Cs1, Enc::Sjis, &cs1, "dat");
-	game(Game::Cs1, Enc::Utf8, &cs1, "dat_us");
-	game(Game::Cs2, Enc::Sjis, &cs2, "dat");
-	game(Game::Cs2, Enc::Utf8, &cs2, "dat_us");
-	game(Game::Tx, Enc::Utf8, &tx, "dat");
-	game(Game::Cs3, Enc::Utf8, &cs3, "dat");
-	game(Game::Cs3, Enc::Utf8, &cs3, "dat_en");
-	game(Game::Cs3, Enc::Utf8, &cs3, "dat_fr");
-	game(Game::Cs4, Enc::Utf8, &cs4, "dat");
-	game(Game::Cs4, Enc::Utf8, &cs4, "dat_en");
-	game(Game::Reverie, Enc::Utf8, &rev, "dat_en");
+	if filters.is_empty() {
+		game(Game::Cs1, Enc::Sjis, &cs1, "dat");
+		game(Game::Cs1, Enc::Utf8, &cs1, "dat_us");
+		game(Game::Cs2, Enc::Sjis, &cs2, "dat");
+		game(Game::Cs2, Enc::Utf8, &cs2, "dat_us");
+		game(Game::Tx, Enc::Utf8, &tx, "dat");
+		game(Game::Cs3, Enc::Utf8, &cs3, "dat");
+		game(Game::Cs3, Enc::Utf8, &cs3, "dat_en");
+		game(Game::Cs3, Enc::Utf8, &cs3, "dat_fr");
+		game(Game::Cs4, Enc::Utf8, &cs4, "dat");
+		game(Game::Cs4, Enc::Utf8, &cs4, "dat_en");
+		game(Game::Reverie, Enc::Utf8, &rev, "dat_en");
+	} else {
+		for filter in &filters {
+			match filter.as_str() {
+				"cs1" => game(Game::Cs1, Enc::Utf8, &cs1, "dat_us"),
+				"cs2" => game(Game::Cs2, Enc::Utf8, &cs2, "dat_us"),
+				"tx"  => game(Game::Tx,  Enc::Utf8, &tx,  "dat"),
+				"cs3" => game(Game::Cs3, Enc::Utf8, &cs3, "dat_en"),
+				"cs4" => game(Game::Cs4, Enc::Utf8, &cs4, "dat_en"),
+				"rev" => game(Game::Reverie, Enc::Utf8, &rev, "dat_en"),
+				_ => eprintln!("Unknown game: {filter}"),
+			}
+		}
+	}
 }
 
 fn ls(path: impl AsRef<Path>) -> Vec<String> {
