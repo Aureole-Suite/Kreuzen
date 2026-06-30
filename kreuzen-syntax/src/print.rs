@@ -88,17 +88,6 @@ impl Ctx {
 		self.space = self.space.max(space);
 	}
 
-	fn arglist<I: IntoIterator>(&mut self, args: I, mut f: impl FnMut(I::Item, &mut Self)) {
-		self.sym("(");
-		for (i, arg) in args.into_iter().enumerate() {
-			if i != 0 {
-				self.sym_(",");
-			}
-			f(arg, self);
-		}
-		self.sym_(")");
-	}
-
 	fn block<I: IntoIterator>(&mut self, block: I, mut f: impl FnMut(I::Item, &mut Self)) {
 		self._sym_("{");
 		self.indent += 1;
@@ -308,12 +297,11 @@ impl Print for Op {
 				panic!("setter second arg must be expr");
 			};
 			expr.print(ctx);
-		} else if self.name == "return" {
-			assert!(self.args.is_empty());
-			ctx.token(self.name);
 		} else {
 			ctx.token(self.name);
-			ctx.arglist(self.args.iter(), Arg::print);
+			for arg in &self.args {
+				arg.print(ctx);
+			}
 		}
 	}
 }
