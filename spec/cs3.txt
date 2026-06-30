@@ -339,7 +339,7 @@
 
 3C 'CharFace'
 3C03 char str str str str str
-3C04 u16 str
+3C04 char str
 3D   'CharTurnDir' char f32 f32 u8
 3E   char char f32 u8
 3F   char
@@ -715,9 +715,9 @@ A6   char f32 f32 f32
 A9   'NoteGetCount' u8
 AA   u8 u8
 A8   flags32
-AB00 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
+AB00 char u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
 AB01
-AB02 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+AB02 u8 flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag
 AB03 f32 f32 f32
 AC00 u8
 AC01 u32
