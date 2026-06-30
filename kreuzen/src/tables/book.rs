@@ -33,6 +33,7 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Book> {
 		1 => {
 			f.check_u16(0)?;
 			let title = f.sstr(16)?;
+			#[rustfmt::skip]
 			let data = [
 				f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?,
 				f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?,
@@ -40,7 +41,7 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Book> {
 			let text = f.str()?;
 			Book::TitlePage { title, data, text }
 		}
-		n => rootcause::bail!("unexpected control {n} in BookData")
+		n => rootcause::bail!("unexpected control {n} in BookData"),
 	})
 }
 

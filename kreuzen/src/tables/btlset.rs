@@ -30,11 +30,7 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Btlset> {
 		[0.0; 6]
 	};
 	let btl_id = f.u32()?;
-	let unk1 = if f.game >= Game::Cs3 {
-		f.u32()?
-	} else {
-		0
-	};
+	let unk1 = if f.game >= Game::Cs3 { f.u32()? } else { 0 };
 	let bgm = (f.u16()?, f.u16()?);
 	f.check_u32(0)?;
 	let unk2 = f.u32()?;
@@ -56,9 +52,8 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Btlset> {
 			// I don't know wtf this extra chunk is, it's only present in cs2 a0004.
 			// Still, might as well keep it
 			let num = f.u32()? + 1000000000;
-			let names = [
-				f.sstr(16)?, f.sstr(16)?, f.sstr(16)?, f.sstr(16)?,
-			];
+			let names = [f.sstr(16)?, f.sstr(16)?, f.sstr(16)?, f.sstr(16)?];
+			#[rustfmt::skip]
 			let probs = [f.u16()? as u8, f.u16()? as u8, f.u16()? as u8, f.u16()? as u8];
 			let mut monsters: Vec<_> = names.into_iter().zip(probs).collect();
 			while monsters.last().is_some_and(|(m, p)| m.is_empty() && *p == 0) {
@@ -73,10 +68,12 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Btlset> {
 			f.check(&[0; 0x18])?;
 			break;
 		}
+		#[rustfmt::skip]
 		let names = [
 			f.sstr(16)?, f.sstr(16)?, f.sstr(16)?, f.sstr(16)?,
 			f.sstr(16)?, f.sstr(16)?, f.sstr(16)?, f.sstr(16)?,
 		];
+		#[rustfmt::skip]
 		let probs = [
 			f.u8()?, f.u8()?, f.u8()?, f.u8()?,
 			f.u8()?, f.u8()?, f.u8()?, f.u8()?,

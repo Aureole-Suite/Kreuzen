@@ -35,17 +35,12 @@ fn is_valid_preload(main_names: &[String], preload: &[String]) -> bool {
 ///
 /// Assumes that no main or preload element starts with `_aN_`. Hopefully this holds.
 fn find_shadow_start(list: &[String]) -> usize {
-	list.iter()
-		.position(|s| strip_shadow_prefix(s).is_some())
-		.unwrap_or(list.len())
+	list.iter().position(|s| strip_shadow_prefix(s).is_some()).unwrap_or(list.len())
 }
 
 /// Finds the index at which the preload section begins.
 fn find_preload_start(list: &[String]) -> usize {
-	let min_start = list
-		.iter()
-		.rposition(|s| !s.starts_with('_'))
-		.map_or(0, |i| i + 1);
+	let min_start = list.iter().rposition(|s| !s.starts_with('_')).map_or(0, |i| i + 1);
 
 	(min_start..=list.len())
 		.find(|&start| is_valid_preload(&list[..start], &list[start..]))
@@ -64,7 +59,9 @@ pub fn parse(list: &[String]) -> Split {
 	}
 	let shadow = &list[shadow_start..];
 
-	let mut entries: Vec<Entry> = main.iter().enumerate()
+	let mut entries: Vec<Entry> = main
+		.iter()
+		.enumerate()
 		.map(|(i, n)| Entry {
 			name: n.clone(),
 			main: i,

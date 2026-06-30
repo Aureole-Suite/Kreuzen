@@ -83,8 +83,7 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Summon>> {
 
 fn write_cs1(d: &OData, table: &[Summon]) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
-	let n = u8::try_from(table.len())
-		.map_err(|_| rootcause::report!("SummonTable too large: {}", table.len()))?;
+	let n = u8::try_from(table.len()).map_err(|_| rootcause::report!("SummonTable too large: {}", table.len()))?;
 	f.u8(n);
 	for s in table {
 		write_summon(&mut f, d, s)?;

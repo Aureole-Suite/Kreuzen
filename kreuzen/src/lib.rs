@@ -1,17 +1,17 @@
 use gospel::read::{Le as _, Reader};
-use gospel::write::{Le as _, Writer, Label};
+use gospel::write::{Label, Le as _, Writer};
 
 use crate::code::Code;
 use crate::io::{CReader, WriterExt as _};
 
-mod io;
 pub mod code;
-pub mod expr;
-pub mod text;
-mod spec;
-pub mod types;
-pub mod tables;
 pub mod decompile;
+pub mod expr;
+mod io;
+mod spec;
+pub mod tables;
+pub mod text;
+pub mod types;
 
 mod split;
 
@@ -93,12 +93,7 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		f.cstr()?;
 	};
 
-	let (game, enc, variant) = resolve_game(
-		&name,
-		game,
-		enc,
-		old_cs1,
-	);
+	let (game, enc, variant) = resolve_game(&name, game, enc, old_cs1);
 
 	let mut oddness = match game {
 		Game::Cs4 if f.pos() == table_top => 1,
@@ -110,13 +105,9 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		Game::Reverie => {
 			f.align_zeroed(4)?;
 			f.check_u32(0xFF000000)?;
-			if f.check_u32(0xFF000000).is_ok() {
-				2
-			} else {
-				0
-			}
+			if f.check_u32(0xFF000000).is_ok() { 2 } else { 0 }
 		}
-		_ => 0
+		_ => 0,
 	};
 
 	crate::ensure!(f.pos() == table_top);
@@ -135,13 +126,7 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let pad = f.slice(first - pos)?;
 	crate::ensure!(pad.iter().all(|b| *b == 0));
 
-	let mut f = CReader {
-		game,
-		enc,
-		scena: &name,
-		variant,
-		reader: f,
-	};
+	let mut f = CReader { game, enc, scena: &name, variant, reader: f };
 
 	let ranges = starts.iter().copied().zip(iter).collect::<Vec<_>>();
 	let split = split::parse(&names);
@@ -151,7 +136,7 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		let _span = tracing::error_span!("entry", name=%entry.name).entered();
 		match read_chunk(&mut f, &ranges, &entry) {
 			Ok(chunk) => chunks.push(chunk),
-			Err(e) => errors.push(e.context(format!("error parsing chunk {}", entry.name)).into_cloneable())
+			Err(e) => errors.push(e.context(format!("error parsing chunk {}", entry.name)).into_cloneable()),
 		}
 	}
 
@@ -169,32 +154,22 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		return Err(errors.context("error parsing chunks").into());
 	}
 
-	Ok(Scena {
-		name,
-		game,
-		enc,
-		oddness,
-		variant,
-		chunks,
-	})
+	Ok(Scena { name, game, enc, oddness, variant, chunks })
 }
-
 
 pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	let start = Label::new();
 
 	let mut errors = rootcause::report_collection::ReportCollection::new();
 	let mut chunks = Vec::new();
-	let mut chunk = |align: usize, name: &str, raw: bool, body: rootcause::Result<Writer>| {
-		match body {
-			Ok(mut body) => {
-				if !raw {
-					body.u8(1);
-				}
-				chunks.push((Label::new(), align, name.to_owned(), body))
+	let mut chunk = |align: usize, name: &str, raw: bool, body: rootcause::Result<Writer>| match body {
+		Ok(mut body) => {
+			if !raw {
+				body.u8(1);
 			}
-			Err(e) => errors.push(e.context(format!("error writing chunk {}", name)).into_cloneable()),
+			chunks.push((Label::new(), align, name.to_owned(), body))
 		}
+		Err(e) => errors.push(e.context(format!("error writing chunk {}", name)).into_cloneable()),
 	};
 
 	let d = io::OData {
@@ -221,7 +196,8 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	}
 	for c in &scena.chunks {
 		if !c.preload.is_empty() {
-			chunk(16, &format!("_{}", c.name), false, tables::preload::write(&d, &c.preload));
+			let f = tables::preload::write(&d, &c.preload);
+			chunk(16, &format!("_{}", c.name), false, f);
 		}
 	}
 	if scena.game == Game::Reverie && scena.oddness == 3 {
@@ -300,12 +276,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	Ok(f.finish()?)
 }
 
-fn resolve_game(
-	n: &str,
-	mut game: Game,
-	mut enc: Enc,
-	old_cs1: bool,
-) -> (Game, Enc, u8) {
+fn resolve_game(n: &str, mut game: Game, mut enc: Enc, old_cs1: bool) -> (Game, Enc, u8) {
 	let cs1_special = ["mon022_c00", "mon022_c01", "mon070_c00", "mon118_c00"];
 	let cs2_special = ["e2230", "e4501", "e4701", "m5010"];
 	let cs3_special_1 = ["mon037_c00", "mon042_c00", "mon042_c01", "mon046_c00", "ply000", "ply001"];
@@ -319,20 +290,17 @@ fn resolve_game(
 		"npcx03",
 		"npcx04",
 		"vehicle",
-
 		"alchr034",
 		"alchr034_0",
 		"almon006_c03",
 		"almon452_0",
 		"almon452_1",
 		"btl0922",
-
 		"a0102",
 		"a0104",
 		"a0106",
 		"a0108",
 		"a2050",
-
 		"tk_bike",
 	];
 	let cs4_special = ["rob030"];
@@ -360,9 +328,11 @@ fn resolve_game(
 		"title_menu_v",
 	];
 
+	let cs1_sjis = ["almon146", "almon148_c00", "almon143_c00", "almon118", "almon046_c02"];
+
 	let cs3_special = cs3_special_1.contains(&n) || cs3_special_2.contains(&n) || cs3_special_3.contains(&n);
 
-	if game == Game::Cs1 && matches!(n, "almon146" | "almon148_c00" | "almon143_c00" | "almon118" | "almon046_c02") {
+	if game == Game::Cs1 && cs1_sjis.contains(&n) {
 		enc = Enc::Sjis;
 	}
 
@@ -428,12 +398,7 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 		let _span = tracing::error_span!("shadow", a).entered();
 		shadow.push(code::read_code_chunk(cr, ranges[s])?);
 	}
-	let chunk = Chunk {
-		name: e.name.clone(),
-		func,
-		preload,
-		shadow,
-	};
+	let chunk = Chunk { name: e.name.clone(), func, preload, shadow };
 	Ok(chunk)
 }
 
@@ -461,7 +426,6 @@ fn read_asm(f: &mut Reader, n: usize) -> rootcause::Result<(Vec<String>, Vec<usi
 	}
 	Ok((names, starts))
 }
-
 
 fn read_subchunk<T>(f: &mut CReader, s: (usize, usize), body: impl FnOnce(&mut CReader) -> rootcause::Result<T>) -> rootcause::Result<T> {
 	let (start, end) = s;

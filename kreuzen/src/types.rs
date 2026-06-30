@@ -136,12 +136,17 @@ impl std::fmt::Debug for CharAttr {
 	}
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, derive_more::From, derive_more::Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(derive_more::From, derive_more::Debug)]
 #[debug("0x{_0:02X}")]
 pub struct Flags8(pub u8);
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, derive_more::From, derive_more::Debug)]
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(derive_more::From, derive_more::Debug)]
 #[debug("0x{_0:04X}")]
 pub struct Flags16(pub u16);
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, derive_more::From, derive_more::Debug)]
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(derive_more::From, derive_more::Debug)]
 #[debug("0x{_0:08X}")]
 pub struct Flags32(pub u32);

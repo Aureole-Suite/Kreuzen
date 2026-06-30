@@ -17,12 +17,7 @@ pub fn to_dot(ops: &[FlatOp]) -> String {
 		pos: usize,
 		ops: &'a [FlatOp],
 	}
-	let mut state = State {
-		nodes: Vec::new(),
-		edges: Vec::new(),
-		pos: 0,
-		ops,
-	};
+	let mut state = State { nodes: Vec::new(), edges: Vec::new(), pos: 0, ops };
 
 	impl<'a> State<'a> {
 		fn flush(&mut self, until: usize, shape: &str) {
@@ -42,10 +37,9 @@ pub fn to_dot(ops: &[FlatOp]) -> String {
 	for (i, stmt) in ops.iter().enumerate() {
 		let pos = state.pos;
 		match stmt {
-			FlatOp::Label(_) => {
-			}
+			FlatOp::Label(_) => {}
 			FlatOp::Op(_) => {
-				if matches!(ops.get(i+1), Some(FlatOp::Label(..))) {
+				if matches!(ops.get(i + 1), Some(FlatOp::Label(..))) {
 					state.edges.push(format!("n{pos} -> n{until} [color=black]", until = i + 1));
 					state.flush(i + 1, "box");
 				}
@@ -82,4 +76,3 @@ pub fn to_dot(ops: &[FlatOp]) -> String {
 	writeln!(out, "}}").unwrap();
 	out
 }
-

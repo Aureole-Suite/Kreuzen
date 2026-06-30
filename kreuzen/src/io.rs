@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use crate::{Enc, Game};
 use gospel::read::Reader;
-use gospel::write::{Writer, Label};
+use gospel::write::{Label, Writer};
 
 fn encode(enc: Enc, s: &str) -> rootcause::Result<Vec<u8>> {
 	match enc {
@@ -10,7 +10,7 @@ fn encode(enc: Enc, s: &str) -> rootcause::Result<Vec<u8>> {
 		Enc::Sjis => match falcom_sjis::encode(s) {
 			Ok(bytes) => Ok(bytes),
 			Err(pos) => rootcause::bail!("invalid Shift-JIS at byte {pos}: {s:?}"),
-		}
+		},
 	}
 }
 
@@ -52,7 +52,7 @@ impl<'a> CReader<'a> {
 			Enc::Utf8 => match String::from_utf8_lossy(bytes) {
 				Cow::Borrowed(text) => Ok(text.to_owned()),
 				Cow::Owned(e) => {
-					if let Ok(mut s) = falcom_sjis::decode(bytes){
+					if let Ok(mut s) = falcom_sjis::decode(bytes) {
 						tracing::warn!("Invalid UTF-8 in text, but valid Shift-JIS: {s:?}");
 						s.insert(0, '\u{FFFD}');
 						Ok(s)
@@ -60,11 +60,11 @@ impl<'a> CReader<'a> {
 						rootcause::bail!("Invalid UTF-8 in text: {e:?}");
 					}
 				}
-			}
+			},
 			Enc::Sjis => match falcom_sjis::decode(bytes) {
 				Ok(text) => Ok(text),
 				Err(_) => rootcause::bail!("Invalid Shift-JIS in text: {e:?}", e = falcom_sjis::decode_lossy(bytes)),
-			}
+			},
 		}
 	}
 

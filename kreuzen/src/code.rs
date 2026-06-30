@@ -3,15 +3,16 @@ use std::collections::{BTreeSet, HashMap};
 use std::rc::Rc;
 
 use gospel::read::{Le as _, Reader};
-use gospel::write::{Le as _, Writer, Label as WLabel};
+use gospel::write::{Label as WLabel, Le as _, Writer};
 use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
 
+use crate::Game;
+use crate::expr::Expr;
 use crate::io::{CReader, OData, WriterExt as _};
 use crate::spec::{Opcode, Part};
-use crate::expr::Expr;
 use crate::text::Text;
-use crate::{Game, types::*};
+use crate::types::*;
 
 mod to_dot;
 pub use to_dot::to_dot;
@@ -78,8 +79,7 @@ fn read(f: &mut CReader) -> rootcause::Result<Code> {
 		let op = read_op(f)
 			.context_with(|| format!("Failed to read op at {pos:04X}"))
 			.attach_with(|| OpContext(std::mem::take(&mut ops)))
-			.attach_with(|| Hexdump(format!("{:#2.48X}", f.dump().start(pos).mark(f.pos()))))
-			?;
+			.attach_with(|| Hexdump(format!("{:#2.48X}", f.dump().start(pos).mark(f.pos()))))?;
 		ops.push((Label(pos as u32), op))
 	}
 
@@ -94,10 +94,7 @@ pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::
 	let (start, end) = s;
 	let d = f.data();
 	crate::ensure!(start <= end && end <= d.len());
-	let mut g = CReader {
-		reader: Reader::new(&d[..end]).at(start)?,
-		..*f
-	};
+	let mut g = CReader { reader: Reader::new(&d[..end]).at(start)?, ..*f };
 	let v = read(&mut g)?;
 	if !g.remaining().iter().all(|x| *x == 0) {
 		tracing::warn!("Data remaining after function: {:02X?}", g.remaining());
@@ -133,9 +130,9 @@ fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> rootcause::Result<Vec<
 
 	const WEIRD_LABEL: Label = Label(10651);
 	if wtf
-	&& labels.len() == 1
-	&& let Some(if_loc) = ops2.iter().position(|op| matches!(op, FlatOp::If(_, _, WEIRD_LABEL)))
-	&& labels.remove(&WEIRD_LABEL)
+		&& labels.len() == 1
+		&& let Some(if_loc) = ops2.iter().position(|op| matches!(op, FlatOp::If(_, _, WEIRD_LABEL)))
+		&& labels.remove(&WEIRD_LABEL)
 	{
 		tracing::warn!("Fixing up broken label");
 		ops2.insert(if_loc + 2, FlatOp::Label(WEIRD_LABEL));
@@ -152,9 +149,13 @@ pub(crate) fn remap_labels(ops2: &mut Vec<FlatOp>) {
 	for op in ops2.iter() {
 		match op {
 			FlatOp::Op(_) | FlatOp::Label(_) => {}
-			FlatOp::Goto(_, l) | FlatOp::If(_, _, l) => { used.insert(*l); }
+			FlatOp::Goto(_, l) | FlatOp::If(_, _, l) => {
+				used.insert(*l);
+			}
 			FlatOp::Switch(_, _, ls, l) => {
-				for (_, l) in ls { used.insert(*l); }
+				for (_, l) in ls {
+					used.insert(*l);
+				}
 				used.insert(*l);
 			}
 		}
@@ -177,13 +178,12 @@ pub(crate) fn remap_labels(ops2: &mut Vec<FlatOp>) {
 				current = Some(new);
 				true
 			}
-		},
+		}
 		_ => {
 			current = None;
 			true
 		}
 	});
-
 
 	let remap = |l: &mut Label| *l = order[l];
 	for op in ops2.iter_mut() {
@@ -193,10 +193,10 @@ pub(crate) fn remap_labels(ops2: &mut Vec<FlatOp>) {
 			FlatOp::Goto(_, l) | FlatOp::If(_, _, l) => remap(l),
 			FlatOp::Switch(_, _, ls, l) => {
 				for (_, l) in ls {
- 					remap(l);
- 				}
- 				remap(l);
- 			}
+					remap(l);
+				}
+				remap(l);
+			}
 		}
 	}
 }
@@ -230,7 +230,7 @@ impl std::fmt::Debug for OpMeta {
 pub struct Op {
 	pub name: &'static str,
 	pub meta: OpMeta,
-	pub args: Vec<Arg>
+	pub args: Vec<Arg>,
 }
 
 impl std::fmt::Debug for Op {
@@ -248,6 +248,7 @@ impl std::fmt::Debug for Op {
 }
 
 #[derive(Clone, PartialEq, derive_more::From, derive_more::Debug)]
+#[rustfmt::skip]
 pub enum Arg {
 	#[debug("{_0:?}")] Str(String),
 	#[from(skip)] #[debug("{_0:?}")] Int(i64), // i64 becase it can contain both i32 and u32
@@ -501,7 +502,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 					op.args.push(Arg::Int(0)); // This one is only there in the japanese version
 				}
 			}
-			
+
 			P::Rev_3E => {
 				match op.args[1] {
 					Arg::Char(Char(0xFE12)) => read_parts(op, f, &[P::U8])?,
@@ -522,12 +523,10 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 					read_parts(op, f, &[P::U8])?;
 				}
 			}
-			P::Rev_E002 => {
-				match op.args[1] {
-					Arg::Char(Char(0xFFFF)) => read_parts(op, f, &[P::I32])?,
-					_ => read_parts(op, f, &[P::F32])?,
-				}
-			}
+			P::Rev_E002 => match op.args[1] {
+				Arg::Char(Char(0xFFFF)) => read_parts(op, f, &[P::I32])?,
+				_ => read_parts(op, f, &[P::F32])?,
+			},
 
 			P::Print => println!("{op:?}"),
 			P::Fail => rootcause::bail!("Fail"),
@@ -601,7 +600,9 @@ fn op_d2(a: i16) -> &'static [Part] {
 
 pub fn write(d: &OData, code: &Code) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
-	let labels: HashMap<Label, WLabel> = code.ops.iter()
+	let labels: HashMap<Label, WLabel> = code
+		.ops
+		.iter()
 		.filter_map(|op| if let FlatOp::Label(l) = op { Some((*l, WLabel::new())) } else { None })
 		.collect();
 	for op in &code.ops {
@@ -644,16 +645,9 @@ fn write_flatop(d: &OData, f: &mut Writer, op: &FlatOp, labels: &HashMap<Label, 
 	Ok(())
 }
 
-fn write_branch_meta(
-	d: &OData,
-	f: &mut Writer,
-	name: &'static str,
-	line: u16,
-	width: u8,
-) -> rootcause::Result<()> {
+fn write_branch_meta(d: &OData, f: &mut Writer, name: &'static str, line: u16, width: u8) -> rootcause::Result<()> {
 	let spec = crate::spec::for_game(d.game, d.variant);
-	let opcode = spec.by_name.get(name).copied()
-		.context_with(|| format!("no opcode for {name:?}"))?;
+	let opcode = spec.by_name.get(name).copied().context_with(|| format!("no opcode for {name:?}"))?;
 	crate::ensure!(!opcode.is_empty(), "empty opcode for {:?}", name);
 
 	f.u8(opcode[0]);
@@ -668,7 +662,10 @@ fn write_branch_meta(
 
 pub(crate) fn write_op(d: &OData, f: &mut Writer, op: &Op) -> rootcause::Result<()> {
 	let spec = crate::spec::for_game(d.game, d.variant);
-	let opcode = spec.by_name.get(op.name).copied()
+	let opcode = spec
+		.by_name
+		.get(op.name)
+		.copied()
 		.context_with(|| format!("no opcode for {:?}", op.name))?;
 	crate::ensure!(!opcode.is_empty(), "empty opcode for {:?}", op.name);
 
@@ -682,7 +679,8 @@ pub(crate) fn write_op(d: &OData, f: &mut Writer, op: &Op) -> rootcause::Result<
 		f.delay(move |_| Some([cell.get()]));
 	}
 
-	let mut op_spec = spec.ops[opcode[0] as usize].as_ref()
+	let mut op_spec = spec.ops[opcode[0] as usize]
+		.as_ref()
 		.context_with(|| format!("opcode {opcode} not in spec"))?;
 	let mut cursor = 0usize;
 	let mut op_end = 0usize;
@@ -706,32 +704,29 @@ pub(crate) fn write_op(d: &OData, f: &mut Writer, op: &Op) -> rootcause::Result<
 }
 
 fn take_arg<'a>(op: &'a Op, cursor: &mut usize) -> rootcause::Result<&'a Arg> {
-	let arg = op.args.get(*cursor).context_with(|| format!("not enough args in {op:?} at {}", *cursor))?;
+	let arg = op
+		.args
+		.get(*cursor)
+		.context_with(|| format!("not enough args in {op:?} at {}", *cursor))?;
 	*cursor += 1;
 	Ok(arg)
 }
 
-fn write_parts(
-	d: &OData,
-	f: &mut Writer,
-	op: &Op,
-	cursor: &mut usize,
-	parts: &[Part],
-	op_end: &mut usize,
-) -> rootcause::Result<()> {
+fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[Part], op_end: &mut usize) -> rootcause::Result<()> {
 	macro_rules! arg {
 		($variant:ident) => {
 			match take_arg(op, cursor)? {
 				Arg::$variant(v) => v,
-				a => rootcause::bail!("expected {} in {}, got {a:?}", stringify!($variant), op.name),
+				a => {
+					rootcause::bail!("expected {} in {}, got {a:?}", stringify!($variant), op.name)
+				}
 			}
 		};
 	}
 	macro_rules! int {
 		($ty:ty) => {{
 			let v = *arg!(Int);
-			<$ty>::try_from(v)
-				.context_with(|| format!("{v} out of range for {} in {}", stringify!($ty), op.name))?
+			<$ty>::try_from(v).context_with(|| format!("{v} out of range for {} in {}", stringify!($ty), op.name))?
 		}};
 	}
 
@@ -763,7 +758,11 @@ fn write_parts(
 			P::NumReg => f.u8(arg!(NumReg).0),
 			P::StrReg => f.u8(arg!(StrReg).0),
 			P::Attr => f.u8(arg!(Attr).0),
-			P::CharAttr => { let v = arg!(CharAttr); f.u16(v.0.0); f.u8(v.1); }
+			P::CharAttr => {
+				let v = arg!(CharAttr);
+				f.u16(v.0.0);
+				f.u8(v.1);
+			}
 
 			P::Flags8 => f.u8(arg!(Flags8).0),
 			P::Flags16 => f.u16(arg!(Flags16).0),
@@ -782,18 +781,14 @@ fn write_parts(
 					write_dyn(f, d, take_arg(op, cursor)?)?;
 				}
 			}
-			P::Dyn_Char => {
-				match take_arg(op, cursor)? {
-					Arg::Char(Char(v)) => write_dyn(f, d, &Arg::Int(*v as i64))?,
-					arg => write_dyn(f, d, arg)?,
-				}
-			}
-			P::Dyn_Sound => {
-				match take_arg(op, cursor)? {
-					Arg::Sound(Sound(v)) => write_dyn(f, d, &Arg::Int(*v as i64))?,
-					arg => write_dyn(f, d, arg)?,
-				}
-			}
+			P::Dyn_Char => match take_arg(op, cursor)? {
+				Arg::Char(Char(v)) => write_dyn(f, d, &Arg::Int(*v as i64))?,
+				arg => write_dyn(f, d, arg)?,
+			},
+			P::Dyn_Sound => match take_arg(op, cursor)? {
+				Arg::Sound(Sound(v)) => write_dyn(f, d, &Arg::Int(*v as i64))?,
+				arg => write_dyn(f, d, arg)?,
+			},
 
 			P::Cs1_36 => {
 				if matches!(op.args[1], Arg::Char(Char(0xFE02..=0xFE03))) {
@@ -856,24 +851,25 @@ fn write_parts(
 			P::Cs4_wtf_are_you_doing => {
 				if *cursor < op.args.len() {
 					match op.args[*cursor] {
-						Arg::Int(0) => { f.u32(0); *cursor += 1; }
+						Arg::Int(0) => {
+							f.u32(0);
+							*cursor += 1;
+						}
 						_ => {}
 					}
 				}
 			}
 
-			P::Rev_3E => {
-				match op.args[1] {
-					Arg::Char(Char(0xFE12)) => write_parts(d, f, op, cursor, &[P::U8], op_end)?,
-					Arg::Char(Char(0xFE13)) => write_parts(d, f, op, cursor, &[P::F32], op_end)?,
-					Arg::Char(Char(0xFFFF)) => {
-						if *cursor < op.args.len() {
-							write_parts(d, f, op, cursor, &[P::U8, P::U8, P::U8], op_end)?;
-						}
+			P::Rev_3E => match op.args[1] {
+				Arg::Char(Char(0xFE12)) => write_parts(d, f, op, cursor, &[P::U8], op_end)?,
+				Arg::Char(Char(0xFE13)) => write_parts(d, f, op, cursor, &[P::F32], op_end)?,
+				Arg::Char(Char(0xFFFF)) => {
+					if *cursor < op.args.len() {
+						write_parts(d, f, op, cursor, &[P::U8, P::U8, P::U8], op_end)?;
 					}
-					_ => {}
 				}
-			}
+				_ => {}
+			},
 			P::Rev_D2 => {
 				let Arg::Int(v) = op.args[0] else {
 					rootcause::bail!("Expected Int for Rev_D2 dispatch");
@@ -885,12 +881,10 @@ fn write_parts(
 					write_parts(d, f, op, cursor, &[P::U8], op_end)?;
 				}
 			}
-			P::Rev_E002 => {
-				match op.args[1] {
-					Arg::Char(Char(0xFFFF)) => write_parts(d, f, op, cursor, &[P::I32], op_end)?,
-					_ => write_parts(d, f, op, cursor, &[P::F32], op_end)?,
-				}
-			}
+			P::Rev_E002 => match op.args[1] {
+				Arg::Char(Char(0xFFFF)) => write_parts(d, f, op, cursor, &[P::I32], op_end)?,
+				_ => write_parts(d, f, op, cursor, &[P::F32], op_end)?,
+			},
 
 			P::Print | P::Fail => {}
 		}

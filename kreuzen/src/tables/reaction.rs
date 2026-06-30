@@ -94,8 +94,7 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Reaction>> {
 
 fn write_cs1(table: &[Reaction], count: usize) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
-	let n = u16::try_from(table.len())
-		.map_err(|_| rootcause::report!("ReactionTable too large: {}", table.len()))?;
+	let n = u16::try_from(table.len()).map_err(|_| rootcause::report!("ReactionTable too large: {}", table.len()))?;
 	f.u16(n);
 	for r in table {
 		crate::ensure!(r.floats.len() == count);

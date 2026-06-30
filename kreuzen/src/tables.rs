@@ -3,22 +3,22 @@ use gospel::write::Writer;
 use crate::Game;
 use crate::io::{CReader, OData};
 
-pub mod preload;
-pub mod add_collision;
 pub mod action;
+pub mod add_collision;
 pub mod algo;
 pub mod anime_clip;
 pub mod book;
-pub mod btlset;
 pub mod break_;
+pub mod btlset;
 pub mod condition;
 pub mod fc_auto;
 pub mod field_follow;
+pub mod field_monster;
 pub mod part;
+pub mod preload;
 pub mod reaction;
 pub mod style_name;
 pub mod summon;
-pub mod field_monster;
 pub mod weapon_att;
 
 #[derive(Clone)]
@@ -31,7 +31,6 @@ impl std::fmt::Debug for Opaque {
 		write!(f, "[{} bytes]", self.bytes.len())
 	}
 }
-
 
 // Preload tables are stored separately from others, so they are not in this enum
 #[derive(Debug, Clone)]
@@ -68,6 +67,7 @@ impl Dummy {
 			Dummy::Empty => b"",
 			// I have no idea what these byte sequences mean.
 			// They look like garbage, but might as well roundtrip them I guess.
+			#[rustfmt::skip]
 			Dummy::D12 => &[
 				0x12, 0x00, 0x00,
 				0x63, 0x00, 0x00, 0x00,
@@ -78,19 +78,22 @@ impl Dummy {
 				0x00, 0xEF, 0xCD, 0xAB,
 				0x07, 0xC8, 0x00, 0x00, 0x00,
 			],
-			Dummy::Dff => &const {
-				let mut x = [0; 28];
-				x[0] = 0xFF;
-				x[1] = 0xFF;
-				x[2] = 0xFF;
-				x[3] = 0xFF;
-				x
+			Dummy::Dff => {
+				&const {
+					let mut x = [0; 28];
+					x[0] = 0xFF;
+					x[1] = 0xFF;
+					x[2] = 0xFF;
+					x[3] = 0xFF;
+					x
+				}
 			}
 		}
 	}
 }
 
 // Returns None if the chunk is code
+#[rustfmt::skip]
 pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Table>> {
 	Ok(Some(match name {
 		"ActionTable"      => Table::ActionTable(action::read(f)?),
@@ -105,10 +108,10 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		"ReactionTable"    => Table::ReactionTable(reaction::read(f)?),
 		"SummonTable"      => Table::SummonTable(summon::read(f)?),
 		"WeaponAttTable"   => Table::WeaponAttTable(weapon_att::read(f)?),
-		name if name.starts_with("BookData") => Table::Book(book::read(f, name)?),
-		name if name.starts_with("FC_auto") => Table::FcAuto(fc_auto::read(f)?),
+		name if name.starts_with("BookData")  => Table::Book(book::read(f, name)?),
+		name if name.starts_with("FC_auto")   => Table::FcAuto(fc_auto::read(f)?),
 		name if name.starts_with("StyleName") => Table::StyleName(style_name::read(f)?),
-		_ => return read_other(f, name)
+		_ => return read_other(f, name),
 	}))
 }
 

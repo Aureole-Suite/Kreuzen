@@ -41,8 +41,7 @@ pub(crate) fn write(d: &OData, table: &[Break]) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
 	match d.game {
 		Game::Cs1 | Game::Cs2 => {
-			let n = u8::try_from(table.len())
-				.map_err(|_| rootcause::report!("BreakTable too large: {}", table.len()))?;
+			let n = u8::try_from(table.len()).map_err(|_| rootcause::report!("BreakTable too large: {}", table.len()))?;
 			f.u8(n);
 			for b in table {
 				f.u16(b.id);

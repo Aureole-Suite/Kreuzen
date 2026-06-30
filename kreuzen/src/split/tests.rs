@@ -1,6 +1,6 @@
 use super::{Entry, Split, parse};
 
-fn s<'a>(names: impl IntoIterator<Item=&'a str>) -> Vec<Entry> {
+fn s<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<Entry> {
 	let names = names.into_iter().map(|n| n.to_owned()).collect::<Vec<_>>();
 	let entries = parse(&names);
 	validate(&names, &entries);
@@ -21,7 +21,8 @@ fn validate(names: &[String], split: &Split) {
 		assert_eq!(names[i], "_a0_CharaterSection", "charater section name mismatch");
 	}
 
-	let mut parts = split.entries
+	let mut parts = split
+		.entries
 		.iter()
 		.map(|e| e.main)
 		.chain(split.entries.iter().filter_map(|e| e.preload))

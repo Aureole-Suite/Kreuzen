@@ -30,14 +30,14 @@ impl std::fmt::Debug for Stmt {
 					f.write_str(" ")?;
 					m2.fmt(f)?;
 					f.write_str("else ")?;
-					if let [stmt@Stmt::If(..)] = els.as_slice() {
+					if let [stmt @ Stmt::If(..)] = els.as_slice() {
 						stmt.fmt(f)?;
 					} else {
 						els.fmt(f)?;
 					}
 				}
 				Ok(())
-			},
+			}
 			Self::While(m, a, b, c) => m.fmt(f)?.debug_tuple("While").field(a).field(b).field(c).finish(),
 			Self::Break(m) => m.fmt(f)?.debug_tuple("Break").finish(),
 			Self::Continue(m) => m.fmt(f)?.debug_tuple("Continue").finish(),
@@ -74,13 +74,7 @@ pub fn compile(stmts: &[Stmt]) -> rootcause::Result<Code> {
 	Ok(Code { ops })
 }
 
-fn compile_inner(
-	out: &mut Vec<FlatOp>,
-	l: &mut u32,
-	stmts: &[Stmt],
-	brk: Option<Label>,
-	cont: Option<Label>,
-) -> rootcause::Result<()> {
+fn compile_inner(out: &mut Vec<FlatOp>, l: &mut u32, stmts: &[Stmt], brk: Option<Label>, cont: Option<Label>) -> rootcause::Result<()> {
 	fn label(l: &mut u32) -> Label {
 		let n = *l;
 		*l += 1;
@@ -197,10 +191,7 @@ impl<'a> Ctx<'a> {
 	#[track_caller]
 	fn sub(&mut self, label: Label) -> rootcause::Result<Ctx<'a>> {
 		let pos = self.lookup(label)?;
-		let sub = Self {
-			end: pos,
-			..*self
-		};
+		let sub = Self { end: pos, ..*self };
 		self.pos = pos;
 		Ok(sub)
 	}
@@ -208,7 +199,9 @@ impl<'a> Ctx<'a> {
 	#[track_caller]
 	fn goto_before(&self, label: Label) -> rootcause::Result<Option<(OpMeta, Label)>> {
 		let pos = self.lookup(label)?;
-		if pos > 0 && let FlatOp::Goto(meta, cont) = self.gctx.stmts[pos - 1] {
+		if pos > 0
+			&& let FlatOp::Goto(meta, cont) = self.gctx.stmts[pos - 1]
+		{
 			Ok(Some((meta, cont)))
 		} else {
 			Ok(None)
@@ -218,8 +211,7 @@ impl<'a> Ctx<'a> {
 	fn block(&mut self, what: &'static str, goto_allowed: GotoAllowed) -> rootcause::Result<BlockValue> {
 		let start = self.pos;
 		let end = self.end;
-		Ok(block(self, goto_allowed)
-			.context_with(|| format!("while parsing {what} block at {start}..{end}"))?)
+		Ok(block(self, goto_allowed).context_with(|| format!("while parsing {what} block at {start}..{end}"))?)
 	}
 }
 
@@ -241,15 +233,14 @@ fn block(ctx: &mut Ctx, goto_allowed: GotoAllowed) -> rootcause::Result<BlockVal
 			FlatOp::If(m, e, label) => {
 				let start = ctx.pos - 1;
 				let end = ctx.end;
-				parse_if(&mut stmts, ctx, *m, e.clone(), *label)
-					.context_with(|| format!("while parsing if statement at {start}..{end}"))?;
-			},
+				parse_if(&mut stmts, ctx, *m, e.clone(), *label).context_with(|| format!("while parsing if statement at {start}..{end}"))?;
+			}
 			FlatOp::Switch(m, e, cases, default) => {
 				let start = ctx.pos - 1;
 				let end = ctx.end;
 				parse_switch(&mut stmts, ctx, *m, e.clone(), cases, *default)
 					.context_with(|| format!("while parsing switch statement at {start}..{end}"))?;
-			},
+			}
 
 			FlatOp::Goto(m, l) => {
 				let ok = match goto_allowed {
@@ -262,7 +253,7 @@ fn block(ctx: &mut Ctx, goto_allowed: GotoAllowed) -> rootcause::Result<BlockVal
 				} else if Some(*l) == ctx.cont {
 					stmts.push(Stmt::Continue(*m))
 				} else if ok {
-					return Ok((stmts, Some((*m, *l))))
+					return Ok((stmts, Some((*m, *l))));
 				} else {
 					rootcause::bail!("unexpected goto to {l} at position {}", ctx.pos - 1);
 				}
@@ -272,23 +263,18 @@ fn block(ctx: &mut Ctx, goto_allowed: GotoAllowed) -> rootcause::Result<BlockVal
 	Ok((stmts, None))
 }
 
-fn parse_if(
-	stmts: &mut Vec<Stmt>,
-	ctx: &mut Ctx,
-	l: OpMeta,
-	e: Expr,
-	label: Label,
-) -> rootcause::Result<()> {
+fn parse_if(stmts: &mut Vec<Stmt>, ctx: &mut Ctx, l: OpMeta, e: Expr, label: Label) -> rootcause::Result<()> {
 	if let Some((m, cont)) = ctx.goto_before(label)?
-			&& ctx.pos >= 2
-			&& ctx.gctx.lookup(cont)? == ctx.pos - 2 {
+		&& ctx.pos >= 2
+		&& ctx.gctx.lookup(cont)? == ctx.pos - 2
+	{
 		let mut sub = ctx.sub(label)?;
 		sub.brk = Some(label);
 		sub.cont = Some(cont);
 		let (mut body, _) = sub.block("while body", GotoAllowed::No)?;
 		assert_eq!(body.pop(), Some(Stmt::Continue(m)));
 		stmts.push(Stmt::While(l, e, body, m));
-		return Ok(())
+		return Ok(());
 	}
 
 	let (body, goto) = ctx.sub(label)?.block("if body", GotoAllowed::Yes)?;
@@ -302,14 +288,7 @@ fn parse_if(
 	Ok(())
 }
 
-fn parse_switch(
-	stmts: &mut Vec<Stmt>,
-	ctx: &mut Ctx,
-	l: OpMeta,
-	e: Expr,
-	cases: &[(i32, Label)],
-	default: Label,
-) -> rootcause::Result<()> {
+fn parse_switch(stmts: &mut Vec<Stmt>, ctx: &mut Ctx, l: OpMeta, e: Expr, cases: &[(i32, Label)], default: Label) -> rootcause::Result<()> {
 	let pos = cases.iter().map(|(_, l)| ctx.lookup(*l)).collect::<rootcause::Result<Vec<_>, _>>()?;
 	if !pos.is_sorted() {
 		rootcause::bail!("switch cases are not in order: {:?}", pos);
@@ -323,7 +302,7 @@ fn parse_switch(
 	let mut brk = None;
 	for stmt in &ctx.gctx.stmts[ctx.pos..last_pos] {
 		if let FlatOp::Goto(_, goto) = stmt
-		&& ctx.lookup(*goto)? >= last_pos
+			&& ctx.lookup(*goto)? >= last_pos
 		{
 			brk = brk.max(Some(*goto));
 		}

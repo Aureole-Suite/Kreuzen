@@ -318,6 +318,7 @@ macro_rules! print_via_debug {
 	};
 }
 
+#[rustfmt::skip]
 print_via_debug!(
 	String, str, i64, i32, u32, f32,
 	types::Char, types::Item, types::Magic, types::Sound, types::Music,
@@ -332,8 +333,14 @@ impl Print for Arg {
 			Arg::Str(v) => v.print(ctx),
 			Arg::Int(v) => v.print(ctx),
 			Arg::F32(v) => v.print(ctx),
-			Arg::F32Munged(v) => { v.print(ctx); ctx.sym("'"); }
-			Arg::I32Munged(v) => { v.print(ctx); ctx.sym("'"); }
+			Arg::F32Munged(v) => {
+				v.print(ctx);
+				ctx.sym("'");
+			}
+			Arg::I32Munged(v) => {
+				v.print(ctx);
+				ctx.sym("'");
+			}
 			Arg::Char(v) => v.print(ctx),
 			Arg::Item(v) => v.print(ctx),
 			Arg::Magic(v) => v.print(ctx),
@@ -401,7 +408,7 @@ impl Print for Text {
 		}
 
 		assert!(lines.len() >= 2);
-		if lines.len() == 2 && lines[0].is_empty(){
+		if lines.len() == 2 && lines[0].is_empty() {
 			ctx.token(format!(r#""""{}""""#, lines[1]));
 		} else {
 			if lines.last().is_some_and(|x| x.is_empty()) {
@@ -452,11 +459,15 @@ fn print_expr(e: &Expr, ctx: &mut Ctx, prec: u32) {
 		Expr::NumReg(v) => v.print(ctx),
 		Expr::Bin(op, a, b) => {
 			let (sym, p) = binop_prio(*op);
-			if p < prec { ctx._sym("("); }
+			if p < prec {
+				ctx._sym("(");
+			}
 			print_expr(a, ctx, p);
 			ctx._sym_(sym);
 			print_expr(b, ctx, p + 1);
-			if p < prec { ctx.sym_(")"); }
+			if p < prec {
+				ctx.sym_(")");
+			}
 		}
 		Expr::Un(op, a) => {
 			ctx._sym(match op {

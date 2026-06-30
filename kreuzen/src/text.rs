@@ -64,8 +64,16 @@ impl Text {
 					0x0C => TextControl::_0C,
 					0x0F => TextControl::_0F,
 					0x10 => TextControl::Item(Item(f.u16()?)),
-					0x11 => { let v = f.u32()?; TextControl::Voice(Sound(u16::try_from(v).map_err(|_| rootcause::report!("voice id {v:#X} out of bounds"))?)) }
-					0x12 => { let v = f.u32()?; TextControl::VoiceSilent(Sound(u16::try_from(v).map_err(|_| rootcause::report!("voice id {v:#X} out of bounds"))?)) }
+					0x11 => {
+						let v = f.u32()?;
+						let v = u16::try_from(v).map_err(|_| rootcause::report!("voice id {v:#X} out of bounds"))?;
+						TextControl::Voice(Sound(v))
+					}
+					0x12 => {
+						let v = f.u32()?;
+						let v = u16::try_from(v).map_err(|_| rootcause::report!("voice id {v:#X} out of bounds"))?;
+						TextControl::VoiceSilent(Sound(v))
+					}
 					0x13 => TextControl::_13,
 					0x16 => TextControl::_16,
 					0x17 => TextControl::Param(f.u16()?),
@@ -98,16 +106,31 @@ impl Text {
 					TextControl::_0B => f.u8(0x0B),
 					TextControl::_0C => f.u8(0x0C),
 					TextControl::_0F => f.u8(0x0F),
-					TextControl::Item(v) => { f.u8(0x10); f.u16(v.0); }
-					TextControl::Voice(v) => { f.u8(0x11); f.u32(v.0 as u32); }
-					TextControl::VoiceSilent(v) => { f.u8(0x12); f.u32(v.0 as u32); }
+					TextControl::Item(v) => {
+						f.u8(0x10);
+						f.u16(v.0);
+					}
+					TextControl::Voice(v) => {
+						f.u8(0x11);
+						f.u32(v.0 as u32);
+					}
+					TextControl::VoiceSilent(v) => {
+						f.u8(0x12);
+						f.u32(v.0 as u32);
+					}
 					TextControl::_13 => f.u8(0x13),
 					TextControl::_16 => f.u8(0x16),
-					TextControl::Param(v) => { f.u8(0x17); f.u16(v); }
+					TextControl::Param(v) => {
+						f.u8(0x17);
+						f.u16(v);
+					}
 					TextControl::_18 => f.u8(0x18),
-					TextControl::Magic(v) => { f.u8(0x19); f.u16(v.0); }
+					TextControl::Magic(v) => {
+						f.u8(0x19);
+						f.u16(v.0);
+					}
 					TextControl::_1A => f.u8(0x1A),
-				}
+				},
 			}
 		}
 		f.u8(0x00);
@@ -121,6 +144,6 @@ fn encode(enc: Enc, s: &str) -> rootcause::Result<Vec<u8>> {
 		Enc::Sjis => match falcom_sjis::encode(s) {
 			Ok(bytes) => Ok(bytes),
 			Err(pos) => rootcause::bail!("invalid Shift-JIS in text at byte {pos}: {s:?}"),
-		}
+		},
 	}
 }

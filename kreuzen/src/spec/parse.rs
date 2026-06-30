@@ -1,7 +1,7 @@
-use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::Write;
 use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::{IteratorExt as _, ResultExt as _};
+use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Write;
 
 use crate::spec::{Op, Opcode, Part, Spec};
 
@@ -21,13 +21,11 @@ pub fn try_parse_lines(name: &str) -> rootcause::Result<Lines> {
 	let text = super::text_for(name).context_with(|| format!("unknown spec: {name}"))?;
 	let mut ops = BTreeMap::new();
 	let mut add = |code: Opcode, name: String, parts: Vec<Part>| {
-		assert!(
-			!ops.contains_key(&code),
-			"Duplicate code in spec: {code} and {name}"
-		);
+		assert!(!ops.contains_key(&code), "Duplicate code in spec: {code} and {name}");
 		ops.insert(code, (name, parts));
 	};
-	() = text.lines()
+	() = text
+		.lines()
 		.map(|line| parse_line(line, &mut add).context_with(|| format!("error parsing line: {line:?}")))
 		.collect_reports()
 		.context_with(|| format!("error parsing spec: {name}"))?;
@@ -69,10 +67,7 @@ fn parse_line(line0: &str, add: &mut impl FnMut(Opcode, String, Vec<Part>)) -> r
 }
 
 pub fn parse_spec(ops: &Lines) -> Spec {
-	Spec {
-		ops: build_ops(ops),
-		by_name: build_names(ops),
-	}
+	Spec { ops: build_ops(ops), by_name: build_names(ops) }
 }
 
 fn build_ops(ops: &Lines) -> [Option<Op>; 256] {
@@ -112,9 +107,7 @@ fn fill_name(op: &mut Op, byte: u8, prefix: &str, parent_has_name: bool) {
 	}
 }
 
-fn build_names(
-	inp: &BTreeMap<Opcode, (String, Vec<Part>)>,
-) -> BTreeMap<String, Opcode> {
+fn build_names(inp: &BTreeMap<Opcode, (String, Vec<Part>)>) -> BTreeMap<String, Opcode> {
 	let mut all = BTreeSet::new();
 	let mut leaves = BTreeSet::new();
 	for op in inp.keys() {
@@ -146,7 +139,9 @@ fn build_names(
 
 	for op in inp.keys() {
 		for p in op.prefixes() {
-			if let Some((s, _)) = inp.get(&p) && !s.is_empty() {
+			if let Some((s, _)) = inp.get(&p)
+				&& !s.is_empty()
+			{
 				let mut s = s.clone();
 				if p.len() < op.len() {
 					s.push('_');

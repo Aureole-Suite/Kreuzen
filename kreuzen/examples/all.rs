@@ -1,9 +1,10 @@
-use std::fmt::Write;
 use kreuzen::{Body, Enc, Game};
-use std::path::{Path, PathBuf};
 use std::cell::Cell;
+use std::fmt::Write;
+use std::path::{Path, PathBuf};
 use tracing::Level;
-use tracing_subscriber::{EnvFilter, prelude::*};
+use tracing_subscriber::EnvFilter;
+use tracing_subscriber::prelude::*;
 
 thread_local! {
 	static WARNED: Cell<bool> = const { Cell::new(false) };
@@ -55,7 +56,7 @@ fn main() {
 			match filter.as_str() {
 				"cs1" => game(Game::Cs1, Enc::Utf8, &cs1, "dat_us"),
 				"cs2" => game(Game::Cs2, Enc::Utf8, &cs2, "dat_us"),
-				"tx"  => game(Game::Tx,  Enc::Utf8, &tx,  "dat"),
+				"tx" => game(Game::Tx, Enc::Utf8, &tx, "dat"),
 				"cs3" => game(Game::Cs3, Enc::Utf8, &cs3, "dat_en"),
 				"cs4" => game(Game::Cs4, Enc::Utf8, &cs4, "dat_en"),
 				"rev" => game(Game::Reverie, Enc::Utf8, &rev, "dat_en"),
@@ -137,7 +138,7 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 	Ok(())
 }
 
-fn check_decompile(name: &str, code: &kreuzen::code::Code)  {
+fn check_decompile(name: &str, code: &kreuzen::code::Code) {
 	match kreuzen::decompile::decompile(code) {
 		Ok(stmts) => {
 			let v = kreuzen::decompile::compile(&stmts).unwrap();
@@ -152,7 +153,10 @@ fn check_decompile(name: &str, code: &kreuzen::code::Code)  {
 }
 
 fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
-	let mut s = format!("scena {} game={:?} enc={:?} oddness={} variant={}\n", scena.name, scena.game, scena.enc, scena.oddness, scena.variant);
+	let mut s = format!(
+		"scena {} game={:?} enc={:?} oddness={} variant={}\n",
+		scena.name, scena.game, scena.enc, scena.oddness, scena.variant
+	);
 	for chunk in &scena.chunks {
 		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
 		s.push('\n');
@@ -174,12 +178,14 @@ fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
 }
 
 fn check_preload(scena: &kreuzen::Scena) {
-	let has_preload = scena.chunks.iter()
+	let has_preload = scena
+		.chunks
+		.iter()
 		.filter(|c| match &c.func {
 			Body::Code(code) => !kreuzen::tables::preload::from_code(&code.ops, &c.name, &[]).is_empty(),
 			_ => false,
 		})
-	.map(|x| x.name.as_str())
+		.map(|x| x.name.as_str())
 		.collect::<Vec<_>>();
 	for chunk in &scena.chunks {
 		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();

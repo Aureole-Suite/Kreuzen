@@ -44,8 +44,7 @@ fn read_cs2(f: &mut CReader) -> rootcause::Result<Vec<Condition>> {
 
 fn write_cs2(table: &[Condition]) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
-	let n = u8::try_from(table.len())
-		.map_err(|_| rootcause::report!("ConditionTable too large: {}", table.len()))?;
+	let n = u8::try_from(table.len()).map_err(|_| rootcause::report!("ConditionTable too large: {}", table.len()))?;
 	f.u8(n);
 	for c in table {
 		crate::ensure!(c.entries.len() <= 5, "ConditionTable entry has more than 5 entries: {c:?}");

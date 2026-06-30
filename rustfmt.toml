@@ -1,3 +1,5 @@
 hard_tabs = true
 merge_derives = false
 imports_granularity = "Module"
+max_width = 150
+struct_lit_width = 50

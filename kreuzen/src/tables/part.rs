@@ -28,11 +28,7 @@ pub(crate) fn write(d: &OData, table: &[Part]) -> rootcause::Result<Writer> {
 }
 
 fn read_part(f: &mut CReader) -> rootcause::Result<Part> {
-	Ok(Part {
-		id: f.u32()?,
-		a: f.sstr(32)?,
-		b: f.sstr(32)?,
-	})
+	Ok(Part { id: f.u32()?, a: f.sstr(32)?, b: f.sstr(32)? })
 }
 
 fn write_part(f: &mut Writer, d: &OData, p: &Part) -> rootcause::Result<()> {
@@ -80,8 +76,7 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Part>> {
 
 fn write_cs1(d: &OData, table: &[Part]) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
-	let n = u8::try_from(table.len())
-		.map_err(|_| rootcause::report!("PartTable too large: {}", table.len()))?;
+	let n = u8::try_from(table.len()).map_err(|_| rootcause::report!("PartTable too large: {}", table.len()))?;
 	f.u8(n);
 	for p in table {
 		write_part(&mut f, d, p)?;

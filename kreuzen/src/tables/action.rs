@@ -1,8 +1,8 @@
 use gospel::read::Le as _;
 use gospel::write::{Le as _, Writer};
 
-use crate::{Enc, Game};
 use crate::io::{CReader, OData, WriterExt as _};
+use crate::{Enc, Game};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Action {
@@ -28,13 +28,7 @@ impl Action {
 			u2: (0.0, 0.0, 0.0),
 			cast_time: 0,
 			recovery_time: 0,
-			effects: vec![
-				(1, 0, 0, 0),
-				(2, 0, 0, 0),
-				(3, 0, 0, 0),
-				(4, 0, 0, 0),
-				(5, 0, 0, 0),
-			],
+			effects: vec![(1, 0, 0, 0), (2, 0, 0, 0), (3, 0, 0, 0), (4, 0, 0, 0), (5, 0, 0, 0)],
 			cp_cost: 0,
 			flags: String::new(),
 			ani: String::new(),
@@ -75,13 +69,8 @@ fn read_cs1(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 		let recovery_time = f.u16()?;
 
 		let u4 = (f.u8()? as u16, f.u8()? as u16);
-		let mut w = || -> Result<u32, gospel::read::Error> {
-			Ok(if f.game == Game::Cs1 { f.u16()? as u32 } else { f.u32()? })
-		};
-		let mut effects = vec![
-			(u4.0, w()?, w()?, w()?),
-			(u4.1, w()?, w()?, w()?),
-		];
+		let mut w = || -> Result<u32, gospel::read::Error> { Ok(if f.game == Game::Cs1 { f.u16()? as u32 } else { f.u32()? }) };
+		let mut effects = vec![(u4.0, w()?, w()?, w()?), (u4.1, w()?, w()?, w()?)];
 		while effects.last().is_some_and(|v| *v == (0, 0, 0, 0)) {
 			effects.pop();
 		}
@@ -91,12 +80,17 @@ fn read_cs1(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 		let ani = f.sstr(32)?;
 		let name = f.sstr(namelen)?;
 		out.push(Action {
-			id, kind, target,
+			id,
+			kind,
+			target,
 			u2: (0.0, 0.0, 0.0),
-			cast_time, recovery_time,
+			cast_time,
+			recovery_time,
 			effects,
 			cp_cost,
-			flags, ani, name,
+			flags,
+			ani,
+			name,
 		});
 	}
 
@@ -143,7 +137,19 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 		let flags = f.sstr(16)?;
 		let ani = f.sstr(32)?;
 		let name = f.sstr(64)?;
-		let act = Action { id, kind, target, u2, cast_time, recovery_time, effects, cp_cost, flags, ani, name };
+		let act = Action {
+			id,
+			kind,
+			target,
+			u2,
+			cast_time,
+			recovery_time,
+			effects,
+			cp_cost,
+			flags,
+			ani,
+			name,
+		};
 		if id == 0xFFFF && f.game == Game::Reverie {
 			has_sep = true;
 			continue;
@@ -193,7 +199,6 @@ fn write_cs1(d: &OData, table: &[Action]) -> rootcause::Result<Writer> {
 			}
 			Ok(())
 		};
-
 
 		w(e0.1)?;
 		w(e0.2)?;

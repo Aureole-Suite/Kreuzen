@@ -3,7 +3,7 @@ use gospel::write::{Le as _, Writer};
 
 use crate::Game;
 use crate::code::{Arg, FlatOp};
-use crate::io::{OData, CReader, WriterExt as _};
+use crate::io::{CReader, OData, WriterExt as _};
 use crate::text::{TextControl, TextPart};
 use crate::types::{Char, Sound};
 
@@ -29,10 +29,19 @@ struct RawPreload {
 	str: Option<String>,
 }
 impl RawPreload {
-	fn charid(&mut self) -> Char { self.charid.take().unwrap() }
-	fn u32(&mut self) -> u32 { self.u32.take().unwrap() }
-	fn str(&mut self) -> String { self.str.take().unwrap() }
+	fn charid(&mut self) -> Char {
+		self.charid.take().unwrap()
+	}
 
+	fn u32(&mut self) -> u32 {
+		self.u32.take().unwrap()
+	}
+
+	fn str(&mut self) -> String {
+		self.str.take().unwrap()
+	}
+
+	#[rustfmt::skip]
 	fn finish(self, null: Char) -> rootcause::Result<()> {
 		let mut errs = Vec::new();
 		if let Some(v) = self.charid && v != null {
@@ -65,7 +74,9 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Preload>> {
 			_ => Char(0xFFFF),
 		};
 		let sound = |v: u32| -> rootcause::Result<Sound> {
-			u16::try_from(v).map(Sound).map_err(|_| rootcause::report!("sound id {v:#X} out of bounds"))
+			u16::try_from(v)
+				.map(Sound)
+				.map_err(|_| rootcause::report!("sound id {v:#X} out of bounds"))
 		};
 		table.push(match preload.kind {
 			0 => {
@@ -133,7 +144,7 @@ pub fn from_code(ops: &[FlatOp], name: &str, functions: &[&str]) -> Vec<Preload>
 			("EffLoad", [_, _, Arg::Str(s)]) => out.push(Preload::EffLoad(s.clone())),
 			("SoundPlay", [Arg::Sound(s), ..]) => out.push(Preload::SoundPlay(*s)),
 			("SoundPlayVoice", [Arg::Sound(s), ..]) => out.push(Preload::SoundPlayVoice(*s)),
-			("SoundPlayRandom", [_, args@..]) => {
+			("SoundPlayRandom", [_, args @ ..]) => {
 				let mut n = 0;
 				for (i, v) in args.iter().enumerate() {
 					let Arg::Sound(s) = v else { continue };
@@ -147,7 +158,7 @@ pub fn from_code(ops: &[FlatOp], name: &str, functions: &[&str]) -> Vec<Preload>
 					}
 				}
 			}
-			("TextTalk"|"TextShow", [_, Arg::Text(text)]) => {
+			("TextTalk" | "TextShow", [_, Arg::Text(text)]) => {
 				for part in &text.0 {
 					if let TextPart::Control(TextControl::Voice(id)) = part {
 						// Unclear if VoiceSilent should apply this, since that one only exists in CS1 which doesn't have preload
@@ -157,7 +168,7 @@ pub fn from_code(ops: &[FlatOp], name: &str, functions: &[&str]) -> Vec<Preload>
 			}
 			("NameplateShow", [_, _, Arg::Str(s), _, _]) => out.push(Preload::NameplateShow(s.clone())),
 			("CharAniclipPlay", [Arg::Char(c), Arg::Str(s), ..]) if s != "_stop_" => out.push(Preload::CharAniclipPlay(*c, s.clone())),
-			_ => {},
+			_ => {}
 		}
 	}
 	out

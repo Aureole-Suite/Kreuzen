@@ -23,8 +23,7 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Collision>> {
 
 pub(crate) fn write(_d: &OData, table: &[Collision]) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
-	let n = u8::try_from(table.len())
-		.map_err(|_| rootcause::report!("AddCollision too large: {}", table.len()))?;
+	let n = u8::try_from(table.len()).map_err(|_| rootcause::report!("AddCollision too large: {}", table.len()))?;
 	f.u8(n);
 	for c in table {
 		f.u32(c.a);

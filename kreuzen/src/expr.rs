@@ -1,7 +1,8 @@
+use crate::io::{CReader, OData};
+use crate::types::*;
 use gospel::read::Le as _;
 use gospel::write::{Le as _, Writer};
 use rootcause::prelude::ResultExt as _;
-use crate::{io::{CReader, OData}, types::*};
 
 #[rustfmt::skip]
 #[derive(Clone, PartialEq, derive_more::Debug, derive_more::From)]
@@ -114,16 +115,47 @@ impl Expr {
 
 fn write_inner(e: &Expr, d: &OData, f: &mut Writer) -> rootcause::Result<()> {
 	match e {
-		Expr::Int(v) => { f.u8(0x00); f.i32(*v); }
-		Expr::Op(op) => { f.u8(0x1C); crate::code::write_op(d, f, op)?; }
-		Expr::Flag(Flag(v)) => { f.u8(0x1E); f.u16(*v); }
-		Expr::Var(Var(v)) => { f.u8(0x1F); f.u8(*v); }
-		Expr::Attr(Attr(v)) => { f.u8(0x20); f.u8(*v); }
-		Expr::CharAttr(CharAttr(Char(c), a)) => { f.u8(0x21); f.u16(*c); f.u8(*a); }
-		Expr::Rand => { f.u8(0x22); }
-		Expr::Global(Global(v)) => { f.u8(0x23); f.u8(*v); }
-		Expr::SystemFlags(Flags32(v)) => { f.u8(0x24); f.u32(*v); }
-		Expr::NumReg(NumReg(v)) => { f.u8(0x25); f.u8(*v); f.u8(0); }
+		Expr::Int(v) => {
+			f.u8(0x00);
+			f.i32(*v);
+		}
+		Expr::Op(op) => {
+			f.u8(0x1C);
+			crate::code::write_op(d, f, op)?;
+		}
+		Expr::Flag(Flag(v)) => {
+			f.u8(0x1E);
+			f.u16(*v);
+		}
+		Expr::Var(Var(v)) => {
+			f.u8(0x1F);
+			f.u8(*v);
+		}
+		Expr::Attr(Attr(v)) => {
+			f.u8(0x20);
+			f.u8(*v);
+		}
+		Expr::CharAttr(CharAttr(Char(c), a)) => {
+			f.u8(0x21);
+			f.u16(*c);
+			f.u8(*a);
+		}
+		Expr::Rand => {
+			f.u8(0x22);
+		}
+		Expr::Global(Global(v)) => {
+			f.u8(0x23);
+			f.u8(*v);
+		}
+		Expr::SystemFlags(Flags32(v)) => {
+			f.u8(0x24);
+			f.u32(*v);
+		}
+		Expr::NumReg(NumReg(v)) => {
+			f.u8(0x25);
+			f.u8(*v);
+			f.u8(0);
+		}
 		Expr::Bin(op, a, b) => {
 			write_inner(a, d, f)?;
 			write_inner(b, d, f)?;
@@ -146,12 +178,10 @@ fn read_inner(f: &mut CReader, stack: &mut Vec<Expr>) -> Result<(), rootcause::R
 		match f.u8()? {
 			0x00 => stack.push(Expr::Int(f.i32()?)),
 			0x01 => break,
-			0x1C => {
-				match crate::code::read_op(f)? {
-					crate::code::FlatOp::Op(op) => stack.push(Expr::Op(op)),
-					op => rootcause::bail!("expr can't contain {op:?}"),
-				}
-			}
+			0x1C => match crate::code::read_op(f)? {
+				crate::code::FlatOp::Op(op) => stack.push(Expr::Op(op)),
+				op => rootcause::bail!("expr can't contain {op:?}"),
+			},
 			0x1E => stack.push(Flag(f.u16()?).into()),
 			0x1F => stack.push(Var(f.u8()?).into()),
 			0x20 => stack.push(Attr(f.u8()?).into()),
@@ -187,7 +217,7 @@ fn read_inner(f: &mut CReader, stack: &mut Vec<Expr>) -> Result<(), rootcause::R
 				stack.push(Expr::Ass(v, Box::new(a)));
 			}
 
-			code => rootcause::bail!("unknown expr op: {code:02X}")
+			code => rootcause::bail!("unknown expr op: {code:02X}"),
 		}
 	}
 	Ok(())
