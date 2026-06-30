@@ -318,14 +318,53 @@ macro_rules! print_via_debug {
 	};
 }
 
-#[rustfmt::skip]
-print_via_debug!(
-	String, str, i64, i32, u32, f32,
-	types::Char, types::Item, types::Magic, types::Sound, types::Music,
-	types::Flag, types::Global, types::Var,
-	types::FuncArg, types::NumReg, types::StrReg, types::Attr, types::CharAttr,
-	types::Flags8, types::Flags16, types::Flags32,
+print_via_debug!(String, str, i64, i32, u32, f32, types::Flags8, types::Flags16, types::Flags32,);
+
+macro_rules! print_bracket {
+	($($t:ty => $name:literal),* $(,)?) => {
+		$(
+			impl Print for $t {
+				fn print(&self, ctx: &mut Ctx) {
+					ctx.token(format!("{}[{}]", $name, self.0));
+				}
+			}
+		)*
+	};
+}
+
+print_bracket!(
+	types::Item => "item",
+	types::Magic => "magic",
+	types::Sound => "sound",
+	types::Music => "music",
+	types::Flag => "flag",
+	types::Global => "global",
+	types::Var => "var",
+	types::FuncArg => "func_arg",
+	types::NumReg => "num_reg",
+	types::StrReg => "str_reg",
+	types::Attr => "attr",
 );
+
+impl Print for types::Char {
+	fn print(&self, ctx: &mut Ctx) {
+		let inner = match self.0 {
+			0xFFFE => "self".to_string(),
+			0xFFFF => "null".to_string(),
+			n if n >= 0xF000 => format!("0x{n:04X}"),
+			n => format!("{n}"),
+		};
+		ctx.token(format!("char[{inner}]"));
+	}
+}
+
+impl Print for types::CharAttr {
+	fn print(&self, ctx: &mut Ctx) {
+		self.0.print(ctx);
+		ctx.sym(".");
+		ctx.token(self.1.to_string())
+	}
+}
 
 impl Print for Arg {
 	fn print(&self, ctx: &mut Ctx) {
