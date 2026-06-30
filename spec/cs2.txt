@@ -85,34 +85,34 @@
 2719 str
 271A char
 
-2800 char char u8
+2800 'BtlDamage' char char u8
 2801 char f32 f32
-2802 u8 char
-2803 char
-2804 u8
+2802 'BtlLoopTargetsReset' var char
+2803 'BtlLoopTargetsNext' char
+2804 'BtlLoopTargetsInit' u8
 2805 u8 str
 2806 u8
 2807 u8 str
 2808 u8
-2809 u16
+2809 'Btl_InitHit' char
 280A char char
-280B char flags32
-280C char flags32
-280D char
+280B 'BtlCharFlagsSet' char flags32
+280C 'BtlCharFlagSet' char flags32
+280D 'BtlCharFlagsGet' char
 280E char u16 u32
-280F char u16
+280F 'BtlCharGetTarget' char u16
 2810 char
 2811 char u8
 2812 char char char char char char char char char
 2813 char u16 char u32 u32 u32
-2814 u16
-2816
-2815 char f32 f32 f32 f32 f32
-2817 char u32
-2818
-2819 u32
-281A u32
-281B
+2814 'BtlKill' char
+2816 'BtlAfterimageOff'
+2815 'BtlAfterimageOn' char f32 f32 f32 f32 f32
+2817 'BtlDummyCreate' char u32
+2818 'BtlDummyDelete'
+2819 'BtlFlagsSet' flags32
+281A 'BtlFlagsUnset' flags32
+281B 'BtlFlagsGet'
 281C char
 281D u16 f32 f32
 281E u16 char str str
@@ -132,13 +132,13 @@
 282C u16
 282D u16
 282E char char
-2832 char char f32 f32 f32 f32 u8 u8
-2833
-2834 char u32
+2832 'Btl_CharSetPos' char char f32 f32 f32 f32 u8 u8
+2833 'Btl_MoveToTarget'
+2834 'BtlCharSavePos' char u32
 2835 char f32 f32 f32 f32
 2836 char char f32 u16
 2837 char char f32 f32 f32 f32 f32 u8
-283C char char f32 f32
+283C 'BtlCharTurnToChar' char char f32 f32
 2846 f32 f32 f32
 2847
 2848 char
@@ -146,19 +146,19 @@
 2851 str u16
 2852 char u8
 2853 str
-285A u16 u32
+285A 'BtlCharSetAtDelay' char u32
 285B u8 u32
-285C u8
-285D u16
-285E u16
-285F u16
-2860 u16
+285C 'BtlGetCount' u8
+285D char
+285E char
+285F char
+2860 char
 2861 char u8 u32 u32 u32 u32
-2862 char u8
-2863 u16
-2864 str
-2865 u16
-2866 u16
+2862 'BtlCharGetStat' char u8
+2863 char
+2864 'BtlTextShow' str
+2865 char
+2866 char
 2867
 2868
 2869

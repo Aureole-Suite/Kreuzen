@@ -71,65 +71,65 @@
 2713 char u8 f32 f32 f32 f32
 2715 u8 str
 
-2800 char char u8
+2800 'BtlDamage' char char u8
 2801 char f32 f32
-2802 u8
-2803
-2804 u8
+2802 'BtlLoopTargetsReset' var
+2803 'BtlLoopTargetsNext'
+2804 'BtlLoopTargetsInit' u8
 2805 u8 str
 2806 u8
 2807 u8 str
 2808 u8
-2809 u16
+2809 'Btl_InitHit' char
 280A char char
-280B char flags32
-280C char flags32
-280D char
+280B 'BtlCharFlagsSet' char flags32
+280C 'BtlCharFlagSet' char flags32
+280D 'BtlCharFlagsGet' char
 280E char u16 u32
-280F char u16
+280F 'BtlCharGetTarget' char u16
 2810 char
 2811 char u8
 2812 char char char char char char char char char
 2813 char u16 char u32 u32 u32
-2814 u16
-2816
-2815 char f32 f32 f32 f32 f32
-2817 u16
-2818
-2819 u16
-281A u16
-281B
+2814 'BtlKill' char
+2816 'BtlAfterimageOff'
+2815 'BtlAfterimageOn' char f32 f32 f32 f32 f32
+2817 'BtlDummyCreate' char
+2818 'BtlDummyDelete'
+2819 'BtlFlagsSet' flags16
+281A 'BtlFlagsUnset' flags16
+281B 'BtlFlagsGet'
 281C char
-2832 char char f32 f32 f32 f32 u8 u8
-2833
-2834 char u32
+2832 'Btl_CharSetPos' char char f32 f32 f32 f32 u8 u8
+2833 'Btl_MoveToTarget'
+2834 'BtlCharSavePos' char u32
 2835 char f32 f32 f32 f32
 2836 char char f32 u16
 2837 char char f32 f32 f32 f32 f32 u8
-283C char char f32 f32
+283C 'BtlCharTurnToChar' char char f32 f32
 2846 f32 f32 f32
 2847
 2848 char
 2850 u16 str u32 u32 u32 u32 u16 str
-285A u16 u32
+285A 'BtlCharSetAtDelay' char u32
 285B u8 u32
-285C u8
-285D u16
-285E u16
-285F u16
-2860 u16
+285C 'BtlGetCount' u8
+285D char
+285E char
+285F char
+2860 char
 2861 char u8 u32
-2862 char u8
-2863 u16
-2864 str
-2865 u16
-2866 u16
+2862 'BtlCharGetStat' char u8
+2863 char
+2864 'BtlTextShow' str
+2865 char
+2866 char
 # 2869 u16 str str
 # 286A u16
 286B u16
 286C u16
 286D u16
-286E u16 u16 u32 u32 u32
+286E char char u32 u32 u32
 2870
 2871 u32 u16 u8
 2872 u32 u32 u16 u8
@@ -139,9 +139,9 @@
 2876
 2877
 2878
-2879 u16
-287A u16 u8
-287B u16 u16
+2879 char
+287A char u8
+287B char char
 287C
 287D
 287E f32 u16 u8
@@ -216,7 +216,7 @@
 320B char
 
 33   'CharTurnDir' char f32 f32 u8
-34   char u16 f32 u8
+34   char char f32 u8
 35   char
 36   char char f32 f32 f32 cs1_36 f32 u8 u16
 37   char u8
@@ -240,7 +240,7 @@
 3C   char char u16 cs1_3c
 3D00 str u16
 3D01 str u16
-3E00 u16 u16 u16
+3E00 char u16 u16
 3F00 u16
 3F01 u16
 3F02
