@@ -3,6 +3,7 @@ use gospel::write::{Le as _, Writer};
 
 use crate::Game;
 use crate::io::{CReader, OData, WriterExt as _};
+use crate::types::{Battle, Music};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Btlset {
@@ -10,7 +11,7 @@ pub struct Btlset {
 	pub bounds: [f32; 6],
 	pub btl_id: u32,
 	pub unk1: u32,
-	pub bgm: (u16, u16),
+	pub bgm: (Music, Music),
 	pub unk2: u32,
 	pub script: String,
 	pub variants: Vec<Variant>,
@@ -18,7 +19,7 @@ pub struct Btlset {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Variant {
-	pub num: u32,
+	pub id: Battle,
 	pub monsters: Vec<(String, u8)>, // up to 8 entries
 }
 
@@ -34,7 +35,7 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Btlset> {
 	} else {
 		(f.u16()? as u32, f.u16()? as u32)
 	};
-	let bgm = (f.u16()?, f.u16()?);
+	let bgm = (Music(f.u16()?), Music(f.u16()?));
 	f.check_u32(0)?;
 	let unk2 = f.u32()?;
 	let slen = match f.game {
@@ -54,7 +55,7 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Btlset> {
 		if f.check_u32(0xFFFFFFFE).is_ok() {
 			// I don't know wtf this extra chunk is, it's only present in cs2 a0004.
 			// Still, might as well keep it
-			let num = f.u32()? + 1000000000;
+			let id = Battle(f.u32()? + 1000000000);
 			let names = [f.sstr(16)?, f.sstr(16)?, f.sstr(16)?, f.sstr(16)?];
 			#[rustfmt::skip]
 			let probs = [f.u16()? as u8, f.u16()? as u8, f.u16()? as u8, f.u16()? as u8];
@@ -62,12 +63,12 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Btlset> {
 			while monsters.last().is_some_and(|(m, p)| m.is_empty() && *p == 0) {
 				monsters.pop();
 			}
-			variants.push(Variant { num, monsters });
+			variants.push(Variant { id, monsters });
 			continue;
 		}
 
-		let num = f.u32()?;
-		if num == 0xFFFFFFFF {
+		let id = Battle(f.u32()?);
+		if id.0 == 0xFFFFFFFF {
 			f.check(&[0; 0x18])?;
 			break;
 		}
@@ -90,7 +91,7 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Btlset> {
 		while monsters.last().is_some_and(|(m, p)| m.is_empty() && *p == 0) {
 			monsters.pop();
 		}
-		variants.push(Variant { num, monsters });
+		variants.push(Variant { id, monsters });
 	}
 
 	Ok(Btlset {
@@ -120,8 +121,8 @@ pub(crate) fn write(d: &OData, b: &Btlset) -> rootcause::Result<Writer> {
 		f.u16(b.btl_id as u16);
 		f.u16(b.unk1 as u16);
 	}
-	f.u16(b.bgm.0);
-	f.u16(b.bgm.1);
+	f.u16(b.bgm.0.0);
+	f.u16(b.bgm.1.0);
 	f.u32(0);
 	f.u32(b.unk2);
 	let slen = match d.game {
@@ -132,10 +133,10 @@ pub(crate) fn write(d: &OData, b: &Btlset) -> rootcause::Result<Writer> {
 	f.sstr(slen, d.enc, &b.script)?;
 
 	for v in &b.variants {
-		if v.num >= 1_000_000_000 {
+		if v.id.0 >= 1_000_000_000 {
 			crate::ensure!(v.monsters.len() <= 4, "FE-variant has more than 4 monsters: {v:?}");
 			f.u32(0xFFFFFFFE);
-			f.u32(v.num - 1_000_000_000);
+			f.u32(v.id.0 - 1_000_000_000);
 			for (name, _) in &v.monsters {
 				f.sstr(16, d.enc, name)?;
 			}
@@ -150,7 +151,7 @@ pub(crate) fn write(d: &OData, b: &Btlset) -> rootcause::Result<Writer> {
 			}
 		} else {
 			crate::ensure!(v.monsters.len() <= 8, "btlset variant has more than 8 monsters: {v:?}");
-			f.u32(v.num);
+			f.u32(v.id.0);
 			for (name, _) in &v.monsters {
 				f.sstr(16, d.enc, name)?;
 			}

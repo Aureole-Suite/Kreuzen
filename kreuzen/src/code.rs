@@ -262,6 +262,7 @@ pub enum Arg {
 
 	#[debug("{_0:?}")] Char(crate::types::Char),
 	#[debug("{_0:?}")] Item(crate::types::Item),
+	#[debug("{_0:?}")] Battle(crate::types::Battle),
 	#[debug("{_0:?}")] Magic(crate::types::Magic),
 	#[debug("{_0:?}")] Sound(crate::types::Sound),
 	#[debug("{_0:?}")] Music(crate::types::Music),
@@ -407,6 +408,15 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 
 			P::Char => op.args.push(Char(f.u16()?).into()),
 			P::Item => op.args.push(Item(f.u16()?).into()),
+			P::Chr_battle => {
+				let v = f.i32()?;
+				op.args.push(Arg::Int(v as i64));
+				if v == -1 {
+					f.check_u8(0)?;
+				} else {
+					op.args.push(Battle(f.u8()? as u32).into());
+				}
+			}
 			P::Magic => op.args.push(Magic(f.u16()?).into()),
 			P::Sound => op.args.push(Sound(f.u16()?).into()),
 			P::Music => op.args.push(Music(f.u16()?).into()),
@@ -749,6 +759,15 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 
 			P::Char => f.u16(arg!(Char).0),
 			P::Item => f.u16(arg!(Item).0),
+			P::Chr_battle => {
+				let v = int!(i32);
+				f.i32(v);
+				if v == -1 {
+					f.u8(0);
+				} else {
+					f.u8(arg!(Battle).0.try_into()?);
+				}
+			}
 			P::Magic => f.u16(arg!(Magic).0),
 			P::Sound => f.u16(arg!(Sound).0),
 			P::Music => f.u16(arg!(Music).0),

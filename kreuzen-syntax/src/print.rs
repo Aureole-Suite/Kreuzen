@@ -367,6 +367,7 @@ macro_rules! print_bracket {
 
 print_bracket!(
 	types::Item => "item",
+	types::Battle => "battle",
 	types::Magic => "magic",
 	types::Sound => "sound",
 	types::Music => "music",
@@ -415,6 +416,7 @@ impl Print for Arg {
 			}
 			Arg::Char(v) => v.print(ctx),
 			Arg::Item(v) => v.print(ctx),
+			Arg::Battle(v) => v.print(ctx),
 			Arg::Magic(v) => v.print(ctx),
 			Arg::Sound(v) => v.print(ctx),
 			Arg::Music(v) => v.print(ctx),

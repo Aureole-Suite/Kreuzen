@@ -285,12 +285,15 @@ impl Print for Btlset {
 
 impl Print for Variant {
 	fn print(&self, ctx: &mut Ctx) {
-		self.num.print(ctx);
-		ctx.block(&self.monsters, |(name, prob), ctx| {
-			name.print(ctx);
-			prob.print(ctx);
-			ctx.sym_(";");
-		});
+		self.id.print(ctx);
+		for (monster, prob) in &self.monsters {
+			monster.print(ctx);
+			if *prob != 100 {
+				ctx.sym(":");
+				prob.print(ctx);
+			}
+		}
+		ctx.sym_(";");
 	}
 }
 

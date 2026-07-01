@@ -1,5 +1,5 @@
 import cs1 00..13
-13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32
+13   'CharCreate' char str str str u8 flags32 f32 f32 f32 f32 f32 f32 f32 str str chr_battle f32
 import cs1 14..22
 22   'CharAniclipPlay' char str u8 u8 u8 u8 f32 f32 f32 f32
 import cs1 23..FFFFFFFF
