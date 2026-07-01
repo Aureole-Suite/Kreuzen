@@ -109,7 +109,7 @@ pub enum Part {
 
 	Char,
 	Item,
-	Chr_battle,
+	Battle,
 	Magic,
 	Flag,
 	Global,

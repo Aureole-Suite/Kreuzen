@@ -416,7 +416,11 @@ impl Print for Arg {
 			}
 			Arg::Char(v) => v.print(ctx),
 			Arg::Item(v) => v.print(ctx),
-			Arg::Battle(v) => v.print(ctx),
+			Arg::Battle(a, v) => {
+				ctx.token(format!("btlset[{a}]"));
+				ctx.sym(":");
+				v.print(ctx);
+			}
 			Arg::Magic(v) => v.print(ctx),
 			Arg::Sound(v) => v.print(ctx),
 			Arg::Music(v) => v.print(ctx),

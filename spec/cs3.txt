@@ -28,7 +28,7 @@
 1901 'SystemSaveFlagUnset' u16
 1902 'SystemSaveFlagGet' u16
 1A00 'GetIntArg' funcarg
-1D   'CharCreate' char str str str u8 flags32 u32 f32 f32 f32 f32 f32 f32 f32 str str chr_battle f32 f32 flag
+1D   'CharCreate' char str str str u8 flags32 u32 f32 f32 f32 f32 f32 f32 f32 str str battle f32 f32 flag
 1E   'Fork' char u8 u8 str
 1F   'ForkKill' char u8
 20   u8 dyn dyn dyn
@@ -65,7 +65,7 @@
 2910 u8
 
 2A   u8 char str str u8
-2B00 'Battle' u32 u8 u8 i32 u8 i32 u8
+2B00 'Battle' battle u8 i32 u8 i32 u8
 
 2C   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
 2D   'CharAniclipWait' char u32 u8
