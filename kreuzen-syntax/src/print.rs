@@ -374,11 +374,11 @@ impl Print for Arg {
 			Arg::F32(v) => v.print(ctx),
 			Arg::F32Munged(v) => {
 				v.print(ctx);
-				ctx.sym("'");
+				ctx.sym_("'");
 			}
 			Arg::I32Munged(v) => {
 				v.print(ctx);
-				ctx.sym("'");
+				ctx.sym_("'");
 			}
 			Arg::Char(v) => v.print(ctx),
 			Arg::Item(v) => v.print(ctx),

@@ -395,11 +395,11 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 			P::I16 => op.args.push(f.i16()?.into()),
 			P::I32 => op.args.push(f.i32()?.into()),
 			P::F32 => {
-				let v = f.i32()?;
-				op.args.push(if v == 0 || v.abs() > 0x1000000 {
-					Arg::F32(f32::from_bits(v as u32))
+				let v = f.f32()?;
+				op.args.push(if v == 0.0 || (1e-5..=1e5).contains(&v.abs()) {
+					Arg::F32(v)
 				} else {
-					Arg::F32Munged(v)
+					Arg::F32Munged(v.to_bits().cast_signed())
 				});
 			}
 			P::Str => op.args.push(f.str()?.into()),
