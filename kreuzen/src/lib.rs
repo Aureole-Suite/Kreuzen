@@ -59,7 +59,7 @@ pub struct Scena {
 pub struct Chunk {
 	pub name: String,
 	pub func: Body,
-	pub preload: Vec<tables::preload::Preload>,
+	pub preload: Vec<code::preload::Preload>,
 	pub shadow: Vec<Code>,
 }
 
@@ -196,7 +196,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	}
 	for c in &scena.chunks {
 		if !c.preload.is_empty() {
-			let f = tables::preload::write(&d, &c.preload);
+			let f = code::preload::write(&d, &c.preload);
 			chunk(16, &format!("_{}", c.name), false, f);
 		}
 	}
@@ -385,7 +385,7 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 	};
 	let preload = if let Some(i) = e.preload {
 		let _span = tracing::error_span!("preload").entered();
-		let v = read_subchunk(cr, ranges[i], tables::preload::read)?;
+		let v = read_subchunk(cr, ranges[i], code::preload::read)?;
 		if v.is_empty() {
 			tracing::warn!("preload is empty");
 		}

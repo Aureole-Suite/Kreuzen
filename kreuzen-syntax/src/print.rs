@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 
+use kreuzen::code::preload::Preload;
 use kreuzen::code::{Arg, Code, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
-use kreuzen::tables::preload::Preload;
 use kreuzen::text::{Text, TextControl, TextPart};
 use kreuzen::types;
 

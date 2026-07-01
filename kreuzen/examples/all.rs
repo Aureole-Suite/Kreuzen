@@ -182,7 +182,7 @@ fn check_preload(scena: &kreuzen::Scena) {
 		.chunks
 		.iter()
 		.filter(|c| match &c.func {
-			Body::Code(code) => !kreuzen::tables::preload::from_code(&code.ops, &c.name, &[]).is_empty(),
+			Body::Code(code) => !kreuzen::code::preload::from_code(&code.ops, &c.name, &[]).is_empty(),
 			_ => false,
 		})
 		.map(|x| x.name.as_str())
@@ -195,7 +195,7 @@ fn check_preload(scena: &kreuzen::Scena) {
 			}
 			continue;
 		};
-		let preload2 = kreuzen::tables::preload::from_code(&code.ops, &chunk.name, &has_preload);
+		let preload2 = kreuzen::code::preload::from_code(&code.ops, &chunk.name, &has_preload);
 		if preload2 != chunk.preload {
 			let diff = pretty_assertions::Comparison::new(&preload2, &chunk.preload);
 			tracing::error!("preload mismatch {:?} {} {}", scena.game, scena.variant, scena.oddness);

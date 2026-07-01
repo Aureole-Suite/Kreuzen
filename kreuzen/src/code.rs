@@ -14,6 +14,7 @@ use crate::spec::{Opcode, Part};
 use crate::text::Text;
 use crate::types::*;
 
+pub mod preload;
 mod to_dot;
 pub use to_dot::to_dot;
 
