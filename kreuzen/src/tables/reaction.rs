@@ -6,12 +6,12 @@ use crate::io::{CReader, OData};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Reaction {
-	id: u16,
-	a: u16,
-	b: u16,
-	c: u16,
-	floats: Vec<f32>, // always length 12 except in cs1 where it's empty
-	d: u32,
+	pub id: u16,
+	pub a: u16,
+	pub b: u16,
+	pub c: u16,
+	pub floats: Vec<f32>, // always length 12 except in cs1 where it's empty
+	pub d: u32,
 }
 
 pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Vec<Reaction>> {

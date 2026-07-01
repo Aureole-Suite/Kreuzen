@@ -1,3 +1,5 @@
+pub mod tables;
+
 use std::borrow::Cow;
 
 use kreuzen::code::preload::Preload;
@@ -318,7 +320,8 @@ macro_rules! print_via_debug {
 	};
 }
 
-print_via_debug!(String, str, i64, i32, u32, f32, types::Flags8, types::Flags16, types::Flags32,);
+print_via_debug!(String, str, u8, u16, i64, i32, u32, f32);
+print_via_debug!(types::Flags8, types::Flags16, types::Flags32);
 
 macro_rules! print_bracket {
 	($($t:ty => $name:literal),* $(,)?) => {

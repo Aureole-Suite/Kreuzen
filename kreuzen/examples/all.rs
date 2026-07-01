@@ -163,7 +163,7 @@ fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
 		write!(s, "{} ", chunk.name)?;
 		match &chunk.func {
 			Body::Code(code) => write_dec(&mut s, code)?,
-			Body::Table(table) => writeln!(s, "{table:#?}")?,
+			Body::Table(table) => s += kreuzen_syntax::print_table(table).as_str(),
 		}
 		if !chunk.preload.is_empty() {
 			write!(s, " preload {}", kreuzen_syntax::print_preload(&chunk.preload))?;

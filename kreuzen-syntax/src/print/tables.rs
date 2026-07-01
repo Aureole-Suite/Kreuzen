@@ -1,0 +1,346 @@
+use kreuzen::tables::action::Action;
+use kreuzen::tables::add_collision::Collision;
+use kreuzen::tables::algo::Algo;
+use kreuzen::tables::anime_clip::AnimeClip;
+use kreuzen::tables::book::Book;
+use kreuzen::tables::break_::Break;
+use kreuzen::tables::btlset::{Btlset, Variant};
+use kreuzen::tables::condition::Condition;
+use kreuzen::tables::field_follow::FieldFollow;
+use kreuzen::tables::field_monster::FieldMonster;
+use kreuzen::tables::part::Part;
+use kreuzen::tables::reaction::Reaction;
+use kreuzen::tables::style_name::StyleName;
+use kreuzen::tables::summon::Summon;
+use kreuzen::tables::weapon_att::WeaponAtt;
+use kreuzen::tables::{Dummy, Table};
+
+use super::{Ctx, Print};
+
+pub fn print_table(table: &Table) -> String {
+	let mut ctx = Ctx::new();
+	table.print(&mut ctx);
+	ctx.out
+}
+
+fn paren(ctx: &mut Ctx, f: impl FnOnce(&mut Ctx)) {
+	ctx._sym("(");
+	f(ctx);
+	ctx.sym_(")");
+}
+
+impl Print for Table {
+	fn print(&self, ctx: &mut Ctx) {
+		match self {
+			Table::AddCollision(t) => {
+				ctx.word("AddCollision");
+				ctx.block(t, Collision::print);
+			}
+			Table::ActionTable(t) => {
+				ctx.word("ActionTable");
+				ctx.block(t, Action::print);
+			}
+			Table::AlgoTable(t) => {
+				ctx.word("AlgoTable");
+				ctx.block(t, Algo::print);
+			}
+			Table::AnimeClipTable(t) => {
+				ctx.word("AnimeClipTable");
+				ctx.block(t, AnimeClip::print);
+			}
+			Table::Book(t) => {
+				ctx.word("Book");
+				t.print(ctx);
+			}
+			Table::BreakTable(t) => {
+				ctx.word("BreakTable");
+				ctx.block(t, Break::print);
+			}
+			Table::ConditionTable(t) => {
+				ctx.word("ConditionTable");
+				ctx.block(t, Condition::print);
+			}
+			Table::FcAuto(t) => {
+				ctx.word("FcAuto");
+				t.print(ctx);
+				ctx.sym_(";");
+			}
+			Table::FieldFollowData(t) => {
+				ctx.word("FieldFollowData");
+				t.print(ctx);
+			}
+			Table::PartTable(t) => {
+				ctx.word("PartTable");
+				ctx.block(t, Part::print);
+			}
+			Table::ReactionTable(t) => {
+				ctx.word("ReactionTable");
+				ctx.block(t, Reaction::print);
+			}
+			Table::StyleName(t) => {
+				ctx.word("StyleName");
+				t.print(ctx);
+			}
+			Table::SummonTable(t) => {
+				ctx.word("SummonTable");
+				ctx.block(t, Summon::print);
+			}
+			Table::FieldMonsterData(t) => {
+				ctx.word("FieldMonsterData");
+				t.print(ctx);
+			}
+			Table::WeaponAttTable(t) => {
+				ctx.word("WeaponAttTable");
+				t.print(ctx);
+			}
+			Table::Btlset(t) => {
+				ctx.word("Btlset");
+				t.print(ctx);
+			}
+			Table::Dummy(t) => {
+				ctx.word("Dummy");
+				t.print(ctx);
+			}
+		}
+	}
+}
+
+impl Print for Action {
+	fn print(&self, ctx: &mut Ctx) {
+		self.id.print(ctx);
+		paren(ctx, |ctx| {
+			self.kind.0.print(ctx);
+			self.kind.1.print(ctx);
+		});
+		paren(ctx, |ctx| {
+			self.target.0.print(ctx);
+			self.target.1.print(ctx);
+			self.target.2.print(ctx);
+		});
+		paren(ctx, |ctx| {
+			self.u2.0.print(ctx);
+			self.u2.1.print(ctx);
+			self.u2.2.print(ctx);
+		});
+		self.cast_time.print(ctx);
+		self.recovery_time.print(ctx);
+		self.cp_cost.print(ctx);
+		self.flags.print(ctx);
+		self.ani.print(ctx);
+		self.name.print(ctx);
+		if self.effects.is_empty() {
+			ctx.sym_(";");
+		} else {
+			ctx.block(&self.effects, |&(id, a, b, c), ctx| {
+				id.print(ctx);
+				a.print(ctx);
+				b.print(ctx);
+				c.print(ctx);
+				ctx.sym_(";");
+			});
+		}
+	}
+}
+
+impl Print for Collision {
+	fn print(&self, ctx: &mut Ctx) {
+		self.a.print(ctx);
+		for &v in &self.b {
+			v.print(ctx);
+		}
+		ctx.sym_(";");
+	}
+}
+
+impl Print for Algo {
+	fn print(&self, ctx: &mut Ctx) {
+		self.id.print(ctx);
+		self.chance.print(ctx);
+		self.use_limit.print(ctx);
+		self.target_priority.print(ctx);
+		paren(ctx, |ctx| {
+			self.cond.0.print(ctx);
+			self.cond.1.print(ctx);
+			self.cond.2.print(ctx);
+			self.cond.3.print(ctx);
+			self.cond.4.print(ctx);
+		});
+		ctx.sym_(";");
+	}
+}
+
+impl Print for AnimeClip {
+	fn print(&self, ctx: &mut Ctx) {
+		self.kind.print(ctx);
+		self.a.print(ctx);
+		self.b.print(ctx);
+		ctx.sym_(";");
+	}
+}
+
+impl Print for Book {
+	fn print(&self, ctx: &mut Ctx) {
+		match self {
+			Book::Header(n) => {
+				ctx.word("header");
+				n.print(ctx);
+				ctx.sym_(";");
+			}
+			Book::TitlePage { title, data, text } => {
+				ctx.word("title_page");
+				title.print(ctx);
+				paren(ctx, |ctx| {
+					for &v in data {
+						v.print(ctx);
+					}
+				});
+				text.print(ctx);
+				ctx.sym_(";");
+			}
+			Book::Page(text) => {
+				ctx.word("page");
+				text.print(ctx);
+				ctx.sym_(";");
+			}
+			Book::Empty => {
+				ctx.word("empty");
+				ctx.sym_(";");
+			}
+		}
+	}
+}
+
+impl Print for Break {
+	fn print(&self, ctx: &mut Ctx) {
+		self.id.print(ctx);
+		self.value.print(ctx);
+		ctx.sym_(";");
+	}
+}
+
+impl Print for Condition {
+	fn print(&self, ctx: &mut Ctx) {
+		self.id.print(ctx);
+		ctx.block(&self.entries, |&(id, a, b, c), ctx| {
+			id.print(ctx);
+			a.print(ctx);
+			b.print(ctx);
+			c.print(ctx);
+			ctx.sym_(";");
+		});
+	}
+}
+
+impl Print for FieldFollow {
+	fn print(&self, ctx: &mut Ctx) {
+		self.a.print(ctx);
+		self.b.print(ctx);
+		self.c.print(ctx);
+		self.d.print(ctx);
+		self.e.print(ctx);
+		ctx.sym_(";");
+	}
+}
+
+impl Print for FieldMonster {
+	fn print(&self, ctx: &mut Ctx) {
+		self.a.print(ctx);
+		self.b.print(ctx);
+		self.c.print(ctx);
+		for &v in &self.floats {
+			v.print(ctx);
+		}
+		ctx.sym_(";");
+	}
+}
+
+impl Print for Part {
+	fn print(&self, ctx: &mut Ctx) {
+		self.id.print(ctx);
+		self.a.print(ctx);
+		self.b.print(ctx);
+		ctx.sym_(";");
+	}
+}
+
+impl Print for Reaction {
+	fn print(&self, ctx: &mut Ctx) {
+		self.id.print(ctx);
+		self.a.print(ctx);
+		self.b.print(ctx);
+		self.c.print(ctx);
+		for &v in &self.floats {
+			v.print(ctx);
+		}
+		self.d.print(ctx);
+		ctx.sym_(";");
+	}
+}
+
+impl Print for StyleName {
+	fn print(&self, ctx: &mut Ctx) {
+		self.0.print(ctx);
+		self.1.print(ctx);
+		ctx.sym_(";");
+	}
+}
+
+impl Print for Summon {
+	fn print(&self, ctx: &mut Ctx) {
+		self.kind.print(ctx);
+		self.a.print(ctx);
+		self.b.print(ctx);
+		self.name.print(ctx);
+		ctx.sym_(";");
+	}
+}
+
+impl Print for WeaponAtt {
+	fn print(&self, ctx: &mut Ctx) {
+		self.slash.print(ctx);
+		self.thrust.print(ctx);
+		self.pierce.print(ctx);
+		self.strike.print(ctx);
+		ctx.sym_(";");
+	}
+}
+
+impl Print for Btlset {
+	fn print(&self, ctx: &mut Ctx) {
+		self.field.print(ctx);
+		for &v in &self.bounds {
+			v.print(ctx);
+		}
+		self.btl_id.print(ctx);
+		self.unk1.print(ctx);
+		paren(ctx, |ctx| {
+			self.bgm.0.print(ctx);
+			self.bgm.1.print(ctx);
+		});
+		self.unk2.print(ctx);
+		self.script.print(ctx);
+		ctx.block(&self.variants, Variant::print);
+	}
+}
+
+impl Print for Variant {
+	fn print(&self, ctx: &mut Ctx) {
+		self.num.print(ctx);
+		ctx.block(&self.monsters, |(name, prob), ctx| {
+			name.print(ctx);
+			prob.print(ctx);
+			ctx.sym_(";");
+		});
+	}
+}
+
+impl Print for Dummy {
+	fn print(&self, ctx: &mut Ctx) {
+		ctx.word(match self {
+			Dummy::Empty => "empty",
+			Dummy::D12 => "d12",
+			Dummy::Dff => "dff",
+		});
+		ctx.sym_(";");
+	}
+}
