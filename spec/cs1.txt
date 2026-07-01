@@ -4,7 +4,7 @@
 04   'fastcall' u8 str
 05   'if'
 06   'switch'
-07    u32
+07    flags32
 08   'SetAttr' attr expr
 09   'nop'
 0A   'SetVar' var expr
@@ -272,7 +272,7 @@
 4900 u32 u32 u32 u32 u32 u32 u32 u32
 4901 u32 f32 f32 f32 f32 f32 f32 f32
 4902 u32 u32 u32 u32 u32 u32 u32 u32
-4903 u32 u32 u32 u32 u32 u32 u32 u32
+4903 u32 f32 f32 f32 u32 u32 u32 u32
 4904 u32 u32 u32 u32 u32 u32 u32 u32
 490A u32 u32 u32 u32 u32 u32 u32 u32
 490B
@@ -295,7 +295,7 @@
 491E
 491F
 4920
-4921 u32
+4921 f32
 4923 u16
 4924 char
 4925

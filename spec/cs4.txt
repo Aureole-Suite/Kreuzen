@@ -132,7 +132,7 @@
 321E char u8 f32
 321F char u16
 3221 char u16 u8
-3222 char u32 str
+3222 u16 u16 u16 str
 
 33 'Btl'
 3300 'BtlDamage' char char u8 u8

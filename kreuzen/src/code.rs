@@ -396,7 +396,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 			P::I32 => op.args.push(f.i32()?.into()),
 			P::F32 => {
 				let v = f.f32()?;
-				op.args.push(if v == 0.0 || (1e-5..=1e5).contains(&v.abs()) {
+				op.args.push(if v == 0.0 || (1e-5..=1e8).contains(&v.abs()) {
 					Arg::F32(v)
 				} else {
 					Arg::F32Munged(v.to_bits().cast_signed())
@@ -566,7 +566,7 @@ fn op_98(a: u16, game: Game) -> &'static [Part] {
 		5002 => &[F32],
 		6000 => &[U32],
 		6001 => &[U32],
-		6500 => &[U32],
+		6500 => &[F32],
 		7000 => &[U8],
 		7001 if game == Game::Reverie => &[Global],
 		8000 => &[Str, U8],

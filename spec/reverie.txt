@@ -147,7 +147,7 @@
 321E char u8 f32
 321F char u16
 3221 char u16 u8
-3222 char u32 str
+3222 char u16 u16 str
 3223
 3224 char dyn u16 u32 dyn dyn dyn dyn f32 f32 f32 dyn dyn dyn u8 u32
 

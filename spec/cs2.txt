@@ -4,7 +4,7 @@
 04   'fastcall' u8 str
 05   'if'
 06   'switch'
-07    u32
+07    flags32
 08   'SetAttr' attr expr
 09   'nop'
 0A   'SetVar' var expr
@@ -38,8 +38,8 @@
 1F04 u8 u8
 1F06 u8 u16
 1F07 u8 u16
-1F08 u8 str u16 u32 u32
-1F09 u8 str u32
+1F08 u8 str u16 flags32 u32
+1F09 u8 str flags32
 1F0A u8
 1F0B u8 u16
 1F0C u8 u16
@@ -248,7 +248,7 @@
 2D1B f32 f32
 2D1C
 2D1D
-2D1E u8 u32 u32 u8
+2D1E u8 f32 u32 u8
 
 2E   'CharSetPos' char f32 f32 f32 f32
 2F   'CharAniPlay' char u8 u8 str
@@ -342,7 +342,7 @@
 42   char f32 f32 f32 f32 u16 u8
 43   char u8
 44   f32
-4500 char u32 i16 flags16 f32 f32
+4500 char f32 i16 flags16 f32 f32
 4501 char
 4502 char u16 u16 u16 u8
 4503 char f32 f32 f32 f32 u16 u8
@@ -356,8 +356,8 @@
 4A00 u32 u32 u32 u32 u32 u32 u32 u32
 4A01 u32 f32 f32 f32 f32 f32 f32 f32
 4A02 u32 u32 u32 u32 u32 u32 u32 u32
-4A05 u32 u32 u32 u32 u32 u32 u32 u32
-4A06 u32 u32 u32 u32 u32 u32 u32 u32
+4A05 u32 u32 u32 u32 f32 f32 u32 u32
+4A06 i32 u32 u32 u32 u32 u32 u32 u32
 4A0A u32 u32 u32 u32 u32 u32 u32 u32
 4A0B char
 4A0D 'MapPlaceTbox' str str flag item
@@ -402,7 +402,7 @@
 4A3A char u16 f32 f32 f32 f32
 4A3B char u16 f32 f32
 4A3C char f32 f32
-4A3D u32
+4A3D f32
 4A3E u8 str u32
 4A3F
 4A40 u16
@@ -478,7 +478,7 @@
 61   u8 u16 u16 f32 f32 f32
 62   char f32
 63   str f32 u16
-64   u16 f32 u32 f32 f32 u8
+64   char f32 f32 f32 f32 u8
 6500 'ItemAdd' item u32
 6501 'ItemRemove' item u32
 6502 'ItemHas' item u32
@@ -572,11 +572,11 @@
 7503
 7504
 76   f32
-78   char u32 f32 f32 f32 f32 f32 u32
+78   char u32 f32 flag f32 f32 f32 f32 u16
 79   char u16 u16 u16
-7A00 u32 u32 u32 u32
-7A01 u32 u32 u32 u32
-7A02 u32 u32 u32 u32
+7A00 f32 f32 f32 f32
+7A01 f32 f32 f32 f32
+7A02 f32 f32 f32 f32
 7A1B flags32
 7B   u8 u8
 7C   u8 u16 u16 u16 u32 u16 f32 f32 f32 str
@@ -609,7 +609,7 @@
 8909
 890A
 890B
-8A00 u32
+8A00 flags32
 8A01
 8B00 'BookShow' str str u8 flag
 8B01 'BookWait'

@@ -32,7 +32,7 @@
 1322 u16 u16 u16 u8 str u16 u16 u8 u8 u8 u8 u32
 1323 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
 1324 u16 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
-1325 u16 u16 u16 u16 u16 u16 u16 u16 u16 u32 u32 u32 u32 u8
+1325 u16 u16 u16 u16 u16 u16 u16 u16 u16 flags32 flags32 flags32 flags32 u8 # These flags are colors but as long as it's hex I guess
 1326 u16
 1327 u16 u16 u16 u8 u16 u16 u8 u8 u8 u8 u32
 1328 u16 u16 u16 u8 u8 u8 u16 u16 u8 u8 u8 u8 u32
