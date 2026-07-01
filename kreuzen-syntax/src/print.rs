@@ -486,7 +486,13 @@ impl Print for Expr {
 
 fn print_expr(e: &Expr, ctx: &mut Ctx, prec: u32) {
 	match e {
-		Expr::Int(v) => v.print(ctx),
+		Expr::Int(v) => {
+			if *v >= 0x10000 && v.count_ones() == 1 {
+				ctx.token(format!("0x{v:08X}"));
+			} else {
+				v.print(ctx)
+			}
+		}
 		Expr::Op(op) => op.print(ctx),
 		Expr::Flag(v) => v.print(ctx),
 		Expr::Var(v) => v.print(ctx),
