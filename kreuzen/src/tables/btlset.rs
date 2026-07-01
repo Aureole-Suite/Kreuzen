@@ -29,8 +29,11 @@ pub(crate) fn read(f: &mut CReader) -> rootcause::Result<Btlset> {
 	} else {
 		[0.0; 6]
 	};
-	let btl_id = f.u32()?;
-	let unk1 = if f.game >= Game::Cs3 { f.u32()? } else { 0 };
+	let (btl_id, unk1) = if f.game >= Game::Cs3 {
+		(f.u32()?, f.u32()?)
+	} else {
+		(f.u16()? as u32, f.u16()? as u32)
+	};
 	let bgm = (f.u16()?, f.u16()?);
 	f.check_u32(0)?;
 	let unk2 = f.u32()?;
@@ -110,9 +113,12 @@ pub(crate) fn write(d: &OData, b: &Btlset) -> rootcause::Result<Writer> {
 			f.f32(v);
 		}
 	}
-	f.u32(b.btl_id);
 	if d.game >= Game::Cs3 {
+		f.u32(b.btl_id);
 		f.u32(b.unk1);
+	} else {
+		f.u16(b.btl_id as u16);
+		f.u16(b.unk1 as u16);
 	}
 	f.u16(b.bgm.0);
 	f.u16(b.bgm.1);
