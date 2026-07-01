@@ -323,6 +323,36 @@ macro_rules! print_via_debug {
 print_via_debug!(String, str, u8, u16, i64, i32, u32, f32);
 print_via_debug!(types::Flags8, types::Flags16, types::Flags32);
 
+macro_rules! print_tuple {
+	($($t:ident)*) => {
+		#[expect(non_snake_case)]
+		impl<$($t: Print,)+> Print for ($($t,)+) {
+			fn print(&self, ctx: &mut Ctx) {
+				let ($($t,)+) = self;
+				ctx._sym("(");
+				$($t.print(ctx);)+
+				ctx.sym_(")");
+			}
+		}
+	};
+}
+
+print_tuple!(A);
+print_tuple!(A B);
+print_tuple!(A B C);
+print_tuple!(A B C D);
+print_tuple!(A B C D E);
+
+impl<T: Print, const N: usize> Print for [T; N] {
+	fn print(&self, ctx: &mut Ctx) {
+		ctx._sym("(");
+		for v in self {
+			v.print(ctx);
+		}
+		ctx.sym_(")");
+	}
+}
+
 macro_rules! print_bracket {
 	($($t:ty => $name:literal),* $(,)?) => {
 		$(

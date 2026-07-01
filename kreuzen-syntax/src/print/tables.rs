@@ -23,12 +23,6 @@ pub fn print_table(table: &Table) -> String {
 	ctx.out
 }
 
-fn paren(ctx: &mut Ctx, f: impl FnOnce(&mut Ctx)) {
-	ctx._sym("(");
-	f(ctx);
-	ctx.sym_(")");
-}
-
 impl Print for Table {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
@@ -108,20 +102,9 @@ impl Print for Table {
 impl Print for Action {
 	fn print(&self, ctx: &mut Ctx) {
 		self.id.print(ctx);
-		paren(ctx, |ctx| {
-			self.kind.0.print(ctx);
-			self.kind.1.print(ctx);
-		});
-		paren(ctx, |ctx| {
-			self.target.0.print(ctx);
-			self.target.1.print(ctx);
-			self.target.2.print(ctx);
-		});
-		paren(ctx, |ctx| {
-			self.u2.0.print(ctx);
-			self.u2.1.print(ctx);
-			self.u2.2.print(ctx);
-		});
+		self.kind.print(ctx);
+		self.target.print(ctx);
+		self.u2.print(ctx);
 		self.cast_time.print(ctx);
 		self.recovery_time.print(ctx);
 		self.cp_cost.print(ctx);
@@ -131,11 +114,8 @@ impl Print for Action {
 		if self.effects.is_empty() {
 			ctx.sym_(";");
 		} else {
-			ctx.block(&self.effects, |&(id, a, b, c), ctx| {
-				id.print(ctx);
-				a.print(ctx);
-				b.print(ctx);
-				c.print(ctx);
+			ctx.block(&self.effects, |item, ctx| {
+				item.print(ctx);
 				ctx.sym_(";");
 			});
 		}
@@ -145,9 +125,7 @@ impl Print for Action {
 impl Print for Collision {
 	fn print(&self, ctx: &mut Ctx) {
 		self.a.print(ctx);
-		for &v in &self.b {
-			v.print(ctx);
-		}
+		self.b.print(ctx);
 		ctx.sym_(";");
 	}
 }
@@ -158,13 +136,7 @@ impl Print for Algo {
 		self.chance.print(ctx);
 		self.use_limit.print(ctx);
 		self.target_priority.print(ctx);
-		paren(ctx, |ctx| {
-			self.cond.0.print(ctx);
-			self.cond.1.print(ctx);
-			self.cond.2.print(ctx);
-			self.cond.3.print(ctx);
-			self.cond.4.print(ctx);
-		});
+		self.cond.print(ctx);
 		ctx.sym_(";");
 	}
 }
@@ -189,11 +161,7 @@ impl Print for Book {
 			Book::TitlePage { title, data, text } => {
 				ctx.word("title_page");
 				title.print(ctx);
-				paren(ctx, |ctx| {
-					for &v in data {
-						v.print(ctx);
-					}
-				});
+				data.print(ctx);
 				text.print(ctx);
 				ctx.sym_(";");
 			}
@@ -221,11 +189,8 @@ impl Print for Break {
 impl Print for Condition {
 	fn print(&self, ctx: &mut Ctx) {
 		self.id.print(ctx);
-		ctx.block(&self.entries, |&(id, a, b, c), ctx| {
-			id.print(ctx);
-			a.print(ctx);
-			b.print(ctx);
-			c.print(ctx);
+		ctx.block(&self.entries, |item, ctx| {
+			item.print(ctx);
 			ctx.sym_(";");
 		});
 	}
@@ -308,15 +273,10 @@ impl Print for WeaponAtt {
 impl Print for Btlset {
 	fn print(&self, ctx: &mut Ctx) {
 		self.field.print(ctx);
-		for &v in &self.bounds {
-			v.print(ctx);
-		}
+		self.bounds.print(ctx);
 		self.btl_id.print(ctx);
 		self.unk1.print(ctx);
-		paren(ctx, |ctx| {
-			self.bgm.0.print(ctx);
-			self.bgm.1.print(ctx);
-		});
+		self.bgm.print(ctx);
 		self.unk2.print(ctx);
 		self.script.print(ctx);
 		ctx.block(&self.variants, Variant::print);
