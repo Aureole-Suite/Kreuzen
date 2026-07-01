@@ -2,11 +2,12 @@ use gospel::read::Le as _;
 use gospel::write::{Le as _, Writer};
 
 use crate::io::{CReader, OData, WriterExt as _};
+use crate::types::Magic;
 use crate::{Enc, Game};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Action {
-	pub id: u16,
+	pub id: Magic,
 	pub kind: (u8, u8),
 	pub target: (u8, u8, u16),
 	pub u2: (f32, f32, f32), // almost always (45.0, 100.0, -100.0); CS3+
@@ -22,7 +23,7 @@ pub struct Action {
 impl Action {
 	fn dummy() -> Self {
 		Self {
-			id: 0xFFFF,
+			id: Magic(0xFFFF),
 			kind: (0, 0),
 			target: (0, 0, 0),
 			u2: (0.0, 0.0, 0.0),
@@ -62,7 +63,7 @@ fn read_cs1(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 
 	let mut out = Vec::with_capacity(n);
 	while !f.remaining().is_empty() {
-		let id = f.u16()?;
+		let id = Magic(f.u16()?);
 		let kind = (f.u8()?, f.u8()?);
 		let target = (f.u8()?, f.u8()?, f.u8()? as u16);
 		let cast_time = f.u8()? as u16;
@@ -108,8 +109,8 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 		if has_sep {
 			tracing::warn!("data after ActionTable terminator");
 		}
-		let id = f.u16()?;
-		if id == 0xFFFF && f.game != Game::Reverie {
+		let id = Magic(f.u16()?);
+		if id.0 == 0xFFFF && f.game != Game::Reverie {
 			has_sep = true;
 			f.check(&[0; 193])?;
 			continue;
@@ -150,7 +151,7 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Action>> {
 			ani,
 			name,
 		};
-		if id == 0xFFFF && f.game == Game::Reverie {
+		if id.0 == 0xFFFF && f.game == Game::Reverie {
 			has_sep = true;
 			continue;
 		}
@@ -175,7 +176,7 @@ fn write_cs1(d: &OData, table: &[Action]) -> rootcause::Result<Writer> {
 		crate::ensure!(a.target.2 <= 0xFF, "Cs1 target.2 doesn't fit in u8: {}", a.target.2);
 		crate::ensure!(a.cast_time <= 0xFF, "Cs1 cast_time doesn't fit in u8: {}", a.cast_time);
 
-		f.u16(a.id);
+		f.u16(a.id.0);
 		f.u8(a.kind.0);
 		f.u8(a.kind.1);
 		f.u8(a.target.0);
@@ -231,7 +232,7 @@ fn write_cs3(d: &OData, table: &[Action]) -> rootcause::Result<Writer> {
 
 fn write_cs3_action(f: &mut Writer, d: &OData, a: &Action) -> rootcause::Result<()> {
 	crate::ensure!(a.effects.len() <= 5, "Cs3 action has more than 5 effects: {a:?}");
-	f.u16(a.id);
+	f.u16(a.id.0);
 	f.u8(a.kind.0);
 	f.u8(a.kind.1);
 	f.u8(a.target.0);

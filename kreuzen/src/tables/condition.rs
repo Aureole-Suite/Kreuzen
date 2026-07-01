@@ -3,10 +3,11 @@ use gospel::write::{Le as _, Writer};
 
 use crate::Game;
 use crate::io::{CReader, OData};
+use crate::types::Magic;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Condition {
-	pub id: u16,
+	pub id: Magic,
 	pub entries: Vec<(u16, u32, u32, u32)>,
 }
 
@@ -28,7 +29,7 @@ fn read_cs2(f: &mut CReader) -> rootcause::Result<Vec<Condition>> {
 	let n = f.u8()? as usize;
 	let mut out = Vec::with_capacity(n);
 	for _ in 0..n {
-		let id = f.u16()?;
+		let id = Magic(f.u16()?);
 		let vs = [f.u16()?, f.u16()?, f.u16()?, f.u16()?, f.u16()?];
 		let mut entries = Vec::with_capacity(vs.len());
 		for v in vs {
@@ -48,7 +49,7 @@ fn write_cs2(table: &[Condition]) -> rootcause::Result<Writer> {
 	f.u8(n);
 	for c in table {
 		crate::ensure!(c.entries.len() <= 5, "ConditionTable entry has more than 5 entries: {c:?}");
-		f.u16(c.id);
+		f.u16(c.id.0);
 		for i in 0..5 {
 			f.u16(c.entries.get(i).map_or(0, |e| e.0));
 		}

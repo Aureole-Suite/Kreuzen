@@ -3,10 +3,11 @@ use gospel::write::{Le as _, Writer};
 
 use crate::Game;
 use crate::io::{CReader, OData};
+use crate::types::Magic;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Algo {
-	pub id: u16,
+	pub id: Magic,
 	pub chance: u8,
 	pub use_limit: u8,
 	pub target_priority: u8,
@@ -16,7 +17,7 @@ pub struct Algo {
 impl Algo {
 	fn dummy() -> Self {
 		Self {
-			id: 0xFFFF,
+			id: Magic(0xFFFF),
 			chance: 0,
 			use_limit: 0,
 			target_priority: 0,
@@ -40,7 +41,7 @@ pub(crate) fn write(d: &OData, table: &[Algo]) -> rootcause::Result<Writer> {
 }
 
 fn read_algo(f: &mut CReader) -> rootcause::Result<Algo> {
-	let id = f.u16()?;
+	let id = Magic(f.u16()?);
 	let cond0 = f.u8()?;
 	let chance = f.u8()?;
 	let use_limit = f.u8()?;
@@ -54,7 +55,7 @@ fn read_algo(f: &mut CReader) -> rootcause::Result<Algo> {
 }
 
 fn write_algo(f: &mut Writer, algo: &Algo) {
-	f.u16(algo.id);
+	f.u16(algo.id.0);
 	f.u8(algo.cond.0);
 	f.u8(algo.chance);
 	f.u8(algo.use_limit);
@@ -92,7 +93,7 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Algo>> {
 			tracing::warn!("data after AlgoTable terminator");
 		}
 		let algo = read_algo(f)?;
-		if algo.id == terminator_id {
+		if algo.id.0 == terminator_id {
 			has_sep = true;
 			continue;
 		}
@@ -110,7 +111,7 @@ fn write_cs1(d: &OData, table: &[Algo]) -> rootcause::Result<Writer> {
 	f.u8(n);
 	for algo in table {
 		write_algo(&mut f, algo);
-		if d.game == Game::Cs1 && algo.id == 0xFFFF {
+		if d.game == Game::Cs1 && algo.id.0 == 0xFFFF {
 			f.slice(&[0; 8]);
 		}
 	}

@@ -3,10 +3,11 @@ use gospel::write::{Le as _, Writer};
 
 use crate::Game;
 use crate::io::{CReader, OData};
+use crate::types::Magic;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Reaction {
-	pub id: u16,
+	pub id: Magic,
 	pub a: u16,
 	pub b: u16,
 	pub c: u16,
@@ -37,7 +38,7 @@ fn read_cs1(f: &mut CReader, count: usize) -> rootcause::Result<Vec<Reaction>> {
 	let mut out = Vec::new();
 	while !f.remaining().is_empty() {
 		out.push(Reaction {
-			id: f.u16()?,
+			id: Magic(f.u16()?),
 			a: f.u16()?,
 			b: f.u16()?,
 			c: f.u16()?,
@@ -65,8 +66,8 @@ fn read_cs3(f: &mut CReader) -> rootcause::Result<Vec<Reaction>> {
 		if has_sep {
 			tracing::warn!("data after ReactionTable terminator");
 		}
-		let id = f.u16()?;
-		if id == sentinel {
+		let id = Magic(f.u16()?);
+		if id.0 == sentinel {
 			f.check(&[0; 58])?;
 			has_sep = true;
 			continue;
@@ -98,7 +99,7 @@ fn write_cs1(table: &[Reaction], count: usize) -> rootcause::Result<Writer> {
 	f.u16(n);
 	for r in table {
 		crate::ensure!(r.floats.len() == count);
-		f.u16(r.id);
+		f.u16(r.id.0);
 		f.u16(r.a);
 		f.u16(r.b);
 		f.u16(r.c);
@@ -115,7 +116,7 @@ fn write_cs3(d: &OData, table: &[Reaction]) -> rootcause::Result<Writer> {
 	let sentinel = if d.game == Game::Reverie { 0xFFFF } else { 0 };
 	for r in table {
 		crate::ensure!(r.floats.len() == 12);
-		f.u16(r.id);
+		f.u16(r.id.0);
 		f.u16(r.a);
 		f.u16(r.b);
 		f.u16(r.c);
