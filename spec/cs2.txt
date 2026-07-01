@@ -317,18 +317,18 @@
 3E01 str u16
 3F00 u16 u16 u16
 
-4000 u16
-4001 u16
+4000 char
+4001 char
 4002
 4003
-4004 u16
-4005 u16
-4006 u16
+4004 char
+4005 char
+4006 char
 4007
-4008 u16 u8 u8 u16
-4009 u16
-400A u16
-400B u16
+4008 char u8 u8 u16
+4009 char
+400A char
+400B char
 400D u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 400E
 400F
@@ -428,13 +428,13 @@
 59   char u8
 5B00 str u16
 5B01 str u16
-5C00 u16 u16
-5C01 u16 u16
-5C02 u16 u32
-5C03 u16
-5C04 u16 u16
-5C05 u16
-5C06 u16 u16
+5C00 char u16
+5C01 char u16
+5C02 char u32
+5C03 char
+5C04 char u16
+5C05 char
+5C06 char u16
 5D02 u16
 5E00 str u16
 5E01 str u16
@@ -479,23 +479,24 @@
 62   char f32
 63   str f32 u16
 64   u16 f32 u32 f32 f32 u8
-6500 u16 u32
-6501 u16 u32
-6502 u16 u32
-6503 u16 u32
-6504 u16 u32
-6505 u16 u32
-6507 u16 u32
+6500 'ItemAdd' item u32
+6501 'ItemRemove' item u32
+6502 'ItemHas' item u32
+6503 'ItemClear' u16 u32
+6504 'MiraAdd' u16 u32
+6505 'MiraRemove' u16 u32
+6507 'SepithAdd' item u32
+6508 'SepithRemove' item u32
 6509 u16 u32
 650A u16 u32
 650B u16 u32
-650C u16 u32
+650C 'MiraGet' u16 u32
 650D u16 u32
 650E u16 u32
 6600 char u16 u8
 6601 char u8
 6602 char u16
-6603 char u16 u8 u8
+6603 char item u8 u8
 6604 char u8 u8
 6606 char u8 u8 u8
 6607 char u8

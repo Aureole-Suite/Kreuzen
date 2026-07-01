@@ -241,18 +241,18 @@
 3D00 str u16
 3D01 str u16
 3E00 char u16 u16
-3F00 u16
-3F01 u16
+3F00 char
+3F01 char
 3F02
 3F03
-3F04 u16
-3F05 u16
-3F06 u16
+3F04 char
+3F05 char
+3F06 char
 3F07
-3F08 u16 u8 u8 u16
-3F09 u16
-3F0A u16
-3F0B u16
+3F08 char u8 u8 u16
+3F09 char
+3F0A char
+3F0B char
 
 40   f32 f32 f32 f32 u16 u8
 41   char f32 f32 f32 f32 u16 u8
@@ -321,12 +321,12 @@
 58   char u8
 59   u16
 5A   u8 str u16
-5B00 u16 u16
-5B01 u16 u16
-5B02 u16
-5B03 u16
-5B04 u16 u16
-5B05 u16
+5B00 char u16
+5B01 char u16
+5B02 char
+5B03 char
+5B04 char u16
+5B05 char
 5C00 u16 u16
 5C02 u16
 5C03 u16
@@ -363,13 +363,20 @@
 61   char f32
 62   str f32 u16
 63   char f32 f32 f32 f32 u8
-64   u8 u16 u32
-6500 u16 u16 u8
-6501 u16 u8
-6502 u16 u16
-6503 u16 u16 u8
-6504 u16 u8
-6506 u16 u8 u8
+6400 'ItemAdd' item u32
+6401 'ItemRemove' item u32
+6402 'ItemHas' item u32
+6403 'ItemClear' u16 u32
+6404 'MiraAdd' u16 u32
+6405 'MiraRemove' u16 u32
+6407 'SepithAdd' item u32
+6408 'SepithRemove' item u32
+6500 char u16 u8
+6501 char u8
+6502 char u16
+6503 char item u8
+6504 char u8
+6506 char u8 u8
 6507 char u8
 6508 char u32
 6509 char u8
