@@ -15,7 +15,7 @@
 10   'Sleep' u16
 11   u16 u16
 12   'SetGlobal' global expr
-13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
+13   'CharCreate' char str str str u8 flags32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 14   'Fork' char u8 u8 str
 15   'ForkKill' char u8
 16   u8
@@ -52,7 +52,7 @@
 2405 char str str
 240A char str str
 240B char str str
-25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
+25   u8 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 
 2600 'PkgLoad' str
 2601 'PkgUnload' str
@@ -129,10 +129,10 @@
 286B u16
 286C u16
 286D u16
-286E char char u32 u32 u32
+286E char char f32 f32 f32
 2870
 2871 u32 u16 u8
-2872 u32 u32 u16 u8
+2872 u32 f32 u16 u8
 2873 u16
 2874 u16
 2875 u16
@@ -191,11 +191,11 @@
 3007
 
 31 'Sound'
-3100 'SoundPlay' sound f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
+3100 'SoundPlay' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3101 'SoundStop' sound u16
 3102 u16
 3103 u16 f32 u16
-3132 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3132 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3134 u16
 3135 u16 u32 u16
 3137 u16
@@ -313,7 +313,7 @@
 
 50   'SetCharAttr' charattr expr
 51   char u8 str
-52   char str u32 u32 u32 u32 u32 u32 u32 u32 u32
+52   char str f32 f32 f32 f32 f32 f32 f32 f32 f32
 53   u8 u16 u16 f32
 55   char u8 str
 56   str u16
@@ -362,7 +362,7 @@
 60   u8 u16 u16 f32 f32 f32
 61   char f32
 62   str f32 u16
-63   u16 f32 u32 f32 f32 u8
+63   char f32 f32 f32 f32 u8
 64   u8 u16 u32
 6500 u16 u16 u8
 6501 u16 u8
@@ -387,7 +387,7 @@
 6801 u16
 
 69   'ActiveVoice' u16
-6900 'ActiveVoicePlay' u32
+6900 'ActiveVoicePlay' f32
 6901 'ActiveVoiceStop'
 6902 char f32 u16 u16 str
 6903 str f32 u16 u16 str
@@ -433,9 +433,9 @@
 7400
 7401
 7402
-77   u16 u32 u32 u32 u32 u32 u32 u32
+77   u16 f32 f32 u32 f32 f32 f32 f32
 78   u16 u16 u16 u16
-79   u8 u32 u32 u32 u32
+79   u8 f32 f32 f32 f32
 7A   u8 u8
 7B   u8 u16 u16 u16 u16 u16 f32 f32 f32 str
 7D   u16 u16

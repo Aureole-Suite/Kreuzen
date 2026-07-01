@@ -15,7 +15,7 @@
 10   'Sleep' u16
 11   u16 u16
 12   'SetGlobal' global expr
-13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str f32 f32 u32
+13   'CharCreate' char str str str u8 flags32 f32 f32 f32 f32 f32 f32 f32 str str f32 f32 u32
 14   'Fork' char u8 u8 str
 15   'ForkKill' char u8
 16   u8 u16
@@ -140,11 +140,11 @@
 3007
 
 31 'Sound'
-3100 'SoundPlay' sound f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
+3100 'SoundPlay' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3101 'SoundStop' sound u16
 3102 u16
 3103 u16 f32 u16
-3132 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3132 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3133 u16 u16
 3134 u16
 3137 u16
@@ -187,7 +187,7 @@
 3A   'CharEmote' char u8 f32 u16 f32
 3B   'CharLookDir' char f32 f32 f32 u16 u16
 3C0000 char u16 u16
-3C0100 char u16 u16 u32 u32 u32
+3C0100 char u16 u16 f32 f32 f32
 3D00 str u16
 3D01 str u16
 3E00 char u16 u16
@@ -340,7 +340,7 @@
 
 60   u8 u16 u16 f32 f32 f32
 61   char f32
-63   u16 f32 u32 f32 f32 u8
+63   char f32 f32 f32 f32 u8
 6400 u16 u32
 6401 u16 u32
 6402 u16 u32
@@ -382,7 +382,7 @@
 6801 u16 u8
 
 69   'ActiveVoice' u16
-6900 'ActiveVoicePlay' u32
+6900 'ActiveVoicePlay' f32
 6901 'ActiveVoiceStop'
 6902 char f32 u16 u16 str u16 f32
 6903 str f32 u16 u16 str u16 f32

@@ -15,7 +15,7 @@
 10   'Sleep' u16
 11   u16 u16
 12   'SetGlobal' global expr
-13   'CharCreate' char str str str u8 u32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
+13   'CharCreate' char str str str u8 flags32 f32 f32 f32 f32 f32 f32 f32 str str i32 u8 f32 f32 u16
 14   'Fork' char u8 u8 str
 15   'ForkKill' char u8
 16   u8 u16
@@ -62,7 +62,7 @@
 240B char str str
 240D char
 240E char u32 str str
-25   u8 char str str u32 u32 u32 u32 u32 u32 f32 f32 f32
+25   u8 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 
 2600 'PkgLoad' str
 2601 'PkgUnload' str
@@ -166,7 +166,7 @@
 286B u16
 286C u16
 286D u16
-286E char char u32 u32 u32 u32
+286E char char f32 f32 f32 f32
 286F
 2870
 2871 u32 u16 u8
@@ -265,11 +265,11 @@
 3107
 
 32 'Sound'
-3200 'SoundPlay' sound f32 u16 f32 f32 u16 char u32 u32 u32 f32 str
+3200 'SoundPlay' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3201 'SoundStop' sound u16
 3202 u16
 3203 u16 f32 u16
-3232 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char u32 u32 u32 u32 str
+3232 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3233 u16 u16
 3234 u16
 3237 u16

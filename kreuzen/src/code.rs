@@ -446,7 +446,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 			}
 			P::Cs1_3C => {
 				if matches!(op.args[1], Arg::Char(Char(0xFFFF))) {
-					read_parts(op, f, &[P::U32, P::U32, P::U32])?;
+					read_parts(op, f, &[P::F32, P::F32, P::F32])?;
 				}
 			}
 
@@ -458,7 +458,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 
 			P::Tx_3C => {
 				if matches!(op.args[0], Arg::Int(1)) {
-					read_parts(op, f, &[P::U32, P::U32, P::U32])?;
+					read_parts(op, f, &[P::F32, P::F32, P::F32])?;
 				}
 			}
 			P::Tx_isforceload => {
@@ -797,7 +797,7 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 			}
 			P::Cs1_3C => {
 				if matches!(op.args[1], Arg::Char(Char(0xFFFF))) {
-					write_parts(d, f, op, cursor, &[P::U32, P::U32, P::U32], op_end)?;
+					write_parts(d, f, op, cursor, &[P::F32, P::F32, P::F32], op_end)?;
 				}
 			}
 
@@ -809,7 +809,7 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 
 			P::Tx_3C => {
 				if matches!(op.args[0], Arg::Int(1)) {
-					write_parts(d, f, op, cursor, &[P::U32, P::U32, P::U32], op_end)?;
+					write_parts(d, f, op, cursor, &[P::F32, P::F32, P::F32], op_end)?;
 				}
 			}
 			P::Tx_isforceload => {
