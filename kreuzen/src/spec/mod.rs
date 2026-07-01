@@ -105,6 +105,7 @@ pub enum Part {
 	I16,
 	I32,
 	F32,
+	Pos,
 	Str,
 
 	Char,

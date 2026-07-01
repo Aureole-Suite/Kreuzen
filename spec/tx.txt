@@ -15,7 +15,7 @@
 10   'Sleep' u16
 11   u16 u16
 12   'SetGlobal' global expr
-13   'CharCreate' char str str str u8 flags32 f32 f32 f32 f32 f32 f32 f32 str str f32 f32 u16 u16
+13   'CharCreate' char str str str u8 flags32 pos f32 f32 f32 f32 str str f32 f32 u16 u16
 14   'Fork' char u8 u8 str
 15   'ForkKill' char u8
 16   u8 u16
@@ -93,7 +93,7 @@
 2B   char flags32
 2C 'Cam'
 2C00
-2C02 'CamLookAt' u8 f32 f32 f32 u16
+2C02 'CamLookAt' u8 pos u16
 2C03 'CamLookAtChar' u8 char str f32 f32 f32 u16 u8
 2C04 'CamRotate' u8 f32 f32 f32 u16 u8
 2C05 'CamDistance' u8 f32 u16
@@ -121,7 +121,7 @@
 2C25 u8 f32 f32
 2C26 u8 u16
 
-2D   char f32 f32 f32 f32
+2D   'CharSetPos' char pos f32
 2E   char
 2E00 u8 str
 2E01 u8 str
@@ -299,9 +299,9 @@
 5B06 u16 u16
 5D00 str flags32
 5D01 str flags32
-5D02 str f32 f32 f32
-5D03 str f32 f32 f32
-5D04 str f32 f32 f32
+5D02 'ObjSetPos' str pos
+5D03 'ObjSetRot' str f32 f32 f32
+5D04 'ObjSetScale' str f32 f32 f32
 5D05 str
 5D06 str
 5D07 str f32 f32 f32 f32 u16 u8
@@ -333,7 +333,7 @@
 5F char
 5F00 f32 u8 u16
 5F01
-5F02 f32 f32 f32
+5F02 pos
 5F03 f32 u8 u16
 5F04 f32 f32 f32 f32 f32 u8 u16
 5F05 f32 f32 f32 f32 f32 f32 f32
@@ -431,7 +431,7 @@
 7300
 7301
 7302 u16
-7303 f32 f32 f32
+7303 pos
 7304 u16
 7305 f32
 7306 u16

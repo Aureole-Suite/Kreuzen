@@ -15,7 +15,7 @@
 10   'Sleep' u16
 11   u16 u16
 12   'SetGlobal' global expr
-13   'CharCreate' char str str str u8 flags32 f32 f32 f32 f32 f32 f32 f32 str str battle f32 f32 flag
+13   'CharCreate' char str str str u8 flags32 pos f32 f32 f32 f32 str str battle f32 f32 flag
 14   'Fork' char u8 u8 str
 15   'ForkKill' char u8
 16   u8
@@ -157,7 +157,7 @@
 
 2D 'Cam'
 2D00
-2D02 'CamLookAt' u8 f32 f32 f32 u16
+2D02 'CamLookAt' u8 pos u16
 2D03 'CamLookAtChar' u8 char str f32 f32 f32 u16
 2D04 'CamRotate' u8 f32 f32 f32 u16 u8
 2D05 'CamDistance' u8 f32 u16
@@ -178,7 +178,7 @@
 2D16 u8 f32 u16
 2D17 u16
 
-2E   'CharSetPos' char f32 f32 f32 f32
+2E   'CharSetPos' char pos f32
 2F   'CharAniPlay' char u8 str
 
 30 'Bgm'
@@ -333,9 +333,9 @@
 5C03 u16
 5D00 str u16
 5D01 str u16
-5D02 str f32 f32 f32
-5D03 str f32 f32 f32
-5D04 str f32 f32 f32
+5D02 'ObjSetPos' str pos
+5D03 'ObjSetRot' str f32 f32 f32
+5D04 'ObjSetScale' str f32 f32 f32
 5D05 str
 5D06 str
 5D07 str f32 f32 f32 f32 u16 u8
@@ -434,7 +434,7 @@
 7300
 7301
 7302 u16
-7303 f32 f32 f32
+7303 pos
 7304 u16
 7305 f32
 7306 u16

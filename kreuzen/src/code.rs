@@ -404,6 +404,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 					Arg::F32Munged(v.to_bits().cast_signed())
 				});
 			}
+			P::Pos => read_parts(op, f, &[P::F32, P::F32, P::F32])?,
 			P::Str => op.args.push(f.str()?.into()),
 
 			P::Char => op.args.push(Char(f.u16()?).into()),
@@ -899,6 +900,8 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 				Arg::Char(Char(0xFFFF)) => write_parts(d, f, op, cursor, &[P::I32], op_end)?,
 				_ => write_parts(d, f, op, cursor, &[P::F32], op_end)?,
 			},
+
+			P::Pos => write_parts(d, f, op, cursor, &[P::F32, P::F32, P::F32], op_end)?,
 
 			P::Print | P::Fail => {}
 		}
