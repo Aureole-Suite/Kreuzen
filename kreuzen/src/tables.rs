@@ -56,7 +56,6 @@ pub enum Table {
 #[derive(Debug, Clone, Copy)]
 pub enum Dummy {
 	Empty,
-	D12,
 	Dff,
 }
 
@@ -64,19 +63,6 @@ impl Dummy {
 	const fn bytes(&self) -> &'static [u8] {
 		match self {
 			Dummy::Empty => b"",
-			// I have no idea what these byte sequences mean.
-			// They look like garbage, but might as well roundtrip them I guess.
-			#[rustfmt::skip]
-			Dummy::D12 => &[
-				0x12, 0x00, 0x00,
-				0x63, 0x00, 0x00, 0x00,
-				0x13, 0x01, 0x0A, 0x00, 0x00,
-				0x02, 0x00, 0x00, 0x00,
-				0x23, 0x00,
-				0x10, 0x13, 0x01, 0x07,
-				0x00, 0xEF, 0xCD, 0xAB,
-				0x07, 0xC8, 0x00, 0x00, 0x00,
-			],
 			Dummy::Dff => {
 				&const {
 					let mut x = [0; 28];
@@ -121,9 +107,9 @@ fn read_other(f: &mut CReader<'_>, name: &str) -> Result<Option<Table>, rootcaus
 			return Ok(Some(Table::Dummy(Dummy::Empty)));
 		}
 		if matches!(f.game, Game::Cs1 | Game::Cs2) {
-			if r == Dummy::D12.bytes() {
+			if f.scena == "a0004" && f.clone().check(b"b").is_err() {
 				f.slice(r.len())?;
-				return Ok(Some(Table::Dummy(Dummy::D12)));
+				return Ok(None);
 			}
 			if r == Dummy::Dff.bytes() {
 				f.slice(r.len())?;

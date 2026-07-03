@@ -301,7 +301,6 @@ impl Print for Dummy {
 	fn print(&self, ctx: &mut Ctx) {
 		ctx.word(match self {
 			Dummy::Empty => "empty",
-			Dummy::D12 => "d12",
 			Dummy::Dff => "dff",
 		});
 		ctx.sym_(";");
