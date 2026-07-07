@@ -128,9 +128,6 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		if let Body::Code(code) = &c.func {
 			check_decompile(&c.name, code);
 		}
-		for (i, code) in c.shadow.iter().enumerate() {
-			check_decompile(&format!("_a{i}_{}", c.name), code);
-		}
 	}
 
 	// check_preload(&scena);
@@ -170,7 +167,7 @@ fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
 		}
 		for (a, shadow) in chunk.shadow.iter().enumerate() {
 			write!(s, "_a{a}_{}", chunk.name)?;
-			write_dec(&mut s, shadow)?;
+			write!(s, "{}", kreuzen_syntax::print_shadow(shadow))?;
 		}
 		writeln!(s)?;
 	}

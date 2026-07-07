@@ -15,7 +15,7 @@ pub struct Shadow {
 pub enum ShadowOp {
 	Call { table: i64, name: String },
 	CharAni { chr: Char, strings: Vec<String> },
-	CharFork { chr: Char, slot: u8, name: String, flags: i64 },
+	Fork { chr: Char, slot: u8, name: String, flags: i64 },
 }
 
 pub fn parse(code: &Code) -> rootcause::Result<Shadow> {
@@ -75,7 +75,7 @@ fn parse_one(stmt: &Stmt) -> rootcause::Result<ShadowOp> {
 					crate::ensure!(let [Arg::Char(wc), Arg::Int(wslot)] = wait.args.as_slice());
 					crate::ensure!(fc == &chr && wc == &chr && slot == wslot);
 					let slot = u8::try_from(*slot).context_with(|| format!("Fork slot {slot} out of u8 range"))?;
-					Ok(ShadowOp::CharFork { chr, slot, name: name.clone(), flags: *flags })
+					Ok(ShadowOp::Fork { chr, slot, name: name.clone(), flags: *flags })
 				}
 				_ => rootcause::bail!("unrecognized if body: {body:?}"),
 			}
@@ -126,7 +126,7 @@ fn flatten_one(shadow: &ShadowOp, line: u16) -> Stmt {
 				.collect();
 			cond(*chr, body)
 		}
-		ShadowOp::CharFork { chr, slot, name, flags } => {
+		ShadowOp::Fork { chr, slot, name, flags } => {
 			let slot_i = i64::from(*slot);
 			let body = vec![
 				Stmt::Op(Op {

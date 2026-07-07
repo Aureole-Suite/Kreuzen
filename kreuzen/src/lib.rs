@@ -70,7 +70,7 @@ pub struct Chunk {
 	pub name: String,
 	pub func: Body,
 	pub preload: Vec<code::preload::Preload>,
-	pub shadow: Vec<Code>,
+	pub shadow: Vec<code::shadow::Shadow>,
 }
 
 #[derive(Debug, Clone)]
@@ -214,8 +214,9 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 		chunk(4, "_a0_CharaterSection", false, Ok(Writer::new()));
 	}
 	for c in &scena.chunks {
-		for (i, code) in c.shadow.iter().enumerate() {
-			chunk(4, &format!("_a{i}_{}", c.name), true, code::write(&d, code));
+		for (i, shadow) in c.shadow.iter().enumerate() {
+			let code = code::shadow::flatten(&shadow);
+			chunk(4, &format!("_a{i}_{}", c.name), true, code::write(&d, &code));
 		}
 	}
 
@@ -406,7 +407,8 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 	let mut shadow = Vec::with_capacity(e.shadow.len());
 	for (a, &s) in e.shadow.iter().enumerate() {
 		let _span = tracing::error_span!("shadow", a).entered();
-		shadow.push(code::read_code_chunk(cr, ranges[s])?);
+		let code = code::read_code_chunk(cr, ranges[s])?;
+		shadow.push(code::shadow::parse(&code)?);
 	}
 	let chunk = Chunk { name: e.name.clone(), func, preload, shadow };
 	Ok(chunk)

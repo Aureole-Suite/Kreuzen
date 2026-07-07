@@ -3,6 +3,7 @@ pub mod tables;
 use std::borrow::Cow;
 
 use kreuzen::code::preload::Preload;
+use kreuzen::code::shadow::{Shadow, ShadowOp};
 use kreuzen::code::{Arg, Code, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
@@ -146,6 +147,12 @@ pub fn print_flat(code: &Code) -> String {
 pub fn print_preload(preloads: &[Preload]) -> String {
 	let mut ctx = Ctx::new();
 	ctx.block(preloads, Preload::print);
+	ctx.out
+}
+
+pub fn print_shadow(shadow: &Shadow) -> String {
+	let mut ctx = Ctx::new();
+	shadow.print(&mut ctx);
 	ctx.out
 }
 
@@ -301,6 +308,45 @@ impl Print for Preload {
 			opCE02(s),
 		};
 		ctx.sym_(";");
+	}
+}
+
+impl Print for Shadow {
+	fn print(&self, ctx: &mut Ctx) {
+		if self.line != 0 {
+			ctx.token(format!("{}", self.line));
+			ctx.sym("@");
+		}
+		ctx.block(&self.ops, ShadowOp::print);
+	}
+}
+
+impl Print for ShadowOp {
+	fn print(&self, ctx: &mut Ctx) {
+		match self {
+			ShadowOp::Call { table, name } => {
+				ctx.word("Call");
+				table.print(ctx);
+				name.print(ctx);
+				ctx.sym_(";");
+			}
+			ShadowOp::CharAni { chr, strings } => {
+				ctx.word("CharAni");
+				chr.print(ctx);
+				for s in strings {
+					s.print(ctx);
+				}
+				ctx.sym_(";");
+			}
+			ShadowOp::Fork { chr, slot, name, flags } => {
+				ctx.word("Fork");
+				chr.print(ctx);
+				slot.print(ctx);
+				name.print(ctx);
+				flags.print(ctx);
+				ctx.sym_(";");
+			}
+		}
 	}
 }
 
