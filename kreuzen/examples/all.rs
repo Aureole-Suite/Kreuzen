@@ -105,6 +105,14 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 	WARNED.with(|w| w.set(false));
 	let scena = kreuzen::read(game, enc, &bytes)?;
 	let had_warnings = WARNED.with(|w| w.take());
+	if scena.game != game || scena.enc != enc {
+		tracing::warn!(
+			"resolved as {:?}/{:?}, expected {game:?}/{enc:?} — skipping output",
+			scena.game,
+			scena.enc
+		);
+		return Ok(());
+	}
 	let bytes2 = kreuzen::write(&scena)?;
 	let s1 = to_string(&scena)?;
 	if bytes != bytes2 {
