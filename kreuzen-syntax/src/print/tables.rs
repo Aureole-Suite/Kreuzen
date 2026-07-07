@@ -9,7 +9,7 @@ use kreuzen::tables::condition::Condition;
 use kreuzen::tables::field_follow::FieldFollow;
 use kreuzen::tables::field_monster::FieldMonster;
 use kreuzen::tables::part::Part;
-use kreuzen::tables::reaction::Reaction;
+use kreuzen::tables::reaction::{PartReaction, Reaction, ReactionKind};
 use kreuzen::tables::style_name::StyleName;
 use kreuzen::tables::summon::Summon;
 use kreuzen::tables::weapon_att::WeaponAtt;
@@ -111,14 +111,10 @@ impl Print for Action {
 		self.flags.print(ctx);
 		self.ani.print(ctx);
 		self.name.print(ctx);
-		if self.effects.is_empty() {
-			ctx.sym_(";");
-		} else {
-			ctx.block(&self.effects, |item, ctx| {
-				item.print(ctx);
-				ctx.sym_(";");
-			});
+		for item in &self.effects {
+			item.print(ctx);
 		}
+		ctx.sym_(";");
 	}
 }
 
@@ -189,10 +185,10 @@ impl Print for Break {
 impl Print for Condition {
 	fn print(&self, ctx: &mut Ctx) {
 		self.id.print(ctx);
-		ctx.block(&self.entries, |item, ctx| {
+		for item in &self.entries {
 			item.print(ctx);
-			ctx.sym_(";");
-		});
+		}
+		ctx.sym_(";");
 	}
 }
 
@@ -231,14 +227,29 @@ impl Print for Part {
 impl Print for Reaction {
 	fn print(&self, ctx: &mut Ctx) {
 		self.id.print(ctx);
-		self.a.print(ctx);
-		self.b.print(ctx);
-		self.c.print(ctx);
-		for &v in &self.floats {
-			v.print(ctx);
+		match &self.kind {
+			ReactionKind::Parts(parts) => {
+				for p in parts {
+					p.print(ctx);
+				}
+			}
+			ReactionKind::Alias(m) => {
+				m.print(ctx);
+			}
 		}
-		self.d.print(ctx);
 		ctx.sym_(";");
+	}
+}
+
+impl Print for PartReaction {
+	fn print(&self, ctx: &mut Ctx) {
+		ctx._sym("(");
+		self.rating.print(ctx);
+		self.unbalance.print(ctx);
+		self.hit.print(ctx);
+		self.miss.print(ctx);
+		self.counter.print(ctx);
+		ctx.sym_(")");
 	}
 }
 
