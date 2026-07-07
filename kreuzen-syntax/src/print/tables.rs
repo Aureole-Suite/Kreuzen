@@ -32,11 +32,11 @@ impl Print for Table {
 			}
 			Table::ActionTable(t) => {
 				ctx.word("ActionTable");
-				ctx.block(t, Action::print);
+				ctx.block_commented("id kind target ?? cast recovery cp flags ani name effects", t, Action::print);
 			}
 			Table::AlgoTable(t) => {
 				ctx.word("AlgoTable");
-				ctx.block(t, Algo::print);
+				ctx.block_commented("id chance use_limit target_priority cond", t, Algo::print);
 			}
 			Table::AnimeClipTable(t) => {
 				ctx.word("AnimeClipTable");
@@ -48,7 +48,7 @@ impl Print for Table {
 			}
 			Table::BreakTable(t) => {
 				ctx.word("BreakTable");
-				ctx.block(t, Break::print);
+				ctx.block_commented("id value", t, Break::print);
 			}
 			Table::ConditionTable(t) => {
 				ctx.word("ConditionTable");
@@ -69,7 +69,7 @@ impl Print for Table {
 			}
 			Table::ReactionTable(t) => {
 				ctx.word("ReactionTable");
-				ctx.block(t, Reaction::print);
+				ctx.block_commented("id (stars unbalance hit miss counter) ...", t, Reaction::print);
 			}
 			Table::StyleName(t) => {
 				ctx.word("StyleName");
@@ -86,6 +86,7 @@ impl Print for Table {
 			Table::WeaponAttTable(t) => {
 				ctx.word("WeaponAttTable");
 				t.print(ctx);
+				ctx.comment("slash thrust pierce strike");
 			}
 			Table::Btlset(t) => {
 				ctx.word("Btlset");

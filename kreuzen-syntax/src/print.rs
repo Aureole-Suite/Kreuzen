@@ -90,9 +90,24 @@ impl Ctx {
 		self.space = self.space.max(space);
 	}
 
-	fn block<I: IntoIterator>(&mut self, block: I, mut f: impl FnMut(I::Item, &mut Self)) {
+	fn comment(&mut self, text: &'static str) {
+		self.do_space(true);
+		self.out.push_str("# ");
+		self.out.push_str(text);
+		self.set_space(Space::Block(0));
+	}
+
+	fn block<I: IntoIterator>(&mut self, block: I, f: impl FnMut(I::Item, &mut Self)) {
+		self.block_commented("", block, f);
+	}
+
+	fn block_commented<I: IntoIterator>(&mut self, comment: &'static str, block: I, mut f: impl FnMut(I::Item, &mut Self)) {
 		self._sym_("{");
 		self.indent += 1;
+		if !comment.is_empty() {
+			self.set_space(Space::Block(0));
+			self.comment(comment);
+		}
 		for stmt in block {
 			self.set_space(Space::Block(0));
 			f(stmt, self);
