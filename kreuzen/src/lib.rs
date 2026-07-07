@@ -215,7 +215,7 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	}
 	for c in &scena.chunks {
 		for (i, shadow) in c.shadow.iter().enumerate() {
-			let code = code::shadow::flatten(&shadow);
+			let code = code::shadow::flatten(shadow);
 			chunk(4, &format!("_a{i}_{}", c.name), true, code::write(&d, &code));
 		}
 	}
