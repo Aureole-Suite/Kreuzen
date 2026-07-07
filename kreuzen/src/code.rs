@@ -15,6 +15,7 @@ use crate::text::Text;
 use crate::types::*;
 
 pub mod preload;
+pub mod shadow;
 mod to_dot;
 pub use to_dot::to_dot;
 

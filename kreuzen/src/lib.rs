@@ -26,6 +26,16 @@ macro_rules! ensure_ {
 			rootcause::bail!($($arg)*);
 		}
 	};
+	(let $pat:pat = $val:expr) => {
+		let $pat = $val else {
+			rootcause::bail!("{}", stringify!(let $pat = $cond));
+		};
+	};
+	(let $pat:pat = $val:expr, $($arg:tt)*) => {
+		let $pat = $val else {
+			rootcause::bail!($($arg)*);
+		};
+	};
 }
 use ensure_ as ensure;
 
