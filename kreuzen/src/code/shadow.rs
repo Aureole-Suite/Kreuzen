@@ -84,14 +84,14 @@ fn parse_one(stmt: &Stmt) -> rootcause::Result<ShadowOp> {
 	}
 }
 
-pub fn flatten(shadows: &Shadow) -> rootcause::Result<Code> {
+pub fn flatten(shadows: &Shadow) -> Code {
 	let mut stmts: Vec<Stmt> = shadows.ops.iter().map(|s| flatten_one(s, shadows.line)).collect();
 	stmts.push(Stmt::Op(Op {
 		name: "return",
 		meta: OpMeta::default(),
 		args: vec![],
 	}));
-	crate::decompile::compile(&stmts)
+	crate::decompile::compile(&stmts).expect("is valid code")
 }
 
 fn flatten_one(shadow: &ShadowOp, line: u16) -> Stmt {
