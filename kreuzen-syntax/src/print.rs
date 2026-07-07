@@ -1,5 +1,3 @@
-pub mod tables;
-
 use kreuzen::code::preload::Preload;
 use kreuzen::code::shadow::{Shadow, ShadowOp};
 use kreuzen::code::{Arg, Code, FlatOp, Label, Op, OpMeta};
@@ -8,7 +6,7 @@ use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
 use kreuzen::text::{Text, TextControl, TextPart};
 use kreuzen::types;
 
-use crate::Ctx;
+use crate::{Ctx, Print};
 
 pub fn print_function(stmts: &[Stmt]) -> String {
 	let mut ctx = Ctx::new();
@@ -32,10 +30,6 @@ pub fn print_shadow(shadow: &Shadow) -> String {
 	let mut ctx = Ctx::new();
 	shadow.print(&mut ctx);
 	ctx.finish()
-}
-
-trait Print {
-	fn print(&self, ctx: &mut Ctx);
 }
 
 impl Print for OpMeta {
