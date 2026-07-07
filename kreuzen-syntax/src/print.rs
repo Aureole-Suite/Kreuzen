@@ -1,7 +1,5 @@
 pub mod tables;
 
-use std::borrow::Cow;
-
 use kreuzen::code::preload::Preload;
 use kreuzen::code::shadow::{Shadow, ShadowOp};
 use kreuzen::code::{Arg, Code, FlatOp, Label, Op, OpMeta};
@@ -10,137 +8,30 @@ use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
 use kreuzen::text::{Text, TextControl, TextPart};
 use kreuzen::types;
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
-enum Space {
-	#[default]
-	None,
-	Inline,
-	Block(usize),
-}
-
-struct Ctx {
-	out: String,
-	space: Space,
-	indent: usize,
-}
-
-impl Ctx {
-	fn new() -> Self {
-		Self { out: String::new(), space: Space::None, indent: 0 }
-	}
-
-	fn token(&mut self, word: impl Into<Cow<'static, str>>) {
-		self.do_space(true);
-		self.out.push_str(&word.into());
-		self.set_space(Space::Inline);
-	}
-
-	fn word(&mut self, word: &'static str) {
-		self.token(word)
-	}
-
-	fn sym(&mut self, sym: &'static str) {
-		self.do_space(false);
-		self.out.push_str(sym);
-		self.set_space(Space::None);
-	}
-
-	fn _sym(&mut self, sym: &'static str) {
-		self.do_space(true);
-		self.out.push_str(sym);
-		self.set_space(Space::None);
-	}
-
-	fn sym_(&mut self, sym: &'static str) {
-		self.do_space(false);
-		self.out.push_str(sym);
-		self.set_space(Space::Inline);
-	}
-
-	fn _sym_(&mut self, sym: &'static str) {
-		self.do_space(true);
-		self.out.push_str(sym);
-		self.set_space(Space::Inline);
-	}
-
-	fn do_space(&mut self, inline: bool) {
-		if self.out.is_empty() {
-			self.space = Space::None;
-			return;
-		}
-		match self.space {
-			Space::None => {}
-			Space::Inline => {
-				if inline {
-					self.out.push(' ');
-				}
-			}
-			Space::Block(n) => {
-				for _ in 0..=n {
-					self.out.push('\n');
-				}
-				for _ in 0..self.indent {
-					self.out.push('\t');
-				}
-			}
-		}
-		self.space = Space::None;
-	}
-
-	fn set_space(&mut self, space: Space) {
-		self.space = self.space.max(space);
-	}
-
-	fn comment(&mut self, text: &'static str) {
-		self.do_space(true);
-		self.out.push_str("# ");
-		self.out.push_str(text);
-		self.set_space(Space::Block(0));
-	}
-
-	fn block<I: IntoIterator>(&mut self, block: I, f: impl FnMut(I::Item, &mut Self)) {
-		self.block_commented("", block, f);
-	}
-
-	fn block_commented<I: IntoIterator>(&mut self, comment: &'static str, block: I, mut f: impl FnMut(I::Item, &mut Self)) {
-		self._sym_("{");
-		self.indent += 1;
-		if !comment.is_empty() {
-			self.set_space(Space::Block(0));
-			self.comment(comment);
-		}
-		for stmt in block {
-			self.set_space(Space::Block(0));
-			f(stmt, self);
-		}
-		self.set_space(Space::Block(0));
-		self.indent -= 1;
-		self._sym_("}");
-	}
-}
+use crate::Ctx;
 
 pub fn print_function(stmts: &[Stmt]) -> String {
 	let mut ctx = Ctx::new();
 	stmts.print(&mut ctx);
-	ctx.out
+	ctx.finish()
 }
 
 pub fn print_flat(code: &Code) -> String {
 	let mut ctx = Ctx::new();
 	ctx.block(&code.ops, FlatOp::print);
-	ctx.out
+	ctx.finish()
 }
 
 pub fn print_preload(preloads: &[Preload]) -> String {
 	let mut ctx = Ctx::new();
 	ctx.block(preloads, Preload::print);
-	ctx.out
+	ctx.finish()
 }
 
 pub fn print_shadow(shadow: &Shadow) -> String {
 	let mut ctx = Ctx::new();
 	shadow.print(&mut ctx);
-	ctx.out
+	ctx.finish()
 }
 
 trait Print {
@@ -219,7 +110,7 @@ impl Print for Stmt {
 					}
 					ctx.indent += 1;
 					for stmt in body {
-						ctx.set_space(Space::Block(0));
+						ctx.newline(0);
 						stmt.print(ctx);
 					}
 					ctx.indent -= 1;
@@ -542,7 +433,7 @@ impl Print for Text {
 					c.print(&mut sub);
 					let line = lines.last_mut().unwrap();
 					line.push('{');
-					line.push_str(&sub.out);
+					line.push_str(&sub.finish());
 					line.push('}');
 				}
 			}
@@ -559,11 +450,11 @@ impl Print for Text {
 			ctx.token(format!(r#""""{}"#, iter.next().unwrap()));
 			ctx.indent += 1;
 			for line in iter {
-				ctx.set_space(Space::Block(0));
+				ctx.newline(0);
 				ctx.token(line);
 			}
 			ctx.indent -= 1;
-			ctx.set_space(Space::Block(0));
+			ctx.newline(0);
 			ctx.token(r#"""""#);
 		};
 	}
