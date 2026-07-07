@@ -182,33 +182,6 @@ fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
 	Ok(s)
 }
 
-fn check_preload(scena: &kreuzen::Scena) {
-	let has_preload = scena
-		.chunks
-		.iter()
-		.filter(|c| match &c.func {
-			Body::Code(code) => !kreuzen::code::preload::from_code(&code.ops, &c.name, &[]).is_empty(),
-			_ => false,
-		})
-		.map(|x| x.name.as_str())
-		.collect::<Vec<_>>();
-	for chunk in &scena.chunks {
-		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
-		let Body::Code(code) = &chunk.func else {
-			if !chunk.preload.is_empty() {
-				tracing::error!("chunk {} has a preload but is not code", chunk.name);
-			}
-			continue;
-		};
-		let preload2 = kreuzen::code::preload::from_code(&code.ops, &chunk.name, &has_preload);
-		if preload2 != chunk.preload {
-			let diff = pretty_assertions::Comparison::new(&preload2, &chunk.preload);
-			tracing::error!("preload mismatch {:?} {} {}", scena.game, scena.variant, scena.oddness);
-			println!("{}", diff);
-		}
-	}
-}
-
 fn write_dec(s: &mut String, code: &kreuzen::code::Code) -> rootcause::Result<()> {
 	match kreuzen::decompile::decompile(code) {
 		Ok(stmts) => s.push_str(&kreuzen_syntax::print_function(&stmts)),
