@@ -117,19 +117,6 @@ impl Ctx {
 		self.indent -= 1;
 		self._sym_("}");
 	}
-
-	fn meta(&mut self, m: OpMeta) {
-		if m.line != 0 {
-			self.token(format!("{}", m.line));
-			self.sym("@");
-		}
-		if m.width > 1 {
-			self.token(format!("{}", m.width));
-		}
-		if m.width > 0 {
-			self.sym("~");
-		}
-	}
 }
 
 pub fn print_function(stmts: &[Stmt]) -> String {
@@ -160,6 +147,21 @@ trait Print {
 	fn print(&self, ctx: &mut Ctx);
 }
 
+impl Print for OpMeta {
+	fn print(&self, ctx: &mut Ctx) {
+		if self.line != 0 {
+			ctx.token(format!("{}", self.line));
+			ctx.sym("@");
+		}
+		if self.width > 1 {
+			ctx.token(format!("{}", self.width));
+		}
+		if self.width > 0 {
+			ctx.sym("~");
+		}
+	}
+}
+
 impl Print for Stmt {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
@@ -168,22 +170,22 @@ impl Print for Stmt {
 				ctx.sym_(";");
 			}
 			Stmt::Break(m) => {
-				ctx.meta(*m);
+				m.print(ctx);
 				ctx.word("break");
 				ctx.sym_(";");
 			}
 			Stmt::Continue(m) => {
-				ctx.meta(*m);
+				m.print(ctx);
 				ctx.word("continue");
 				ctx.sym_(";");
 			}
 			Stmt::If(m, e, then, els) => {
-				ctx.meta(*m);
+				m.print(ctx);
 				ctx.word("if");
 				e.print(ctx);
 				then.print(ctx);
 				if let Some((m2, els)) = els {
-					ctx.meta(*m2);
+					m2.print(ctx);
 					ctx.word("else");
 					if let [stmt @ Stmt::If(..)] = els.as_slice() {
 						stmt.print(ctx);
@@ -193,13 +195,13 @@ impl Print for Stmt {
 				}
 			}
 			Stmt::While(m, e, body, _) => {
-				ctx.meta(*m);
+				m.print(ctx);
 				ctx.word("while");
 				e.print(ctx);
 				body.print(ctx);
 			}
 			Stmt::Switch(m, e, cases) => {
-				ctx.meta(*m);
+				m.print(ctx);
 				ctx.word("switch");
 				e.print(ctx);
 				ctx.block(cases, |(case, body), ctx| {
@@ -249,18 +251,18 @@ impl Print for FlatOp {
 				return;
 			}
 			FlatOp::Goto(m, l) => {
-				ctx.meta(*m);
+				m.print(ctx);
 				ctx.word("goto");
 				l.print(ctx);
 			}
 			FlatOp::If(m, e, l) => {
-				ctx.meta(*m);
+				m.print(ctx);
 				ctx.word("if");
 				e.print(ctx);
 				l.print(ctx);
 			}
 			FlatOp::Switch(m, e, cases, default) => {
-				ctx.meta(*m);
+				m.print(ctx);
 				ctx.word("switch");
 				e.print(ctx);
 				ctx.block(cases, |(value, label), ctx| {
@@ -352,7 +354,7 @@ impl Print for ShadowOp {
 
 impl Print for Op {
 	fn print(&self, ctx: &mut Ctx) {
-		ctx.meta(self.meta);
+		self.meta.print(ctx);
 		if matches!(self.name, "SetAttr" | "SetVar" | "SetNumReg" | "SetGlobal" | "SetCharAttr") {
 			assert_eq!(self.args.len(), 2);
 			self.args[0].print(ctx);
