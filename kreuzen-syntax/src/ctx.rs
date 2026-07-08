@@ -85,7 +85,7 @@ impl Ctx {
 		self.space = self.space.max(space);
 	}
 
-	pub fn comment(&mut self, text: &'static str) {
+	pub fn comment(&mut self, text: &str) {
 		self.do_space(true);
 		self.out.push_str("# ");
 		self.out.push_str(text);
@@ -96,7 +96,7 @@ impl Ctx {
 		self.block_commented("", block, f);
 	}
 
-	pub fn block_commented<I: IntoIterator>(&mut self, comment: &'static str, block: I, mut f: impl FnMut(I::Item, &mut Self)) {
+	pub fn block_commented<I: IntoIterator>(&mut self, comment: &str, block: I, mut f: impl FnMut(I::Item, &mut Self)) {
 		self._sym_("{");
 		self.indent += 1;
 		let mut n = false;
@@ -117,7 +117,10 @@ impl Ctx {
 		self._sym_("}");
 	}
 
-	pub fn finish(self) -> String {
+	pub fn finish(mut self) -> String {
+		if matches!(self.space, Space::Block(_)) {
+			self.out.push('\n');
+		}
 		self.out
 	}
 }

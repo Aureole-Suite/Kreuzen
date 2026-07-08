@@ -6,30 +6,6 @@ use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
 
 use crate::{Ctx, Print};
 
-pub fn print_function(stmts: &[Stmt]) -> String {
-	let mut ctx = Ctx::new();
-	stmts.print(&mut ctx);
-	ctx.finish()
-}
-
-pub fn print_flat(code: &Code) -> String {
-	let mut ctx = Ctx::new();
-	ctx.block(&code.ops, FlatOp::print);
-	ctx.finish()
-}
-
-pub fn print_preload(preloads: &[Preload]) -> String {
-	let mut ctx = Ctx::new();
-	ctx.block(preloads, Preload::print);
-	ctx.finish()
-}
-
-pub fn print_shadow(shadow: &Shadow) -> String {
-	let mut ctx = Ctx::new();
-	shadow.print(&mut ctx);
-	ctx.finish()
-}
-
 impl Print for OpMeta {
 	fn print(&self, ctx: &mut Ctx) {
 		if self.line != 0 {

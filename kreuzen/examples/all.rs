@@ -1,6 +1,8 @@
+use kreuzen::code::FlatOp;
+use kreuzen::code::preload::Preload;
 use kreuzen::{Body, Enc, Game};
+use kreuzen_syntax::{Ctx, Print as _};
 use std::cell::Cell;
-use std::fmt::Write;
 use std::path::{Path, PathBuf};
 use tracing::Level;
 use tracing_subscriber::EnvFilter;
@@ -114,11 +116,11 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		return Ok(());
 	}
 	let bytes2 = kreuzen::write(&scena)?;
-	let s1 = to_string(&scena)?;
+	let s1 = to_string(&scena);
 	if bytes != bytes2 {
 		let scena2 = kreuzen::read(game, enc, &bytes2)?;
 
-		let s2 = to_string(&scena2)?;
+		let s2 = to_string(&scena2);
 		if s1 != s2 {
 			tracing::error!("decoded mismatch after roundtrip");
 			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
@@ -157,39 +159,39 @@ fn check_decompile(name: &str, code: &kreuzen::code::Code) {
 	}
 }
 
-fn to_string(scena: &kreuzen::Scena) -> Result<String, rootcause::Report> {
-	let mut s = format!(
-		"scena {} game={:?} enc={:?} oddness={} variant={}\n",
+fn to_string(scena: &kreuzen::Scena) -> String {
+	let mut ctx = Ctx::new();
+	let s = format!(
+		"scena {} game={:?} enc={:?} oddness={} variant={}",
 		scena.name, scena.game, scena.enc, scena.oddness, scena.variant
 	);
+	ctx.token(s);
+	ctx.newline(1);
+
 	for chunk in &scena.chunks {
 		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
-		s.push('\n');
-		write!(s, "{} ", chunk.name)?;
+		ctx.token(chunk.name.to_owned());
 		match &chunk.func {
-			Body::Code(code) => write_dec(&mut s, code)?,
-			Body::Table(table) => s += kreuzen_syntax::print_table(table).as_str(),
+			Body::Code(code) => {
+				match kreuzen::decompile::decompile(code) {
+					Ok(stmts) => stmts.print(&mut ctx),
+					Err(e) => {
+						ctx.block_commented(&format!("Error decompiling:{e}"), &code.ops, FlatOp::print);
+						print!("Error decompiling:{e}"); // has a newline on its own
+					}
+				}
+			}
+			Body::Table(table) => table.print(&mut ctx),
 		}
 		if !chunk.preload.is_empty() {
-			write!(s, " preload {}", kreuzen_syntax::print_preload(&chunk.preload))?;
+			ctx.word("preload");
+			ctx.block(&chunk.preload, Preload::print);
 		}
 		for (a, shadow) in chunk.shadow.iter().enumerate() {
-			write!(s, "_a{a}_{}", chunk.name)?;
-			write!(s, "{}", kreuzen_syntax::print_shadow(shadow))?;
+			ctx.token(format!("_a{a}_{}", chunk.name));
+			shadow.print(&mut ctx);
 		}
-		writeln!(s)?;
+		ctx.newline(1);
 	}
-	Ok(s)
-}
-
-fn write_dec(s: &mut String, code: &kreuzen::code::Code) -> rootcause::Result<()> {
-	match kreuzen::decompile::decompile(code) {
-		Ok(stmts) => s.push_str(&kreuzen_syntax::print_function(&stmts)),
-		Err(e) => {
-			write!(s, "/* Error decompiling:{e} */ ")?;
-			s.push_str(&kreuzen_syntax::print_flat(code));
-			print!("Error decompiling:{e}"); // has a newline on its own
-		}
-	}
-	Ok(())
+	ctx.finish()
 }

@@ -17,12 +17,6 @@ use kreuzen::tables::{Dummy, Table};
 
 use super::{Ctx, Print};
 
-pub fn print_table(table: &Table) -> String {
-	let mut ctx = Ctx::new();
-	table.print(&mut ctx);
-	ctx.finish()
-}
-
 impl Print for Table {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
