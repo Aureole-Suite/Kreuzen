@@ -55,7 +55,7 @@ pub enum Enc {
 	Utf8,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScenaInfo {
 	pub name: String,
 	pub game: Game,
@@ -64,13 +64,13 @@ pub struct ScenaInfo {
 	pub variant: u8,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RawScena {
 	pub info: ScenaInfo,
 	pub chunks: Vec<RawChunk>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum RawChunk {
 	Function { name: String, function: RawFunction },
 	Table { name: String, table: tables::Table, shadow: bool },
@@ -84,26 +84,26 @@ impl RawChunk {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RawFunction {
 	pub body: Vec<FlatOp>,
 	pub preload: Vec<code::preload::Preload>,
 	pub shadow: Vec<code::shadow::Shadow>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Scena {
 	pub info: ScenaInfo,
 	pub chunks: Vec<Chunk>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Chunk {
 	Function { name: String, function: Function },
 	Table { name: String, table: tables::Table, shadow: bool },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Function {
 	pub body: Vec<decompile::Stmt>,
 	pub preload: Vec<code::preload::Preload>,

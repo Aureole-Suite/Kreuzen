@@ -32,7 +32,7 @@ impl std::fmt::Debug for Opaque {
 }
 
 // Preload tables are stored separately from others, so they are not in this enum
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Table {
 	AddCollision(Vec<add_collision::Collision>),
 	ActionTable(Vec<action::Action>),
@@ -53,7 +53,7 @@ pub enum Table {
 	Dummy(Dummy),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dummy {
 	Empty,
 	Dff,
