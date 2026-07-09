@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
 
-use crate::Function;
 use crate::code::{FlatOp, Label, Op, OpMeta};
 use crate::expr::Expr;
 use crate::types::Char;
@@ -16,7 +15,7 @@ pub enum Stmt {
 	Break(OpMeta),
 	Continue(OpMeta),
 	Switch(OpMeta, Expr, Vec<(Case, Vec<Stmt>)>),
-	ForkLambda(OpMeta, Char, i64, Function),
+	ForkLambda(OpMeta, Char, i64, String, Vec<Stmt>),
 }
 
 pub fn leaves(code: &[Stmt]) -> Vec<&Stmt> {
@@ -99,7 +98,7 @@ impl std::fmt::Debug for Stmt {
 			Self::Break(m) => m.fmt(f)?.debug_tuple("Break").finish(),
 			Self::Continue(m) => m.fmt(f)?.debug_tuple("Continue").finish(),
 			Self::Switch(m, a, b) => m.fmt(f)?.debug_tuple("Switch").field(a).field(b).finish(),
-			Self::ForkLambda(m, a, b, c) => m.fmt(f)?.debug_tuple("ForkLambda").field(a).field(b).field(c).finish(),
+			Self::ForkLambda(m, a, b, c, d) => m.fmt(f)?.debug_tuple("ForkLambda").field(a).field(b).field(c).field(d).finish(),
 		}
 	}
 }

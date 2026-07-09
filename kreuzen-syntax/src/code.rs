@@ -59,12 +59,13 @@ impl Print for Stmt {
 				e.print(ctx);
 				body.print(ctx);
 			}
-			Stmt::ForkLambda(m, chr, slot, function) => {
+			Stmt::ForkLambda(m, chr, slot, name, body) => {
 				m.print(ctx);
 				ctx.word("ForkLambda");
 				chr.print(ctx);
 				slot.print(ctx);
-				function.print(ctx);
+				name.print(ctx);
+				body.print(ctx);
 			}
 			Stmt::Switch(m, e, cases) => {
 				m.print(ctx);
@@ -213,6 +214,13 @@ impl Print for ShadowOp {
 				name.print(ctx);
 				flags.print(ctx);
 				ctx.sym_(";");
+			}
+			ShadowOp::ForkLambda { chr, slot, name, ops } => {
+				ctx.word("ForkLambda");
+				chr.print(ctx);
+				slot.print(ctx);
+				name.print(ctx);
+				ctx.block(ops, ShadowOp::print);
 			}
 		}
 	}

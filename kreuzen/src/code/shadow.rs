@@ -16,6 +16,7 @@ pub enum ShadowOp {
 	Call { table: i64, name: String },
 	CharAni { chr: Char, strings: Vec<String> },
 	Fork { chr: Char, slot: u8, name: String, flags: i64 },
+	ForkLambda { chr: Char, slot: u8, name: String, ops: Vec<ShadowOp> },
 }
 
 pub fn parse_name(name: &str) -> Option<(usize, &str)> {
@@ -152,5 +153,6 @@ fn flatten_one(shadow: &ShadowOp, line: u16) -> Stmt {
 			];
 			cond(*chr, body)
 		}
+		ShadowOp::ForkLambda { .. } => panic!("cannot flatten ForkLambda; desugar first"),
 	}
 }
