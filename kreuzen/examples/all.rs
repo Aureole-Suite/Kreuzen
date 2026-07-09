@@ -1,6 +1,6 @@
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
-use kreuzen::{RawChunk, Enc, Game};
+use kreuzen::{Enc, Game, RawChunk};
 use kreuzen_syntax::{Ctx, Print as _};
 use std::cell::Cell;
 use std::path::{Path, PathBuf};
@@ -105,14 +105,14 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Result<()> {
 	let bytes = std::fs::read(script)?;
 	WARNED.with(|w| w.set(false));
-	let scena = kreuzen::read(game, enc, &bytes)?;
+	let raw = kreuzen::read(game, enc, &bytes)?;
 	let had_warnings = WARNED.with(|w| w.take());
-	let bytes2 = kreuzen::write(&scena)?;
-	let s1 = to_string(&scena);
+	let bytes2 = kreuzen::write(&raw)?;
 	if bytes != bytes2 {
-		let scena2 = kreuzen::read(game, enc, &bytes2)?;
+		let raw2 = kreuzen::read(game, enc, &bytes2)?;
 
-		let s2 = to_string(&scena2);
+		let s1 = to_string(&raw);
+		let s2 = to_string(&raw2);
 		if s1 != s2 {
 			tracing::error!("decoded mismatch after roundtrip");
 			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
@@ -123,36 +123,30 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		tracing::warn!("warnings emitted but bytes are identical");
 	}
 
+	let scena = kreuzen::decompile(&raw)?;
+	let raw2 = kreuzen::compile(&scena)?;
+	if raw2 != raw {
+		let s1 = to_string(&raw);
+		let s2 = to_string(&raw2);
+		tracing::error!("decompile mismatch after roundtrip");
+		if s1 == s2 {
+			println!("string was equal, so probably NaN issues");
+		} else {
+			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
+		}
+	}
+
 	if scena.info.game != game || scena.info.enc != enc {
 		return Ok(());
 	}
 
+	let s1 = to_string(&raw);
 	std::fs::create_dir_all(outfile.parent().unwrap())?;
 	std::fs::write(outfile, s1)?;
-
-	for c in &scena.chunks {
-		if let RawChunk::Function { name, function } = c {
-			check_decompile(name, &function.body);
-		}
-	}
 
 	// check_preload(&scena);
 
 	Ok(())
-}
-
-fn check_decompile(name: &str, code: &[FlatOp]) {
-	match kreuzen::decompile::decompile(code) {
-		Ok(stmts) => {
-			let v = kreuzen::decompile::compile(&stmts).unwrap();
-			if v != *code {
-				let diff = pretty_assertions::Comparison::new(&v, code);
-				tracing::error!("recompile mismatch in {name}");
-				println!("{}", diff);
-			}
-		}
-		Err(e) => tracing::error!("Error decompiling {name}:{e}"),
-	}
 }
 
 fn to_string(scena: &kreuzen::RawScena) -> String {
