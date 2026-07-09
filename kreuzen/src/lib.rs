@@ -66,17 +66,24 @@ pub struct Scena {
 }
 
 #[derive(Debug, Clone)]
-pub struct Chunk {
-	pub name: String,
-	pub func: Body,
+pub struct Function {
+	pub body: Code,
 	pub preload: Vec<code::preload::Preload>,
 	pub shadow: Vec<code::shadow::Shadow>,
 }
 
 #[derive(Debug, Clone)]
-pub enum Body {
-	Code(Code),
-	Table(tables::Table),
+pub enum Chunk {
+	Function { name: String, function: Function },
+	Table { name: String, table: tables::Table, shadow: bool },
+}
+
+impl Chunk {
+	pub fn name(&self) -> &str {
+		match self {
+			Chunk::Function { name, .. } | Chunk::Table { name, .. } => name,
+		}
+	}
 }
 
 pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
@@ -190,33 +197,45 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	};
 
 	for c in &scena.chunks {
-		match &c.func {
-			Body::Code(code) => {
-				let align = match (c.name.as_str(), scena.game) {
+		match c {
+			Chunk::Function { name, function } => {
+				let align = match (name.as_str(), scena.game) {
 					("Init", Game::Cs1) if scena.name == "effect" => 16,
 					_ => 4,
 				};
-				chunk(align, &c.name, true, code::write(&d, code));
+				chunk(align, name, true, code::write(&d, &function.body));
 			}
-			Body::Table(table) => {
-				let (align, f) = tables::write(&d, c.name.as_str(), table)?;
-				chunk(align, &c.name.clone(), false, Ok(f));
+			Chunk::Table { name, table, .. } => {
+				let (align, f) = tables::write(&d, name.as_str(), table)?;
+				chunk(align, name, false, Ok(f));
 			}
-		};
+		}
 	}
 	for c in &scena.chunks {
-		if !c.preload.is_empty() {
-			let f = code::preload::write(&d, &c.preload);
-			chunk(16, &format!("_{}", c.name), false, f);
+		if let Chunk::Function { name, function } = c
+			&& !function.preload.is_empty()
+		{
+			let f = code::preload::write(&d, &function.preload);
+			chunk(16, &format!("_{name}"), false, f);
 		}
 	}
 	if scena.game == Game::Reverie && scena.oddness == 3 {
 		chunk(4, "_a0_CharaterSection", false, Ok(Writer::new()));
 	}
 	for c in &scena.chunks {
-		for (i, shadow) in c.shadow.iter().enumerate() {
-			let code = code::shadow::flatten(shadow);
-			chunk(4, &format!("_a{i}_{}", c.name), true, code::write(&d, &code));
+		match c {
+			Chunk::Function { name, function } => {
+				for (i, shadow) in function.shadow.iter().enumerate() {
+					let code = code::shadow::flatten(shadow);
+					chunk(4, &format!("_a{i}_{name}"), true, code::write(&d, &code));
+				}
+			}
+			Chunk::Table { name, shadow: true, .. } => {
+				let empty = code::shadow::Shadow { line: 0, ops: vec![] };
+				let code = code::shadow::flatten(&empty);
+				chunk(4, &format!("_a0_{name}"), true, code::write(&d, &code));
+			}
+			Chunk::Table { shadow: false, .. } => {}
 		}
 	}
 
@@ -390,28 +409,36 @@ fn resolve_game(n: &str, mut game: Game, mut enc: Enc, old_cs1: bool) -> (Game, 
 }
 
 fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
-	let func = match read_subchunk(cr, ranges[e.main], |f| tables::read(f, &e.name))? {
-		Some(table) => Body::Table(table),
-		None => Body::Code(code::read_code_chunk(cr, ranges[e.main])?),
-	};
-	let preload = if let Some(i) = e.preload {
-		let _span = tracing::error_span!("preload").entered();
-		let v = read_subchunk(cr, ranges[i], code::preload::read)?;
-		if v.is_empty() {
-			tracing::warn!("preload is empty");
-		}
-		v
-	} else {
-		Vec::new()
-	};
-	let mut shadow = Vec::with_capacity(e.shadow.len());
+	let mut shadows = Vec::with_capacity(e.shadow.len());
 	for (a, &s) in e.shadow.iter().enumerate() {
 		let _span = tracing::error_span!("shadow", a).entered();
 		let code = code::read_code_chunk(cr, ranges[s])?;
-		shadow.push(code::shadow::parse(&code)?);
+		shadows.push(code::shadow::parse(&code)?);
 	}
-	let chunk = Chunk { name: e.name.clone(), func, preload, shadow };
-	Ok(chunk)
+	if let Some(table) = read_subchunk(cr, ranges[e.main], |f| tables::read(f, &e.name))? {
+		let shadow = match shadows.as_slice() {
+			[] => false,
+			[s] if s.ops.is_empty() => true,
+			_ => rootcause::bail!("unexpected shadows for table chunk {:?}", e.name),
+		};
+		Ok(Chunk::Table { name: e.name.clone(), table, shadow })
+	} else {
+		let body = code::read_code_chunk(cr, ranges[e.main])?;
+		let preload = if let Some(i) = e.preload {
+			let _span = tracing::error_span!("preload").entered();
+			let v = read_subchunk(cr, ranges[i], code::preload::read)?;
+			if v.is_empty() {
+				tracing::warn!("preload is empty");
+			}
+			v
+		} else {
+			Vec::new()
+		};
+		Ok(Chunk::Function {
+			name: e.name.clone(),
+			function: Function { body, preload, shadow: shadows },
+		})
+	}
 }
 
 // This function corresponds to the /asm/ files. Cursed.

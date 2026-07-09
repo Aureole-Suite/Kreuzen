@@ -1,6 +1,7 @@
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
-use kreuzen::{Body, Enc, Game};
+use kreuzen::code::shadow::Shadow;
+use kreuzen::{Chunk, Enc, Game};
 use kreuzen_syntax::{Ctx, Print as _};
 use std::cell::Cell;
 use std::path::{Path, PathBuf};
@@ -107,14 +108,6 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 	WARNED.with(|w| w.set(false));
 	let scena = kreuzen::read(game, enc, &bytes)?;
 	let had_warnings = WARNED.with(|w| w.take());
-	if scena.game != game || scena.enc != enc {
-		tracing::warn!(
-			"resolved as {:?}/{:?}, expected {game:?}/{enc:?} — skipping output",
-			scena.game,
-			scena.enc
-		);
-		return Ok(());
-	}
 	let bytes2 = kreuzen::write(&scena)?;
 	let s1 = to_string(&scena);
 	if bytes != bytes2 {
@@ -131,12 +124,16 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		tracing::warn!("warnings emitted but bytes are identical");
 	}
 
+	if scena.game != game || scena.enc != enc {
+		return Ok(());
+	}
+
 	std::fs::create_dir_all(outfile.parent().unwrap())?;
 	std::fs::write(outfile, s1)?;
 
 	for c in &scena.chunks {
-		if let Body::Code(code) = &c.func {
-			check_decompile(&c.name, code);
+		if let Chunk::Function { name, function } = c {
+			check_decompile(name, &function.body);
 		}
 	}
 
@@ -169,27 +166,34 @@ fn to_string(scena: &kreuzen::Scena) -> String {
 	ctx.newline(1);
 
 	for chunk in &scena.chunks {
-		let _span = tracing::error_span!("chunk", name=%chunk.name).entered();
-		ctx.token(chunk.name.to_owned());
-		match &chunk.func {
-			Body::Code(code) => {
-				match kreuzen::decompile::decompile(code) {
+		match chunk {
+			Chunk::Function { name, function } => {
+				let _span = tracing::error_span!("chunk", name=%name).entered();
+				ctx.token(name.to_owned());
+				match kreuzen::decompile::decompile(&function.body) {
 					Ok(stmts) => stmts.print(&mut ctx),
 					Err(e) => {
-						ctx.block_commented(&format!("Error decompiling:{e}"), &code.ops, FlatOp::print);
+						ctx.block_commented(&format!("Error decompiling:{e}"), &function.body.ops, FlatOp::print);
 						print!("Error decompiling:{e}"); // has a newline on its own
 					}
 				}
+				if !function.preload.is_empty() {
+					ctx.word("preload");
+					ctx.block(&function.preload, Preload::print);
+				}
+				for (a, shadow) in function.shadow.iter().enumerate() {
+					ctx.token(format!("_a{a}_{name}"));
+					shadow.print(&mut ctx);
+				}
 			}
-			Body::Table(table) => table.print(&mut ctx),
-		}
-		if !chunk.preload.is_empty() {
-			ctx.word("preload");
-			ctx.block(&chunk.preload, Preload::print);
-		}
-		for (a, shadow) in chunk.shadow.iter().enumerate() {
-			ctx.token(format!("_a{a}_{}", chunk.name));
-			shadow.print(&mut ctx);
+			Chunk::Table { name, table, shadow } => {
+				let _span = tracing::error_span!("chunk", name=%name).entered();
+				ctx.token(name.to_owned());
+				if *shadow {
+					ctx.word("shadow");
+				}
+				table.print(&mut ctx);
+			}
 		}
 		ctx.newline(1);
 	}
