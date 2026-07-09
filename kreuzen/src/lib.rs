@@ -56,37 +56,42 @@ pub enum Enc {
 }
 
 #[derive(Debug, Clone)]
-pub struct Scena {
+pub struct ScenaInfo {
 	pub name: String,
 	pub game: Game,
 	pub enc: Enc,
 	pub oddness: u8,
 	pub variant: u8,
-	pub chunks: Vec<Chunk>,
 }
 
 #[derive(Debug, Clone)]
-pub struct Function {
+pub struct RawScena {
+	pub info: ScenaInfo,
+	pub chunks: Vec<RawChunk>,
+}
+
+#[derive(Debug, Clone)]
+pub enum RawChunk {
+	Function { name: String, function: RawFunction },
+	Table { name: String, table: tables::Table, shadow: bool },
+}
+
+impl RawChunk {
+	pub fn name(&self) -> &str {
+		match self {
+			RawChunk::Function { name, .. } | RawChunk::Table { name, .. } => name,
+		}
+	}
+}
+
+#[derive(Debug, Clone)]
+pub struct RawFunction {
 	pub body: Vec<FlatOp>,
 	pub preload: Vec<code::preload::Preload>,
 	pub shadow: Vec<code::shadow::Shadow>,
 }
 
-#[derive(Debug, Clone)]
-pub enum Chunk {
-	Function { name: String, function: Function },
-	Table { name: String, table: tables::Table, shadow: bool },
-}
-
-impl Chunk {
-	pub fn name(&self) -> &str {
-		match self {
-			Chunk::Function { name, .. } | Chunk::Table { name, .. } => name,
-		}
-	}
-}
-
-pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
+pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<RawScena> {
 	let mut f = Reader::new(bytes);
 	f.check_u32(0x20)?;
 	let name_start = f.u32()? as usize;
@@ -171,10 +176,13 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		return Err(errors.context("error parsing chunks").into());
 	}
 
-	Ok(Scena { name, game, enc, oddness, variant, chunks })
+	Ok(RawScena {
+		info: ScenaInfo { name, game, enc, oddness, variant },
+		chunks,
+	})
 }
 
-pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
+pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 	let start = Label::new();
 
 	let mut errors = rootcause::report_collection::ReportCollection::new();
@@ -191,51 +199,51 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 
 	let d = io::OData {
 		start,
-		game: scena.game,
-		enc: scena.enc,
-		variant: scena.variant,
+		game: scena.info.game,
+		enc: scena.info.enc,
+		variant: scena.info.variant,
 	};
 
 	for c in &scena.chunks {
 		match c {
-			Chunk::Function { name, function } => {
-				let align = match (name.as_str(), scena.game) {
-					("Init", Game::Cs1) if scena.name == "effect" => 16,
+			RawChunk::Function { name, function } => {
+				let align = match (name.as_str(), scena.info.game) {
+					("Init", Game::Cs1) if scena.info.name == "effect" => 16,
 					_ => 4,
 				};
 				chunk(align, name, true, code::write(&d, &function.body));
 			}
-			Chunk::Table { name, table, .. } => {
+			RawChunk::Table { name, table, .. } => {
 				let (align, f) = tables::write(&d, name.as_str(), table)?;
 				chunk(align, name, false, Ok(f));
 			}
 		}
 	}
 	for c in &scena.chunks {
-		if let Chunk::Function { name, function } = c
+		if let RawChunk::Function { name, function } = c
 			&& !function.preload.is_empty()
 		{
 			let f = code::preload::write(&d, &function.preload);
 			chunk(16, &format!("_{name}"), false, f);
 		}
 	}
-	if scena.game == Game::Reverie && scena.oddness == 3 {
+	if scena.info.game == Game::Reverie && scena.info.oddness == 3 {
 		chunk(4, "_a0_CharaterSection", false, Ok(Writer::new()));
 	}
 	for c in &scena.chunks {
 		match c {
-			Chunk::Function { name, function } => {
+			RawChunk::Function { name, function } => {
 				for (i, shadow) in function.shadow.iter().enumerate() {
 					let code = code::shadow::flatten(shadow);
 					chunk(4, &format!("_a{i}_{name}"), true, code::write(&d, &code));
 				}
 			}
-			Chunk::Table { name, shadow: true, .. } => {
+			RawChunk::Table { name, shadow: true, .. } => {
 				let empty = code::shadow::Shadow { line: 0, ops: vec![] };
 				let code = code::shadow::flatten(&empty);
 				chunk(4, &format!("_a0_{name}"), true, code::write(&d, &code));
 			}
-			Chunk::Table { shadow: false, .. } => {}
+			RawChunk::Table { shadow: false, .. } => {}
 		}
 	}
 
@@ -254,13 +262,13 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 	let asm_end = f.ptr32(start);
 
 	f.u32(0xABCDEF00);
-	let old_cs1 = scena.game == Game::Cs1 && (1..100).contains(&scena.variant);
+	let old_cs1 = scena.info.game == Game::Cs1 && (1..100).contains(&scena.info.variant);
 	if !old_cs1 {
 		f.place(name_start);
-		f.str(scena.enc, &scena.name)?;
+		f.str(scena.info.enc, &scena.info.name)?;
 	}
 
-	match (scena.game, scena.oddness) {
+	match (scena.info.game, scena.info.oddness) {
 		(Game::Cs4, 0) => f.align(4),
 		(Game::Reverie, 0 | 3) => {
 			f.align(4);
@@ -287,13 +295,13 @@ pub fn write(scena: &Scena) -> rootcause::Result<Vec<u8>> {
 		}
 		for (c, l) in chunks.iter().zip(name_pos) {
 			f.place(l);
-			f.str(scena.enc, &c.2)?;
+			f.str(scena.info.enc, &c.2)?;
 		}
 	}
 
 	if old_cs1 {
 		f.place(name_start);
-		f.str(scena.enc, &scena.name)?;
+		f.str(scena.info.enc, &scena.info.name)?;
 	}
 	f.place(asm_end);
 
@@ -408,7 +416,7 @@ fn resolve_game(n: &str, mut game: Game, mut enc: Enc, old_cs1: bool) -> (Game, 
 	(game, enc, variant)
 }
 
-fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<Chunk> {
+fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<RawChunk> {
 	let mut shadows = Vec::with_capacity(e.shadow.len());
 	for (a, &s) in e.shadow.iter().enumerate() {
 		let _span = tracing::error_span!("shadow", a).entered();
@@ -421,7 +429,7 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 			[s] if s.ops.is_empty() => true,
 			_ => rootcause::bail!("unexpected shadows for table chunk {:?}", e.name),
 		};
-		Ok(Chunk::Table { name: e.name.clone(), table, shadow })
+		Ok(RawChunk::Table { name: e.name.clone(), table, shadow })
 	} else {
 		let body = code::read_code_chunk(cr, ranges[e.main])?;
 		let preload = if let Some(i) = e.preload {
@@ -434,9 +442,9 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 		} else {
 			Vec::new()
 		};
-		Ok(Chunk::Function {
+		Ok(RawChunk::Function {
 			name: e.name.clone(),
-			function: Function { body, preload, shadow: shadows },
+			function: RawFunction { body, preload, shadow: shadows },
 		})
 	}
 }

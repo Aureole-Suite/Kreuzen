@@ -1,6 +1,6 @@
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
-use kreuzen::{Chunk, Enc, Game};
+use kreuzen::{RawChunk, Enc, Game};
 use kreuzen_syntax::{Ctx, Print as _};
 use std::cell::Cell;
 use std::path::{Path, PathBuf};
@@ -123,7 +123,7 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		tracing::warn!("warnings emitted but bytes are identical");
 	}
 
-	if scena.game != game || scena.enc != enc {
+	if scena.info.game != game || scena.info.enc != enc {
 		return Ok(());
 	}
 
@@ -131,7 +131,7 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 	std::fs::write(outfile, s1)?;
 
 	for c in &scena.chunks {
-		if let Chunk::Function { name, function } = c {
+		if let RawChunk::Function { name, function } = c {
 			check_decompile(name, &function.body);
 		}
 	}
@@ -155,18 +155,18 @@ fn check_decompile(name: &str, code: &[FlatOp]) {
 	}
 }
 
-fn to_string(scena: &kreuzen::Scena) -> String {
+fn to_string(scena: &kreuzen::RawScena) -> String {
 	let mut ctx = Ctx::new();
 	let s = format!(
 		"scena {} game={:?} enc={:?} oddness={} variant={}",
-		scena.name, scena.game, scena.enc, scena.oddness, scena.variant
+		scena.info.name, scena.info.game, scena.info.enc, scena.info.oddness, scena.info.variant
 	);
 	ctx.token(s);
 	ctx.newline(1);
 
 	for chunk in &scena.chunks {
 		match chunk {
-			Chunk::Function { name, function } => {
+			RawChunk::Function { name, function } => {
 				let _span = tracing::error_span!("chunk", name=%name).entered();
 				ctx.token(name.to_owned());
 				match kreuzen::decompile::decompile(&function.body) {
@@ -185,7 +185,7 @@ fn to_string(scena: &kreuzen::Scena) -> String {
 					shadow.print(&mut ctx);
 				}
 			}
-			Chunk::Table { name, table, shadow } => {
+			RawChunk::Table { name, table, shadow } => {
 				let _span = tracing::error_span!("chunk", name=%name).entered();
 				ctx.token(name.to_owned());
 				if *shadow {
