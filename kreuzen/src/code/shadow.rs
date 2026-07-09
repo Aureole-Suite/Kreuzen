@@ -18,6 +18,16 @@ pub enum ShadowOp {
 	Fork { chr: Char, slot: u8, name: String, flags: i64 },
 }
 
+pub fn parse_name(name: &str) -> Option<(usize, &str)> {
+	let rest = name.strip_prefix("_a")?;
+	let sep = rest.find('_')?;
+	let digits = &rest[..sep];
+	if digits.is_empty() || !digits.chars().all(|c| c.is_ascii_digit()) {
+		return None;
+	}
+	Some((digits.parse().ok()?, &rest[sep + 1..]))
+}
+
 pub fn parse(code: &[FlatOp]) -> rootcause::Result<Shadow> {
 	let stmts = crate::decompile::decompile(code)?;
 	let mut iter = stmts.iter();

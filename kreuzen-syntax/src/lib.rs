@@ -35,8 +35,8 @@ impl Print for RawFunction {
 			ctx.word("preload");
 			ctx.block(&self.preload, Preload::print);
 		}
-		for (i, shadow) in self.shadow.iter().enumerate() {
-			ctx.token(format!("_a{i}_{}", self.name));
+		for shadow in &self.shadow {
+			ctx.word("shadow");
 			shadow.print(ctx);
 		}
 	}
@@ -76,8 +76,8 @@ impl Print for Function {
 			ctx.word("preload");
 			ctx.block(&self.preload, Preload::print);
 		}
-		for (i, shadow) in self.shadow.iter().enumerate() {
-			ctx.token(format!("_a{i}_{}", self.name));
+		for shadow in &self.shadow {
+			ctx.word("shadow");
 			shadow.print(ctx);
 		}
 	}

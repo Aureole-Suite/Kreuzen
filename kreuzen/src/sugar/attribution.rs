@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 use crate::code::Arg;
-use crate::code::shadow::Shadow;
+use crate::code::shadow::{Shadow, parse_name};
 use crate::decompile::Stmt;
 use crate::{Chunk, Scena};
 
@@ -56,22 +56,12 @@ pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 	Ok(())
 }
 
-fn shadow_parts(name: &str) -> Option<(usize, &str)> {
-	let rest = name.strip_prefix("_a")?;
-	let sep = rest.find('_')?;
-	let digits = &rest[..sep];
-	if digits.is_empty() || !digits.chars().all(|c| c.is_ascii_digit()) {
-		return None;
-	}
-	Some((digits.parse().ok()?, &rest[sep + 1..]))
-}
-
 fn move_shadows(moves: Vec<(String, &mut String)>, mut shadows: HashMap<String, &mut Vec<Shadow>>) -> rootcause::Result<()> {
 	let mut dest_for = HashMap::<String, String>::new();
 	let mut order = Vec::new();
 	for (dest, src) in &moves {
 		let src = src.as_str();
-		let Some((idx, owner)) = shadow_parts(src) else { continue };
+		let Some((idx, owner)) = parse_name(src) else { continue };
 		if !dest_for.contains_key(src) {
 			dest_for.insert(src.to_owned(), dest.clone());
 			order.push((src.to_owned(), idx, owner.to_owned()));
