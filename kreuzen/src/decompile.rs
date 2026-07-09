@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
 
-use crate::code::{Code, FlatOp, Label, Op, OpMeta};
+use crate::code::{FlatOp, Label, Op, OpMeta};
 use crate::expr::Expr;
 
 #[derive(Clone, PartialEq)]
@@ -54,8 +54,8 @@ pub enum Case {
 	None,
 }
 
-pub fn decompile(code: &Code) -> rootcause::Result<Vec<Stmt>> {
-	let stmts = &code.ops;
+pub fn decompile(code: &[FlatOp]) -> rootcause::Result<Vec<Stmt>> {
+	let stmts = code;
 	let mut labels = BTreeMap::new();
 	for (i, stmt) in stmts.iter().enumerate() {
 		if let FlatOp::Label(l) = stmt {
@@ -67,11 +67,11 @@ pub fn decompile(code: &Code) -> rootcause::Result<Vec<Stmt>> {
 	Ok(body)
 }
 
-pub fn compile(stmts: &[Stmt]) -> rootcause::Result<Code> {
+pub fn compile(stmts: &[Stmt]) -> rootcause::Result<Vec<FlatOp>> {
 	let mut ops = Vec::new();
 	compile_inner(&mut ops, &mut 0, stmts, None, None)?;
 	crate::code::remap_labels(&mut ops);
-	Ok(Code { ops })
+	Ok(ops)
 }
 
 fn compile_inner(out: &mut Vec<FlatOp>, l: &mut u32, stmts: &[Stmt], brk: Option<Label>, cont: Option<Label>) -> rootcause::Result<()> {

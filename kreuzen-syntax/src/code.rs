@@ -1,6 +1,6 @@
 use kreuzen::code::preload::Preload;
 use kreuzen::code::shadow::{Shadow, ShadowOp};
-use kreuzen::code::{Arg, Code, FlatOp, Label, Op, OpMeta};
+use kreuzen::code::{Arg, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
 

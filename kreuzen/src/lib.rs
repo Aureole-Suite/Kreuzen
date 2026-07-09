@@ -1,7 +1,7 @@
 use gospel::read::{Le as _, Reader};
 use gospel::write::{Label, Le as _, Writer};
 
-use crate::code::Code;
+use crate::code::FlatOp;
 use crate::io::{CReader, WriterExt as _};
 
 pub mod code;
@@ -67,7 +67,7 @@ pub struct Scena {
 
 #[derive(Debug, Clone)]
 pub struct Function {
-	pub body: Code,
+	pub body: Vec<FlatOp>,
 	pub preload: Vec<code::preload::Preload>,
 	pub shadow: Vec<code::shadow::Shadow>,
 }

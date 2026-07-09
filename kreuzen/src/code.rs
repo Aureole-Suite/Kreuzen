@@ -66,12 +66,7 @@ impl std::fmt::Debug for Hexdump {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Code {
-	pub ops: Vec<FlatOp>,
-}
-
-fn read(f: &mut CReader) -> rootcause::Result<Code> {
+fn read(f: &mut CReader) -> rootcause::Result<Vec<FlatOp>> {
 	let mut ops = Vec::new();
 	while !f.remaining().is_empty() {
 		if f.check_u8(0).is_ok() {
@@ -89,10 +84,10 @@ fn read(f: &mut CReader) -> rootcause::Result<Code> {
 	let mut ops = insert_labels(ops, wtf)?;
 	remap_labels(&mut ops);
 
-	Ok(Code { ops })
+	Ok(ops)
 }
 
-pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::Result<Code> {
+pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::Result<Vec<FlatOp>> {
 	let (start, end) = s;
 	let d = f.data();
 	crate::ensure!(start <= end && end <= d.len());
@@ -603,14 +598,13 @@ fn op_d2(a: i16) -> &'static [Part] {
 	}
 }
 
-pub fn write(d: &OData, code: &Code) -> rootcause::Result<Writer> {
+pub fn write(d: &OData, code: &[FlatOp]) -> rootcause::Result<Writer> {
 	let mut f = Writer::new();
 	let labels: HashMap<Label, WLabel> = code
-		.ops
 		.iter()
 		.filter_map(|op| if let FlatOp::Label(l) = op { Some((*l, WLabel::new())) } else { None })
 		.collect();
-	for op in &code.ops {
+	for op in code {
 		write_flatop(d, &mut f, op, &labels)?;
 	}
 	Ok(f)

@@ -1,6 +1,5 @@
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
-use kreuzen::code::shadow::Shadow;
 use kreuzen::{Chunk, Enc, Game};
 use kreuzen_syntax::{Ctx, Print as _};
 use std::cell::Cell;
@@ -142,7 +141,7 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 	Ok(())
 }
 
-fn check_decompile(name: &str, code: &kreuzen::code::Code) {
+fn check_decompile(name: &str, code: &[FlatOp]) {
 	match kreuzen::decompile::decompile(code) {
 		Ok(stmts) => {
 			let v = kreuzen::decompile::compile(&stmts).unwrap();
@@ -173,7 +172,7 @@ fn to_string(scena: &kreuzen::Scena) -> String {
 				match kreuzen::decompile::decompile(&function.body) {
 					Ok(stmts) => stmts.print(&mut ctx),
 					Err(e) => {
-						ctx.block_commented(&format!("Error decompiling:{e}"), &function.body.ops, FlatOp::print);
+						ctx.block_commented(&format!("Error decompiling:{e}"), &function.body, FlatOp::print);
 						print!("Error decompiling:{e}"); // has a newline on its own
 					}
 				}

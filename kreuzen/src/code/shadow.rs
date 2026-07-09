@@ -1,6 +1,6 @@
 use rootcause::prelude::ResultExt;
 
-use crate::code::{Arg, Code, Op, OpMeta};
+use crate::code::{Arg, FlatOp, Op, OpMeta};
 use crate::decompile::Stmt;
 use crate::expr::Expr;
 use crate::types::Char;
@@ -18,7 +18,7 @@ pub enum ShadowOp {
 	Fork { chr: Char, slot: u8, name: String, flags: i64 },
 }
 
-pub fn parse(code: &Code) -> rootcause::Result<Shadow> {
+pub fn parse(code: &[FlatOp]) -> rootcause::Result<Shadow> {
 	let stmts = crate::decompile::decompile(code)?;
 	let mut iter = stmts.iter();
 	crate::ensure!(matches!(iter.next_back(), Some(Stmt::Op(op)) if op.name == "return"));
@@ -84,7 +84,7 @@ fn parse_one(stmt: &Stmt) -> rootcause::Result<ShadowOp> {
 	}
 }
 
-pub fn flatten(shadows: &Shadow) -> Code {
+pub fn flatten(shadows: &Shadow) -> Vec<FlatOp> {
 	let mut stmts: Vec<Stmt> = shadows.ops.iter().map(|s| flatten_one(s, shadows.line)).collect();
 	stmts.push(Stmt::Op(Op {
 		name: "return",
