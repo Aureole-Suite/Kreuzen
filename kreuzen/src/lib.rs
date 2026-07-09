@@ -91,6 +91,93 @@ pub struct RawFunction {
 	pub shadow: Vec<code::shadow::Shadow>,
 }
 
+#[derive(Debug, Clone)]
+pub struct Scena {
+	pub info: ScenaInfo,
+	pub chunks: Vec<Chunk>,
+}
+
+#[derive(Debug, Clone)]
+pub enum Chunk {
+	Function { name: String, function: Function },
+	Table { name: String, table: tables::Table, shadow: bool },
+}
+
+#[derive(Debug, Clone)]
+pub struct Function {
+	pub body: Vec<decompile::Stmt>,
+	pub preload: Vec<code::preload::Preload>,
+	pub shadow: Vec<code::shadow::Shadow>,
+}
+
+pub fn decompile(raw: &RawScena) -> rootcause::Result<Scena> {
+	let mut chunks = Vec::with_capacity(raw.chunks.len());
+	let mut errors = rootcause::report_collection::ReportCollection::new();
+	for c in &raw.chunks {
+		match c {
+			RawChunk::Function { name, function } => {
+				let _span = tracing::error_span!("chunk", name=%name).entered();
+				match crate::decompile::decompile(&function.body) {
+					Ok(body) => chunks.push(Chunk::Function {
+						name: name.clone(),
+						function: Function {
+							body,
+							preload: function.preload.clone(),
+							shadow: function.shadow.clone(),
+						},
+					}),
+					Err(e) => errors.push(e.context(format!("error decompiling chunk {name}")).into_cloneable()),
+				}
+			}
+			RawChunk::Table { name, table, shadow } => {
+				chunks.push(Chunk::Table {
+					name: name.clone(),
+					table: table.clone(),
+					shadow: *shadow,
+				});
+			}
+		}
+	}
+	if !errors.is_empty() {
+		return Err(errors.context("error decompiling chunks").into());
+	}
+	Ok(Scena { info: raw.info.clone(), chunks })
+}
+
+pub fn compile(scena: &Scena) -> rootcause::Result<RawScena> {
+	let mut chunks = Vec::with_capacity(scena.chunks.len());
+	let mut errors = rootcause::report_collection::ReportCollection::new();
+	for c in &scena.chunks {
+		match c {
+			Chunk::Function { name, function } => {
+				let _span = tracing::error_span!("chunk", name=%name).entered();
+				match crate::decompile::compile(&function.body) {
+					Ok(body) => chunks.push(RawChunk::Function {
+						name: name.clone(),
+						function: RawFunction {
+							body,
+							preload: function.preload.clone(),
+							shadow: function.shadow.clone(),
+						},
+					}),
+					Err(e) => errors.push(e.context(format!("error compiling chunk {name}")).into_cloneable()),
+				}
+			}
+			Chunk::Table { name, table, shadow } => {
+				chunks.push(RawChunk::Table {
+					name: name.clone(),
+					table: table.clone(),
+					shadow: *shadow,
+				});
+			}
+		}
+	}
+	if !errors.is_empty() {
+		return Err(errors.context("error compiling chunks").into());
+	}
+	Ok(RawScena { info: scena.info.clone(), chunks })
+}
+
 pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<RawScena> {
 	let mut f = Reader::new(bytes);
 	f.check_u32(0x20)?;
