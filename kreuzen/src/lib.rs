@@ -72,20 +72,22 @@ pub struct RawScena {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawChunk {
-	Function { name: String, function: RawFunction },
+	Function { function: RawFunction },
 	Table { name: String, table: tables::Table, shadow: bool },
 }
 
 impl RawChunk {
 	pub fn name(&self) -> &str {
 		match self {
-			RawChunk::Function { name, .. } | RawChunk::Table { name, .. } => name,
+			RawChunk::Function { function } => &function.name,
+			RawChunk::Table { name, .. } => name,
 		}
 	}
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RawFunction {
+	pub name: String,
 	pub body: Vec<FlatOp>,
 	pub preload: Vec<code::preload::Preload>,
 	pub shadow: Vec<code::shadow::Shadow>,
@@ -99,12 +101,13 @@ pub struct Scena {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Chunk {
-	Function { name: String, function: Function },
+	Function { function: Function },
 	Table { name: String, table: tables::Table, shadow: bool },
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
+	pub name: String,
 	pub body: Vec<decompile::Stmt>,
 	pub preload: Vec<code::preload::Preload>,
 	pub shadow: Vec<code::shadow::Shadow>,
@@ -115,18 +118,18 @@ pub fn decompile(raw: &RawScena) -> rootcause::Result<Scena> {
 	let mut errors = rootcause::report_collection::ReportCollection::new();
 	for c in &raw.chunks {
 		match c {
-			RawChunk::Function { name, function } => {
-				let _span = tracing::error_span!("chunk", name=%name).entered();
+			RawChunk::Function { function } => {
+				let _span = tracing::error_span!("chunk", name=%function.name).entered();
 				match crate::decompile::decompile(&function.body) {
 					Ok(body) => chunks.push(Chunk::Function {
-						name: name.clone(),
 						function: Function {
+							name: function.name.clone(),
 							body,
 							preload: function.preload.clone(),
 							shadow: function.shadow.clone(),
 						},
 					}),
-					Err(e) => errors.push(e.context(format!("error decompiling chunk {name}")).into_cloneable()),
+					Err(e) => errors.push(e.context(format!("error decompiling chunk {}", function.name)).into_cloneable()),
 				}
 			}
 			RawChunk::Table { name, table, shadow } => {
@@ -149,18 +152,18 @@ pub fn compile(scena: &Scena) -> rootcause::Result<RawScena> {
 	let mut errors = rootcause::report_collection::ReportCollection::new();
 	for c in &scena.chunks {
 		match c {
-			Chunk::Function { name, function } => {
-				let _span = tracing::error_span!("chunk", name=%name).entered();
+			Chunk::Function { function } => {
+				let _span = tracing::error_span!("chunk", name=%function.name).entered();
 				match crate::decompile::compile(&function.body) {
 					Ok(body) => chunks.push(RawChunk::Function {
-						name: name.clone(),
 						function: RawFunction {
+							name: function.name.clone(),
 							body,
 							preload: function.preload.clone(),
 							shadow: function.shadow.clone(),
 						},
 					}),
-					Err(e) => errors.push(e.context(format!("error compiling chunk {name}")).into_cloneable()),
+					Err(e) => errors.push(e.context(format!("error compiling chunk {}", function.name)).into_cloneable()),
 				}
 			}
 			Chunk::Table { name, table, shadow } => {
@@ -293,12 +296,12 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 
 	for c in &scena.chunks {
 		match c {
-			RawChunk::Function { name, function } => {
-				let align = match (name.as_str(), scena.info.game) {
+			RawChunk::Function { function } => {
+				let align = match (function.name.as_str(), scena.info.game) {
 					("Init", Game::Cs1) if scena.info.name == "effect" => 16,
 					_ => 4,
 				};
-				chunk(align, name, true, code::write(&d, &function.body));
+				chunk(align, &function.name, true, code::write(&d, &function.body));
 			}
 			RawChunk::Table { name, table, .. } => {
 				let (align, f) = tables::write(&d, name.as_str(), table)?;
@@ -307,11 +310,11 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 		}
 	}
 	for c in &scena.chunks {
-		if let RawChunk::Function { name, function } = c
+		if let RawChunk::Function { function } = c
 			&& !function.preload.is_empty()
 		{
 			let f = code::preload::write(&d, &function.preload);
-			chunk(16, &format!("_{name}"), false, f);
+			chunk(16, &format!("_{}", function.name), false, f);
 		}
 	}
 	if scena.info.game == Game::Reverie && scena.info.oddness == 3 {
@@ -319,10 +322,10 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 	}
 	for c in &scena.chunks {
 		match c {
-			RawChunk::Function { name, function } => {
+			RawChunk::Function { function } => {
 				for (i, shadow) in function.shadow.iter().enumerate() {
 					let code = code::shadow::flatten(shadow);
-					chunk(4, &format!("_a{i}_{name}"), true, code::write(&d, &code));
+					chunk(4, &format!("_a{i}_{}", function.name), true, code::write(&d, &code));
 				}
 			}
 			RawChunk::Table { name, shadow: true, .. } => {
@@ -530,8 +533,7 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 			Vec::new()
 		};
 		Ok(RawChunk::Function {
-			name: e.name.clone(),
-			function: RawFunction { body, preload, shadow: shadows },
+			function: RawFunction { name: e.name.clone(), body, preload, shadow: shadows },
 		})
 	}
 }

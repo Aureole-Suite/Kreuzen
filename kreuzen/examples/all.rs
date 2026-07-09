@@ -160,9 +160,9 @@ fn to_string(scena: &kreuzen::RawScena) -> String {
 
 	for chunk in &scena.chunks {
 		match chunk {
-			RawChunk::Function { name, function } => {
-				let _span = tracing::error_span!("chunk", name=%name).entered();
-				ctx.token(name.to_owned());
+			RawChunk::Function { function } => {
+				let _span = tracing::error_span!("chunk", name=%function.name).entered();
+				ctx.token(function.name.to_owned());
 				match kreuzen::decompile::decompile(&function.body) {
 					Ok(stmts) => stmts.print(&mut ctx),
 					Err(e) => {
@@ -175,7 +175,7 @@ fn to_string(scena: &kreuzen::RawScena) -> String {
 					ctx.block(&function.preload, Preload::print);
 				}
 				for (a, shadow) in function.shadow.iter().enumerate() {
-					ctx.token(format!("_a{a}_{name}"));
+					ctx.token(format!("_a{a}_{}", function.name));
 					shadow.print(&mut ctx);
 				}
 			}
