@@ -507,14 +507,14 @@ fn resolve_game(n: &str, mut game: Game, mut enc: Enc, old_cs1: bool) -> (Game, 
 }
 
 fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> rootcause::Result<RawChunk> {
-	let mut shadows = Vec::with_capacity(e.shadow.len());
+	let mut shadow = Vec::with_capacity(e.shadow.len());
 	for (a, &s) in e.shadow.iter().enumerate() {
 		let _span = tracing::error_span!("shadow", a).entered();
 		let code = code::read_code_chunk(cr, ranges[s])?;
-		shadows.push(code::shadow::parse(&code)?);
+		shadow.push(code::shadow::parse(&code)?);
 	}
 	if let Some(table) = read_subchunk(cr, ranges[e.main], |f| tables::read(f, &e.name))? {
-		let shadow = match shadows.as_slice() {
+		let shadow = match shadow.as_slice() {
 			[] => false,
 			[s] if s.ops.is_empty() => true,
 			_ => rootcause::bail!("unexpected shadows for table chunk {:?}", e.name),
@@ -533,7 +533,7 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 			Vec::new()
 		};
 		Ok(RawChunk::Function {
-			function: RawFunction { name: e.name.clone(), body, preload, shadow: shadows },
+			function: RawFunction { name: e.name.clone(), body, preload, shadow },
 		})
 	}
 }
