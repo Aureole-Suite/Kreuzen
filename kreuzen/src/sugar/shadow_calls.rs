@@ -30,6 +30,10 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 						let Some((0, base)) = parse_name(name),
 						"shadow references {name}, which does not start with _a0_"
 					);
+					crate::ensure!(
+						!base.starts_with("_a0_"),
+						"shadow references {name}, which strips to another _a0_ name"
+					);
 					*name = base.to_owned();
 				}
 			}
@@ -54,7 +58,9 @@ pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 
 		for shadow in &mut function.shadow {
 			for op in &mut shadow.ops {
-				if let ShadowOp::Call { name, .. } | ShadowOp::Fork { name, .. } = op {
+				if let ShadowOp::Call { name, .. } | ShadowOp::Fork { name, .. } = op
+					&& !name.starts_with("_a0_")
+				{
 					*name = format!("_a0_{name}");
 				}
 			}

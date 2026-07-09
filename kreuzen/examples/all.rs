@@ -150,6 +150,17 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
 		}
 	}
+	let desugar2 = kreuzen::sugar::desugar(&desugar)?;
+	if desugar2 != desugar {
+		let s1 = desugar.print_to_string();
+		let s2 = desugar2.print_to_string();
+		tracing::error!("desugar is not idempotent");
+		if s1 == s2 {
+			println!("string was equal, so probably NaN issues");
+		} else {
+			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
+		}
+	}
 
 	if scena.info.game != game || scena.info.enc != enc {
 		return Ok(());
