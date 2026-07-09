@@ -9,6 +9,7 @@ pub mod decompile;
 pub mod expr;
 mod io;
 mod spec;
+pub mod sugar;
 pub mod tables;
 pub mod text;
 pub mod types;
@@ -105,7 +106,7 @@ pub enum Chunk {
 	Table { name: String, table: tables::Table, shadow: bool },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Function {
 	pub name: String,
 	pub body: Vec<decompile::Stmt>,

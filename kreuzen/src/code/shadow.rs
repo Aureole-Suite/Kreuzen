@@ -5,7 +5,7 @@ use crate::decompile::Stmt;
 use crate::expr::Expr;
 use crate::types::Char;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Shadow {
 	pub line: u16,
 	pub ops: Vec<ShadowOp>,

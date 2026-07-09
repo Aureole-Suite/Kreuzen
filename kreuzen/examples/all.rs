@@ -1,7 +1,5 @@
-use kreuzen::code::FlatOp;
-use kreuzen::code::preload::Preload;
-use kreuzen::{Enc, Game, RawChunk};
-use kreuzen_syntax::{Ctx, Print as _};
+use kreuzen::{Enc, Game};
+use kreuzen_syntax::Print as _;
 use std::cell::Cell;
 use std::path::{Path, PathBuf};
 use tracing::Level;
@@ -136,11 +134,24 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		}
 	}
 
+	let resugar = kreuzen::sugar::resugar(&scena)?;
+	let desugar = kreuzen::sugar::desugar(&resugar)?;
+	if desugar != scena {
+		let s1 = scena.print_to_string();
+		let s2 = desugar.print_to_string();
+		tracing::error!("decompile mismatch after resugar");
+		if s1 == s2 {
+			println!("string was equal, so probably NaN issues");
+		} else {
+			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
+		}
+	}
+
 	if scena.info.game != game || scena.info.enc != enc {
 		return Ok(());
 	}
 
-	let s1 = scena.print_to_string();
+	let s1 = resugar.print_to_string();
 	std::fs::create_dir_all(outfile.parent().unwrap())?;
 	std::fs::write(outfile, s1)?;
 

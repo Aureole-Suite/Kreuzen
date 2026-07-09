@@ -16,6 +16,60 @@ pub enum Stmt {
 	Switch(OpMeta, Expr, Vec<(Case, Vec<Stmt>)>),
 }
 
+pub fn leaves(code: &[Stmt]) -> Vec<&Stmt> {
+	fn leaves_inner<'a>(code: &'a [Stmt], out: &mut Vec<&'a Stmt>) {
+		for stmt in code {
+			match stmt {
+				Stmt::If(_, _, yes, no) => {
+					leaves_inner(yes, out);
+					if let Some(no) = no {
+						leaves_inner(&no.1, out);
+					}
+				}
+				Stmt::While(_, _, body, _) => {
+					leaves_inner(body, out);
+				}
+				Stmt::Switch(_, _, cases) => {
+					for case in cases {
+						leaves_inner(&case.1, out);
+					}
+				}
+				s => out.push(s),
+			}
+		}
+	}
+	let mut out = Vec::new();
+	leaves_inner(code, &mut out);
+	out
+}
+
+pub fn leaves_mut(code: &mut [Stmt]) -> Vec<&mut Stmt> {
+	fn leaves_mut_inner<'a>(code: &'a mut [Stmt], out: &mut Vec<&'a mut Stmt>) {
+		for stmt in code {
+			match stmt {
+				Stmt::If(_, _, yes, no) => {
+					leaves_mut_inner(yes, out);
+					if let Some(no) = no {
+						leaves_mut_inner(&mut no.1, out);
+					}
+				}
+				Stmt::While(_, _, body, _) => {
+					leaves_mut_inner(body, out);
+				}
+				Stmt::Switch(_, _, cases) => {
+					for case in cases {
+						leaves_mut_inner(&mut case.1, out);
+					}
+				}
+				s => out.push(s),
+			}
+		}
+	}
+	let mut out = Vec::new();
+	leaves_mut_inner(code, &mut out);
+	out
+}
+
 impl std::fmt::Debug for Stmt {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
