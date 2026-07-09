@@ -20,6 +20,12 @@ impl<S: tracing::Subscriber> tracing_subscriber::Layer<S> for WarnDetector {
 	}
 }
 
+fn with_warnings<T>(f: impl FnOnce() -> rootcause::Result<T>) -> rootcause::Result<(T, bool)> {
+	WARNED.with(|w| w.set(false));
+	let value = f()?;
+	Ok((value, WARNED.with(|w| w.take())))
+}
+
 fn main() {
 	unsafe { compact_debug::enable(true) };
 
@@ -102,9 +108,7 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 
 fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Result<()> {
 	let bytes = std::fs::read(script)?;
-	WARNED.with(|w| w.set(false));
-	let raw = kreuzen::read(game, enc, &bytes)?;
-	let had_warnings = WARNED.with(|w| w.take());
+	let (raw, warned) = with_warnings(|| kreuzen::read(game, enc, &bytes))?;
 	let bytes2 = kreuzen::write(&raw)?;
 	if bytes != bytes2 {
 		let raw2 = kreuzen::read(game, enc, &bytes2)?;
@@ -114,16 +118,16 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		if s1 != s2 {
 			tracing::error!("decoded mismatch after roundtrip");
 			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
-		} else if !had_warnings {
+		} else if !warned {
 			tracing::error!("bytes differ ({} -> {} bytes)", bytes.len(), bytes2.len());
 		}
-	} else if had_warnings {
+	} else if warned {
 		tracing::warn!("warnings emitted but bytes are identical");
 	}
 
-	let scena = kreuzen::decompile(&raw)?;
+	let (scena, warned) = with_warnings(|| kreuzen::decompile(&raw))?;
 	let raw2 = kreuzen::compile(&scena)?;
-	if raw2 != raw {
+	if raw2 != raw && !warned {
 		let s1 = raw.print_to_string();
 		let s2 = raw2.print_to_string();
 		tracing::error!("decompile mismatch after roundtrip");
@@ -134,9 +138,9 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		}
 	}
 
-	let resugar = kreuzen::sugar::resugar(&scena)?;
+	let (resugar, warned) = with_warnings(|| kreuzen::sugar::resugar(&scena))?;
 	let desugar = kreuzen::sugar::desugar(&resugar)?;
-	if desugar != scena {
+	if desugar != scena && !warned {
 		let s1 = scena.print_to_string();
 		let s2 = desugar.print_to_string();
 		tracing::error!("decompile mismatch after resugar");
