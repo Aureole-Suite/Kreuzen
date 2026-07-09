@@ -3,8 +3,10 @@ use std::collections::BTreeMap;
 use rootcause::option_ext::OptionExt as _;
 use rootcause::prelude::ResultExt as _;
 
+use crate::Function;
 use crate::code::{FlatOp, Label, Op, OpMeta};
 use crate::expr::Expr;
+use crate::types::Char;
 
 #[derive(Clone, PartialEq)]
 pub enum Stmt {
@@ -14,6 +16,7 @@ pub enum Stmt {
 	Break(OpMeta),
 	Continue(OpMeta),
 	Switch(OpMeta, Expr, Vec<(Case, Vec<Stmt>)>),
+	ForkLambda(OpMeta, Char, i64, Function),
 }
 
 pub fn leaves(code: &[Stmt]) -> Vec<&Stmt> {
@@ -96,6 +99,7 @@ impl std::fmt::Debug for Stmt {
 			Self::Break(m) => m.fmt(f)?.debug_tuple("Break").finish(),
 			Self::Continue(m) => m.fmt(f)?.debug_tuple("Continue").finish(),
 			Self::Switch(m, a, b) => m.fmt(f)?.debug_tuple("Switch").field(a).field(b).finish(),
+			Self::ForkLambda(m, a, b, c) => m.fmt(f)?.debug_tuple("ForkLambda").field(a).field(b).field(c).finish(),
 		}
 	}
 }
@@ -186,6 +190,7 @@ fn compile_inner(out: &mut Vec<FlatOp>, l: &mut u32, stmts: &[Stmt], brk: Option
 				}
 				out.push(FlatOp::Label(brk));
 			}
+			Stmt::ForkLambda(..) => rootcause::bail!("cannot compile ForkLambda; desugar first"),
 		}
 	}
 

@@ -59,6 +59,13 @@ impl Print for Stmt {
 				e.print(ctx);
 				body.print(ctx);
 			}
+			Stmt::ForkLambda(m, chr, slot, function) => {
+				m.print(ctx);
+				ctx.word("ForkLambda");
+				chr.print(ctx);
+				slot.print(ctx);
+				function.print(ctx);
+			}
 			Stmt::Switch(m, e, cases) => {
 				m.print(ctx);
 				ctx.word("switch");
