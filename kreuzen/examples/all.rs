@@ -111,8 +111,8 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 	if bytes != bytes2 {
 		let raw2 = kreuzen::read(game, enc, &bytes2)?;
 
-		let s1 = to_string(&raw);
-		let s2 = to_string(&raw2);
+		let s1 = raw.print_to_string();
+		let s2 = raw2.print_to_string();
 		if s1 != s2 {
 			tracing::error!("decoded mismatch after roundtrip");
 			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
@@ -126,8 +126,8 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 	let scena = kreuzen::decompile(&raw)?;
 	let raw2 = kreuzen::compile(&scena)?;
 	if raw2 != raw {
-		let s1 = to_string(&raw);
-		let s2 = to_string(&raw2);
+		let s1 = raw.print_to_string();
+		let s2 = raw2.print_to_string();
 		tracing::error!("decompile mismatch after roundtrip");
 		if s1 == s2 {
 			println!("string was equal, so probably NaN issues");
@@ -140,55 +140,9 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 		return Ok(());
 	}
 
-	let s1 = to_string(&raw);
+	let s1 = scena.print_to_string();
 	std::fs::create_dir_all(outfile.parent().unwrap())?;
 	std::fs::write(outfile, s1)?;
 
-	// check_preload(&scena);
-
 	Ok(())
-}
-
-fn to_string(scena: &kreuzen::RawScena) -> String {
-	let mut ctx = Ctx::new();
-	let s = format!(
-		"scena {} game={:?} enc={:?} oddness={} variant={}",
-		scena.info.name, scena.info.game, scena.info.enc, scena.info.oddness, scena.info.variant
-	);
-	ctx.token(s);
-	ctx.newline(1);
-
-	for chunk in &scena.chunks {
-		match chunk {
-			RawChunk::Function { function } => {
-				let _span = tracing::error_span!("chunk", name=%function.name).entered();
-				ctx.token(function.name.to_owned());
-				match kreuzen::decompile::decompile(&function.body) {
-					Ok(stmts) => stmts.print(&mut ctx),
-					Err(e) => {
-						ctx.block_commented(&format!("Error decompiling:{e}"), &function.body, FlatOp::print);
-						print!("Error decompiling:{e}"); // has a newline on its own
-					}
-				}
-				if !function.preload.is_empty() {
-					ctx.word("preload");
-					ctx.block(&function.preload, Preload::print);
-				}
-				for (a, shadow) in function.shadow.iter().enumerate() {
-					ctx.token(format!("_a{a}_{}", function.name));
-					shadow.print(&mut ctx);
-				}
-			}
-			RawChunk::Table { name, table, shadow } => {
-				let _span = tracing::error_span!("chunk", name=%name).entered();
-				ctx.token(name.to_owned());
-				if *shadow {
-					ctx.word("shadow");
-				}
-				table.print(&mut ctx);
-			}
-		}
-		ctx.newline(1);
-	}
-	ctx.finish()
 }
