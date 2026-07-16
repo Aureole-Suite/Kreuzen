@@ -102,7 +102,7 @@ pub struct Scena {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Chunk {
-	Function { function: Function },
+	Function(Function),
 	Table { name: String, table: tables::Table, shadow: bool },
 }
 
@@ -122,14 +122,12 @@ pub fn decompile(raw: &RawScena) -> rootcause::Result<Scena> {
 			RawChunk::Function { function } => {
 				let _span = tracing::error_span!("chunk", name=%function.name).entered();
 				match crate::decompile::decompile(&function.body) {
-					Ok(body) => chunks.push(Chunk::Function {
-						function: Function {
-							name: function.name.clone(),
-							body,
-							preload: function.preload.clone(),
-							shadow: function.shadow.clone(),
-						},
-					}),
+					Ok(body) => chunks.push(Chunk::Function(Function {
+						name: function.name.clone(),
+						body,
+						preload: function.preload.clone(),
+						shadow: function.shadow.clone(),
+					})),
 					Err(e) => errors.push(e.context(format!("error decompiling chunk {}", function.name)).into_cloneable()),
 				}
 			}
@@ -153,7 +151,7 @@ pub fn compile(scena: &Scena) -> rootcause::Result<RawScena> {
 	let mut errors = rootcause::report_collection::ReportCollection::new();
 	for c in &scena.chunks {
 		match c {
-			Chunk::Function { function } => {
+			Chunk::Function(function) => {
 				let _span = tracing::error_span!("chunk", name=%function.name).entered();
 				match crate::decompile::compile(&function.body) {
 					Ok(body) => chunks.push(RawChunk::Function {

@@ -89,7 +89,7 @@ impl Print for Function {
 impl Print for Chunk {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
-			Chunk::Function { function } => function.print(ctx),
+			Chunk::Function(f) => f.print(ctx),
 			Chunk::Table { name, table, shadow } => {
 				ctx.token(name.to_owned());
 				if *shadow {

@@ -17,7 +17,7 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut chunks = Vec::with_capacity(scena.chunks.len());
 	for chunk in scena.chunks.drain(..) {
 		match chunk {
-			Chunk::Function { function } if function.name.starts_with("_Lambda_") => {
+			Chunk::Function(function) if function.name.starts_with("_Lambda_") => {
 				let name = function.name.clone();
 				crate::ensure!(lambdas.insert(name.clone(), function).is_none(), "duplicate lambda {name}");
 			}
@@ -27,7 +27,7 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 	scena.chunks = chunks;
 
 	for chunk in &mut scena.chunks {
-		let Chunk::Function { function } = chunk else { continue };
+		let Chunk::Function(function) = chunk else { continue };
 		merge_function(function, &mut lambdas)?;
 	}
 	crate::ensure!(lambdas.is_empty(), "lambdas are never forked: {:?}", lambdas.keys().collect::<Vec<_>>());
@@ -105,11 +105,11 @@ pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut chunks = Vec::with_capacity(scena.chunks.len());
 	for chunk in scena.chunks.drain(..) {
 		match chunk {
-			Chunk::Function { mut function } => {
+			Chunk::Function(mut function) => {
 				let mut lambdas = Vec::new();
 				extract_function(&mut function, &mut lambdas)?;
-				chunks.push(Chunk::Function { function });
-				chunks.extend(lambdas.into_iter().map(|function| Chunk::Function { function }));
+				chunks.push(Chunk::Function(function));
+				chunks.extend(lambdas.into_iter().map(Chunk::Function));
 			}
 			chunk => chunks.push(chunk),
 		}

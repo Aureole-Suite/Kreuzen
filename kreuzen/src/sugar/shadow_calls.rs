@@ -7,17 +7,14 @@ use crate::{Chunk, Scena};
 
 pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 	for chunk in &mut scena.chunks {
-		let Chunk::Function { function } = chunk else { continue };
+		let Chunk::Function(function) = chunk else { continue };
 		for stmt in crate::decompile::leaves_mut(&mut function.body) {
 			if let Stmt::Op(op) = stmt
 				&& op.name == "call"
 				&& let [Arg::Int(11), Arg::Str(name)] = op.args.as_slice()
 				&& let Some((idx, owner)) = parse_name(name)
 			{
-				crate::ensure!(
-					owner == function.name,
-					"{} calls shadow {name}, which is not its own", function.name
-				);
+				crate::ensure!(owner == function.name, "{} calls shadow {name}, which is not its own", function.name);
 				op.name = "CallShadow";
 				op.args = vec![Arg::Int(idx as i64)];
 			}
@@ -30,10 +27,7 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 						let Some((0, base)) = parse_name(name),
 						"shadow references {name}, which does not start with _a0_"
 					);
-					crate::ensure!(
-						!base.starts_with("_a0_"),
-						"shadow references {name}, which strips to another _a0_ name"
-					);
+					crate::ensure!(!base.starts_with("_a0_"), "shadow references {name}, which strips to another _a0_ name");
 					*name = base.to_owned();
 				}
 			}
@@ -44,7 +38,7 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 
 pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 	for chunk in &mut scena.chunks {
-		let Chunk::Function { function } = chunk else { continue };
+		let Chunk::Function(function) = chunk else { continue };
 		for stmt in crate::decompile::leaves_mut(&mut function.body) {
 			if let Stmt::Op(op) = stmt
 				&& op.name == "CallShadow"

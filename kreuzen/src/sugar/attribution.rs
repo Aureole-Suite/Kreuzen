@@ -10,7 +10,7 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut shadows = HashMap::new();
 	let mut moves = Vec::new();
 	for chunk in &mut scena.chunks {
-		let Chunk::Function { function } = chunk else { continue };
+		let Chunk::Function(function) = chunk else { continue };
 		shadows.insert(function.name.clone(), &mut function.shadow);
 
 		for stmt in crate::decompile::leaves_mut(&mut function.body) {
@@ -31,7 +31,7 @@ pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut shadows = HashMap::new();
 	let mut moves = Vec::new();
 	for chunk in &mut scena.chunks {
-		let Chunk::Function { function } = chunk else { continue };
+		let Chunk::Function(function) = chunk else { continue };
 		shadows.insert(function.name.clone(), &mut function.shadow);
 
 		let mut current = function.name.clone();
