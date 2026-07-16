@@ -2,7 +2,7 @@ use kreuzen::tables::action::Action;
 use kreuzen::tables::add_collision::Collision;
 use kreuzen::tables::algo::Algo;
 use kreuzen::tables::anime_clip::AnimeClip;
-use kreuzen::tables::book::BookData;
+use kreuzen::tables::book::{BookData, Page};
 use kreuzen::tables::break_::Break;
 use kreuzen::tables::btlset::{Btlset, Variant};
 use kreuzen::tables::condition::Condition;
@@ -41,21 +41,10 @@ impl Print for Table {
 				name.print(ctx);
 				book.print(ctx);
 			}
-			Table::Book { name, book } => {
+			Table::Book { name, pages } => {
 				ctx.word("Book");
 				name.print(ctx);
-				ctx.block(&book.pages, |(title, text), ctx| {
-					match title {
-						Some(t) => {
-							ctx.word("title_page");
-							t.title.print(ctx);
-							t.data.print(ctx);
-						}
-						None => ctx.word("page"),
-					}
-					text.print(ctx);
-					ctx.sym_(";");
-				});
+				ctx.block(pages, Page::print);
 			}
 			Table::BreakTable(t) => {
 				ctx.word("BreakTable");
@@ -186,6 +175,21 @@ impl Print for BookData {
 				ctx.sym_(";");
 			}
 		}
+	}
+}
+
+impl Print for Page {
+	fn print(&self, ctx: &mut Ctx) {
+		match &self.title {
+			Some(t) => {
+				ctx.word("title_page");
+				t.title.print(ctx);
+				t.data.print(ctx);
+			}
+			None => ctx.word("page"),
+		}
+		self.text.print(ctx);
+		ctx.sym_(";");
 	}
 }
 

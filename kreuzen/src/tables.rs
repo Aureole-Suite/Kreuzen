@@ -38,7 +38,7 @@ pub enum Table {
 	AlgoTable(Vec<algo::Algo>),
 	AnimeClipTable(Vec<anime_clip::AnimeClip>),
 	BookData { name: String, book: book::BookData }, // Raw book data
-	Book { name: String, book: book::Book },         // Desugared
+	Book { name: String, pages: Vec<book::Page> },   // Desugared
 	BreakTable(Vec<break_::Break>),
 	ConditionTable(Vec<condition::Condition>),
 	FcAuto { name: String, text: String },

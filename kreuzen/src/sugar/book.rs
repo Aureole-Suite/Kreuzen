@@ -1,6 +1,6 @@
 //! Combine groups of `BookData<XX>_*` chunks into a single `Book` chunk.
 use crate::tables::Table;
-use crate::tables::book::{Book, BookData};
+use crate::tables::book::{BookData, Page};
 use crate::text::{Text, TextControl, TextPart};
 use crate::{Chunk, Scena};
 
@@ -27,16 +27,16 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 				unreachable!()
 			};
 			pages.push(match book {
-				BookData::TitlePage(title, text) => (Some(title), parse_text(&text)?),
-				BookData::Page(text) => (None, parse_text(&text)?),
-				BookData::Empty => (None, Text(Vec::new())),
+				BookData::TitlePage(title, text) => Page { title: Some(title), text: parse_text(&text)? },
+				BookData::Page(text) => Page { title: None, text: parse_text(&text)? },
+				BookData::Empty => Page { title: None, text: Text(Vec::new()) },
 				BookData::Header(_) => rootcause::bail!("page {name} is a header"),
 			});
 		}
 		if pages.len() != n as usize {
 			tracing::warn!("book {base} header says {n} pages, found {}", pages.len());
 		}
-		chunks.push(Chunk::Table(Table::Book { name: base.to_owned(), book: Book { pages } }));
+		chunks.push(Chunk::Table(Table::Book { name: base.to_owned(), pages }));
 	}
 	scena.chunks = chunks;
 	Ok(())
@@ -45,17 +45,17 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut chunks = Vec::with_capacity(scena.chunks.len());
 	for chunk in std::mem::take(&mut scena.chunks) {
-		let Chunk::Table(Table::Book { name: base, book }) = chunk else {
+		let Chunk::Table(Table::Book { name: base, pages }) = chunk else {
 			chunks.push(chunk);
 			continue;
 		};
 		chunks.push(Chunk::Table(Table::BookData {
 			name: format!("{base}_99"),
-			book: BookData::Header(book.pages.len() as u16),
+			book: BookData::Header(pages.len() as u16),
 		}));
-		for (m, (title, text)) in book.pages.into_iter().enumerate() {
-			let text = unparse_text(&text)?;
-			let book = match title {
+		for (m, page) in pages.into_iter().enumerate() {
+			let text = unparse_text(&page.text)?;
+			let book = match page.title {
 				Some(title) => BookData::TitlePage(title, text),
 				None if text.is_empty() => BookData::Empty,
 				None => BookData::Page(text),

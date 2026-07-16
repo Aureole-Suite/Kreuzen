@@ -5,8 +5,9 @@ use crate::io::{CReader, OData, WriterExt as _};
 use crate::text::Text;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Book {
-	pub pages: Vec<(Option<TitlePage>, Text)>,
+pub struct Page {
+	pub title: Option<TitlePage>,
+	pub text: Text,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
