@@ -66,6 +66,13 @@ pub struct ScenaInfo {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TableChunk {
+	pub name: String,
+	pub table: tables::Table,
+	pub shadow: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct RawScena {
 	pub info: ScenaInfo,
 	pub chunks: Vec<RawChunk>,
@@ -74,7 +81,7 @@ pub struct RawScena {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawChunk {
 	Function(RawFunction),
-	Table { name: String, table: tables::Table, shadow: bool },
+	Table(TableChunk),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -94,7 +101,7 @@ pub struct Scena {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Chunk {
 	Function(Function),
-	Table { name: String, table: tables::Table, shadow: bool },
+	Table(TableChunk),
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -122,13 +129,7 @@ pub fn decompile(raw: &RawScena) -> rootcause::Result<Scena> {
 					Err(e) => errors.push(e.context(format!("error decompiling chunk {}", function.name)).into_cloneable()),
 				}
 			}
-			RawChunk::Table { name, table, shadow } => {
-				chunks.push(Chunk::Table {
-					name: name.clone(),
-					table: table.clone(),
-					shadow: *shadow,
-				});
-			}
+			RawChunk::Table(t) => chunks.push(Chunk::Table(t.clone())),
 		}
 	}
 	if !errors.is_empty() {
@@ -154,13 +155,7 @@ pub fn compile(scena: &Scena) -> rootcause::Result<RawScena> {
 					Err(e) => errors.push(e.context(format!("error compiling chunk {}", function.name)).into_cloneable()),
 				}
 			}
-			Chunk::Table { name, table, shadow } => {
-				chunks.push(RawChunk::Table {
-					name: name.clone(),
-					table: table.clone(),
-					shadow: *shadow,
-				});
-			}
+			Chunk::Table(t) => chunks.push(RawChunk::Table(t.clone())),
 		}
 	}
 	if !errors.is_empty() {
@@ -291,9 +286,9 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 				};
 				chunk(align, &function.name, true, code::write(&d, &function.body));
 			}
-			RawChunk::Table { name, table, .. } => {
-				let (align, f) = tables::write(&d, name.as_str(), table)?;
-				chunk(align, name, false, Ok(f));
+			RawChunk::Table(t) => {
+				let (align, f) = tables::write(&d, &t.name, &t.table)?;
+				chunk(align, &t.name, false, Ok(f));
 			}
 		}
 	}
@@ -316,12 +311,13 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 					chunk(4, &format!("_a{i}_{}", function.name), true, code::write(&d, &code));
 				}
 			}
-			RawChunk::Table { name, shadow: true, .. } => {
-				let empty = code::shadow::Shadow { line: 0, ops: vec![] };
-				let code = code::shadow::flatten(&empty);
-				chunk(4, &format!("_a0_{name}"), true, code::write(&d, &code));
+			RawChunk::Table(t) => {
+				if t.shadow {
+					let empty = code::shadow::Shadow { line: 0, ops: vec![] };
+					let code = code::shadow::flatten(&empty);
+					chunk(4, &format!("_a0_{}", t.name), true, code::write(&d, &code));
+				}
 			}
-			RawChunk::Table { shadow: false, .. } => {}
 		}
 	}
 
@@ -507,7 +503,7 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 			[s] if s.ops.is_empty() => true,
 			_ => rootcause::bail!("unexpected shadows for table chunk {:?}", e.name),
 		};
-		Ok(RawChunk::Table { name: e.name.clone(), table, shadow })
+		Ok(RawChunk::Table(TableChunk { name: e.name.clone(), table, shadow }))
 	} else {
 		let body = code::read_code_chunk(cr, ranges[e.main])?;
 		let preload = if let Some(i) = e.preload {

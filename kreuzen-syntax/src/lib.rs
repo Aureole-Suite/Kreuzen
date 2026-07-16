@@ -7,7 +7,7 @@ pub use ctx::Ctx;
 
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
-use kreuzen::{Chunk, Function, RawChunk, RawFunction, RawScena, Scena, ScenaInfo};
+use kreuzen::{Chunk, Function, RawChunk, RawFunction, RawScena, Scena, ScenaInfo, TableChunk};
 
 pub trait Print {
 	fn print(&self, ctx: &mut Ctx);
@@ -24,6 +24,16 @@ impl Print for ScenaInfo {
 			"scena {} game={:?} enc={:?} oddness={} variant={}",
 			self.name, self.game, self.enc, self.oddness, self.variant
 		));
+	}
+}
+
+impl Print for TableChunk {
+	fn print(&self, ctx: &mut Ctx) {
+		ctx.token(self.name.to_owned());
+		if self.shadow {
+			ctx.word("shadow");
+		}
+		self.table.print(ctx);
 	}
 }
 
@@ -47,13 +57,7 @@ impl Print for RawChunk {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
 			RawChunk::Function(f) => f.print(ctx),
-			RawChunk::Table { name, table, shadow } => {
-				ctx.token(name.to_owned());
-				if *shadow {
-					ctx.word("shadow");
-				}
-				table.print(ctx);
-			}
+			RawChunk::Table(t) => t.print(ctx),
 		}
 	}
 }
@@ -90,13 +94,7 @@ impl Print for Chunk {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
 			Chunk::Function(f) => f.print(ctx),
-			Chunk::Table { name, table, shadow } => {
-				ctx.token(name.to_owned());
-				if *shadow {
-					ctx.word("shadow");
-				}
-				table.print(ctx);
-			}
+			Chunk::Table(t) => t.print(ctx),
 		}
 	}
 }
