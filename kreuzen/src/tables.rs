@@ -31,14 +31,13 @@ impl std::fmt::Debug for Opaque {
 	}
 }
 
-// Preload tables are stored separately from others, so they are not in this enum
 #[derive(Debug, Clone, PartialEq)]
 pub enum Table {
 	AddCollision(Vec<add_collision::Collision>),
 	ActionTable(Vec<action::Action>),
 	AlgoTable(Vec<algo::Algo>),
 	AnimeClipTable(Vec<anime_clip::AnimeClip>),
-	Book { name: String, book: book::Book },
+	BookData { name: String, book: book::BookData },
 	BreakTable(Vec<break_::Break>),
 	ConditionTable(Vec<condition::Condition>),
 	FcAuto { name: String, text: String },
@@ -60,7 +59,7 @@ impl Table {
 			Table::ActionTable(_) => "ActionTable",
 			Table::AlgoTable(_) => "AlgoTable",
 			Table::AnimeClipTable(_) => "AnimeClipTable",
-			Table::Book { name, .. } => name,
+			Table::BookData { name, .. } => name,
 			Table::BreakTable(_) => "BreakTable",
 			Table::ConditionTable(_) => "ConditionTable",
 			Table::FcAuto { name, .. } => name,
@@ -117,7 +116,7 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		"ReactionTable"    => Table::ReactionTable(reaction::read(f)?),
 		"SummonTable"      => Table::SummonTable(summon::read(f)?),
 		"WeaponAttTable"   => Table::WeaponAttTable(weapon_att::read(f)?),
-		name if name.starts_with("BookData")  => Table::Book { name: name.to_owned(), book: book::read(f, name)? },
+		name if name.starts_with("BookData")  => Table::BosokData { name: name.to_owned(), book: book::read(f, name)? },
 		name if name.starts_with("FC_auto")   => Table::FcAuto { name: name.to_owned(), text: fc_auto::read(f)? },
 		name if name.starts_with("StyleName") => Table::StyleName { name: name.to_owned(), style: style_name::read(f)? },
 		_ => return read_other(f, name),
@@ -167,7 +166,7 @@ pub(crate) fn write(d: &OData, table: &Table) -> rootcause::Result<(usize, Write
 		Table::ActionTable(t) => action::write(d, t)?,
 		Table::AlgoTable(t) => algo::write(d, t)?,
 		Table::AnimeClipTable(t) => anime_clip::write(d, t)?,
-		Table::Book { book, .. } => book::write(d, book)?,
+		Table::BookData { book, .. } => book::write(d, book)?,
 		Table::BreakTable(t) => break_::write(d, t)?,
 		Table::ConditionTable(t) => condition::write(d, t)?,
 		Table::FcAuto { text, .. } => fc_auto::write(d, text)?,

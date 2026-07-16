@@ -2,7 +2,7 @@ use kreuzen::tables::action::Action;
 use kreuzen::tables::add_collision::Collision;
 use kreuzen::tables::algo::Algo;
 use kreuzen::tables::anime_clip::AnimeClip;
-use kreuzen::tables::book::Book;
+use kreuzen::tables::book::BookData;
 use kreuzen::tables::break_::Break;
 use kreuzen::tables::btlset::{Btlset, Variant};
 use kreuzen::tables::condition::Condition;
@@ -36,7 +36,7 @@ impl Print for Table {
 				ctx.word("AnimeClipTable");
 				ctx.block(t, AnimeClip::print);
 			}
-			Table::Book { name, book } => {
+			Table::BookData { name, book } => {
 				ctx.word("Book");
 				name.print(ctx);
 				book.print(ctx);
@@ -145,27 +145,27 @@ impl Print for AnimeClip {
 	}
 }
 
-impl Print for Book {
+impl Print for BookData {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
-			Book::Header(n) => {
+			BookData::Header(n) => {
 				ctx.word("header");
 				n.print(ctx);
 				ctx.sym_(";");
 			}
-			Book::TitlePage { title, data, text } => {
+			BookData::TitlePage(title, text) => {
 				ctx.word("title_page");
-				title.print(ctx);
-				data.print(ctx);
+				title.title.print(ctx);
+				title.data.print(ctx);
 				text.print(ctx);
 				ctx.sym_(";");
 			}
-			Book::Page(text) => {
+			BookData::Page(text) => {
 				ctx.word("page");
 				text.print(ctx);
 				ctx.sym_(";");
 			}
-			Book::Empty => {
+			BookData::Empty => {
 				ctx.word("empty");
 				ctx.sym_(";");
 			}
