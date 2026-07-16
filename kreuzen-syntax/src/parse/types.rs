@@ -198,11 +198,6 @@ impl Parse for CharAttr {
 	}
 }
 
-/// A function or scena name: an identifier, or a string for names that aren't valid identifiers.
-pub fn name(p: &mut Parser) -> Result<String> {
-	Alt::new(p).test(|p| p.ident().map(str::to_owned)).test(|p| p.parse()).finish()
-}
-
 /// `btlset[N]:battle[M]`, the syntax for `Arg::Battle`.
 pub fn battle_arg(p: &mut Parser) -> Result<Arg> {
 	p.test(Expect::Str("btlset"), |p| {

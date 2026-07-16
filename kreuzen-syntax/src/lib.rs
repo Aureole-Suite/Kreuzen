@@ -25,7 +25,7 @@ pub trait Print {
 impl Print for ScenaInfo {
 	fn print(&self, ctx: &mut Ctx) {
 		ctx.word("scena");
-		types::print_name(&self.name, ctx);
+		self.name.print(ctx);
 		ctx.token(format!(
 			"game={:?} enc={:?} oddness={} variant={}",
 			self.game, self.enc, self.oddness, self.variant
@@ -36,7 +36,7 @@ impl Print for ScenaInfo {
 impl Print for RawFunction {
 	fn print(&self, ctx: &mut Ctx) {
 		ctx.word("fn");
-		types::print_name(&self.name, ctx);
+		self.name.print(ctx);
 		ctx.block(&self.body, FlatOp::print);
 		if !self.preload.is_empty() {
 			ctx.word("preload");
@@ -73,7 +73,7 @@ impl Print for RawScena {
 impl Print for Function {
 	fn print(&self, ctx: &mut Ctx) {
 		ctx.word("fn");
-		types::print_name(&self.name, ctx);
+		self.name.print(ctx);
 		self.body.print(ctx);
 		if !self.preload.is_empty() {
 			ctx.word("preload");

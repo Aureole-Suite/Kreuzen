@@ -78,7 +78,7 @@ pub fn parse_header<'a>(tokens: &'a Tokens, errors: &mut Errors) -> Option<(Scen
 fn parse_header_inner(p: &mut Parser) -> Result<(ScenaInfo, bool)> {
 	let is_raw = p.keyword("raw").is_ok();
 	p.keyword("scena")?;
-	let name = types::name(p)?;
+	let name = p.parse()?;
 
 	p.keyword("game")?;
 	p.punct('=')?;

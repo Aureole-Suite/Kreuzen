@@ -65,6 +65,7 @@ fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	let e = expr::parse_expr(p, ctx)?;
 	let mut inner = p.delim('{')?;
+	// While has a trailing meta, so can't use super::seq
 	let mut body = Vec::new();
 	let mut meta2 = OpMeta::default();
 	while !inner.at_end() {
