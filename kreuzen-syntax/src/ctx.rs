@@ -15,6 +15,7 @@ pub struct Ctx {
 }
 
 impl Ctx {
+	#[expect(clippy::new_without_default)]
 	pub fn new() -> Self {
 		Self { out: String::new(), space: Space::None, indent: 0 }
 	}
