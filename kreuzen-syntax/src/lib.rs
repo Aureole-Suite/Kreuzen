@@ -29,6 +29,7 @@ impl Print for ScenaInfo {
 
 impl Print for RawFunction {
 	fn print(&self, ctx: &mut Ctx) {
+		ctx.word("fn");
 		ctx.token(self.name.to_owned());
 		ctx.block(&self.body, FlatOp::print);
 		if !self.preload.is_empty() {
@@ -59,6 +60,7 @@ impl Print for RawChunk {
 
 impl Print for RawScena {
 	fn print(&self, ctx: &mut Ctx) {
+		ctx.word("raw");
 		self.info.print(ctx);
 		ctx.newline(1);
 		for c in &self.chunks {
@@ -70,6 +72,7 @@ impl Print for RawScena {
 
 impl Print for Function {
 	fn print(&self, ctx: &mut Ctx) {
+		ctx.word("fn");
 		ctx.token(self.name.to_owned());
 		self.body.print(ctx);
 		if !self.preload.is_empty() {
