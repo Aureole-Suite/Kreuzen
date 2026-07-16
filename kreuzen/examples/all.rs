@@ -94,7 +94,8 @@ fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 			}
 			let script = path.join(&dir).join(folder).join(&file);
 			let scriptname = format!("{game:?}/{dir}/{folder}/{file}");
-			let outfile = PathBuf::from("out").join(format!("{game:?}/{folder}/{dir}/{file}"));
+			let basename = file.strip_suffix(".dat").unwrap_or(&file);
+			let outfile = PathBuf::from("out").join(format!("{game:?}/{folder}/{dir}/{basename}.krz"));
 			let _span = tracing::error_span!("script", name = %scriptname).entered();
 			match process(game, enc, &script, &outfile) {
 				Ok(()) => {}
