@@ -2,6 +2,12 @@ use gospel::read::Le as _;
 use gospel::write::{Le as _, Writer};
 
 use crate::io::{CReader, OData, WriterExt as _};
+use crate::text::Text;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Book {
+	pub pages: Vec<(Option<TitlePage>, Text)>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BookData {

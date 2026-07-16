@@ -37,9 +37,25 @@ impl Print for Table {
 				ctx.block(t, AnimeClip::print);
 			}
 			Table::BookData { name, book } => {
-				ctx.word("Book");
+				ctx.word("BookData");
 				name.print(ctx);
 				book.print(ctx);
+			}
+			Table::Book { name, book } => {
+				ctx.word("Book");
+				name.print(ctx);
+				ctx.block(&book.pages, |(title, text), ctx| {
+					match title {
+						Some(t) => {
+							ctx.word("title_page");
+							t.title.print(ctx);
+							t.data.print(ctx);
+						}
+						None => ctx.word("page"),
+					}
+					text.print(ctx);
+					ctx.sym_(";");
+				});
 			}
 			Table::BreakTable(t) => {
 				ctx.word("BreakTable");
