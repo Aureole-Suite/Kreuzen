@@ -32,13 +32,13 @@
 1E   'NewScena' str str
 
 1F 'Menu'
-1F00 u8 u16 f32
-1F01 u8 str u16
-1F02 u8 u8 u16 u16
-1F03 u8
-1F04 u8 u8
+1F00 'MenuNew' u8 u16 f32
+1F01 'MenuAdd' u8 str i16
+1F02 'MenuShow' u8 u8 i16 i16
+1F03 'MenuHide' u8
+1F04 'MenuWait' u8 global
 1F06 u8 u16
-1F07 u8 u16
+1F07 'MenuDisable' u8 u16
 
 20   u8 char str str u8
 21 'Battle'
@@ -402,11 +402,11 @@
 6905 u32
 
 6A 'Menu2'
-6A00 u8 u16 f32
-6A01 u8 str u16
-6A02 u8 u8 u16 u16
-6A03 u8
-6A04 u8 u8
+6A00 'Menu2New' u8 u16 f32
+6A01 'Menu2Add' u8 str i16
+6A02 'Menu2Show' u8 u8 i16 i16
+6A03 'Menu2Hide' u8
+6A04 'Menu2Wait' u8 global
 6A06 u8 u16
 
 6B   char str str u8
