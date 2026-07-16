@@ -15,10 +15,10 @@ use kreuzen::tables::summon::Summon;
 use kreuzen::tables::weapon_att::WeaponAtt;
 use kreuzen::tables::{Dummy, Table};
 
+use super::PCtx;
 use super::alt::Alt;
 use super::parser::{Error, Expect, Parser, Result};
 use super::types::Parse;
-use super::PCtx;
 
 pub fn parse_table(p: &mut Parser, _ctx: &PCtx) -> Result<Table> {
 	let span = p.next_span();
@@ -133,22 +133,10 @@ impl Parse for StyleName {
 impl Parse for BookData {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		Alt::new(p)
-			.test(|p| {
-				p.keyword("header")?;
-				p.commit();
-				p.parse().map(BookData::Header)
-			})
-			.test(|p| {
-				p.keyword("title_page")?;
-				p.commit();
-				Ok(BookData::TitlePage(p.parse()?, p.parse()?))
-			})
-			.test(|p| {
-				p.keyword("page")?;
-				p.commit();
-				p.parse().map(BookData::Page)
-			})
-			.test(|p| p.keyword("empty").map(|_| BookData::Empty))
+			.test_kw("header", |p| p.parse().map(BookData::Header))
+			.test_kw("title_page", |p| Ok(BookData::TitlePage(p.parse()?, p.parse()?)))
+			.test_kw("page", |p| p.parse().map(BookData::Page))
+			.test_kw("empty", |_| Ok(BookData::Empty))
 			.finish()
 	}
 }
@@ -164,12 +152,8 @@ impl Parse for TitlePage {
 impl Parse for Page {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		let title = Alt::new(p)
-			.test(|p| {
-				p.keyword("title_page")?;
-				p.commit();
-				p.parse().map(Some)
-			})
-			.test(|p| p.keyword("page").map(|_| None))
+			.test_kw("title_page", |p| p.parse().map(Some))
+			.test_kw("page", |_| Ok(None))
 			.finish()?;
 		let text = p.parse()?;
 		Ok(Page { title, text })

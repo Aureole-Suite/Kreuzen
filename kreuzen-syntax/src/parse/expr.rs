@@ -121,7 +121,7 @@ fn parse_atom(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {
 			p.commit();
 			Ok(unop(UnOp::Neg, parse_atom(p, ctx)?))
 		})
-		.test(|p| p.keyword("rand").map(|_| Expr::Rand))
+		.test_kw("rand", |_| Ok(Expr::Rand))
 		.test(|p| p.parse().map(Expr::Flag))
 		.test(|p| p.parse().map(Expr::Var))
 		.test(|p| p.parse().map(Expr::Attr))

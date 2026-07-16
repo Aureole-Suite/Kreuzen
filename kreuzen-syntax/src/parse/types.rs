@@ -47,8 +47,8 @@ impl Parse for f32 {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		Alt::new(p)
 			.test(|p| p.float())
-			.test(|p| p.keyword("inf").map(|_| f32::INFINITY))
-			.test(|p| p.keyword("NaN").map(|_| f32::NAN))
+			.test_kw("inf", |_| Ok(f32::INFINITY))
+			.test_kw("NaN", |_| Ok(f32::NAN))
 			.test(|p| {
 				p.punct('-')?;
 				p.keyword("inf")?;
@@ -178,8 +178,8 @@ impl Parse for Char {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		bracket(p, "char", |p| {
 			Alt::new(p)
-				.test(|p| p.keyword("self").map(|_| Char(0xFFFE)))
-				.test(|p| p.keyword("null").map(|_| Char(0xFFFF)))
+				.test_kw("self", |_| Ok(Char(0xFFFE)))
+				.test_kw("null", |_| Ok(Char(0xFFFF)))
 				.test(|p| p.parse().map(Char))
 				.finish()
 		})

@@ -67,6 +67,15 @@ impl<'a, 'b, 'e, T> Alt<'a, 'b, 'e, T> {
 		self
 	}
 
+	/// An alternative introduced by a keyword, which commits once the keyword matches.
+	pub fn test_kw(self, keyword: &'static str, f: impl FnOnce(&mut TryParser<'a, '_>) -> Result<T>) -> Self {
+		self.test(|p| {
+			p.keyword(keyword)?;
+			p.commit();
+			f(p)
+		})
+	}
+
 	pub fn finish(self) -> Result<T> {
 		if !self.committed {
 			if self.parser.cursor.pos() != self.max_pos {

@@ -12,11 +12,7 @@ pub fn parse_chunks(p: &mut Parser, ctx: &PCtx) -> Vec<Chunk> {
 
 fn parse_chunk(p: &mut Parser, ctx: &PCtx) -> Result<Chunk> {
 	Alt::new(p)
-		.test(|p| {
-			p.keyword("fn")?;
-			p.commit();
-			Ok(Chunk::Function(parse_function(ctx, p)?))
-		})
+		.test_kw("fn", |p| Ok(Chunk::Function(parse_function(ctx, p)?)))
 		.test(|p| tables::parse_table(p, ctx).map(Chunk::Table))
 		.finish()
 }
@@ -94,32 +90,24 @@ fn parse_shadow_ops(p: &mut Parser) -> Result<Vec<ShadowOp>, Error> {
 
 fn parse_shadow_op(p: &mut Parser) -> Result<ShadowOp> {
 	Alt::new(p)
-		.test(|p| {
-			p.keyword("Call")?;
-			p.commit();
+		.test_kw("Call", |p| {
 			let table = p.parse()?;
 			let name = p.parse()?;
 			Ok(ShadowOp::Call { table, name })
 		})
-		.test(|p| {
-			p.keyword("CharAni")?;
-			p.commit();
+		.test_kw("CharAni", |p| {
 			let chr = p.parse()?;
 			let strings = p.parse()?;
 			Ok(ShadowOp::CharAni { chr, strings })
 		})
-		.test(|p| {
-			p.keyword("Fork")?;
-			p.commit();
+		.test_kw("Fork", |p| {
 			let chr = p.parse()?;
 			let slot = p.parse()?;
 			let name = p.parse()?;
 			let flags = p.parse()?;
 			Ok(ShadowOp::Fork { chr, slot, name, flags })
 		})
-		.test(|p| {
-			p.keyword("ForkLambda")?;
-			p.commit();
+		.test_kw("ForkLambda", |p| {
 			let chr = p.parse()?;
 			let slot = p.parse()?;
 			let name = p.parse()?;

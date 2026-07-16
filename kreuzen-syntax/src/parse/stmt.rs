@@ -16,34 +16,12 @@ fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
 	let meta = op::parse_meta(p);
 
 	Alt::new(p)
-		.test(|p| {
-			p.keyword("if")?;
-			p.commit();
-			parse_if(p, ctx, meta)
-		})
-		.test(|p| {
-			p.keyword("while")?;
-			p.commit();
-			parse_while(p, ctx, meta)
-		})
-		.test(|p| {
-			p.keyword("switch")?;
-			p.commit();
-			parse_switch(p, ctx, meta)
-		})
-		.test(|p| {
-			p.keyword("break")?;
-			p.commit();
-			Ok(Stmt::Break(meta))
-		})
-		.test(|p| {
-			p.keyword("continue")?;
-			p.commit();
-			Ok(Stmt::Continue(meta))
-		})
-		.test(|p| {
-			p.keyword("ForkLambda")?;
-			p.commit();
+		.test_kw("if", |p| parse_if(p, ctx, meta))
+		.test_kw("while", |p| parse_while(p, ctx, meta))
+		.test_kw("switch", |p| parse_switch(p, ctx, meta))
+		.test_kw("break", |_| Ok(Stmt::Break(meta)))
+		.test_kw("continue", |_| Ok(Stmt::Continue(meta)))
+		.test_kw("ForkLambda", |p| {
 			let chr = p.parse()?;
 			let slot = p.int()?;
 			let name = p.parse()?;
