@@ -73,17 +73,8 @@ pub struct RawScena {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawChunk {
-	Function { function: RawFunction },
+	Function(RawFunction),
 	Table { name: String, table: tables::Table, shadow: bool },
-}
-
-impl RawChunk {
-	pub fn name(&self) -> &str {
-		match self {
-			RawChunk::Function { function } => &function.name,
-			RawChunk::Table { name, .. } => name,
-		}
-	}
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -119,7 +110,7 @@ pub fn decompile(raw: &RawScena) -> rootcause::Result<Scena> {
 	let mut errors = rootcause::report_collection::ReportCollection::new();
 	for c in &raw.chunks {
 		match c {
-			RawChunk::Function { function } => {
+			RawChunk::Function(function) => {
 				let _span = tracing::error_span!("chunk", name=%function.name).entered();
 				match crate::decompile::decompile(&function.body) {
 					Ok(body) => chunks.push(Chunk::Function(Function {
@@ -154,14 +145,12 @@ pub fn compile(scena: &Scena) -> rootcause::Result<RawScena> {
 			Chunk::Function(function) => {
 				let _span = tracing::error_span!("chunk", name=%function.name).entered();
 				match crate::decompile::compile(&function.body) {
-					Ok(body) => chunks.push(RawChunk::Function {
-						function: RawFunction {
-							name: function.name.clone(),
-							body,
-							preload: function.preload.clone(),
-							shadow: function.shadow.clone(),
-						},
-					}),
+					Ok(body) => chunks.push(RawChunk::Function(RawFunction {
+						name: function.name.clone(),
+						body,
+						preload: function.preload.clone(),
+						shadow: function.shadow.clone(),
+					})),
 					Err(e) => errors.push(e.context(format!("error compiling chunk {}", function.name)).into_cloneable()),
 				}
 			}
@@ -295,7 +284,7 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 
 	for c in &scena.chunks {
 		match c {
-			RawChunk::Function { function } => {
+			RawChunk::Function(function) => {
 				let align = match (function.name.as_str(), scena.info.game) {
 					("Init", Game::Cs1) if scena.info.name == "effect" => 16,
 					_ => 4,
@@ -309,7 +298,7 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 		}
 	}
 	for c in &scena.chunks {
-		if let RawChunk::Function { function } = c
+		if let RawChunk::Function(function) = c
 			&& !function.preload.is_empty()
 		{
 			let f = code::preload::write(&d, &function.preload);
@@ -321,7 +310,7 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 	}
 	for c in &scena.chunks {
 		match c {
-			RawChunk::Function { function } => {
+			RawChunk::Function(function) => {
 				for (i, shadow) in function.shadow.iter().enumerate() {
 					let code = code::shadow::flatten(shadow);
 					chunk(4, &format!("_a{i}_{}", function.name), true, code::write(&d, &code));
@@ -531,9 +520,7 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 		} else {
 			Vec::new()
 		};
-		Ok(RawChunk::Function {
-			function: RawFunction { name: e.name.clone(), body, preload, shadow },
-		})
+		Ok(RawChunk::Function(RawFunction { name: e.name.clone(), body, preload, shadow }))
 	}
 }
 

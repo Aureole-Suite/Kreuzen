@@ -46,7 +46,7 @@ impl Print for RawFunction {
 impl Print for RawChunk {
 	fn print(&self, ctx: &mut Ctx) {
 		match self {
-			RawChunk::Function { function } => function.print(ctx),
+			RawChunk::Function(f) => f.print(ctx),
 			RawChunk::Table { name, table, shadow } => {
 				ctx.token(name.to_owned());
 				if *shadow {
