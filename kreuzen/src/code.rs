@@ -441,28 +441,10 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 				a => a,
 			}),
 
-			P::Cs1_36 => {
-				if matches!(op.args[1], Arg::Char(Char(0xFE02..=0xFE03))) {
-					read_parts(op, f, &[P::F32])?;
-				}
-			}
-			P::Cs1_3C => {
-				if matches!(op.args[1], Arg::Char(Char(0xFFFF))) {
-					read_parts(op, f, &[P::F32, P::F32, P::F32])?;
-				}
+			P::Cs1_36 | P::Cs1_3C | P::Cs2_37 | P::Tx_3C | P::Cs3_98 | P::Cs3_c0 | P::Cs4_40 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
+				read_parts(op, f, extra_parts(p, &op.args, f.game)?)?;
 			}
 
-			P::Cs2_37 => {
-				if matches!(op.args[1], Arg::Char(Char(0xFE04))) {
-					read_parts(op, f, &[P::Str])?;
-				}
-			}
-
-			P::Tx_3C => {
-				if matches!(op.args[0], Arg::Int(1)) {
-					read_parts(op, f, &[P::F32, P::F32, P::F32])?;
-				}
-			}
 			P::Tx_isforceload => {
 				if f.scena == "a0005" && f.check(b"isforceload").is_ok() {
 					// for some reason this one put the name of the flag rather than value
@@ -480,25 +462,6 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 				}
 			}
 
-			P::Cs3_98 => {
-				let Arg::Int(v) = op.args[0] else {
-					rootcause::bail!("Expected U16 for Cs3_c0 part");
-				};
-				read_parts(op, f, op_98(v as u16, f.game))?;
-			}
-			P::Cs3_c0 => {
-				let Arg::Int(v) = op.args[0] else {
-					rootcause::bail!("Expected U16 for Cs3_c0 part");
-				};
-				read_parts(op, f, op_c0(v as u16))?;
-			}
-
-			P::Cs4_40 => {
-				let Arg::Char(v) = op.args[1] else {
-					rootcause::bail!("Expected Char");
-				};
-				read_parts(op, f, op_40(v))?;
-			}
 			P::Cs4_wtf_are_you_doing => {
 				if f.scena == "mg11" && f.check_u32(0).is_ok() {
 					op.args.push(Arg::Int(0)); // This one is only there in the japanese version
@@ -514,27 +477,71 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 					_ => {}
 				}
 			}
-			P::Rev_D2 => {
-				let Arg::Int(v) = op.args[0] else {
-					rootcause::bail!("Expected I16");
-				};
-				read_parts(op, f, op_d2(v as i16))?;
-			}
-			P::Rev_79 => {
-				if matches!(op.args[0], Arg::Int(7)) {
-					read_parts(op, f, &[P::U8])?;
-				}
-			}
-			P::Rev_E002 => match op.args[1] {
-				Arg::Char(Char(0xFFFF)) => read_parts(op, f, &[P::I32])?,
-				_ => read_parts(op, f, &[P::F32])?,
-			},
-
 			P::Print => println!("{op:?}"),
 			P::Fail => rootcause::bail!("Fail"),
 		}
 	}
 	Ok(())
+}
+
+/// Get the extra parts implied by a conditional part.
+///
+/// Errors if the given part is not a conditional one.
+/// Should perhaps refactor that into a separate enum someday. Who cares.
+pub fn extra_parts(p: &Part, args: &[Arg], game: Game) -> rootcause::Result<&'static [Part]> {
+	use Part as P;
+	let arg = |i: usize| args.get(i).context_with(|| format!("no arg {i} for conditional part {p:?}"));
+	Ok(match p {
+		P::Cs1_36 => match arg(1)? {
+			Arg::Char(Char(0xFE02..=0xFE03)) => &[P::F32],
+			_ => &[],
+		},
+		P::Cs1_3C => match arg(1)? {
+			Arg::Char(Char(0xFFFF)) => &[P::F32, P::F32, P::F32],
+			_ => &[],
+		},
+		P::Cs2_37 => match arg(1)? {
+			Arg::Char(Char(0xFE04)) => &[P::Str],
+			_ => &[],
+		},
+		P::Tx_3C => match arg(0)? {
+			Arg::Int(1) => &[P::F32, P::F32, P::F32],
+			_ => &[],
+		},
+		P::Cs3_98 => {
+			let Arg::Int(v) = arg(0)? else {
+				rootcause::bail!("Expected U16 for Cs3_98 part");
+			};
+			op_98(*v as u16, game)
+		}
+		P::Cs3_c0 => {
+			let Arg::Int(v) = arg(0)? else {
+				rootcause::bail!("Expected U16 for Cs3_c0 part");
+			};
+			op_c0(*v as u16)
+		}
+		P::Cs4_40 => {
+			let Arg::Char(v) = arg(1)? else {
+				rootcause::bail!("Expected Char for Cs4_40 part");
+			};
+			op_40(*v)
+		}
+		P::Rev_79 => match arg(0)? {
+			Arg::Int(7) => &[P::U8],
+			_ => &[],
+		},
+		P::Rev_D2 => {
+			let Arg::Int(v) = arg(0)? else {
+				rootcause::bail!("Expected I16 for Rev_D2 part");
+			};
+			op_d2(*v as i16)
+		}
+		P::Rev_E002 => match arg(1)? {
+			Arg::Char(Char(0xFFFF)) => &[P::I32],
+			_ => &[P::F32],
+		},
+		_ => rootcause::bail!("{p:?} is not an arg-driven conditional part"),
+	})
 }
 
 #[rustfmt::skip]
@@ -801,28 +808,10 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 				arg => write_dyn(f, d, arg)?,
 			},
 
-			P::Cs1_36 => {
-				if matches!(op.args[1], Arg::Char(Char(0xFE02..=0xFE03))) {
-					write_parts(d, f, op, cursor, &[P::F32], op_end)?;
-				}
-			}
-			P::Cs1_3C => {
-				if matches!(op.args[1], Arg::Char(Char(0xFFFF))) {
-					write_parts(d, f, op, cursor, &[P::F32, P::F32, P::F32], op_end)?;
-				}
+			P::Cs1_36 | P::Cs1_3C | P::Cs2_37 | P::Tx_3C | P::Cs3_98 | P::Cs3_c0 | P::Cs4_40 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
+				write_parts(d, f, op, cursor, extra_parts(p, &op.args, d.game)?, op_end)?;
 			}
 
-			P::Cs2_37 => {
-				if matches!(op.args[1], Arg::Char(Char(0xFE04))) {
-					write_parts(d, f, op, cursor, &[P::Str], op_end)?;
-				}
-			}
-
-			P::Tx_3C => {
-				if matches!(op.args[0], Arg::Int(1)) {
-					write_parts(d, f, op, cursor, &[P::F32, P::F32, P::F32], op_end)?;
-				}
-			}
 			P::Tx_isforceload => {
 				if matches!(op.args.get(*cursor), Some(Arg::Str(s)) if s == "isforceload") {
 					f.slice(b"isforceload");
@@ -840,25 +829,6 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 				}
 			}
 
-			P::Cs3_98 => {
-				let Arg::Int(v) = op.args[0] else {
-					rootcause::bail!("Expected Int for Cs3_98 dispatch");
-				};
-				write_parts(d, f, op, cursor, op_98(v as u16, d.game), op_end)?;
-			}
-			P::Cs3_c0 => {
-				let Arg::Int(v) = op.args[0] else {
-					rootcause::bail!("Expected Int for Cs3_c0 dispatch");
-				};
-				write_parts(d, f, op, cursor, op_c0(v as u16), op_end)?;
-			}
-
-			P::Cs4_40 => {
-				let Arg::Char(v) = op.args[1] else {
-					rootcause::bail!("Expected Char for Cs4_40 dispatch");
-				};
-				write_parts(d, f, op, cursor, op_40(v), op_end)?;
-			}
 			#[expect(clippy::single_match)]
 			P::Cs4_wtf_are_you_doing => {
 				if *cursor < op.args.len() {
@@ -883,22 +853,6 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 				}
 				_ => {}
 			},
-			P::Rev_D2 => {
-				let Arg::Int(v) = op.args[0] else {
-					rootcause::bail!("Expected Int for Rev_D2 dispatch");
-				};
-				write_parts(d, f, op, cursor, op_d2(v as i16), op_end)?;
-			}
-			P::Rev_79 => {
-				if matches!(op.args[0], Arg::Int(7)) {
-					write_parts(d, f, op, cursor, &[P::U8], op_end)?;
-				}
-			}
-			P::Rev_E002 => match op.args[1] {
-				Arg::Char(Char(0xFFFF)) => write_parts(d, f, op, cursor, &[P::I32], op_end)?,
-				_ => write_parts(d, f, op, cursor, &[P::F32], op_end)?,
-			},
-
 			P::Pos => write_parts(d, f, op, cursor, &[P::F32, P::F32, P::F32], op_end)?,
 
 			P::Print | P::Fail => {}
