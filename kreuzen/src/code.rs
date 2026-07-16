@@ -273,6 +273,7 @@ pub enum Arg {
 	#[debug("{_0:?}")] Flags8(crate::types::Flags8),
 	#[debug("{_0:?}")] Flags16(crate::types::Flags16),
 	#[debug("{_0:?}")] Flags32(crate::types::Flags32),
+	#[debug("{_0:?}")] SystemFlags(crate::types::SystemFlags),
 
 	#[debug("{_0:?}")] Expr(Expr),
 	#[debug("{_0:?}")] Text(Text),
@@ -421,6 +422,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 			P::Flags8 => op.args.push(Arg::Flags8(f.u8()?.into())),
 			P::Flags16 => op.args.push(Arg::Flags16(f.u16()?.into())),
 			P::Flags32 => op.args.push(Arg::Flags32(f.u32()?.into())),
+			P::SystemFlags => op.args.push(Arg::SystemFlags(f.u32()?.into())),
 
 			P::Expr => op.args.push(self::Expr::read(f)?.into()),
 			P::Text => op.args.push(self::Text::read(f)?.into()),
@@ -775,6 +777,7 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 			P::Flags8 => f.u8(arg!(Flags8).0),
 			P::Flags16 => f.u16(arg!(Flags16).0),
 			P::Flags32 => f.u32(arg!(Flags32).0),
+			P::SystemFlags => f.u32(arg!(SystemFlags).0.0),
 
 			P::Expr => {
 				*op_end = f.len();

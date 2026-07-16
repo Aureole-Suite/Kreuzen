@@ -18,9 +18,9 @@
 10   'FlagSet' flag
 11   'FlagUnset' flag
 12   'FlagToggle' flag
-13   'SystemFlagsSet' flags32
-14   'SystemFlagsUnset' flags32
-15   'SystemFlagsToggle' flags32
+13   'SystemFlagsSet' systemflags
+14   'SystemFlagsUnset' systemflags
+15   'SystemFlagsToggle' systemflags
 16   'Sleep' u16
 17   u16 u16
 18   'SetGlobal' global expr

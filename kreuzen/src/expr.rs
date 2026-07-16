@@ -15,7 +15,7 @@ pub enum Expr {
 	#[debug("{_0:?}")] CharAttr(CharAttr),
 	Rand,
 	#[debug("{_0:?}")] Global(Global),
-	#[from(ignore)] #[debug("{_0:?}")] SystemFlags(Flags32),
+	#[from(ignore)] #[debug("{_0:?}")] SystemFlags(SystemFlags),
 	#[debug("{_0:?}")] NumReg(NumReg),
 	#[from(ignore)] #[debug("({_1:?} {_0} {_2:?})")] Bin(BinOp, Box<Expr>, Box<Expr>),
 	#[from(ignore)] #[debug("{_0}{_1:?}")] Un(UnOp, Box<Expr>),
@@ -147,9 +147,9 @@ fn write_inner(e: &Expr, d: &OData, f: &mut Writer) -> rootcause::Result<()> {
 			f.u8(0x23);
 			f.u8(*v);
 		}
-		Expr::SystemFlags(Flags32(v)) => {
+		Expr::SystemFlags(SystemFlags(v)) => {
 			f.u8(0x24);
-			f.u32(*v);
+			f.u32(v.0);
 		}
 		Expr::NumReg(NumReg(v)) => {
 			f.u8(0x25);

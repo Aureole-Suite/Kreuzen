@@ -87,7 +87,10 @@ macro_rules! print_bracket {
 		$(
 			impl Print for $t {
 				fn print(&self, ctx: &mut Ctx) {
-					ctx.token(format!("{}[{}]", $name, self.0));
+					ctx.word($name);
+					ctx.sym("[");
+					self.0.print(ctx);
+					ctx.sym_("]");
 				}
 			}
 		)*
@@ -107,6 +110,7 @@ print_bracket!(
 	types::NumReg => "num_reg",
 	types::StrReg => "str_reg",
 	types::Attr => "attr",
+	types::SystemFlags => "system",
 );
 
 impl Print for types::Char {

@@ -152,3 +152,13 @@ pub struct Flags16(pub u16);
 #[derive(derive_more::From, derive_more::Debug)]
 #[debug("0x{_0:08X}")]
 pub struct Flags32(pub u32);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(derive_more::From)]
+pub struct SystemFlags(pub Flags32);
+
+impl From<u32> for SystemFlags {
+	fn from(value: u32) -> Self {
+		SystemFlags(value.into())
+	}
+}

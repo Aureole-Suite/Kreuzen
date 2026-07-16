@@ -10,8 +10,8 @@
 0A   'SetVar' var expr
 0C   'FlagSet' flag
 0D   'FlagUnset' flag
-0E   'SystemFlagsSet' flags32
-0F   'SystemFlagsUnset' flags32
+0E   'SystemFlagsSet' systemflags
+0F   'SystemFlagsUnset' systemflags
 10   'Sleep' u16
 11   u16 u16
 12   'SetGlobal' global expr

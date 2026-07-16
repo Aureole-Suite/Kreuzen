@@ -280,6 +280,7 @@ impl Print for Arg {
 			Arg::Flags8(v) => v.print(ctx),
 			Arg::Flags16(v) => v.print(ctx),
 			Arg::Flags32(v) => v.print(ctx),
+			Arg::SystemFlags(v) => v.print(ctx),
 			Arg::Expr(_) => unreachable!("expr handled separately"),
 			Arg::Text(v) => v.print(ctx),
 		}

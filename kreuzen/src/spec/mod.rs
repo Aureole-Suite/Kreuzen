@@ -123,6 +123,7 @@ pub enum Part {
 	Flags8,
 	Flags16,
 	Flags32,
+	SystemFlags,
 
 	Sound,
 	Music,
