@@ -69,7 +69,6 @@ pub struct ScenaInfo {
 pub struct TableChunk {
 	pub name: String,
 	pub table: tables::Table,
-	pub shadow: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -312,7 +311,7 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 				}
 			}
 			RawChunk::Table(t) => {
-				if t.shadow {
+				if scena.info.game == Game::Reverie && tables_are_shadowed(&scena.info.name) {
 					let empty = code::shadow::Shadow { line: 0, ops: vec![] };
 					let code = code::shadow::flatten(&empty);
 					chunk(4, &format!("_a0_{}", t.name), true, code::write(&d, &code));
@@ -386,6 +385,12 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 	}
 
 	Ok(f.finish()?)
+}
+
+fn tables_are_shadowed(name: &str) -> bool {
+	const HASNT: &[&str] = &["alchr023", "alchr113_1", "alchr352_0", "alchr353_0", "alrob022_c10"];
+	const HAS: &[&str] = &["synp05", "synp06"];
+	(name.starts_with("al") && !HASNT.contains(&name)) || HAS.contains(&name)
 }
 
 fn resolve_game(n: &str, mut game: Game, mut enc: Enc, old_cs1: bool) -> (Game, Enc, u8) {
@@ -503,7 +508,13 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 			[s] if s.ops.is_empty() => true,
 			_ => rootcause::bail!("unexpected shadows for table chunk {:?}", e.name),
 		};
-		Ok(RawChunk::Table(TableChunk { name: e.name.clone(), table, shadow }))
+		if shadow && !(cr.game == Game::Reverie && tables_are_shadowed(cr.scena)) {
+			tracing::warn!("expected table to not have shadow");
+		}
+		if !shadow && (cr.game == Game::Reverie && tables_are_shadowed(cr.scena)) {
+			tracing::warn!("expected table to have shadow");
+		}
+		Ok(RawChunk::Table(TableChunk { name: e.name.clone(), table }))
 	} else {
 		let body = code::read_code_chunk(cr, ranges[e.main])?;
 		let preload = if let Some(i) = e.preload {

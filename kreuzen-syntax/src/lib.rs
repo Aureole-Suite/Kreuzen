@@ -30,9 +30,6 @@ impl Print for ScenaInfo {
 impl Print for TableChunk {
 	fn print(&self, ctx: &mut Ctx) {
 		ctx.token(self.name.to_owned());
-		if self.shadow {
-			ctx.word("shadow");
-		}
 		self.table.print(ctx);
 	}
 }
