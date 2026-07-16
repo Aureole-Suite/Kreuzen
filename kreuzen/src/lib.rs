@@ -66,12 +66,6 @@ pub struct ScenaInfo {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct TableChunk {
-	pub name: String,
-	pub table: tables::Table,
-}
-
-#[derive(Debug, Clone, PartialEq)]
 pub struct RawScena {
 	pub info: ScenaInfo,
 	pub chunks: Vec<RawChunk>,
@@ -80,7 +74,7 @@ pub struct RawScena {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawChunk {
 	Function(RawFunction),
-	Table(TableChunk),
+	Table(tables::Table),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -100,7 +94,7 @@ pub struct Scena {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Chunk {
 	Function(Function),
-	Table(TableChunk),
+	Table(tables::Table),
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -286,8 +280,8 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 				chunk(align, &function.name, true, code::write(&d, &function.body));
 			}
 			RawChunk::Table(t) => {
-				let (align, f) = tables::write(&d, &t.name, &t.table)?;
-				chunk(align, &t.name, false, Ok(f));
+				let (align, f) = tables::write(&d, t)?;
+				chunk(align, t.name(), false, Ok(f));
 			}
 		}
 	}
@@ -314,7 +308,7 @@ pub fn write(scena: &RawScena) -> rootcause::Result<Vec<u8>> {
 				if scena.info.game == Game::Reverie && tables_are_shadowed(&scena.info.name) {
 					let empty = code::shadow::Shadow { line: 0, ops: vec![] };
 					let code = code::shadow::flatten(&empty);
-					chunk(4, &format!("_a0_{}", t.name), true, code::write(&d, &code));
+					chunk(4, &format!("_a0_{}", t.name()), true, code::write(&d, &code));
 				}
 			}
 		}
@@ -514,7 +508,7 @@ fn read_chunk(cr: &mut CReader, ranges: &[(usize, usize)], e: &split::Entry) -> 
 		if !shadow && (cr.game == Game::Reverie && tables_are_shadowed(cr.scena)) {
 			tracing::warn!("expected table to have shadow");
 		}
-		Ok(RawChunk::Table(TableChunk { name: e.name.clone(), table }))
+		Ok(RawChunk::Table(table))
 	} else {
 		let body = code::read_code_chunk(cr, ranges[e.main])?;
 		let preload = if let Some(i) = e.preload {

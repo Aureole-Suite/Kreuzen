@@ -7,7 +7,7 @@ pub use ctx::Ctx;
 
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
-use kreuzen::{Chunk, Function, RawChunk, RawFunction, RawScena, Scena, ScenaInfo, TableChunk};
+use kreuzen::{Chunk, Function, RawChunk, RawFunction, RawScena, Scena, ScenaInfo};
 
 pub trait Print {
 	fn print(&self, ctx: &mut Ctx);
@@ -24,13 +24,6 @@ impl Print for ScenaInfo {
 			"scena {} game={:?} enc={:?} oddness={} variant={}",
 			self.name, self.game, self.enc, self.oddness, self.variant
 		));
-	}
-}
-
-impl Print for TableChunk {
-	fn print(&self, ctx: &mut Ctx) {
-		ctx.token(self.name.to_owned());
-		self.table.print(ctx);
 	}
 }
 

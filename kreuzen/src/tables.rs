@@ -38,19 +38,43 @@ pub enum Table {
 	ActionTable(Vec<action::Action>),
 	AlgoTable(Vec<algo::Algo>),
 	AnimeClipTable(Vec<anime_clip::AnimeClip>),
-	Book(book::Book),
+	Book { name: String, book: book::Book },
 	BreakTable(Vec<break_::Break>),
 	ConditionTable(Vec<condition::Condition>),
-	FcAuto(String),
+	FcAuto { name: String, text: String },
 	FieldFollowData(field_follow::FieldFollow),
 	PartTable(Vec<part::Part>),
 	ReactionTable(Vec<reaction::Reaction>),
-	StyleName(style_name::StyleName),
+	StyleName { name: String, style: style_name::StyleName },
 	SummonTable(Vec<summon::Summon>),
 	FieldMonsterData(field_monster::FieldMonster),
 	WeaponAttTable(weapon_att::WeaponAtt),
-	Btlset(btlset::Btlset),
+	Btlset { name: String, btlset: btlset::Btlset },
 	Dummy(Dummy),
+}
+
+impl Table {
+	pub fn name(&self) -> &str {
+		match self {
+			Table::AddCollision(_) => "AddCollision",
+			Table::ActionTable(_) => "ActionTable",
+			Table::AlgoTable(_) => "AlgoTable",
+			Table::AnimeClipTable(_) => "AnimeClipTable",
+			Table::Book { name, .. } => name,
+			Table::BreakTable(_) => "BreakTable",
+			Table::ConditionTable(_) => "ConditionTable",
+			Table::FcAuto { name, .. } => name,
+			Table::FieldFollowData(_) => "FieldFollowData",
+			Table::PartTable(_) => "PartTable",
+			Table::ReactionTable(_) => "ReactionTable",
+			Table::StyleName { name, .. } => name,
+			Table::SummonTable(_) => "SummonTable",
+			Table::FieldMonsterData(_) => "FieldMonsterData",
+			Table::WeaponAttTable(_) => "WeaponAttTable",
+			Table::Btlset { name, .. } => name,
+			Table::Dummy(_) => "",
+		}
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -93,9 +117,9 @@ pub(crate) fn read(f: &mut CReader, name: &str) -> rootcause::Result<Option<Tabl
 		"ReactionTable"    => Table::ReactionTable(reaction::read(f)?),
 		"SummonTable"      => Table::SummonTable(summon::read(f)?),
 		"WeaponAttTable"   => Table::WeaponAttTable(weapon_att::read(f)?),
-		name if name.starts_with("BookData")  => Table::Book(book::read(f, name)?),
-		name if name.starts_with("FC_auto")   => Table::FcAuto(fc_auto::read(f)?),
-		name if name.starts_with("StyleName") => Table::StyleName(style_name::read(f)?),
+		name if name.starts_with("BookData")  => Table::Book { name: name.to_owned(), book: book::read(f, name)? },
+		name if name.starts_with("FC_auto")   => Table::FcAuto { name: name.to_owned(), text: fc_auto::read(f)? },
+		name if name.starts_with("StyleName") => Table::StyleName { name: name.to_owned(), style: style_name::read(f)? },
 		_ => return read_other(f, name),
 	}))
 }
@@ -122,7 +146,7 @@ fn read_other(f: &mut CReader<'_>, name: &str) -> Result<Option<Table>, rootcaus
 		}
 	}
 	if name.is_empty() || name == "ShinigPomBtlset" || name.starts_with("BTLSET") {
-		return Ok(Some(Table::Btlset(btlset::read(f)?)));
+		return Ok(Some(Table::Btlset { name: name.to_owned(), btlset: btlset::read(f)? }));
 	}
 
 	// This is called from read_chunk, so we need to seek to end to prevent errors being reported
@@ -131,11 +155,11 @@ fn read_other(f: &mut CReader<'_>, name: &str) -> Result<Option<Table>, rootcaus
 	Ok(None)
 }
 
-pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(usize, Writer)> {
-	let align = match (name, d.game) {
-		_ if name.starts_with("FC_auto") => 16,
-		("ReactionTable", Game::Cs1 | Game::Cs2) => 16,
-		("ShinigPomBtlset", Game::Cs2) => 16,
+pub(crate) fn write(d: &OData, table: &Table) -> rootcause::Result<(usize, Writer)> {
+	let align = match (table, d.game) {
+		(Table::FcAuto { .. }, _) => 16,
+		(Table::ReactionTable(_), Game::Cs1 | Game::Cs2) => 16,
+		(Table::Btlset { name, .. }, Game::Cs2) if name == "ShinigPomBtlset" => 16,
 		_ => 4,
 	};
 	let f = match table {
@@ -143,15 +167,15 @@ pub(crate) fn write(d: &OData, name: &str, table: &Table) -> rootcause::Result<(
 		Table::ActionTable(t) => action::write(d, t)?,
 		Table::AlgoTable(t) => algo::write(d, t)?,
 		Table::AnimeClipTable(t) => anime_clip::write(d, t)?,
-		Table::Book(t) => book::write(d, t)?,
+		Table::Book { book, .. } => book::write(d, book)?,
 		Table::BreakTable(t) => break_::write(d, t)?,
 		Table::ConditionTable(t) => condition::write(d, t)?,
-		Table::FcAuto(t) => fc_auto::write(d, t)?,
-		Table::Btlset(t) => btlset::write(d, t)?,
+		Table::FcAuto { text, .. } => fc_auto::write(d, text)?,
+		Table::Btlset { btlset, .. } => btlset::write(d, btlset)?,
 		Table::FieldFollowData(t) => field_follow::write(d, t)?,
 		Table::PartTable(t) => part::write(d, t)?,
 		Table::ReactionTable(t) => reaction::write(d, t)?,
-		Table::StyleName(t) => style_name::write(d, t)?,
+		Table::StyleName { style, .. } => style_name::write(d, style)?,
 		Table::SummonTable(t) => summon::write(d, t)?,
 		Table::FieldMonsterData(t) => field_monster::write(d, t)?,
 		Table::WeaponAttTable(t) => weapon_att::write(d, t)?,

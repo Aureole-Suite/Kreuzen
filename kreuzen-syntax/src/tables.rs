@@ -36,9 +36,10 @@ impl Print for Table {
 				ctx.word("AnimeClipTable");
 				ctx.block(t, AnimeClip::print);
 			}
-			Table::Book(t) => {
+			Table::Book { name, book } => {
 				ctx.word("Book");
-				t.print(ctx);
+				name.print(ctx);
+				book.print(ctx);
 			}
 			Table::BreakTable(t) => {
 				ctx.word("BreakTable");
@@ -48,9 +49,10 @@ impl Print for Table {
 				ctx.word("ConditionTable");
 				ctx.block(t, Condition::print);
 			}
-			Table::FcAuto(t) => {
+			Table::FcAuto { name, text } => {
 				ctx.word("FcAuto");
-				t.print(ctx);
+				name.print(ctx);
+				text.print(ctx);
 				ctx.sym_(";");
 			}
 			Table::FieldFollowData(t) => {
@@ -65,9 +67,10 @@ impl Print for Table {
 				ctx.word("ReactionTable");
 				ctx.block_commented("id (stars unbalance hit miss counter) ...", t, Reaction::print);
 			}
-			Table::StyleName(t) => {
+			Table::StyleName { name, style } => {
 				ctx.word("StyleName");
-				t.print(ctx);
+				name.print(ctx);
+				style.print(ctx);
 			}
 			Table::SummonTable(t) => {
 				ctx.word("SummonTable");
@@ -82,9 +85,10 @@ impl Print for Table {
 				t.print(ctx);
 				ctx.comment("slash thrust pierce strike");
 			}
-			Table::Btlset(t) => {
+			Table::Btlset { name, btlset } => {
 				ctx.word("Btlset");
-				t.print(ctx);
+				name.print(ctx);
+				btlset.print(ctx);
 			}
 			Table::Dummy(t) => {
 				ctx.word("Dummy");
