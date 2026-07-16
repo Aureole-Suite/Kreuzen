@@ -85,7 +85,7 @@
 2B00 'Battle' battle u8 i32 u8 i32 u8 i32 u8 i32 u8
 
 2C   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
-2D   'CharAniclipWait' char u32 u8
+2D   'CharAniclipStop' char u32 u8
 2E 'CharAniclipWait'
 2E00 char u8
 2E02 char u8 u8
@@ -809,7 +809,7 @@
 # 7304 dyn
 
 74   'ActiveVoice' u16
-7400 'ActiveVoicePlay' u32
+7400 'ActiveVoicePlay' f32
 7401 'ActiveVoiceStop'
 7402 u16 f32 u16 u16 str f32
 7403 str f32 u16 u16 str f32

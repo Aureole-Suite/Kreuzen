@@ -86,6 +86,7 @@
 2719 str
 271A char
 
+28 'Btl'
 2800 'BtlDamage' char char u8
 2801 char f32 f32
 2802 'BtlLoopTargetsReset' var char
@@ -116,9 +117,9 @@
 281B 'BtlFlagsGet'
 281C char
 281D u16 f32 f32
-281E u16 char str str
-281F u16
-2820 u16 f32 f32
+281E 'BtlTempCreate' u16 char str str
+281F 'BtlTempDelete' u16
+2820 'BtlCombatShellCreate' char f32 f32
 2821
 2822
 2823
@@ -183,10 +184,10 @@
 2881 u16
 2882 str
 2883 char char
-2885
-2886
-2887
-2888
+2885 'BtlKisinPt_85'
+2886 'BtlKisinPt_86'
+2887 'BtlIsKisin'
+2888 'BtlKisinPt_88'
 2889 char
 288A
 288B
@@ -207,7 +208,7 @@
 289B char
 289C char u32
 289D u8
-289E char str
+289E 'BtlCharIsMonster' char str
 289F
 28A0 u16 u16 u16
 28A1 u16 u16 u16
@@ -227,7 +228,7 @@
 2D03 'CamLookAtChar' u8 char str f32 f32 f32 u16
 2D04 'CamRotate' u8 f32 f32 f32 u16 u8
 2D05 'CamDistance' u8 f32 u16
-2D07 u16
+2D07 'CamWait' u16
 2D08 u8 u16
 2D09 'CamVibrate' f32 f32 f32
 2D0B 'CamFov' u8 f32 u16
@@ -238,10 +239,10 @@
 2D10
 2D11 u8 f32 f32 f32 u16 u8
 2D12 flags16
-2D13 char u8 f32 f32 f32 u16 u8
+2D13 'CamRotateChar' char u8 f32 f32 f32 u16 u8
 2D14 'CamLookAtChar2' u8 char str f32 f32 f32 u16
 2D15 u8 f32 i32 u8
-2D16 u8 f32 u16
+2D16 'CamSetHeight' u8 f32 u16
 2D17 u16
 2D18 u8 str f32 f32 f32 u16
 2D19 u8 str f32 f32 f32 u16
@@ -269,7 +270,7 @@
 3200 'SoundPlay' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3201 'SoundStop' sound u16
 3202 u16
-3203 u16 f32 u16
+3203 'SoundSetVolume' sound f32 u16
 3232 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3233 u16 u16
 3234 u16
@@ -340,8 +341,8 @@
 4014
 
 41   f32 f32 f32 f32 u16 u8
-42   char f32 f32 f32 f32 u16 u8
-43   char u8
+42   'CharSetColor' char f32 f32 f32 f32 u16 u8
+43   'ForkWait' char u8
 44   f32
 4500 char f32 i16 flags16 f32 f32
 4501 char
@@ -362,15 +363,15 @@
 4A0A u32 u32 u32 u32 u32 u32 u32 u32
 4A0B char
 4A0D 'MapPlaceTbox' str str flag item
-4A0E u8
-4A0F
+4A0E 'MapTboxOpen' u8
+4A0F 'MapTboxClose'
 4A10
 4A11
 4A12
 4A13
 4A14 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
 4A15 str
-4A17 u8 u32
+4A17 'MapEffSet' u8 u32
 4A18 char u8
 4A19 'MapPlaceHealObj' str str
 4A1A
@@ -378,7 +379,7 @@
 4A1C str u16 u16
 4A1D
 4A1E
-4A1F
+4A1F 'MapDistanceToEnemy'
 4A20
 4A21 char f32
 4A24 char
@@ -477,7 +478,7 @@
 6005 f32 f32 f32 f32 f32 f32 f32
 
 61   u8 u16 u16 f32 f32 f32
-62   char f32
+62   'CharAniSpeed' char f32
 63   str f32 u16
 64   char f32 f32 f32 f32 u8
 6500 'ItemAdd' item u32
@@ -493,7 +494,7 @@
 650B u16 u32
 650C 'MiraGet' u16 u32
 650D u16 u32
-650E u16 u32
+650E 'ItemsetAdd' item u32
 6600 char u16 u8
 6601 char u8
 6602 char u16
@@ -508,11 +509,11 @@
 660C char u8 u8
 67   f32 u16
 
-68 u16
-6801 u16
-6802 u16
-6803 u8
-6804 u8
+68 'Quest' u16
+6801 'QuestTaskSet' u16
+6802 'QuestTaskUnset' u16
+6803 'QuestFlagsSet' flags8
+6804 'QuestFlagsUnset' flags8
 6805
 6806 u16 # SSD has a weird if here
 69   u16
@@ -520,7 +521,7 @@
 6901 u16 u8
 
 6A   'ActiveVoice' u16
-6A00 'ActiveVoicePlay' u32
+6A00 'ActiveVoicePlay' f32
 6A01 'ActiveVoiceStop'
 6A02 char f32 u16 u16 str f32
 6A03 str f32 u16 u16 str f32
@@ -536,7 +537,7 @@
 6B06 u8 u16
 
 6C   char str str u8
-6D   char
+6D   'CharDelete' char
 6E00 str
 6F00 u16
 6F01 u16
@@ -559,7 +560,7 @@
 7109
 7200 u8 u16 u16 u16 u16 u16 u16 u16
 7201
-73   u16 u32 u16
+73   'ShopShow' u16 u32 u16
 7400
 7401
 7402 u16
@@ -581,8 +582,8 @@
 7A1B flags32
 7B   u8 u8
 7C   u8 u16 u16 u16 u32 u16 f32 f32 f32 str
-7E   u16 u16
-7F   u16
+7E   'BondPointsSet' u16 u16
+7F   'BondPointsAdd' u16
 8000 char char str str
 8001 char char str str
 8002 char
@@ -592,8 +593,8 @@
 8200 u16
 8201
 83   u16 f32 f32 f32 f32
-84   u16 u16 u16 u16 u16 u16 u16
-85
+84   'CalendarShow' u16 u16 u16 u16 u16 u16 u16
+85   'CalendarWait'
 86   str u32
 8700 u16 u16
 8701 u16 u16
@@ -617,8 +618,8 @@
 8D   u16
 8E01 u8 f32
 8E02 u8 f32
-8F   u16
-90   u16 f32 f32 f32
+8F   'HelpUnlock' u16
+90   'MapAmbientLight' u16 f32 f32 f32
 9100 u16
 9101
 9102
@@ -643,7 +644,7 @@
 9B02 char u16 f32
 9C   char f32 f32 f32
 9E   flags32
-9F   u8
+9F   'NoteGetCount' u8
 
 A0   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
 A100 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
@@ -656,7 +657,7 @@ A202 u16
 A203 u16
 A204 u16
 A3   u8 u8
-A4   str u16
+A4   'SetEndFunc' str u16
 A5   u8
 A601 u8
 A602

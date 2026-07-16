@@ -68,7 +68,7 @@
 2B00 'Battle' battle u8 i32 u8 i32 u8
 
 2C   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
-2D   'CharAniclipWait' char u32 u8
+2D   'CharAniclipStop' char u32 u8
 2E 'CharAniclipWait'
 2E03 char u8 u8
 2F 'CharAniclip'
@@ -516,7 +516,7 @@
 6607 char
 6608 char u16
 660A char u16
-660B char
+660B 'CharOrderAdd' char
 660C char u16
 660D char
 660E char u16
@@ -546,7 +546,7 @@
 6909 u16
 690B u16
 6913 u16
-6914
+6914 'LinkAuto'
 6915
 
 6A   char
@@ -606,7 +606,7 @@
 7300 u8 u8
 
 74   'ActiveVoice' u16
-7400 'ActiveVoicePlay' u32
+7400 'ActiveVoicePlay' f32
 7401 'ActiveVoiceStop'
 7402 u16 f32 u16 u16 str f32
 7403 str f32 u16 u16 str f32

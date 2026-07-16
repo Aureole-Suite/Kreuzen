@@ -45,7 +45,7 @@
 2100 battle u8
 2101 battle u8 u16 u16 u16 u16
 22   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32
-23   'CharAniclipWait' char u32
+23   'CharAniclipStop' char u32
 2400 char str str
 2401 char str str
 2402 char str str
@@ -72,6 +72,7 @@
 2713 char u8 f32 f32 f32 f32
 2715 u8 str
 
+28 'Btl'
 2800 'BtlDamage' char char u8
 2801 char f32 f32
 2802 'BtlLoopTargetsReset' var
@@ -161,7 +162,7 @@
 2D03 'CamLookAtChar' u8 char str f32 f32 f32 u16
 2D04 'CamRotate' u8 f32 f32 f32 u16 u8
 2D05 'CamDistance' u8 f32 u16
-2D07 u16
+2D07 'CamWait' u16
 2D08 u8 u16
 2D09 'CamVibrate' f32 f32 f32
 2D0B 'CamFov' u8 f32 u16
@@ -172,10 +173,10 @@
 2D10
 2D11 u8 f32 f32 f32 u16 u8
 2D12 flags16
-2D13 char u8 f32 f32 f32 u16 u8
-2D14 'CamLokAtChar2' u8 char str f32 f32 f32 u16
+2D13 'CamRotateChar' char u8 f32 f32 f32 u16 u8
+2D14 'CamLookAtChar2' u8 char str f32 f32 f32 u16
 2D15 u8 f32 i32 u8
-2D16 u8 f32 u16
+2D16 'CamSetHeight' u8 f32 u16
 2D17 u16
 
 2E   'CharSetPos' char pos f32
@@ -195,7 +196,7 @@
 3100 'SoundPlay' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3101 'SoundStop' sound u16
 3102 u16
-3103 u16 f32 u16
+3103 'SoundSetVolume' sound f32 u16
 3132 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3134 u16
 3135 u16 u32 u16
@@ -256,8 +257,8 @@
 3F0B char
 
 40   f32 f32 f32 f32 u16 u8
-41   char f32 f32 f32 f32 u16 u8
-42   char u8
+41   'CharSetColor' char f32 f32 f32 f32 u16 u8
+42   'ForkWait' char u8
 43   f32
 4400 char f32 i16 flags16 f32 f32
 4401 char
@@ -278,15 +279,15 @@
 490A u32 u32 u32 u32 u32 u32 u32 u32
 490B
 490D 'MapPlaceTbox' str str flag item
-490E
-490F
+490E 'MapTboxOpen'
+490F 'MapTboxClose'
 4910
 4911
 4912
 4914 'MapPlaceBreakObj' str str u16 u16 u16 u16 u16
 4915 str
 4916
-4917 u8 u32
+4917 'MapEffSet' u8 u32
 4918 char u8
 4919 'MapPlaceHealObj' str str
 491A
@@ -294,7 +295,7 @@
 491C str u16 u16
 491D
 491E
-491F
+491F 'MapDistanceToEnemy'
 4920
 4921 f32
 4923 u16
@@ -361,7 +362,7 @@
 5F03 f32 u8 u16
 
 60   u8 u16 u16 f32 f32 f32
-61   char f32
+61   'CharAniSpeed' char f32
 62   str f32 u16
 63   char f32 f32 f32 f32 u8
 6400 'ItemAdd' item u32
@@ -383,11 +384,11 @@
 6509 char u8
 66   f32 u16
 
-67 u16
-6701 u16
-6702 u16
-6703 u8
-6704 u8
+67 'Quest' u16
+6701 'QuestTaskSet' u16
+6702 'QuestTaskUnset' u16
+6703 'QuestFlagsSet' flags8
+6704 'QuestFlagsUnset' flags8
 6705
 6706 u16 # SSD has a weird if here
 68   u16
@@ -410,7 +411,7 @@
 6A06 u8 u16
 
 6B   char str str u8
-6C   char
+6C   'CharDelete' char
 6D   u8 str
 6E00 u16
 6E01 u16
@@ -430,7 +431,7 @@
 7009
 7100 u16 u16 u16 u16 u16
 7101
-72   u16
+72   'ShopShow' u16
 7300
 7301
 7302 u16
@@ -446,8 +447,8 @@
 79   u8 f32 f32 f32 f32
 7A   u8 u8
 7B   u8 u16 u16 u16 u16 u16 f32 f32 f32 str
-7D   u16 u16
-7E   u16
+7D   'BondPointsSet' u16 u16
+7E   'BondPointsAdd' u16
 7F00 char char str str
 7F01 char char str str
 7FFE u16 str f32
@@ -456,8 +457,8 @@
 8100 u16
 8101
 82   char u16 u16
-83   u16 u16 u16 u16 u16 u16 u16
-84
+83   'CalendarShow' u16 u16 u16 u16 u16 u16 u16
+84   'CalendarWait'
 85   str u32
 8600 u16 u16
 8601 u16 u16
@@ -471,7 +472,7 @@
 8B   u16 u8
 8C   u16
 8D   u16 f32
-8E   u16
+8E   'HelpUnlock' u16
 
 9000 u16
 9001
@@ -487,11 +488,11 @@
 95
 96   f32 f32 f32 u16 u16
 97   u16
-98   u16 u16
+98   'OrbmentSetCover' char item
 99
 9A02 char u16 f32
 9B   u16 f32 f32 f32
 9D   u32
-9E   u8
+9E   'NoteGetCount' u8
 9F   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
 # vim: ft=config

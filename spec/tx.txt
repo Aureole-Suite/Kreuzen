@@ -63,8 +63,9 @@
 240B char str str
 240D char
 240E char u32 str str
-2500 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
-2501 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+25 'Attachment'
+2500 'AttachmentAdd' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
+2501 'AttachmentRemove' char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 2503 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 2504 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 2505 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
@@ -79,7 +80,7 @@
 270A 'EffLoad' char u8 str
 270B 'EffUnload' char u8
 270C 'EffPlay' char u32 char u32 str f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 flags32 u16 u8 u32
-270D 'EfFStop' char u16 u8
+270D 'EffStop' char u16 u8
 270E char u16
 270F char u16
 2710 'EffWait' char u8
@@ -97,7 +98,7 @@
 2C03 'CamLookAtChar' u8 char str f32 f32 f32 u16 u8
 2C04 'CamRotate' u8 f32 f32 f32 u16 u8
 2C05 'CamDistance' u8 f32 u16
-2C07 u16
+2C07 'CamWait' u16
 2C08 u8 u16
 2C09 'CamVibrate' f32 f32 f32
 2C0B 'CamFov' u8 f32 u16
@@ -107,10 +108,10 @@
 2C10
 2C11 u8 f32 f32 f32 u16 u8
 2C12 flags32
-2C13 char u8 f32 f32 f32 u16 u8
+2C13 'CamRotateChar' char u8 f32 f32 f32 u16 u8
 2C14 'CamLookAtChar2' u8 char str f32 f32 f32 u16 u8
 2C15 u8 f32 i32 u8
-2C16 u8 f32 u16
+2C16 'CamSetHeight' u8 f32 u16
 2C17 u32
 2C1B f32 f32
 2C1F f32 f32 f32
@@ -143,7 +144,7 @@
 3100 'SoundPlay' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3101 'SoundStop' sound u16
 3102 u16
-3103 u16 f32 u16
+3103 'SoundSetVolume' sound f32 u16
 3132 'SoundPlayVoice' sound f32 u16 f32 f32 u16 char f32 f32 f32 f32 str
 3133 u16 u16
 3134 u16
@@ -215,8 +216,8 @@
 3F1C
 
 40   f32 f32 f32 f32 u16 u8
-41   char f32 f32 f32 f32 u16 u8
-42   char u8
+41   'CharSetColor' char f32 f32 f32 f32 u16 u8
+42   'ForkWait' char u8
 43   f32
 4400 char f32 u16 u16 u32 f32
 4401 char
@@ -238,14 +239,14 @@
 4904 u32 u32 u32 u32 u32 u32 u32 u32
 490B char
 490D 'MapPlaceTbox' str str u16 u16 u32 u16 u32 u16 u16 u32
-490E u8
-490F
+490E 'MapTboxOpen' u8
+490F 'MapTboxClose'
 4910
 4911
 4912
 4914 'MapPlaceBreakObj' str str u16 u16 u8 u32 u16
 4915 str
-4917 u8 u32
+4917 'MapEffSet' u8 u32
 4918 char u8
 491A u32
 491B u32
@@ -339,15 +340,15 @@
 5F05 f32 f32 f32 f32 f32 f32 f32
 
 60   u8 u16 u16 f32 f32 f32
-61   char f32
+61   'CharAniSpeed' char f32
 63   char f32 f32 f32 f32 u8
-6400 u16 u32
-6401 u16 u32
-6402 u16 u32
-6403 u16 u32
-6404 u16 u32
-6405 u16 u32
-6407 u16 u32
+6400 'ItemAdd' item u32
+6401 'ItemRemove' item u32
+6402 'ItemHas' item u32
+6403 'ItemClear' u16 u32
+6404 'MiraAdd' u16 u32
+6405 'MiraRemove' u16 u32
+6407 'SepithAdd' item u32
 640C u16 u32
 640F u16 u32 u32
 6410 u16 u32
@@ -369,12 +370,12 @@
 6508 char u8
 66   f32 u16
 
-67   u16
+67   'Quest' u16
 6700
-6701 u16 u8
-6702 u16 u8
-6703 u8 u8
-6704 u8 u8
+6701 'QuestTaskSet' u16 u8
+6702 'QuestTaskUnset' u16 u8
+6703 'QuestFlagsSet' flags8 u8
+6704 'QuestFlagsUnset' flags8 u8
 6705
 
 68   u16
@@ -403,7 +404,7 @@
 6A09 u8 u16
 
 6B   char str str u8 f32 u8
-6C   char
+6C   'CharDelete' char
 6D00 str
 6D01 str f32 u16 u16 u16 u16
 6D02 str f32 u16
@@ -427,7 +428,7 @@
 7002
 7009
 700A
-72   u16 u32 u16
+72   'ShopShow' u16 u32 u16
 7300
 7301
 7302 u16
@@ -454,8 +455,8 @@
 7902 f32 f32 f32 f32
 7903 u16 str u8
 7B   u8 u16 u16 u16 u16 u16 u16 f32 f32 f32 str
-7D   u16 u16
-7E   u16
+7D   'BondPointsSet' u16 u16
+7E   'BondPointsAdd' u16
 7F00 char char str str
 7F01 char char str str
 7F02 char
@@ -468,8 +469,8 @@
 8102
 8103 u32
 82   u16 f32 f32 f32 f32
-83   u16 u16 u16 u16 u16 u16 u16 u16
-84
+83   'CalendarShow' u16 u16 u16 u16 u16 u16 u16 u16
+84   'CalendarWait'
 85   str u32
 8600 u16 u16
 8601 u16 u16
@@ -491,13 +492,13 @@
 890C
 8914 u32
 8915
-8A00 'BookShow' str str u8 u16 # You'd think this was a flag coming from cs2, but nope
+8A00 'BookShow' str str u8 flag
 8A01 'BookWait'
 8C   u8 u16 u8
 8D01 u8 f32
 8D02 u8 f32
-8E   u16
-8F   u16 f32 f32 f32
+8E   'HelpUnlock' u16
+8F   'MapAmbientLight' u16 f32 f32 f32
 9000 u16
 9001
 9002
@@ -531,7 +532,7 @@
 97   u16
 9B   char f32 f32 f32
 9D   flags32
-9E   u8
+9E   'NoteGetCount' u8
 
 9F   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
 A000 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
@@ -549,7 +550,7 @@ A105
 A106
 A107
 A200 u16 u8
-A3   str u16
+A3   'SetEndFunc' str u16
 A4   u8
 A6   u8 char flags32
 A7   u8 char
