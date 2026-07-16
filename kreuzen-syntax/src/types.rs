@@ -36,6 +36,17 @@ fn escape_str(out: &mut String, s: &str) {
 	}
 }
 
+/// Prints a function or scena name: bare if it's a valid identifier, quoted otherwise.
+pub(crate) fn print_name(name: &str, ctx: &mut Ctx) {
+	let mut chars = name.chars();
+	let is_ident = chars.next().is_some_and(unicode_ident::is_xid_start) && chars.all(unicode_ident::is_xid_continue);
+	if is_ident {
+		ctx.token(name.to_owned());
+	} else {
+		name.print(ctx);
+	}
+}
+
 impl Print for str {
 	fn print(&self, ctx: &mut Ctx) {
 		let mut out = String::with_capacity(self.len() + 2);

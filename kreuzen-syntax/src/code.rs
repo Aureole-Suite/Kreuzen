@@ -53,11 +53,19 @@ impl Print for Stmt {
 					}
 				}
 			}
-			Stmt::While(m, e, body, _) => {
+			Stmt::While(m, e, body, m2) => {
 				m.print(ctx);
 				ctx.word("while");
 				e.print(ctx);
-				body.print(ctx);
+				if *m2 == OpMeta::default() {
+					body.print(ctx);
+				} else {
+					// the loopback op's meta, as a trailing marker in the block
+					ctx.block(body.iter().map(Some).chain([None]), |stmt, ctx| match stmt {
+						Some(stmt) => stmt.print(ctx),
+						None => m2.print(ctx),
+					});
+				}
 			}
 			Stmt::ForkLambda(m, chr, slot, name, body) => {
 				m.print(ctx);
@@ -229,12 +237,12 @@ impl Print for ShadowOp {
 impl Print for Op {
 	fn print(&self, ctx: &mut Ctx) {
 		self.meta.print(ctx);
-		if matches!(self.name, "SetAttr" | "SetVar" | "SetNumReg" | "SetGlobal" | "SetCharAttr") {
-			assert_eq!(self.args.len(), 2);
-			self.args[0].print(ctx);
-			let Arg::Expr(expr) = &self.args[1] else {
-				panic!("setter second arg must be expr");
-			};
+		// Setters print infix, but only if the expr is an assignment;
+		// bare exprs (no trailing Ass op in the data) use the generic form.
+		if matches!(self.name, "SetAttr" | "SetVar" | "SetNumReg" | "SetGlobal" | "SetCharAttr")
+			&& let [lhs, Arg::Expr(expr @ Expr::Ass(..))] = self.args.as_slice()
+		{
+			lhs.print(ctx);
 			expr.print(ctx);
 		} else {
 			ctx.token(self.name);
@@ -281,7 +289,7 @@ impl Print for Arg {
 			Arg::Flags16(v) => v.print(ctx),
 			Arg::Flags32(v) => v.print(ctx),
 			Arg::SystemFlags(v) => v.print(ctx),
-			Arg::Expr(_) => unreachable!("expr handled separately"),
+			Arg::Expr(v) => v.print(ctx),
 			Arg::Text(v) => v.print(ctx),
 		}
 	}
@@ -329,7 +337,14 @@ fn print_expr(e: &Expr, ctx: &mut Ctx, prec: u32) {
 				UnOp::Neg => "-",
 				UnOp::BitNot => "~",
 			});
-			print_expr(a, ctx, 10);
+			// -(5) would otherwise be indistinguishable from a literal -5
+			if matches!((op, &**a), (UnOp::Neg, Expr::Int(_))) {
+				ctx.sym("(");
+				print_expr(a, ctx, 0);
+				ctx.sym_(")");
+			} else {
+				print_expr(a, ctx, 10);
+			}
 		}
 		Expr::Ass(op, a) => {
 			ctx._sym_(match op {

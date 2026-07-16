@@ -8,7 +8,7 @@ pub mod code;
 pub mod decompile;
 pub mod expr;
 mod io;
-mod spec;
+pub mod spec;
 pub mod sugar;
 pub mod tables;
 pub mod text;

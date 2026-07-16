@@ -169,7 +169,22 @@ fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Re
 
 	let s1 = resugar.print_to_string();
 	std::fs::create_dir_all(outfile.parent().unwrap())?;
-	std::fs::write(outfile, s1)?;
+	std::fs::write(outfile, &s1)?;
+
+	let mut errors = kreuzen_syntax::diag::Errors::new();
+	let reparsed = kreuzen_syntax::parse(&s1, |i| kreuzen::spec::for_game(i.game, i.variant), &mut errors);
+	if errors.max_severity() >= kreuzen_syntax::diag::Severity::Error {
+		tracing::error!("errors while reparsing");
+		print!("{}", kreuzen_syntax::diag::render(&outfile.display().to_string(), &s1, &errors));
+	} else if reparsed.as_ref() != Some(&resugar) {
+		let s2 = reparsed.map(|r| r.print_to_string()).unwrap_or_default();
+		tracing::error!("mismatch after parse roundtrip");
+		if s1 == s2 {
+			println!("string was equal, so probably NaN issues");
+		} else {
+			print!("{}", pretty_assertions::StrComparison::new(&s1, &s2));
+		}
+	}
 
 	Ok(())
 }

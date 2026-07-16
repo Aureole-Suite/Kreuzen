@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 kreuzen = { path = "../kreuzen" }
+codespan-reporting = "0.12.0"
+unicode-ident = "1.0.18"

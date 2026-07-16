@@ -1,9 +1,13 @@
 mod code;
 mod ctx;
+pub mod diag;
+pub mod lex;
+mod parse;
 mod tables;
 mod types;
 
 pub use ctx::Ctx;
+pub use parse::{Rest, parse, parse_header, parse_scena};
 
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
@@ -20,9 +24,11 @@ pub trait Print {
 
 impl Print for ScenaInfo {
 	fn print(&self, ctx: &mut Ctx) {
+		ctx.word("scena");
+		types::print_name(&self.name, ctx);
 		ctx.token(format!(
-			"scena {} game={:?} enc={:?} oddness={} variant={}",
-			self.name, self.game, self.enc, self.oddness, self.variant
+			"game={:?} enc={:?} oddness={} variant={}",
+			self.game, self.enc, self.oddness, self.variant
 		));
 	}
 }
@@ -30,7 +36,7 @@ impl Print for ScenaInfo {
 impl Print for RawFunction {
 	fn print(&self, ctx: &mut Ctx) {
 		ctx.word("fn");
-		ctx.token(self.name.to_owned());
+		types::print_name(&self.name, ctx);
 		ctx.block(&self.body, FlatOp::print);
 		if !self.preload.is_empty() {
 			ctx.word("preload");
@@ -67,7 +73,7 @@ impl Print for RawScena {
 impl Print for Function {
 	fn print(&self, ctx: &mut Ctx) {
 		ctx.word("fn");
-		ctx.token(self.name.to_owned());
+		types::print_name(&self.name, ctx);
 		self.body.print(ctx);
 		if !self.preload.is_empty() {
 			ctx.word("preload");
