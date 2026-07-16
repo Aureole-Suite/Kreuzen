@@ -15,8 +15,42 @@ macro_rules! print_via_debug {
 	};
 }
 
-print_via_debug!(String, str, u8, u16, i64, i32, u32, f32);
+print_via_debug!(u8, u16, i64, i32, u32, f32);
 print_via_debug!(types::Flags8, types::Flags16, types::Flags32);
+
+fn escape_str(out: &mut String, s: &str) {
+	use std::fmt::Write;
+	for c in s.chars() {
+		match c {
+			'\\' => out.push_str("\\\\"),
+			'"' => out.push_str("\\\""),
+			'\n' => out.push_str("\\n"),
+			'\t' => out.push_str("\\t"),
+			'\r' => out.push_str("\\r"),
+			'{' => out.push_str("\\{"),
+			'}' => out.push_str("\\}"),
+			c if c.is_ascii_control() => write!(out, "\\x{:02X}", c as u32).unwrap(),
+			c if c.is_control() => write!(out, "\\u{{{:04X}}}", c as u32).unwrap(),
+			c => out.push(c),
+		}
+	}
+}
+
+impl Print for str {
+	fn print(&self, ctx: &mut Ctx) {
+		let mut out = String::with_capacity(self.len() + 2);
+		out.push('"');
+		escape_str(&mut out, self);
+		out.push('"');
+		ctx.token(out);
+	}
+}
+
+impl Print for String {
+	fn print(&self, ctx: &mut Ctx) {
+		self.as_str().print(ctx);
+	}
+}
 
 macro_rules! print_tuple {
 	($($t:ident)*) => {
@@ -124,7 +158,7 @@ impl Print for Text {
 
 		for part in &self.0 {
 			match part {
-				TextPart::String(s) => lines.last_mut().unwrap().push_str(s),
+				TextPart::String(s) => escape_str(lines.last_mut().unwrap(), s),
 				TextPart::Control(TextControl::Line) => push_control(&mut lines, "\n"),
 				TextPart::Control(TextControl::Pause) => push_control(&mut lines, "{pause}"),
 				TextPart::Control(TextControl::Clear) => push_control(&mut lines, "{clear}"),
