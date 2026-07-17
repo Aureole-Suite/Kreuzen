@@ -58,14 +58,13 @@ pub(crate) fn recover(c: &mut Cursor) {
 /// once the caller has picked an op table based on the header.
 pub struct Rest<'a> {
 	cursor: Cursor<'a>,
-	is_raw: bool,
 }
 
-/// Phase 1: parses the `scena <name> game=.. enc=.. oddness=.. variant=..` header line.
+/// Phase 1: parses the `scena` header line.
 pub fn parse_header<'a>(tokens: &'a Tokens, errors: &mut Errors) -> Option<(ScenaInfo, Rest<'a>)> {
 	let mut p = Parser::new(tokens.cursor(), errors);
 	match parse_header_inner(&mut p) {
-		Ok((info, is_raw)) => Some((info, Rest { cursor: p.cursor, is_raw })),
+		Ok(info) => Some((info, Rest { cursor: p.cursor })),
 		Err(_) => {
 			p.report(|_| {});
 			None
@@ -73,36 +72,17 @@ pub fn parse_header<'a>(tokens: &'a Tokens, errors: &mut Errors) -> Option<(Scen
 	}
 }
 
-fn parse_header_inner(p: &mut Parser) -> Result<(ScenaInfo, bool)> {
-	let is_raw = p.keyword("raw").is_ok();
+fn parse_header_inner(p: &mut Parser) -> Result<ScenaInfo> {
 	p.keyword("scena")?;
 	let name = p.parse()?;
 
-	p.keyword("game")?;
-	p.punct('=')?;
-	let game = p
-		.alt()
-		.test_kw("Cs1", |_| Ok(Game::Cs1))
-		.test_kw("Cs2", |_| Ok(Game::Cs2))
-		.test_kw("Cs3", |_| Ok(Game::Cs3))
-		.test_kw("Cs4", |_| Ok(Game::Cs4))
-		.test_kw("Reverie", |_| Ok(Game::Reverie))
-		.test_kw("Tx", |_| Ok(Game::Tx))
-		.finish()?;
+	let enc = p.alt().test_kw("sjis", |_| Ok(Enc::Sjis)).test(|_| Ok(Enc::Utf8)).finish()?;
+	let game = p.parse()?;
+	let variant = if p.glued_punct('/').is_ok() { p.parse()? } else { 0 };
+	let oddness = p.parse().unwrap_or(0);
+	p.punct(';')?;
 
-	p.keyword("enc")?;
-	p.punct('=')?;
-	let enc = p.alt().test_kw("Sjis", |_| Ok(Enc::Sjis)).test_kw("Utf8", |_| Ok(Enc::Utf8)).finish()?;
-
-	p.keyword("oddness")?;
-	p.punct('=')?;
-	let oddness = p.parse()?;
-
-	p.keyword("variant")?;
-	p.punct('=')?;
-	let variant = p.parse()?;
-
-	Ok((ScenaInfo { name, game, enc, oddness, variant }, is_raw))
+	Ok(ScenaInfo { name, game, enc, oddness, variant })
 }
 
 /// Phase 2: parses the rest of the file, using the given op table.
@@ -111,11 +91,6 @@ fn parse_header_inner(p: &mut Parser) -> Result<(ScenaInfo, bool)> {
 /// get it from `kreuzen::spec::for_game`.
 pub fn parse_scena(info: ScenaInfo, rest: Rest<'_>, spec: &'static Spec, errors: &mut Errors) -> Scena {
 	let mut p = Parser::new(rest.cursor, errors);
-	if rest.is_raw {
-		let span = p.next_span();
-		p.errors.fatal("raw files are not supported yet", span);
-		return Scena { info, chunks: Vec::new() };
-	}
 	let ctx = PCtx { spec, game: info.game };
 	let mut chunks = Vec::new();
 	while !p.at_end() {

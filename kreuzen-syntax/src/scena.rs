@@ -1,7 +1,7 @@
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
 use kreuzen::code::shadow::{Shadow, ShadowOp};
-use kreuzen::{Body, Chunk, Function, Scena, ScenaInfo};
+use kreuzen::{Body, Chunk, Function, Game, Scena, ScenaInfo};
 
 use crate::parse::Expect;
 use crate::{Error, Parse, Parser, Print, Printer, Result};
@@ -10,12 +10,31 @@ impl Print for ScenaInfo {
 	fn print(&self, ctx: &mut Printer) {
 		ctx.word("scena");
 		self.name.print(ctx);
-		ctx.token(format!(
-			"game={:?} enc={:?} oddness={} variant={}",
-			self.game, self.enc, self.oddness, self.variant
-		));
+		match self.enc {
+			kreuzen::Enc::Sjis => ctx.word("sjis"),
+			kreuzen::Enc::Utf8 => {}
+		}
+		self.game.print(ctx);
+		if self.variant != 0 {
+			ctx.sym("/");
+			self.variant.print(ctx);
+		}
+		if self.oddness != 0 {
+			self.oddness.print(ctx);
+		}
 	}
 }
+
+crate::types::row!(
+	enum Game {
+		Cs1 = "cs1",
+		Cs2 = "cs2",
+		Cs3 = "cs3",
+		Cs4 = "cs4",
+		Reverie = "reverie",
+		Tx = "tx",
+	}
+);
 
 impl Print for Body {
 	fn print(&self, ctx: &mut Printer) {
@@ -57,6 +76,7 @@ impl Print for Chunk {
 impl Print for Scena {
 	fn print(&self, ctx: &mut Printer) {
 		self.info.print(ctx);
+		ctx.end_item();
 		ctx.newline(1);
 		for c in &self.chunks {
 			c.print(ctx);
