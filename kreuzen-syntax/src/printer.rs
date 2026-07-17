@@ -8,13 +8,13 @@ enum Space {
 	Block(usize),
 }
 
-pub struct Ctx {
+pub struct Printer {
 	out: String,
 	space: Space,
 	pub indent: usize,
 }
 
-impl Ctx {
+impl Printer {
 	#[expect(clippy::new_without_default)]
 	pub fn new() -> Self {
 		Self { out: String::new(), space: Space::None, indent: 0 }

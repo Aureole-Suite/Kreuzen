@@ -1,13 +1,13 @@
 use kreuzen::text::{Text, TextControl, TextPart};
 use kreuzen::types;
 
-use crate::{Ctx, Print};
+use crate::{Print, Printer};
 
 macro_rules! print_via_debug {
 	($($t:ty),* $(,)?) => {
 		$(
 			impl Print for $t {
-				fn print(&self, ctx: &mut Ctx) {
+				fn print(&self, ctx: &mut Printer) {
 					ctx.token(format!("{self:?}"));
 				}
 			}
@@ -37,7 +37,7 @@ fn escape_str(out: &mut String, s: &str) {
 }
 
 impl Print for str {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		let mut out = String::with_capacity(self.len() + 2);
 		out.push('"');
 		escape_str(&mut out, self);
@@ -47,7 +47,7 @@ impl Print for str {
 }
 
 impl Print for String {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.as_str().print(ctx);
 	}
 }
@@ -56,7 +56,7 @@ macro_rules! print_tuple {
 	($($t:ident)*) => {
 		#[expect(non_snake_case)]
 		impl<$($t: Print,)+> Print for ($($t,)+) {
-			fn print(&self, ctx: &mut Ctx) {
+			fn print(&self, ctx: &mut Printer) {
 				let ($($t,)+) = self;
 				ctx._sym("(");
 				$($t.print(ctx);)+
@@ -73,7 +73,7 @@ print_tuple!(A B C D);
 print_tuple!(A B C D E);
 
 impl<T: Print, const N: usize> Print for [T; N] {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		ctx._sym("(");
 		for v in self {
 			v.print(ctx);
@@ -86,7 +86,7 @@ macro_rules! print_bracket {
 	($($t:ty => $name:literal),* $(,)?) => {
 		$(
 			impl Print for $t {
-				fn print(&self, ctx: &mut Ctx) {
+				fn print(&self, ctx: &mut Printer) {
 					ctx.word($name);
 					ctx.sym("[");
 					self.0.print(ctx);
@@ -114,7 +114,7 @@ print_bracket!(
 );
 
 impl Print for types::Char {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		let inner = match self.0 {
 			0xFFFE => "self".to_string(),
 			0xFFFF => "null".to_string(),
@@ -126,7 +126,7 @@ impl Print for types::Char {
 }
 
 impl Print for types::CharAttr {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.0.print(ctx);
 		ctx.sym(".");
 		ctx.token(self.1.to_string())
@@ -156,7 +156,7 @@ fn format_line(mut line: String) -> String {
 }
 
 impl Print for Text {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		// start with two lines, so that push_control works. First will usually be empty.
 		let mut lines = vec![String::new(), String::new()];
 
@@ -167,7 +167,7 @@ impl Print for Text {
 				TextPart::Control(TextControl::Pause) => push_control(&mut lines, "{pause}"),
 				TextPart::Control(TextControl::Clear) => push_control(&mut lines, "{clear}"),
 				TextPart::Control(c) => {
-					let mut sub = Ctx::new();
+					let mut sub = Printer::new();
 					c.print(&mut sub);
 					let line = lines.last_mut().unwrap();
 					line.push('{');
@@ -199,7 +199,7 @@ impl Print for Text {
 }
 
 impl Print for TextControl {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match self {
 			TextControl::Line | TextControl::Pause | TextControl::Clear => unreachable!(),
 			TextControl::Item(v) => v.print(ctx),

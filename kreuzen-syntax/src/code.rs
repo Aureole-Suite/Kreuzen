@@ -4,10 +4,10 @@ use kreuzen::code::{Arg, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
 
-use crate::{Ctx, Print};
+use crate::{Print, Printer};
 
 impl Print for OpMeta {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		if self.line != 0 {
 			ctx.token(format!("{}", self.line));
 			ctx.sym("@");
@@ -22,7 +22,7 @@ impl Print for OpMeta {
 }
 
 impl Print for Stmt {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match self {
 			Stmt::Op(op) => {
 				op.print(ctx);
@@ -105,13 +105,13 @@ impl Print for Stmt {
 }
 
 impl Print for [Stmt] {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		ctx.block(self, Stmt::print);
 	}
 }
 
 impl Print for FlatOp {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match self {
 			FlatOp::Op(op) => {
 				op.print(ctx);
@@ -154,7 +154,7 @@ impl Print for FlatOp {
 }
 
 impl Print for Preload {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		macro_rules! inner {
 			($($name:ident ( $($arg:ident),* ),)*) => {
 				match self {
@@ -182,7 +182,7 @@ impl Print for Preload {
 }
 
 impl Print for Shadow {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		if self.line != 0 {
 			ctx.token(format!("{}", self.line));
 			ctx.sym("@");
@@ -192,7 +192,7 @@ impl Print for Shadow {
 }
 
 impl Print for ShadowOp {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match self {
 			ShadowOp::Call { table, name } => {
 				ctx.word("Call");
@@ -228,7 +228,7 @@ impl Print for ShadowOp {
 }
 
 impl Print for Op {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.meta.print(ctx);
 		// Setters print infix, but only if the expr is an assignment;
 		// bare exprs (no trailing Ass op in the data) use the generic form.
@@ -247,7 +247,7 @@ impl Print for Op {
 }
 
 impl Print for Arg {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match self {
 			Arg::Str(v) => v.print(ctx),
 			Arg::Int(v) => v.print(ctx),
@@ -289,12 +289,12 @@ impl Print for Arg {
 }
 
 impl Print for Expr {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		print_expr(self, ctx, 0);
 	}
 }
 
-fn print_expr(e: &Expr, ctx: &mut Ctx, prec: u32) {
+fn print_expr(e: &Expr, ctx: &mut Printer, prec: u32) {
 	match e {
 		Expr::Int(v) => {
 			if *v >= 0x10000 && v.count_ones() == 1 {
@@ -378,7 +378,7 @@ fn binop_prio(op: BinOp) -> (&'static str, u32) {
 }
 
 impl Print for Label {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		ctx._sym("$");
 		ctx.token(format!("L{}", self.0));
 	}

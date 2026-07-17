@@ -15,10 +15,10 @@ use kreuzen::tables::summon::Summon;
 use kreuzen::tables::weapon_att::WeaponAtt;
 use kreuzen::tables::{Dummy, Table};
 
-use super::{Ctx, Print};
+use super::{Printer, Print};
 
 impl Print for Table {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match self {
 			Table::AddCollision(t) => {
 				ctx.word("AddCollision");
@@ -104,7 +104,7 @@ impl Print for Table {
 }
 
 impl Print for Action {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
 		self.kind.print(ctx);
 		self.target.print(ctx);
@@ -123,7 +123,7 @@ impl Print for Action {
 }
 
 impl Print for Collision {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.a.print(ctx);
 		self.b.print(ctx);
 		ctx.sym_(";");
@@ -131,7 +131,7 @@ impl Print for Collision {
 }
 
 impl Print for Algo {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
 		self.chance.print(ctx);
 		self.use_limit.print(ctx);
@@ -142,7 +142,7 @@ impl Print for Algo {
 }
 
 impl Print for AnimeClip {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.kind.print(ctx);
 		self.a.print(ctx);
 		self.b.print(ctx);
@@ -151,7 +151,7 @@ impl Print for AnimeClip {
 }
 
 impl Print for BookData {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match self {
 			BookData::Header(n) => {
 				ctx.word("header");
@@ -179,7 +179,7 @@ impl Print for BookData {
 }
 
 impl Print for Page {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match &self.title {
 			Some(t) => {
 				ctx.word("title_page");
@@ -194,7 +194,7 @@ impl Print for Page {
 }
 
 impl Print for Break {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
 		self.value.print(ctx);
 		ctx.sym_(";");
@@ -202,7 +202,7 @@ impl Print for Break {
 }
 
 impl Print for Condition {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
 		for item in &self.entries {
 			item.print(ctx);
@@ -212,7 +212,7 @@ impl Print for Condition {
 }
 
 impl Print for FieldFollow {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.a.print(ctx);
 		self.b.print(ctx);
 		self.c.print(ctx);
@@ -223,7 +223,7 @@ impl Print for FieldFollow {
 }
 
 impl Print for FieldMonster {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.a.print(ctx);
 		self.b.print(ctx);
 		self.c.print(ctx);
@@ -235,7 +235,7 @@ impl Print for FieldMonster {
 }
 
 impl Print for Part {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
 		self.a.print(ctx);
 		self.b.print(ctx);
@@ -244,7 +244,7 @@ impl Print for Part {
 }
 
 impl Print for Reaction {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
 		match &self.kind {
 			ReactionKind::Parts(parts) => {
@@ -261,7 +261,7 @@ impl Print for Reaction {
 }
 
 impl Print for PartReaction {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		ctx._sym("(");
 		self.rating.print(ctx);
 		self.unbalance.print(ctx);
@@ -273,7 +273,7 @@ impl Print for PartReaction {
 }
 
 impl Print for StyleName {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.0.print(ctx);
 		self.1.print(ctx);
 		ctx.sym_(";");
@@ -281,7 +281,7 @@ impl Print for StyleName {
 }
 
 impl Print for Summon {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.kind.print(ctx);
 		self.a.print(ctx);
 		self.b.print(ctx);
@@ -291,7 +291,7 @@ impl Print for Summon {
 }
 
 impl Print for WeaponAtt {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.slash.print(ctx);
 		self.thrust.print(ctx);
 		self.pierce.print(ctx);
@@ -301,7 +301,7 @@ impl Print for WeaponAtt {
 }
 
 impl Print for Btlset {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.field.print(ctx);
 		self.bounds.print(ctx);
 		self.btl_id.print(ctx);
@@ -314,7 +314,7 @@ impl Print for Btlset {
 }
 
 impl Print for Variant {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
 		for (monster, prob) in &self.monsters {
 			monster.print(ctx);
@@ -328,7 +328,7 @@ impl Print for Variant {
 }
 
 impl Print for Dummy {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		ctx.word(match self {
 			Dummy::Empty => "empty",
 			Dummy::Dff => "dff",

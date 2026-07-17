@@ -1,29 +1,29 @@
 mod code;
-mod ctx;
 pub mod diag;
 pub mod lex;
 mod parse;
+mod printer;
 mod tables;
 mod types;
 
-pub use ctx::Ctx;
 pub use parse::{Rest, parse, parse_header, parse_scena};
+pub use printer::Printer;
 
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
 use kreuzen::{Chunk, Function, RawChunk, RawFunction, RawScena, Scena, ScenaInfo};
 
 pub trait Print {
-	fn print(&self, ctx: &mut Ctx);
+	fn print(&self, ctx: &mut Printer);
 	fn print_to_string(&self) -> String {
-		let mut ctx = Ctx::new();
+		let mut ctx = Printer::new();
 		self.print(&mut ctx);
 		ctx.finish()
 	}
 }
 
 impl Print for ScenaInfo {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		ctx.word("scena");
 		self.name.print(ctx);
 		ctx.token(format!(
@@ -34,7 +34,7 @@ impl Print for ScenaInfo {
 }
 
 impl Print for RawFunction {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		ctx.word("fn");
 		self.name.print(ctx);
 		ctx.block(&self.body, FlatOp::print);
@@ -50,7 +50,7 @@ impl Print for RawFunction {
 }
 
 impl Print for RawChunk {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match self {
 			RawChunk::Function(f) => f.print(ctx),
 			RawChunk::Table(t) => t.print(ctx),
@@ -59,7 +59,7 @@ impl Print for RawChunk {
 }
 
 impl Print for RawScena {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		ctx.word("raw");
 		self.info.print(ctx);
 		ctx.newline(1);
@@ -71,7 +71,7 @@ impl Print for RawScena {
 }
 
 impl Print for Function {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		ctx.word("fn");
 		self.name.print(ctx);
 		self.body.print(ctx);
@@ -87,7 +87,7 @@ impl Print for Function {
 }
 
 impl Print for Chunk {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		match self {
 			Chunk::Function(f) => f.print(ctx),
 			Chunk::Table(t) => t.print(ctx),
@@ -96,7 +96,7 @@ impl Print for Chunk {
 }
 
 impl Print for Scena {
-	fn print(&self, ctx: &mut Ctx) {
+	fn print(&self, ctx: &mut Printer) {
 		self.info.print(ctx);
 		ctx.newline(1);
 		for c in &self.chunks {
