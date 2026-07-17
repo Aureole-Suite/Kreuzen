@@ -1,5 +1,4 @@
-use kreuzen::code::preload::Preload;
-use kreuzen::code::shadow::{Shadow, ShadowOp};
+use kreuzen::code::shadow::Shadow;
 use kreuzen::code::{Arg, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
@@ -154,33 +153,6 @@ impl Print for FlatOp {
 	}
 }
 
-impl Print for Preload {
-	fn print(&self, ctx: &mut Printer) {
-		macro_rules! inner {
-			($($name:ident ( $($arg:ident),* ),)*) => {
-				match self {
-					$(Preload::$name($($arg),*) => {
-						ctx.word(stringify!($name));
-						$(Print::print($arg, ctx);)+
-					})*
-				}
-			}
-		}
-
-		inner! {
-			Call(n, s),
-			PkgLoad(s),
-			EffLoad(s),
-			SoundPlay(n),
-			SoundPlayVoice(n),
-			Voice(n),
-			CharAniclipPlay(c, s),
-			NameplateShow(s),
-			opCE02(s),
-		};
-	}
-}
-
 impl Print for Shadow {
 	fn print(&self, ctx: &mut Printer) {
 		if self.line != 0 {
@@ -188,39 +160,6 @@ impl Print for Shadow {
 			ctx.sym("@");
 		}
 		self.ops.print(ctx);
-	}
-}
-
-impl Print for ShadowOp {
-	fn print(&self, ctx: &mut Printer) {
-		match self {
-			ShadowOp::Call { table, name } => {
-				ctx.word("Call");
-				table.print(ctx);
-				name.print(ctx);
-			}
-			ShadowOp::CharAni { chr, strings } => {
-				ctx.word("CharAni");
-				chr.print(ctx);
-				for s in strings {
-					s.print(ctx);
-				}
-			}
-			ShadowOp::Fork { chr, slot, name, flags } => {
-				ctx.word("Fork");
-				chr.print(ctx);
-				slot.print(ctx);
-				name.print(ctx);
-				flags.print(ctx);
-			}
-			ShadowOp::ForkLambda { chr, slot, name, ops } => {
-				ctx.word("ForkLambda");
-				chr.print(ctx);
-				slot.print(ctx);
-				name.print(ctx);
-				ops.print(ctx);
-			}
-		}
 	}
 }
 

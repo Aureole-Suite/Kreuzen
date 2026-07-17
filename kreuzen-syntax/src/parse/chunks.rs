@@ -2,10 +2,10 @@ use kreuzen::code::preload::Preload;
 use kreuzen::code::shadow::{Shadow, ShadowOp};
 use kreuzen::{Chunk, Function};
 
-use crate::Parse;
 use crate::types::block;
+use crate::{Parse, Parser, Print, Printer, Result};
 
-use super::parser::{Error, Expect, Parser, Result};
+use super::parser::{Error, Expect};
 use super::{PCtx, stmt};
 
 pub fn parse_chunk(p: &mut Parser, ctx: &PCtx) -> Result<Chunk> {
@@ -30,21 +30,19 @@ fn parse_function(ctx: &PCtx, p: &mut super::alt::TryParser<'_, '_>) -> Result<F
 }
 
 block!(Preload);
-impl Parse for Preload {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		p.alt()
-			.test_kw("Call", |p| Ok(Preload::Call(p.parse()?, p.parse()?)))
-			.test_kw("PkgLoad", |p| p.parse().map(Preload::PkgLoad))
-			.test_kw("EffLoad", |p| p.parse().map(Preload::EffLoad))
-			.test_kw("SoundPlay", |p| p.parse().map(Preload::SoundPlay))
-			.test_kw("SoundPlayVoice", |p| p.parse().map(Preload::SoundPlayVoice))
-			.test_kw("Voice", |p| p.parse().map(Preload::Voice))
-			.test_kw("CharAniclipPlay", |p| Ok(Preload::CharAniclipPlay(p.parse()?, p.parse()?)))
-			.test_kw("NameplateShow", |p| p.parse().map(Preload::NameplateShow))
-			.test_kw("opCE02", |p| p.parse().map(Preload::opCE02))
-			.finish()
+crate::types::row!(
+	enum Preload {
+		Call(a, b),
+		PkgLoad(a),
+		EffLoad(a),
+		SoundPlay(a),
+		SoundPlayVoice(a),
+		Voice(a),
+		CharAniclipPlay(a, b),
+		NameplateShow(a),
+		opCE02(a),
 	}
-}
+);
 
 impl Parse for Shadow {
 	fn parse(p: &mut Parser) -> Result<Self> {
@@ -63,33 +61,11 @@ impl Parse for Shadow {
 }
 
 block!(ShadowOp);
-impl Parse for ShadowOp {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		p.alt()
-			.test_kw("Call", |p| {
-				let table = p.parse()?;
-				let name = p.parse()?;
-				Ok(ShadowOp::Call { table, name })
-			})
-			.test_kw("CharAni", |p| {
-				let chr = p.parse()?;
-				let strings = p.parse_many()?;
-				Ok(ShadowOp::CharAni { chr, strings })
-			})
-			.test_kw("Fork", |p| {
-				let chr = p.parse()?;
-				let slot = p.parse()?;
-				let name = p.parse()?;
-				let flags = p.parse()?;
-				Ok(ShadowOp::Fork { chr, slot, name, flags })
-			})
-			.test_kw("ForkLambda", |p| {
-				let chr = p.parse()?;
-				let slot = p.parse()?;
-				let name = p.parse()?;
-				let ops = p.parse()?;
-				Ok(ShadowOp::ForkLambda { chr, slot, name, ops })
-			})
-			.finish()
+crate::types::row!(
+	enum ShadowOp {
+		Call { table, name },
+		CharAni { chr, strings* },
+		Fork { chr, slot, name, flags },
+		ForkLambda { chr, slot, name, ops },
 	}
-}
+);

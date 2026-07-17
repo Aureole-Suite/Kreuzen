@@ -18,114 +18,28 @@ use kreuzen::tables::{Dummy, Table};
 use crate::types::{block, row};
 use crate::{Parse, Parser, Print, Printer, Result};
 
-impl Print for Table {
-	fn print(&self, ctx: &mut Printer) {
-		match self {
-			Table::AddCollision(t) => {
-				ctx.word("AddCollision");
-				t.print(ctx);
-			}
-			Table::ActionTable(t) => {
-				ctx.word("ActionTable");
-				t.print(ctx);
-			}
-			Table::AlgoTable(t) => {
-				ctx.word("AlgoTable");
-				t.print(ctx);
-			}
-			Table::AnimeClipTable(t) => {
-				ctx.word("AnimeClipTable");
-				t.print(ctx);
-			}
-			Table::BookData(name, book) => {
-				ctx.word("BookData");
-				name.print(ctx);
-				book.print(ctx);
-			}
-			Table::Book(name, pages) => {
-				ctx.word("Book");
-				name.print(ctx);
-				pages.print(ctx);
-			}
-			Table::BreakTable(t) => {
-				ctx.word("BreakTable");
-				t.print(ctx);
-			}
-			Table::ConditionTable(t) => {
-				ctx.word("ConditionTable");
-				t.print(ctx);
-			}
-			Table::FcAuto(name, text) => {
-				ctx.word("FcAuto");
-				name.print(ctx);
-				text.print(ctx);
-			}
-			Table::FieldFollowData(t) => {
-				ctx.word("FieldFollowData");
-				t.print(ctx);
-			}
-			Table::PartTable(t) => {
-				ctx.word("PartTable");
-				t.print(ctx);
-			}
-			Table::ReactionTable(t) => {
-				ctx.word("ReactionTable");
-				t.print(ctx);
-			}
-			Table::StyleName(name, style) => {
-				ctx.word("StyleName");
-				name.print(ctx);
-				style.print(ctx);
-			}
-			Table::SummonTable(t) => {
-				ctx.word("SummonTable");
-				t.print(ctx);
-			}
-			Table::FieldMonsterData(t) => {
-				ctx.word("FieldMonsterData");
-				t.print(ctx);
-			}
-			Table::WeaponAttTable(t) => {
-				ctx.word("WeaponAttTable");
-				t.print(ctx);
-			}
-			Table::Btlset(name, btlset) => {
-				ctx.word("Btlset");
-				name.print(ctx);
-				btlset.print(ctx);
-			}
-			Table::Dummy(t) => {
-				ctx.word("Dummy");
-				t.print(ctx);
-			}
-		}
+row!(
+	enum Table {
+		AddCollision(t),
+		ActionTable(t),
+		AlgoTable(t),
+		AnimeClipTable(t),
+		BookData(name, book),
+		Book(name, pages),
+		BreakTable(t),
+		ConditionTable(t),
+		FcAuto(name, text),
+		FieldFollowData(t),
+		PartTable(t),
+		ReactionTable(t),
+		StyleName(name, style),
+		SummonTable(t),
+		FieldMonsterData(t),
+		WeaponAttTable(t),
+		Btlset(name, btlset),
+		Dummy(t),
 	}
-}
-
-impl Parse for Table {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		p.alt()
-			.test_kw("AddCollision", |p| Ok(Table::AddCollision(p.parse()?)))
-			.test_kw("ActionTable", |p| Ok(Table::ActionTable(p.parse()?)))
-			.test_kw("AlgoTable", |p| Ok(Table::AlgoTable(p.parse()?)))
-			.test_kw("AnimeClipTable", |p| Ok(Table::AnimeClipTable(p.parse()?)))
-			.test_kw("BookData", |p| Ok(Table::BookData(p.parse()?, p.parse()?)))
-			.test_kw("Book", |p| Ok(Table::Book(p.parse()?, p.parse()?)))
-			.test_kw("BreakTable", |p| Ok(Table::BreakTable(p.parse()?)))
-			.test_kw("ConditionTable", |p| Ok(Table::ConditionTable(p.parse()?)))
-			.test_kw("FcAuto", |p| Ok(Table::FcAuto(p.parse()?, p.parse()?)))
-			.test_kw("FieldFollowData", |p| Ok(Table::FieldFollowData(p.parse()?)))
-			.test_kw("PartTable", |p| Ok(Table::PartTable(p.parse()?)))
-			.test_kw("ReactionTable", |p| Ok(Table::ReactionTable(p.parse()?)))
-			.test_kw("StyleName", |p| Ok(Table::StyleName(p.parse()?, p.parse()?)))
-			.test_kw("SummonTable", |p| Ok(Table::SummonTable(p.parse()?)))
-			.test_kw("FieldMonsterData", |p| Ok(Table::FieldMonsterData(p.parse()?)))
-			.test_kw("WeaponAttTable", |p| Ok(Table::WeaponAttTable(p.parse()?)))
-			.test_kw("Btlset", |p| Ok(Table::Btlset(p.parse()?, p.parse()?)))
-			.test_kw("Dummy", |p| Ok(Table::Dummy(p.parse()?)))
-			.finish()
-	}
-}
+);
 
 block!(Action, "id kind target ?? cast recovery cp flags ani name effects");
 row!(struct Action { id, kind, target, u2, cast_time, recovery_time, cp_cost, flags, ani, name, effects* });
@@ -245,54 +159,21 @@ impl Parse for Variant {
 	}
 }
 
-impl Print for Dummy {
-	fn print(&self, ctx: &mut Printer) {
-		ctx.word(match self {
-			Dummy::Empty => "empty",
-			Dummy::Dff => "dff",
-		});
+row!(
+	enum Dummy {
+		Empty = "empty",
+		Dff = "dff",
 	}
-}
+);
 
-impl Parse for Dummy {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		p.alt().test_kw("empty", |_| Ok(Dummy::Empty)).test_kw("dff", |_| Ok(Dummy::Dff)).finish()
+row!(
+	enum BookData {
+		Header(n) = "header",
+		TitlePage(title, text) = "title_page",
+		Page(text) = "page",
+		Empty = "empty",
 	}
-}
-
-impl Print for BookData {
-	fn print(&self, ctx: &mut Printer) {
-		match self {
-			BookData::Header(n) => {
-				ctx.word("header");
-				n.print(ctx);
-			}
-			BookData::TitlePage(title, text) => {
-				ctx.word("title_page");
-				title.print(ctx);
-				text.print(ctx);
-			}
-			BookData::Page(text) => {
-				ctx.word("page");
-				text.print(ctx);
-			}
-			BookData::Empty => {
-				ctx.word("empty");
-			}
-		}
-	}
-}
-
-impl Parse for BookData {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		p.alt()
-			.test_kw("header", |p| p.parse().map(BookData::Header))
-			.test_kw("title_page", |p| Ok(BookData::TitlePage(p.parse()?, p.parse()?)))
-			.test_kw("page", |p| p.parse().map(BookData::Page))
-			.test_kw("empty", |_| Ok(BookData::Empty))
-			.finish()
-	}
-}
+);
 
 block!(Page);
 
