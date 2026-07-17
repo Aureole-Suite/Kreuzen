@@ -55,41 +55,101 @@ fn rows<T: Parse>(p: &mut Parser) -> Result<Vec<T>> {
 	p.delim('{', |p| Ok(super::parse_seq(p, |p| p.parse())))
 }
 
-macro_rules! parse_row {
-	($ty:ident { $($field:ident),* $(,)? }) => {
-		impl Parse for $ty {
-			fn parse(p: &mut Parser) -> Result<Self> {
-				$(let $field = p.parse()?;)*
-				Ok($ty { $($field),* })
-			}
-		}
-	};
+impl Parse for Collision {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(Collision { a: p.parse()?, b: p.parse()? })
+	}
 }
-
-// Fields in print order, which is not always declaration order.
-parse_row!(Collision { a, b });
-parse_row!(Action {
-	id,
-	kind,
-	target,
-	u2,
-	cast_time,
-	recovery_time,
-	cp_cost,
-	flags,
-	ani,
-	name,
-	effects
-});
-parse_row!(Algo { id, chance, use_limit, target_priority, cond });
-parse_row!(AnimeClip { kind, a, b });
-parse_row!(Break { id, value });
-parse_row!(Condition { id, entries });
-parse_row!(FieldFollow { a, b, c, d, e });
-parse_row!(FieldMonster { a, b, c, floats });
-parse_row!(Part { id, a, b });
-parse_row!(Summon { kind, a, b, name });
-parse_row!(WeaponAtt { slash, thrust, pierce, strike });
+impl Parse for Action {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		let id = p.parse()?;
+		Ok(Action {
+			id,
+			kind: p.parse()?,
+			target: p.parse()?,
+			u2: p.parse()?,
+			cast_time: p.parse()?,
+			recovery_time: p.parse()?,
+			cp_cost: p.parse()?,
+			flags: p.parse()?,
+			ani: p.parse()?,
+			name: p.parse()?,
+			effects: p.parse()?,
+		})
+	}
+}
+impl Parse for Algo {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(Algo {
+			id: p.parse()?,
+			chance: p.parse()?,
+			use_limit: p.parse()?,
+			target_priority: p.parse()?,
+			cond: p.parse()?,
+		})
+	}
+}
+impl Parse for AnimeClip {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(AnimeClip { kind: p.parse()?, a: p.parse()?, b: p.parse()? })
+	}
+}
+impl Parse for Break {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(Break { id: p.parse()?, value: p.parse()? })
+	}
+}
+impl Parse for Condition {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(Condition { id: p.parse()?, entries: p.parse()? })
+	}
+}
+impl Parse for FieldFollow {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(FieldFollow {
+			a: p.parse()?,
+			b: p.parse()?,
+			c: p.parse()?,
+			d: p.parse()?,
+			e: p.parse()?,
+		})
+	}
+}
+impl Parse for FieldMonster {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(FieldMonster {
+			a: p.parse()?,
+			b: p.parse()?,
+			c: p.parse()?,
+			floats: p.parse()?,
+		})
+	}
+}
+impl Parse for Part {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(Part { id: p.parse()?, a: p.parse()?, b: p.parse()? })
+	}
+}
+impl Parse for Summon {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(Summon {
+			kind: p.parse()?,
+			a: p.parse()?,
+			b: p.parse()?,
+			name: p.parse()?,
+		})
+	}
+}
+impl Parse for WeaponAtt {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Ok(WeaponAtt {
+			slash: p.parse()?,
+			thrust: p.parse()?,
+			pierce: p.parse()?,
+			strike: p.parse()?,
+		})
+	}
+}
 
 impl Parse for StyleName {
 	fn parse(p: &mut Parser) -> Result<Self> {
@@ -110,9 +170,7 @@ impl Parse for BookData {
 
 impl Parse for TitlePage {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		let title = p.parse()?;
-		let data = p.parse()?;
-		Ok(TitlePage { title, data })
+		Ok(TitlePage { title: p.parse()?, data: p.parse()? })
 	}
 }
 
@@ -151,23 +209,15 @@ impl Parse for PartReaction {
 
 impl Parse for Btlset {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		let field = p.parse()?;
-		let bounds = p.parse()?;
-		let btl_id = p.parse()?;
-		let unk1 = p.parse()?;
-		let bgm = p.parse()?;
-		let unk2 = p.parse()?;
-		let script = p.parse()?;
-		let variants = rows(p)?;
 		Ok(Btlset {
-			field,
-			bounds,
-			btl_id,
-			unk1,
-			bgm,
-			unk2,
-			script,
-			variants,
+			field: p.parse()?,
+			bounds: p.parse()?,
+			btl_id: p.parse()?,
+			unk1: p.parse()?,
+			bgm: p.parse()?,
+			unk2: p.parse()?,
+			script: p.parse()?,
+			variants: rows(p)?,
 		})
 	}
 }
