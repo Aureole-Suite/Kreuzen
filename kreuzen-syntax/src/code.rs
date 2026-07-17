@@ -26,17 +26,14 @@ impl Print for Stmt {
 		match self {
 			Stmt::Op(op) => {
 				op.print(ctx);
-				ctx.sym_(";");
 			}
 			Stmt::Break(m) => {
 				m.print(ctx);
 				ctx.word("break");
-				ctx.sym_(";");
 			}
 			Stmt::Continue(m) => {
 				m.print(ctx);
 				ctx.word("continue");
-				ctx.sym_(";");
 			}
 			Stmt::If(m, e, then, els) => {
 				m.print(ctx);
@@ -60,11 +57,20 @@ impl Print for Stmt {
 				if *m2 == OpMeta::default() {
 					body.print(ctx);
 				} else {
-					// the loopback op's meta, as a trailing marker in the block
-					ctx.block(body.iter().map(Some).chain([None]), |stmt, ctx| match stmt {
-						Some(stmt) => stmt.print(ctx),
-						None => m2.print(ctx),
-					});
+					// The loopback op's meta, as a trailing marker in the block.
+					// It is not `;`-terminated, so this can't use ctx.block.
+					ctx._sym_("{");
+					ctx.indent += 1;
+					for stmt in body {
+						ctx.newline(0);
+						stmt.print(ctx);
+						ctx.end_item();
+					}
+					ctx.newline(0);
+					m2.print(ctx);
+					ctx.newline(0);
+					ctx.indent -= 1;
+					ctx._sym_("}");
 				}
 			}
 			Stmt::ForkLambda(m, chr, slot, name, body) => {
@@ -96,6 +102,7 @@ impl Print for Stmt {
 					for stmt in body {
 						ctx.newline(0);
 						stmt.print(ctx);
+						ctx.end_item();
 					}
 					ctx.indent -= 1;
 				});
@@ -115,15 +122,12 @@ impl Print for FlatOp {
 		match self {
 			FlatOp::Op(op) => {
 				op.print(ctx);
-				ctx.sym_(";");
-				return;
 			}
 			FlatOp::Label(l) => {
 				ctx.indent -= 1;
 				l.print(ctx);
 				ctx.sym_(":");
 				ctx.indent += 1;
-				return;
 			}
 			FlatOp::Goto(m, l) => {
 				m.print(ctx);
@@ -144,12 +148,10 @@ impl Print for FlatOp {
 					ctx.token(value.to_string());
 					ctx._sym_("=>");
 					label.print(ctx);
-					ctx.sym_(";");
 				});
 				default.print(ctx);
 			}
 		}
-		ctx.sym_(";");
 	}
 }
 
@@ -177,7 +179,6 @@ impl Print for Preload {
 			NameplateShow(s),
 			opCE02(s),
 		};
-		ctx.sym_(";");
 	}
 }
 
@@ -198,7 +199,6 @@ impl Print for ShadowOp {
 				ctx.word("Call");
 				table.print(ctx);
 				name.print(ctx);
-				ctx.sym_(";");
 			}
 			ShadowOp::CharAni { chr, strings } => {
 				ctx.word("CharAni");
@@ -206,7 +206,6 @@ impl Print for ShadowOp {
 				for s in strings {
 					s.print(ctx);
 				}
-				ctx.sym_(";");
 			}
 			ShadowOp::Fork { chr, slot, name, flags } => {
 				ctx.word("Fork");
@@ -214,7 +213,6 @@ impl Print for ShadowOp {
 				slot.print(ctx);
 				name.print(ctx);
 				flags.print(ctx);
-				ctx.sym_(";");
 			}
 			ShadowOp::ForkLambda { chr, slot, name, ops } => {
 				ctx.word("ForkLambda");

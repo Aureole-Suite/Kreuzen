@@ -75,6 +75,7 @@ impl Print for RawScena {
 		ctx.newline(1);
 		for c in &self.chunks {
 			c.print(ctx);
+			ctx.end_item();
 			ctx.newline(1);
 		}
 	}
@@ -111,6 +112,7 @@ impl Print for Scena {
 		ctx.newline(1);
 		for c in &self.chunks {
 			c.print(ctx);
+			ctx.end_item();
 			ctx.newline(1);
 		}
 	}

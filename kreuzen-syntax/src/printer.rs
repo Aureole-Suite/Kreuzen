@@ -109,6 +109,7 @@ impl Printer {
 		for stmt in block {
 			self.newline(0);
 			f(stmt, self);
+			self.end_item();
 			n = true;
 		}
 		if n {
@@ -116,6 +117,15 @@ impl Printer {
 		}
 		self.indent -= 1;
 		self._sym_("}");
+	}
+
+	/// Ends a statement-like item, mirroring `parse_item` on the parse side:
+	/// prints a `;` unless the item ended with a `}` block or is already
+	/// terminated (`;` from a nested item, `:` from a label, or nothing printed).
+	pub fn end_item(&mut self) {
+		if !matches!(self.out.chars().next_back(), None | Some('{' | '}' | ';' | ':')) {
+			self.sym_(";");
+		}
 	}
 
 	pub fn finish(mut self) -> String {

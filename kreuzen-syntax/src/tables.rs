@@ -59,7 +59,6 @@ impl Print for Table {
 				ctx.word("FcAuto");
 				name.print(ctx);
 				text.print(ctx);
-				ctx.sym_(";");
 			}
 			Table::FieldFollowData(t) => {
 				ctx.word("FieldFollowData");
@@ -144,7 +143,6 @@ impl Print for Action {
 		for item in &self.effects {
 			item.print(ctx);
 		}
-		ctx.sym_(";");
 	}
 }
 
@@ -175,7 +173,6 @@ impl Print for Algo {
 		self.use_limit.print(ctx);
 		self.target_priority.print(ctx);
 		self.cond.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
@@ -198,7 +195,6 @@ impl Print for AnimeClip {
 		self.kind.print(ctx);
 		self.a.print(ctx);
 		self.b.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
@@ -214,7 +210,6 @@ impl Print for Break {
 	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
 		self.value.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
@@ -230,7 +225,6 @@ impl Print for Collision {
 	fn print(&self, ctx: &mut Printer) {
 		self.a.print(ctx);
 		self.b.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
@@ -248,7 +242,6 @@ impl Print for Condition {
 		for item in &self.entries {
 			item.print(ctx);
 		}
-		ctx.sym_(";");
 	}
 }
 
@@ -265,7 +258,6 @@ impl Print for FieldFollow {
 		self.c.print(ctx);
 		self.d.print(ctx);
 		self.e.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
@@ -289,7 +281,6 @@ impl Print for FieldMonster {
 		for &v in &self.floats {
 			v.print(ctx);
 		}
-		ctx.sym_(";");
 	}
 }
 
@@ -311,7 +302,6 @@ impl Print for Part {
 		self.id.print(ctx);
 		self.a.print(ctx);
 		self.b.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
@@ -336,7 +326,6 @@ impl Print for Reaction {
 				m.print(ctx);
 			}
 		}
-		ctx.sym_(";");
 	}
 }
 
@@ -377,7 +366,6 @@ impl Print for StyleName {
 	fn print(&self, ctx: &mut Printer) {
 		self.0.print(ctx);
 		self.1.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
@@ -395,7 +383,6 @@ impl Print for Summon {
 		self.a.print(ctx);
 		self.b.print(ctx);
 		self.name.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
@@ -416,7 +403,6 @@ impl Print for WeaponAtt {
 		self.thrust.print(ctx);
 		self.pierce.print(ctx);
 		self.strike.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
@@ -471,7 +457,6 @@ impl Print for Variant {
 				prob.print(ctx);
 			}
 		}
-		ctx.sym_(";");
 	}
 }
 
@@ -493,7 +478,6 @@ impl Print for Dummy {
 			Dummy::Empty => "empty",
 			Dummy::Dff => "dff",
 		});
-		ctx.sym_(";");
 	}
 }
 
@@ -509,22 +493,18 @@ impl Print for BookData {
 			BookData::Header(n) => {
 				ctx.word("header");
 				n.print(ctx);
-				ctx.sym_(";");
 			}
 			BookData::TitlePage(title, text) => {
 				ctx.word("title_page");
 				title.print(ctx);
 				text.print(ctx);
-				ctx.sym_(";");
 			}
 			BookData::Page(text) => {
 				ctx.word("page");
 				text.print(ctx);
-				ctx.sym_(";");
 			}
 			BookData::Empty => {
 				ctx.word("empty");
-				ctx.sym_(";");
 			}
 		}
 	}
@@ -553,7 +533,6 @@ impl Print for Page {
 			None => ctx.word("page"),
 		}
 		self.text.print(ctx);
-		ctx.sym_(";");
 	}
 }
 
