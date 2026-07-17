@@ -15,6 +15,7 @@ use kreuzen::tables::summon::Summon;
 use kreuzen::tables::weapon_att::WeaponAtt;
 use kreuzen::tables::{Dummy, Table};
 
+use crate::types::block;
 use crate::{Parse, Parser, Print, Printer, Result};
 
 impl Print for Table {
@@ -128,10 +129,7 @@ impl Parse for Table {
 	}
 }
 
-crate::types::block!(
-	Collision, Action, Algo, AnimeClip, Page, Break, Condition, Part, Reaction, Summon, Variant
-);
-
+block!(Action);
 impl Print for Action {
 	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
@@ -169,6 +167,8 @@ impl Parse for Action {
 	}
 }
 
+block!(Algo);
+
 impl Print for Algo {
 	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
@@ -192,6 +192,8 @@ impl Parse for Algo {
 	}
 }
 
+block!(AnimeClip);
+
 impl Print for AnimeClip {
 	fn print(&self, ctx: &mut Printer) {
 		self.kind.print(ctx);
@@ -207,6 +209,8 @@ impl Parse for AnimeClip {
 	}
 }
 
+block!(Break);
+
 impl Print for Break {
 	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
@@ -221,6 +225,8 @@ impl Parse for Break {
 	}
 }
 
+block!(Collision);
+
 impl Print for Collision {
 	fn print(&self, ctx: &mut Printer) {
 		self.a.print(ctx);
@@ -234,6 +240,8 @@ impl Parse for Collision {
 		Ok(Collision { a: p.parse()?, b: p.parse()? })
 	}
 }
+
+block!(Condition);
 
 impl Print for Condition {
 	fn print(&self, ctx: &mut Printer) {
@@ -297,6 +305,8 @@ impl Parse for FieldMonster {
 	}
 }
 
+block!(Part);
+
 impl Print for Part {
 	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
@@ -311,6 +321,8 @@ impl Parse for Part {
 		Ok(Part { id: p.parse()?, a: p.parse()?, b: p.parse()? })
 	}
 }
+
+block!(Reaction);
 
 impl Print for Reaction {
 	fn print(&self, ctx: &mut Printer) {
@@ -375,6 +387,8 @@ impl Parse for StyleName {
 		Ok(StyleName(p.parse()?, p.parse()?))
 	}
 }
+
+block!(Summon);
 
 impl Print for Summon {
 	fn print(&self, ctx: &mut Printer) {
@@ -445,6 +459,8 @@ impl Parse for Btlset {
 		})
 	}
 }
+
+block!(Variant);
 
 impl Print for Variant {
 	fn print(&self, ctx: &mut Printer) {
@@ -525,6 +541,8 @@ impl Parse for BookData {
 			.finish()
 	}
 }
+
+block!(Page);
 
 impl Print for Page {
 	fn print(&self, ctx: &mut Printer) {

@@ -3,6 +3,7 @@ use kreuzen::code::shadow::{Shadow, ShadowOp};
 use kreuzen::{Chunk, Function};
 
 use crate::Parse;
+use crate::types::block;
 
 use super::parser::{Error, Expect, Parser, Result};
 use super::{PCtx, stmt};
@@ -28,6 +29,7 @@ fn parse_function(ctx: &PCtx, p: &mut super::alt::TryParser<'_, '_>) -> Result<F
 	Ok(Function { name, body, preload, shadow })
 }
 
+block!(Preload);
 impl Parse for Preload {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		p.alt()
@@ -60,8 +62,7 @@ impl Parse for Shadow {
 	}
 }
 
-crate::types::block!(Preload, ShadowOp);
-
+block!(ShadowOp);
 impl Parse for ShadowOp {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		p.alt()
