@@ -67,10 +67,9 @@ impl Print for Stmt {
 						ctx.end_item();
 					}
 					ctx.newline(0);
-					m2.print(ctx);
-					ctx.newline(0);
 					ctx.indent -= 1;
-					ctx._sym_("}");
+					m2.print(ctx);
+					ctx.sym_("}");
 				}
 			}
 			Stmt::ForkLambda(m, chr, slot, name, body) => {
