@@ -1,8 +1,10 @@
-mod code;
 pub mod diag;
 pub mod lex;
 mod parse;
 mod print;
+
+mod code;
+mod expr;
 mod scena;
 mod tables;
 mod text;

@@ -1,12 +1,12 @@
 use kreuzen::code::{Arg, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
-use kreuzen::expr::{AssOp, Expr};
+use kreuzen::expr::Expr;
 
 use crate::Parse;
 
 use super::alt::TryParser;
 use super::parser::{Error, Expect, Parser, Result};
-use super::{PCtx, expr, op};
+use super::{PCtx, op};
 
 /// A `{ ... }` block of statements.
 pub fn block(p: &mut Parser, ctx: &PCtx) -> Result<Vec<Stmt>> {
@@ -35,7 +35,7 @@ fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
 }
 
 fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
-	let e = expr::parse_expr(p, ctx)?;
+	let e = crate::expr::parse(p, ctx)?;
 	let then = block(p, ctx)?;
 
 	let els = p.test(Expect::Str("else"), |p| {
@@ -65,7 +65,7 @@ fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 }
 
 fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
-	let e = expr::parse_expr(p, ctx)?;
+	let e = crate::expr::parse(p, ctx)?;
 	// While has a trailing meta, so can't use super::parse_block
 	let (body, meta2) = p.delim('{', |p| {
 		let mut body = Vec::new();
@@ -87,7 +87,7 @@ fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 }
 
 fn parse_switch(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
-	let e = expr::parse_expr(p, ctx)?;
+	let e = crate::expr::parse(p, ctx)?;
 	let cases = p.delim('{', |p| {
 		let mut cases: Vec<(Case, Vec<Stmt>)> = Vec::new();
 		while !p.at_end() {
@@ -117,7 +117,7 @@ fn parse_assignment(p: &mut TryParser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt>
 		.finish()?;
 	let assop = p.parse()?;
 	p.commit();
-	let rhs = expr::parse_expr(p, ctx)?;
+	let rhs = crate::expr::parse(p, ctx)?;
 
 	if !ctx.spec.by_name.contains_key(name) {
 		let span = p.prev_span();
@@ -144,34 +144,5 @@ impl Parse for Case {
 				Ok(Case::Default)
 			})
 			.finish()
-	}
-}
-
-impl Parse for AssOp {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		use AssOp::*;
-		const OPS: &[(&str, AssOp)] = &[
-			("*=", MulAss),
-			("/=", DivAss),
-			("%=", ModAss),
-			("+=", AddAss),
-			("-=", SubAss),
-			("&=", AndAss),
-			("^=", XorAss),
-			("|=", OrAss),
-		];
-		for (tok, assop) in OPS {
-			if p.operator(tok).is_ok() {
-				return Ok(*assop);
-			}
-		}
-		// `=`, but not `==`
-		p.test('=', |p| {
-			p.cursor.punct('=')?;
-			if p.cursor.glued_punct('=').is_ok() {
-				return Err(Error);
-			}
-			Ok(Ass)
-		})
 	}
 }

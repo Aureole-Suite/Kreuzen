@@ -1,6 +1,6 @@
 use kreuzen::code::{Arg, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
-use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
+use kreuzen::expr::Expr;
 
 use crate::{Print, Printer};
 
@@ -210,95 +210,6 @@ impl Print for Arg {
 			Arg::Expr(v) => v.print(ctx),
 			Arg::Text(v) => v.print(ctx),
 		}
-	}
-}
-
-impl Print for Expr {
-	fn print(&self, ctx: &mut Printer) {
-		print_expr(self, ctx, 0);
-	}
-}
-
-fn print_expr(e: &Expr, ctx: &mut Printer, prec: u32) {
-	match e {
-		Expr::Int(v) => {
-			if *v >= 0x10000 && v.count_ones() == 1 {
-				ctx.token(format!("0x{v:08X}"));
-			} else {
-				v.print(ctx)
-			}
-		}
-		Expr::Op(op) => op.print(ctx),
-		Expr::Flag(v) => v.print(ctx),
-		Expr::Var(v) => v.print(ctx),
-		Expr::Attr(v) => v.print(ctx),
-		Expr::CharAttr(v) => v.print(ctx),
-		Expr::Rand => ctx.word("rand"),
-		Expr::Global(v) => v.print(ctx),
-		Expr::SystemFlags(v) => v.print(ctx),
-		Expr::NumReg(v) => v.print(ctx),
-		Expr::Bin(op, a, b) => {
-			let (sym, p) = binop_prio(*op);
-			if p < prec {
-				ctx._sym("(");
-			}
-			print_expr(a, ctx, p);
-			ctx._sym_(sym);
-			print_expr(b, ctx, p + 1);
-			if p < prec {
-				ctx.sym_(")");
-			}
-		}
-		Expr::Un(op, a) => {
-			ctx._sym(match op {
-				UnOp::BoolNot => "!",
-				UnOp::Neg => "-",
-				UnOp::BitNot => "~",
-			});
-			// -(5) would otherwise be indistinguishable from a literal -5
-			if matches!((op, &**a), (UnOp::Neg, Expr::Int(_))) {
-				ctx.sym("(");
-				print_expr(a, ctx, 0);
-				ctx.sym_(")");
-			} else {
-				print_expr(a, ctx, 10);
-			}
-		}
-		Expr::Ass(op, a) => {
-			ctx._sym_(match op {
-				AssOp::Ass => "=",
-				AssOp::MulAss => "*=",
-				AssOp::DivAss => "/=",
-				AssOp::ModAss => "%=",
-				AssOp::AddAss => "+=",
-				AssOp::SubAss => "-=",
-				AssOp::AndAss => "&=",
-				AssOp::XorAss => "^=",
-				AssOp::OrAss => "|=",
-			});
-			print_expr(a, ctx, 0);
-		}
-	}
-}
-
-fn binop_prio(op: BinOp) -> (&'static str, u32) {
-	use BinOp::*;
-	match op {
-		Mul => ("*", 7),
-		Div => ("/", 7),
-		Mod => ("%", 7),
-		Add => ("+", 6),
-		Sub => ("-", 6),
-		BitAnd => ("&", 5),
-		Xor => ("^", 4),
-		Or => ("|", 3),
-		Eq => ("==", 2),
-		Ne => ("!=", 2),
-		Lt => ("<", 2),
-		Gt => (">", 2),
-		Le => ("<=", 2),
-		Ge => (">=", 2),
-		BoolAnd => ("&&", 1),
 	}
 }
 
