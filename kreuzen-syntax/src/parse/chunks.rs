@@ -19,7 +19,7 @@ fn parse_function(ctx: &PCtx, p: &mut super::alt::TryParser<'_, '_>) -> Result<F
 	let body = stmt::block(p, ctx)?;
 	let mut preload = Vec::new();
 	if p.keyword("preload").is_ok() {
-		preload = p.delim('{', |p| Ok(super::parse_seq(p, |p| p.parse())))?;
+		preload = p.parse()?;
 	}
 	let mut shadow = Vec::new();
 	while p.keyword("shadow").is_ok() {
@@ -55,14 +55,12 @@ impl Parse for Shadow {
 				Ok(meta.line)
 			})
 			.unwrap_or(0);
-		let ops = parse_shadow_ops(p)?;
+		let ops = p.parse()?;
 		Ok(Shadow { line, ops })
 	}
 }
 
-fn parse_shadow_ops(p: &mut Parser) -> Result<Vec<ShadowOp>, Error> {
-	p.delim('{', |p| Ok(super::parse_seq(p, |p| p.parse())))
-}
+crate::types::block!(Preload, ShadowOp);
 
 impl Parse for ShadowOp {
 	fn parse(p: &mut Parser) -> Result<Self> {
@@ -88,7 +86,7 @@ impl Parse for ShadowOp {
 				let chr = p.parse()?;
 				let slot = p.parse()?;
 				let name = p.parse()?;
-				let ops = parse_shadow_ops(p)?;
+				let ops = p.parse()?;
 				Ok(ShadowOp::ForkLambda { chr, slot, name, ops })
 			})
 			.finish()

@@ -10,7 +10,7 @@ use super::{PCtx, expr, op};
 
 /// A `{ ... }` block of statements.
 pub fn block(p: &mut Parser, ctx: &PCtx) -> Result<Vec<Stmt>> {
-	p.delim('{', |p| Ok(super::parse_seq(p, |p| parse_stmt(p, ctx))))
+	super::parse_block(p, |p| parse_stmt(p, ctx))
 }
 
 fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
@@ -66,7 +66,7 @@ fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 
 fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	let e = expr::parse_expr(p, ctx)?;
-	// While has a trailing meta, so can't use super::parse_seq
+	// While has a trailing meta, so can't use super::parse_block
 	let (body, meta2) = p.delim('{', |p| {
 		let mut body = Vec::new();
 		let mut meta2 = OpMeta::default();

@@ -22,20 +22,20 @@ use super::parser::{Parser, Result};
 impl Parse for Table {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		p.alt()
-			.test_kw("AddCollision", |p| Ok(Table::AddCollision(rows(p)?)))
-			.test_kw("ActionTable", |p| Ok(Table::ActionTable(rows(p)?)))
-			.test_kw("AlgoTable", |p| Ok(Table::AlgoTable(rows(p)?)))
-			.test_kw("AnimeClipTable", |p| Ok(Table::AnimeClipTable(rows(p)?)))
+			.test_kw("AddCollision", |p| Ok(Table::AddCollision(p.parse()?)))
+			.test_kw("ActionTable", |p| Ok(Table::ActionTable(p.parse()?)))
+			.test_kw("AlgoTable", |p| Ok(Table::AlgoTable(p.parse()?)))
+			.test_kw("AnimeClipTable", |p| Ok(Table::AnimeClipTable(p.parse()?)))
 			.test_kw("BookData", |p| Ok(Table::BookData(p.parse()?, p.parse()?)))
-			.test_kw("Book", |p| Ok(Table::Book(p.parse()?, rows(p)?)))
-			.test_kw("BreakTable", |p| Ok(Table::BreakTable(rows(p)?)))
-			.test_kw("ConditionTable", |p| Ok(Table::ConditionTable(rows(p)?)))
+			.test_kw("Book", |p| Ok(Table::Book(p.parse()?, p.parse()?)))
+			.test_kw("BreakTable", |p| Ok(Table::BreakTable(p.parse()?)))
+			.test_kw("ConditionTable", |p| Ok(Table::ConditionTable(p.parse()?)))
 			.test_kw("FcAuto", |p| Ok(Table::FcAuto(p.parse()?, p.parse()?)))
 			.test_kw("FieldFollowData", |p| Ok(Table::FieldFollowData(p.parse()?)))
-			.test_kw("PartTable", |p| Ok(Table::PartTable(rows(p)?)))
-			.test_kw("ReactionTable", |p| Ok(Table::ReactionTable(rows(p)?)))
+			.test_kw("PartTable", |p| Ok(Table::PartTable(p.parse()?)))
+			.test_kw("ReactionTable", |p| Ok(Table::ReactionTable(p.parse()?)))
 			.test_kw("StyleName", |p| Ok(Table::StyleName(p.parse()?, p.parse()?)))
-			.test_kw("SummonTable", |p| Ok(Table::SummonTable(rows(p)?)))
+			.test_kw("SummonTable", |p| Ok(Table::SummonTable(p.parse()?)))
 			.test_kw("FieldMonsterData", |p| Ok(Table::FieldMonsterData(p.parse()?)))
 			.test_kw("WeaponAttTable", |p| Ok(Table::WeaponAttTable(p.parse()?)))
 			.test_kw("Btlset", |p| Ok(Table::Btlset(p.parse()?, p.parse()?)))
@@ -50,10 +50,9 @@ impl Parse for Dummy {
 	}
 }
 
-/// A `{ ... }` block of `;`-terminated rows.
-fn rows<T: Parse>(p: &mut Parser) -> Result<Vec<T>> {
-	p.delim('{', |p| Ok(super::parse_seq(p, |p| p.parse())))
-}
+crate::types::block!(
+	Collision, Action, Algo, AnimeClip, Page, Break, Condition, Part, Reaction, Summon, Variant
+);
 
 impl Parse for Collision {
 	fn parse(p: &mut Parser) -> Result<Self> {
@@ -62,9 +61,8 @@ impl Parse for Collision {
 }
 impl Parse for Action {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		let id = p.parse()?;
 		Ok(Action {
-			id,
+			id: p.parse()?,
 			kind: p.parse()?,
 			target: p.parse()?,
 			u2: p.parse()?,
@@ -217,7 +215,7 @@ impl Parse for Btlset {
 			bgm: p.parse()?,
 			unk2: p.parse()?,
 			script: p.parse()?,
-			variants: rows(p)?,
+			variants: p.parse()?,
 		})
 	}
 }

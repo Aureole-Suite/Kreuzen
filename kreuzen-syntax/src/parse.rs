@@ -19,18 +19,20 @@ pub(crate) struct PCtx {
 	pub game: Game,
 }
 
-/// Parses a statement-like sequence until the end of the cursor: items are
+/// Parses a `{}` block containing a statement-like sequence: items are
 /// `;`-terminated unless they end with a `}` block, and a failed item skips
 /// ahead and continues with the next one.
-pub(crate) fn parse_seq<T>(p: &mut Parser, mut f: impl FnMut(&mut Parser) -> Result<T>) -> Vec<T> {
-	let mut out = Vec::new();
-	while !p.at_end() {
-		parse_item(p, &mut out, &mut f);
-	}
-	out
+pub(crate) fn parse_block<T>(p: &mut Parser, mut f: impl FnMut(&mut Parser) -> Result<T>) -> Result<Vec<T>> {
+	p.delim('{', |p| {
+		let mut out = Vec::new();
+		while !p.at_end() {
+			parse_item(p, &mut out, &mut f);
+		}
+		Ok(out)
+	})
 }
 
-/// A single item of a statement-like sequence; see [`parse_seq`].
+/// A single item of a statement-like sequence; see [`parse_block`].
 pub(crate) fn parse_item<T>(p: &mut Parser, out: &mut Vec<T>, f: impl FnOnce(&mut Parser) -> Result<T>) {
 	let ok = match f(p) {
 		Ok(v) => {

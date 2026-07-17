@@ -2,6 +2,18 @@ use kreuzen::types;
 
 use crate::{Error, Parse, Parser, Print, Printer, Result};
 
+/// Implements `Parse` for `Vec<T>` by delegating to [`parse_block`].
+macro_rules! block_ {
+	($($t:ty),* $(,)?) => {
+		$(impl crate::Parse for Vec<$t> {
+			fn parse(p: &mut crate::Parser) -> crate::Result<Self> {
+				crate::parse::parse_block(p, |p| p.parse())
+			}
+		})*
+	};
+}
+pub(crate) use block_ as block;
+
 macro_rules! int {
 	($($t:ty),* $(,)?) => {
 		$(impl Print for $t {
