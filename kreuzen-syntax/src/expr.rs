@@ -16,6 +16,7 @@ fn looks_boolean(e: &Expr) -> bool {
 	match e {
 		Expr::Bin(BoolAnd | Eq | Ne | Lt | Gt | Le | Ge, ..) => true,
 		Expr::Bin(Or, l, r) => looks_boolean(l) || looks_boolean(r),
+		Expr::Un(UnOp::BoolNot, _) => true,
 		_ => false,
 	}
 }
