@@ -153,16 +153,6 @@ impl Print for FlatOp {
 	}
 }
 
-impl Print for Shadow {
-	fn print(&self, ctx: &mut Printer) {
-		if self.line != 0 {
-			ctx.token(format!("{}", self.line));
-			ctx.sym("@");
-		}
-		self.ops.print(ctx);
-	}
-}
-
 impl Print for Op {
 	fn print(&self, ctx: &mut Printer) {
 		self.meta.print(ctx);
