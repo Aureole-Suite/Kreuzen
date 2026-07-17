@@ -187,7 +187,7 @@ impl Print for Shadow {
 			ctx.token(format!("{}", self.line));
 			ctx.sym("@");
 		}
-		ctx.block(&self.ops, ShadowOp::print);
+		self.ops.print(ctx);
 	}
 }
 
@@ -218,7 +218,7 @@ impl Print for ShadowOp {
 				chr.print(ctx);
 				slot.print(ctx);
 				name.print(ctx);
-				ctx.block(ops, ShadowOp::print);
+				ops.print(ctx);
 			}
 		}
 	}

@@ -11,7 +11,6 @@ pub use parse::{Error, Parser, Rest, Result, parse, parse_header, parse_scena};
 pub use printer::Printer;
 
 use kreuzen::code::FlatOp;
-use kreuzen::code::preload::Preload;
 use kreuzen::{Chunk, Function, RawChunk, RawFunction, RawScena, Scena, ScenaInfo};
 
 pub trait Print {
@@ -50,7 +49,7 @@ impl Print for RawFunction {
 		ctx.block(&self.body, FlatOp::print);
 		if !self.preload.is_empty() {
 			ctx.word("preload");
-			ctx.block(&self.preload, Preload::print);
+			self.preload.print(ctx);
 		}
 		for shadow in &self.shadow {
 			ctx.word("shadow");
@@ -88,7 +87,7 @@ impl Print for Function {
 		self.body.print(ctx);
 		if !self.preload.is_empty() {
 			ctx.word("preload");
-			ctx.block(&self.preload, Preload::print);
+			self.preload.print(ctx);
 		}
 		for shadow in &self.shadow {
 			ctx.word("shadow");

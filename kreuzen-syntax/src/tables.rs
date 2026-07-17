@@ -426,7 +426,7 @@ impl Print for Btlset {
 		self.bgm.print(ctx);
 		self.unk2.print(ctx);
 		self.script.print(ctx);
-		ctx.block(&self.variants, Variant::print);
+		self.variants.print(ctx);
 	}
 }
 
