@@ -3,7 +3,7 @@ use kreuzen::spec::Part;
 use kreuzen::types::*;
 
 use super::parser::{Error, Expect, Parser, Result};
-use super::{PCtx, expr, types};
+use super::{PCtx, expr};
 
 // Pseudo-ops created by kreuzen::sugar, which don't exist in the spec.
 const SUGAR_OPS: &[(&str, &[Part])] = &[("CallShadow", &[Part::U16])];
@@ -56,7 +56,7 @@ fn parse_parts(p: &mut Parser, ctx: &PCtx, parts: &[Part], op: &mut Op) -> Resul
 
 			P::Char => op.args.push(Arg::Char(p.parse()?)),
 			P::Item => op.args.push(Arg::Item(p.parse()?)),
-			P::Battle => op.args.push(types::battle_arg(p)?),
+			P::Battle => op.args.push(parse_battle_arg(p)?),
 			P::Magic => op.args.push(Arg::Magic(p.parse()?)),
 			P::Sound => op.args.push(Arg::Sound(p.parse()?)),
 			P::Music => op.args.push(Arg::Music(p.parse()?)),
@@ -163,7 +163,6 @@ fn parse_dyn(p: &mut Parser) -> Result<Arg> {
 		.test(|p| p.parse().map(Arg::StrReg))
 		.test(|p| p.parse().map(Arg::Global))
 		.test(|p| p.parse().map(Arg::Str))
-		// I32Munged prints as a float with a trailing '
 		.test(|p| {
 			let v = p.parse()?;
 			if p.glued_punct('\'').is_ok() {
@@ -174,4 +173,11 @@ fn parse_dyn(p: &mut Parser) -> Result<Arg> {
 		})
 		.test(|p| Ok(Arg::Int(p.parse::<i32>()? as i64)))
 		.finish()
+}
+
+pub fn parse_battle_arg(p: &mut Parser) -> Result<Arg> {
+	let a = crate::types::bracket(p, "btlset", |p| p.parse())?;
+	p.glued_punct(':')?;
+	let b = p.parse()?;
+	Ok(Arg::Battle(a, b))
 }
