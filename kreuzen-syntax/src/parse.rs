@@ -13,7 +13,8 @@ use kreuzen::{Enc, Game, Scena, ScenaInfo};
 
 use crate::diag::{Errors, Severity};
 use crate::lex::{Cursor, Tokens};
-use parser::{Error, Parser, Result};
+use alt::Alt;
+use parser::{Parser, Result};
 
 /// Context available while parsing everything after the header.
 pub(crate) struct PCtx {
@@ -82,31 +83,21 @@ fn parse_header_inner(p: &mut Parser) -> Result<(ScenaInfo, bool)> {
 
 	p.keyword("game")?;
 	p.punct('=')?;
-	let span = p.next_span();
-	let game = match p.ident()? {
-		"Cs1" => Game::Cs1,
-		"Cs2" => Game::Cs2,
-		"Cs3" => Game::Cs3,
-		"Cs4" => Game::Cs4,
-		"Reverie" => Game::Reverie,
-		"Tx" => Game::Tx,
-		game => {
-			p.errors.error(format!("unknown game '{game}'"), span);
-			return Err(Error);
-		}
-	};
+	let game = Alt::new(p)
+		.test_kw("Cs1", |_| Ok(Game::Cs1))
+		.test_kw("Cs2", |_| Ok(Game::Cs2))
+		.test_kw("Cs3", |_| Ok(Game::Cs3))
+		.test_kw("Cs4", |_| Ok(Game::Cs4))
+		.test_kw("Reverie", |_| Ok(Game::Reverie))
+		.test_kw("Tx", |_| Ok(Game::Tx))
+		.finish()?;
 
 	p.keyword("enc")?;
 	p.punct('=')?;
-	let span = p.next_span();
-	let enc = match p.ident()? {
-		"Sjis" => Enc::Sjis,
-		"Utf8" => Enc::Utf8,
-		enc => {
-			p.errors.error(format!("unknown encoding '{enc}'"), span);
-			return Err(Error);
-		}
-	};
+	let enc = Alt::new(p)
+		.test_kw("Sjis", |_| Ok(Enc::Sjis))
+		.test_kw("Utf8", |_| Ok(Enc::Utf8))
+		.finish()?;
 
 	p.keyword("oddness")?;
 	p.punct('=')?;

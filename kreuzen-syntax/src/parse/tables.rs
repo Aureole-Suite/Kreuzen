@@ -17,63 +17,36 @@ use kreuzen::tables::{Dummy, Table};
 
 use super::PCtx;
 use super::alt::Alt;
-use super::parser::{Error, Expect, Parser, Result};
+use super::parser::{Expect, Parser, Result};
 use super::types::Parse;
 
 pub fn parse_table(p: &mut Parser, _ctx: &PCtx) -> Result<Table> {
-	let span = p.next_span();
-	let name = p.ident()?;
-	Ok(match name {
-		"AddCollision" => Table::AddCollision(rows(p)?),
-		"ActionTable" => Table::ActionTable(rows(p)?),
-		"AlgoTable" => Table::AlgoTable(rows(p)?),
-		"AnimeClipTable" => Table::AnimeClipTable(rows(p)?),
-		"BookData" => {
-			let name = p.parse()?;
-			Table::BookData { name, book: p.parse()? }
-		}
-		"Book" => {
-			let name = p.parse()?;
-			Table::Book { name, pages: rows(p)? }
-		}
-		"BreakTable" => Table::BreakTable(rows(p)?),
-		"ConditionTable" => Table::ConditionTable(rows(p)?),
-		"FcAuto" => {
-			let name = p.parse()?;
-			let text = p.parse()?;
-			Table::FcAuto { name, text }
-		}
-		"FieldFollowData" => Table::FieldFollowData(p.parse()?),
-		"PartTable" => Table::PartTable(rows(p)?),
-		"ReactionTable" => Table::ReactionTable(rows(p)?),
-		"StyleName" => {
-			let name = p.parse()?;
-			Table::StyleName { name, style: p.parse()? }
-		}
-		"SummonTable" => Table::SummonTable(rows(p)?),
-		"FieldMonsterData" => Table::FieldMonsterData(p.parse()?),
-		"WeaponAttTable" => Table::WeaponAttTable(p.parse()?),
-		"Btlset" => {
-			let name = p.parse()?;
-			Table::Btlset { name, btlset: p.parse()? }
-		}
-		"Dummy" => {
-			let span = p.next_span();
-			let dummy = match p.ident()? {
-				"empty" => Dummy::Empty,
-				"dff" => Dummy::Dff,
-				d => {
-					p.errors.error(format!("unknown dummy '{d}'"), span);
-					return Err(Error);
-				}
-			};
-			Table::Dummy(dummy)
-		}
-		_ => {
-			p.errors.error(format!("unknown chunk '{name}'"), span);
-			return Err(Error);
-		}
-	})
+	Alt::new(p)
+		.test_kw("AddCollision", |p| rows(p).map(Table::AddCollision))
+		.test_kw("ActionTable", |p| rows(p).map(Table::ActionTable))
+		.test_kw("AlgoTable", |p| rows(p).map(Table::AlgoTable))
+		.test_kw("AnimeClipTable", |p| rows(p).map(Table::AnimeClipTable))
+		.test_kw("BookData", |p| Ok(Table::BookData { name: p.parse()?, book: p.parse()? }))
+		.test_kw("Book", |p| Ok(Table::Book { name: p.parse()?, pages: rows(p)? }))
+		.test_kw("BreakTable", |p| rows(p).map(Table::BreakTable))
+		.test_kw("ConditionTable", |p| rows(p).map(Table::ConditionTable))
+		.test_kw("FcAuto", |p| Ok(Table::FcAuto { name: p.parse()?, text: p.parse()? }))
+		.test_kw("FieldFollowData", |p| p.parse().map(Table::FieldFollowData))
+		.test_kw("PartTable", |p| rows(p).map(Table::PartTable))
+		.test_kw("ReactionTable", |p| rows(p).map(Table::ReactionTable))
+		.test_kw("StyleName", |p| Ok(Table::StyleName { name: p.parse()?, style: p.parse()? }))
+		.test_kw("SummonTable", |p| rows(p).map(Table::SummonTable))
+		.test_kw("FieldMonsterData", |p| p.parse().map(Table::FieldMonsterData))
+		.test_kw("WeaponAttTable", |p| p.parse().map(Table::WeaponAttTable))
+		.test_kw("Btlset", |p| Ok(Table::Btlset { name: p.parse()?, btlset: p.parse()? }))
+		.test_kw("Dummy", |p| {
+			Alt::new(p)
+				.test_kw("empty", |_| Ok(Dummy::Empty))
+				.test_kw("dff", |_| Ok(Dummy::Dff))
+				.finish()
+				.map(Table::Dummy)
+		})
+		.finish()
 }
 
 /// A `{ ... }` block of `;`-terminated rows.
