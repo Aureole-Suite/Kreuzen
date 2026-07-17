@@ -2,7 +2,7 @@ use kreuzen::code::{Arg, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::Expr;
 
-use crate::{Print, Printer};
+use crate::{Print, Printer, expr};
 
 impl Print for OpMeta {
 	fn print(&self, ctx: &mut Printer) {
@@ -36,7 +36,7 @@ impl Print for Stmt {
 			Stmt::If(m, e, then, els) => {
 				m.print(ctx);
 				ctx.word("if");
-				e.print(ctx);
+				expr::print_bool(e, ctx);
 				then.print(ctx);
 				if let Some((m2, els)) = els {
 					m2.print(ctx);
@@ -51,7 +51,7 @@ impl Print for Stmt {
 			Stmt::While(m, e, body, m2) => {
 				m.print(ctx);
 				ctx.word("while");
-				e.print(ctx);
+				expr::print_bool(e, ctx);
 				if *m2 == OpMeta::default() {
 					body.print(ctx);
 				} else {
@@ -81,7 +81,7 @@ impl Print for Stmt {
 			Stmt::Switch(m, e, cases) => {
 				m.print(ctx);
 				ctx.word("switch");
-				e.print(ctx);
+				expr::print(e, ctx);
 				ctx.block(cases, |(case, body), ctx| {
 					match case {
 						Case::Default => {
@@ -134,13 +134,13 @@ impl Print for FlatOp {
 			FlatOp::If(m, e, l) => {
 				m.print(ctx);
 				ctx.word("if");
-				e.print(ctx);
+				expr::print_bool(e, ctx);
 				l.print(ctx);
 			}
 			FlatOp::Switch(m, e, cases, default) => {
 				m.print(ctx);
 				ctx.word("switch");
-				e.print(ctx);
+				expr::print(e, ctx);
 				ctx.block(cases, |(value, label), ctx| {
 					ctx.token(value.to_string());
 					ctx._sym_("=>");
@@ -161,7 +161,7 @@ impl Print for Op {
 			&& let [lhs, Arg::Expr(expr @ Expr::Ass(..))] = self.args.as_slice()
 		{
 			lhs.print(ctx);
-			expr.print(ctx);
+			expr::print(expr, ctx);
 		} else {
 			ctx.token(self.name);
 			for arg in &self.args {
@@ -207,7 +207,7 @@ impl Print for Arg {
 			Arg::Flags16(v) => v.print(ctx),
 			Arg::Flags32(v) => v.print(ctx),
 			Arg::SystemFlags(v) => v.print(ctx),
-			Arg::Expr(v) => v.print(ctx),
+			Arg::Expr(v) => expr::print(v, ctx),
 			Arg::Text(v) => v.print(ctx),
 		}
 	}

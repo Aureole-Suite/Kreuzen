@@ -3,13 +3,24 @@ use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
 use crate::parse::PCtx;
 use crate::{Error, Parse, Parser, Print, Printer, Result};
 
-impl Print for Expr {
-	fn print(&self, ctx: &mut Printer) {
-		print_expr(self, ctx, 0);
+pub fn print(e: &Expr, ctx: &mut Printer) {
+	print_expr_inner(e, ctx, 0, false);
+}
+
+pub fn print_bool(e: &Expr, ctx: &mut Printer) {
+	print_expr_inner(e, ctx, 0, true);
+}
+
+fn looks_boolean(e: &Expr) -> bool {
+	use BinOp::*;
+	match e {
+		Expr::Bin(BoolAnd | Eq | Ne | Lt | Gt | Le | Ge, ..) => true,
+		Expr::Bin(Or, l, r) => looks_boolean(l) || looks_boolean(r),
+		_ => false,
 	}
 }
 
-fn print_expr(e: &Expr, ctx: &mut Printer, prec: u32) {
+fn print_expr_inner(e: &Expr, ctx: &mut Printer, prec: u32, bool_ctx: bool) {
 	match e {
 		Expr::Int(v) => {
 			if *v >= 0x10000 && v.count_ones() == 1 {
@@ -28,13 +39,17 @@ fn print_expr(e: &Expr, ctx: &mut Printer, prec: u32) {
 		Expr::SystemFlags(v) => v.print(ctx),
 		Expr::NumReg(v) => v.print(ctx),
 		Expr::Bin(op, a, b) => {
-			let (sym, p) = binop_prio(*op);
+			let (mut sym, p) = binop_prio(*op);
+			if *op == BinOp::Or && (bool_ctx || looks_boolean(a) || looks_boolean(b)) {
+				sym = "||";
+			}
+			let child_bool_ctx = *op == BinOp::BoolAnd || sym == "||";
 			if p < prec {
 				ctx._sym("(");
 			}
-			print_expr(a, ctx, p);
+			print_expr_inner(a, ctx, p, child_bool_ctx);
 			ctx._sym_(sym);
-			print_expr(b, ctx, p + 1);
+			print_expr_inner(b, ctx, p + 1, child_bool_ctx);
 			if p < prec {
 				ctx.sym_(")");
 			}
@@ -48,10 +63,10 @@ fn print_expr(e: &Expr, ctx: &mut Printer, prec: u32) {
 			// -(5) would otherwise be indistinguishable from a literal -5
 			if matches!((op, &**a), (UnOp::Neg, Expr::Int(_))) {
 				ctx.sym("(");
-				print_expr(a, ctx, 0);
+				print_expr_inner(a, ctx, 0, false);
 				ctx.sym_(")");
 			} else {
-				print_expr(a, ctx, 10);
+				print_expr_inner(a, ctx, 10, *op == UnOp::BoolNot);
 			}
 		}
 		Expr::Ass(op, a) => {
@@ -66,7 +81,7 @@ fn print_expr(e: &Expr, ctx: &mut Printer, prec: u32) {
 				AssOp::XorAss => "^=",
 				AssOp::OrAss => "|=",
 			});
-			print_expr(a, ctx, 0);
+			print_expr_inner(a, ctx, 0, false);
 		}
 	}
 }
