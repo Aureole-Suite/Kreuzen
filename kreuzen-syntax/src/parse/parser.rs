@@ -91,10 +91,6 @@ impl<'a, 'e> Parser<'a, 'e> {
 		self.test(Expect::Nt("string"), |p| Ok(p.cursor.string()?))
 	}
 
-	pub fn text_block(&mut self) -> Result<&'a str> {
-		self.test(Expect::Nt("text"), |p| Ok(p.cursor.text_block()?))
-	}
-
 	pub fn int(&mut self) -> Result<i64> {
 		self.test(Expect::Nt("int"), |p| Ok(p.cursor.int()?))
 	}

@@ -95,16 +95,6 @@ impl<'a> Cursor<'a> {
 		}
 	}
 
-	pub fn text_block(&mut self) -> Result<&'a str> {
-		match &self.tokens[self.pos].token {
-			TokenKind::TextBlock(text) => {
-				self.pos += 1;
-				Ok(text.as_ref())
-			}
-			_ => Err(Error),
-		}
-	}
-
 	pub fn meta(&mut self) -> Result<kreuzen::code::OpMeta> {
 		match &self.tokens[self.pos].token {
 			TokenKind::Meta(meta) => {
@@ -142,7 +132,7 @@ impl<'a> Cursor<'a> {
 	}
 
 	fn punct_inner(&self, punct: char, pos: usize) -> bool {
-		assert!(!"()[]{}\0".contains(punct));
+		assert!(!"()[]{}\"\0".contains(punct));
 		matches!(&self.tokens[pos].token, TokenKind::Punct(p) if *p == punct)
 	}
 
@@ -184,7 +174,7 @@ impl<'a> Cursor<'a> {
 	}
 
 	pub fn delim(&mut self, delim: char) -> Result<Cursor<'a>> {
-		assert!("([{".contains(delim));
+		assert!("([{\"".contains(delim));
 		let token = &self.tokens[self.pos];
 		match &token.token {
 			TokenKind::Punct(c) if *c == delim => {

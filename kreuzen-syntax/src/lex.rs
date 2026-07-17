@@ -37,8 +37,6 @@ impl std::fmt::Debug for RawToken {
 pub enum TokenKind {
 	Ident(Box<str>),
 	String(Box<str>),
-	/// Raw contents between `"""` and `"""`, with escapes and `{...}` controls unprocessed.
-	TextBlock(Box<str>),
 	Int(i64),
 	Float(f32),
 	/// `N@`, `N@~`, `N@M~`, or `N~` markers. A bare `~` is never a meta:
@@ -48,25 +46,22 @@ pub enum TokenKind {
 }
 
 pub fn lex(src: &str, errors: &mut Errors) -> Tokens {
-	let mut lexer = Lex { src, pos: 0, errors };
-	lexer.skip_whitespace();
-	let mut tokens = Vec::new();
+	let mut lexer = Lex { src, pos: 0, errors, tokens: Vec::new() };
 	let dummy = RawToken {
 		start: 0,
 		end: 0,
 		token: TokenKind::Punct('\0'),
 		matched: 0,
 	};
-	tokens.push(dummy.clone());
-	while let Some(token) = lexer.lex() {
-		tokens.push(token);
-	}
-	tokens.push(RawToken {
+	lexer.tokens.push(dummy.clone());
+	lexer.run();
+	lexer.tokens.push(RawToken {
 		start: lexer.pos as u32,
 		end: lexer.pos as u32,
 		..dummy
 	});
 
+	let mut tokens = lexer.tokens;
 	match_delims(&mut tokens, errors);
 
 	Tokens(tokens)
@@ -75,27 +70,31 @@ pub fn lex(src: &str, errors: &mut Errors) -> Tokens {
 fn match_delims(tokens: &mut [RawToken], errors: &mut Errors) {
 	let mut stack = Vec::new();
 	for (i, token) in tokens.iter_mut().enumerate() {
-		match token.token {
-			TokenKind::Punct(o @ ('(' | '[' | '{')) => stack.push((i, o, token)),
-			TokenKind::Punct(c @ (')' | ']' | '}')) => {
-				let open_delim = match c {
-					')' => '(',
-					']' => '[',
-					'}' => '{',
-					_ => unreachable!(),
-				};
-				if let Some((j, o, open)) = stack.pop() {
-					if o != open_delim {
-						errors.fatal("mismatched delimiter", token.span()).note("doesn't match", open.span());
-					}
-					let diff = (i - j) as u32;
-					open.matched = diff;
-					token.matched = diff;
-				} else {
-					errors.fatal("unmatched delimiter", token.span());
-				}
+		let open_delim = match token.token {
+			TokenKind::Punct(o @ ('(' | '[' | '{')) => {
+				stack.push((i, o, token));
+				continue;
 			}
-			_ => {}
+			// `"""` doesn't nest, so a quote is a closer iff one is already open
+			TokenKind::Punct('"') if !matches!(stack.last(), Some((_, '"', _))) => {
+				stack.push((i, '"', token));
+				continue;
+			}
+			TokenKind::Punct(')') => '(',
+			TokenKind::Punct(']') => '[',
+			TokenKind::Punct('}') => '{',
+			TokenKind::Punct('"') => '"',
+			_ => continue,
+		};
+		if let Some((j, o, open)) = stack.pop() {
+			if o != open_delim {
+				errors.fatal("mismatched delimiter", token.span()).note("doesn't match", open.span());
+			}
+			let diff = (i - j) as u32;
+			open.matched = diff;
+			token.matched = diff;
+		} else {
+			errors.fatal("unmatched delimiter", token.span());
 		}
 	}
 	for (_, _, open) in stack {
@@ -107,6 +106,7 @@ struct Lex<'a> {
 	src: &'a str,
 	pos: usize,
 	errors: &'a mut Errors,
+	tokens: Vec<RawToken>,
 }
 
 impl<'a> Lex<'a> {
@@ -154,17 +154,29 @@ impl<'a> Lex<'a> {
 		}
 	}
 
-	fn lex(&mut self) -> Option<RawToken> {
-		let start = self.pos;
-		let token = self.lex_token()?;
-		let end = self.pos;
-		self.skip_whitespace();
-		Some(RawToken {
+	fn push(&mut self, start: usize, token: TokenKind) {
+		self.tokens.push(RawToken {
 			start: start as u32,
-			end: end as u32,
+			end: self.pos as u32,
 			token,
 			matched: 0,
-		})
+		});
+	}
+
+	fn run(&mut self) {
+		self.skip_whitespace();
+		loop {
+			let start = self.pos;
+			if self.consume("\"\"\"") {
+				self.push(start, TokenKind::Punct('"'));
+				self.lex_text();
+			} else if let Some(token) = self.lex_token() {
+				self.push(start, token);
+			} else {
+				break;
+			}
+			self.skip_whitespace();
+		}
 	}
 
 	fn lex_token(&mut self) -> Option<TokenKind> {
@@ -247,10 +259,6 @@ impl<'a> Lex<'a> {
 			}
 		}
 
-		if self.consume("\"\"\"") {
-			return Some(self.lex_text_block(start));
-		}
-
 		if self.consume("\"") {
 			return Some(TokenKind::String(self.lex_string(start)));
 		}
@@ -290,26 +298,105 @@ impl<'a> Lex<'a> {
 		}
 	}
 
-	// Contents never contain a raw '"' (the printer escapes them), so we can
-	// simply scan for the closing delimiter and defer everything else.
-	fn lex_text_block(&mut self, start: usize) -> TokenKind {
-		let content_start = self.pos;
-		loop {
-			match self.next_char() {
-				Some('"') => {
-					let content = &self.src[content_start..self.pos - 1];
-					if !self.consume("\"\"") {
-						self.errors.error("stray '\"' in text block", self.pos - 1..self.pos);
-						continue;
-					}
-					return TokenKind::TextBlock(content.into());
+	/// The contents of a text block, after the opening `"""`. Leading
+	/// whitespace on each line is indentation (a leading space is written
+	/// `\ `), an escaped newline is a continuation, and `{}` groups contain
+	/// ordinary tokens. The text between groups becomes a `String` token,
+	/// with line breaks as `\n`.
+	fn lex_text(&mut self) {
+		let mut chunk = String::new();
+		let mut chunk_start = self.pos;
+		macro_rules! flush {
+			() => {
+				if !chunk.is_empty() {
+					self.tokens.push(RawToken {
+						start: chunk_start as u32,
+						end: self.pos as u32,
+						token: TokenKind::String(std::mem::take(&mut chunk).into()),
+						matched: 0,
+					});
 				}
-				Some(_) => {}
+			};
+		}
+		loop {
+			let start = self.pos;
+			match self.peek_char() {
 				None => {
-					self.errors.fatal("unterminated text block", start..start + 3);
-					return TokenKind::TextBlock(self.src[content_start..self.pos].into());
+					flush!();
+					self.errors.fatal("unterminated text block", self.pos..self.pos);
+					self.push(start, TokenKind::Punct('"'));
+					return;
+				}
+				Some('"') if self.src[self.pos..].starts_with("\"\"\"") => {
+					flush!();
+					self.pos += 3;
+					self.push(start, TokenKind::Punct('"'));
+					return;
+				}
+				Some('"') => {
+					self.errors.error("unescaped '\"' in text", start..start + 1);
+					self.next_char();
+					chunk.push('"');
+				}
+				Some('\n') => {
+					self.next_char();
+					while self.consume("\t") || self.consume(" ") {}
+					chunk.push('\n');
+				}
+				Some('\\') => {
+					self.next_char();
+					if self.consume("\n") {
+						while self.consume("\t") || self.consume(" ") {}
+					} else {
+						match lex_escape(self.src, &mut self.pos) {
+							Some(c) => chunk.push(c),
+							None => {
+								self.errors.error("invalid escape sequence", start..self.pos);
+							}
+						}
+					}
+				}
+				Some('{') => {
+					flush!();
+					self.next_char();
+					self.push(start, TokenKind::Punct('{'));
+					self.lex_control();
+					chunk_start = self.pos;
+				}
+				Some('}') => {
+					self.errors.error("stray '}' in text", start..start + 1);
+					self.next_char();
+				}
+				Some(c) => {
+					self.next_char();
+					chunk.push(c);
 				}
 			}
+		}
+	}
+
+	/// The inside of a `{}` control group in a text block: ordinary tokens up
+	/// to the matching `}`. Stops short at `"""` or end of input, leaving
+	/// `match_delims` to report the unclosed `{`.
+	fn lex_control(&mut self) {
+		let mut depth = 0usize;
+		loop {
+			self.skip_whitespace();
+			if self.src[self.pos..].starts_with("\"\"\"") {
+				return;
+			}
+			let start = self.pos;
+			let Some(token) = self.lex_token() else { return };
+			match token {
+				TokenKind::Punct('{') => depth += 1,
+				TokenKind::Punct('}') if depth == 0 => {
+					self.push(start, token);
+					return;
+				}
+				TokenKind::Punct('}') => depth -= 1,
+				_ => {}
+			}
+			self.push(start, token);
 		}
 	}
 
@@ -338,8 +425,9 @@ impl<'a> Lex<'a> {
 }
 
 /// Parses one escape sequence (after the `\`) at `*pos`, advancing it.
-/// Shared with text-block parsing, which processes escapes at parse time.
-pub(crate) fn lex_escape(src: &str, pos: &mut usize) -> Option<char> {
+/// Shared between strings and text blocks; an escaped newline is not an
+/// escape sequence but a continuation, handled separately in `lex_text`.
+fn lex_escape(src: &str, pos: &mut usize) -> Option<char> {
 	let mut chars = src[*pos..].chars();
 	let mut next = || {
 		let c = chars.next();
@@ -349,6 +437,7 @@ pub(crate) fn lex_escape(src: &str, pos: &mut usize) -> Option<char> {
 	match next()? {
 		'"' => Some('"'),
 		'\\' => Some('\\'),
+		' ' => Some(' '),
 		'n' => Some('\n'),
 		'r' => Some('\r'),
 		't' => Some('\t'),
