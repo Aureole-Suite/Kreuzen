@@ -176,4 +176,13 @@ impl<'a, 'e> Parser<'a, 'e> {
 	pub fn parse<T: Parse>(&mut self) -> Result<T> {
 		T::parse(self)
 	}
+
+	/// Greedy repetition: parses elements until one fails.
+	pub fn parse_many<T: Parse>(&mut self) -> Result<Vec<T>> {
+		let mut out = Vec::new();
+		while let Ok(v) = self.parse() {
+			out.push(v);
+		}
+		Ok(out)
+	}
 }

@@ -74,7 +74,7 @@ impl Parse for Action {
 			flags: p.parse()?,
 			ani: p.parse()?,
 			name: p.parse()?,
-			effects: p.parse()?,
+			effects: p.parse_many()?,
 		})
 	}
 }
@@ -101,7 +101,7 @@ impl Parse for Break {
 }
 impl Parse for Condition {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(Condition { id: p.parse()?, entries: p.parse()? })
+		Ok(Condition { id: p.parse()?, entries: p.parse_many()? })
 	}
 }
 impl Parse for FieldFollow {
@@ -121,7 +121,7 @@ impl Parse for FieldMonster {
 			a: p.parse()?,
 			b: p.parse()?,
 			c: p.parse()?,
-			floats: p.parse()?,
+			floats: p.parse_many()?,
 		})
 	}
 }

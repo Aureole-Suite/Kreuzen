@@ -78,7 +78,7 @@ impl Parse for ShadowOp {
 			})
 			.test_kw("CharAni", |p| {
 				let chr = p.parse()?;
-				let strings = p.parse()?;
+				let strings = p.parse_many()?;
 				Ok(ShadowOp::CharAni { chr, strings })
 			})
 			.test_kw("Fork", |p| {
