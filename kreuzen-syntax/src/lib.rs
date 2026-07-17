@@ -6,7 +6,7 @@ mod printer;
 mod tables;
 mod types;
 
-pub use parse::{Parser, Rest, parse, parse_header, parse_scena};
+pub use parse::{Error, Parser, Rest, Result, parse, parse_header, parse_scena};
 pub use printer::Printer;
 
 use kreuzen::code::FlatOp;
@@ -28,7 +28,7 @@ pub trait Print {
 /// A failed parse may leave the cursor mid-value; callers that want to try
 /// alternatives must go through `Alt` (or `Parser::test`), which restores it.
 pub trait Parse: Sized {
-	fn parse(p: &mut Parser) -> parse::Result<Self>;
+	fn parse(p: &mut Parser) -> Result<Self>;
 }
 
 impl Print for ScenaInfo {

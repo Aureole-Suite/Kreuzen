@@ -1,22 +1,49 @@
 use kreuzen::text::{Text, TextControl, TextPart};
 use kreuzen::types;
 
-use crate::{Print, Printer};
+use crate::{Error, Parse, Parser, Print, Printer, Result};
 
-macro_rules! print_via_debug {
+macro_rules! int {
 	($($t:ty),* $(,)?) => {
-		$(
-			impl Print for $t {
-				fn print(&self, ctx: &mut Printer) {
-					ctx.token(format!("{self:?}"));
-				}
+		$(impl Print for $t {
+			fn print(&self, ctx: &mut Printer) {
+				ctx.token(format!("{self:?}"));
 			}
-		)*
+		})*
+		$(impl Parse for $t {
+			fn parse(p: &mut Parser) -> Result<Self> {
+				let v = p.int()?;
+				<$t>::try_from(v).map_err(|_| {
+					p.errors.error(concat!("value out of range for ", stringify!($t)), p.prev_span());
+					Error
+				})
+			}
+		})*
 	};
 }
 
-print_via_debug!(u8, u16, i64, i32, u32, f32);
-print_via_debug!(types::Flags8, types::Flags16, types::Flags32);
+int!(u8, u16, u32, i8, i16, i32, i64);
+
+impl Print for f32 {
+	fn print(&self, ctx: &mut Printer) {
+		ctx.token(format!("{self:?}"));
+	}
+}
+
+impl Parse for f32 {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		p.alt()
+			.test(|p| p.float())
+			.test_kw("inf", |_| Ok(f32::INFINITY))
+			.test_kw("NaN", |_| Ok(f32::NAN))
+			.test(|p| {
+				p.punct('-')?;
+				p.keyword("inf")?;
+				Ok(f32::NEG_INFINITY)
+			})
+			.finish()
+	}
+}
 
 fn escape_str(out: &mut String, s: &str) {
 	use std::fmt::Write;
@@ -52,7 +79,13 @@ impl Print for String {
 	}
 }
 
-macro_rules! print_tuple {
+impl Parse for String {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		p.string().map(str::to_owned)
+	}
+}
+
+macro_rules! tuple {
 	($($t:ident)*) => {
 		#[expect(non_snake_case)]
 		impl<$($t: Print,)+> Print for ($($t,)+) {
@@ -63,14 +96,24 @@ macro_rules! print_tuple {
 				ctx.sym_(")");
 			}
 		}
+
+		#[expect(non_snake_case)]
+		impl<$($t: Parse,)+> Parse for ($($t,)+) {
+			fn parse(p: &mut Parser) -> Result<Self> {
+				p.delim('(', |p| {
+					$(let $t = p.parse::<$t>()?;)+
+					Ok(($($t,)+))
+				})
+			}
+		}
 	};
 }
 
-print_tuple!(A);
-print_tuple!(A B);
-print_tuple!(A B C);
-print_tuple!(A B C D);
-print_tuple!(A B C D E);
+tuple!(A);
+tuple!(A B);
+tuple!(A B C);
+tuple!(A B C D);
+tuple!(A B C D E);
 
 impl<T: Print, const N: usize> Print for [T; N] {
 	fn print(&self, ctx: &mut Printer) {
@@ -82,22 +125,42 @@ impl<T: Print, const N: usize> Print for [T; N] {
 	}
 }
 
-macro_rules! print_bracket {
-	($($t:ty => $name:literal),* $(,)?) => {
-		$(
-			impl Print for $t {
-				fn print(&self, ctx: &mut Printer) {
-					ctx.word($name);
-					ctx.sym("[");
-					self.0.print(ctx);
-					ctx.sym_("]");
-				}
+impl<T: Parse, const N: usize> Parse for [T; N] {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		p.delim('(', |p| {
+			let mut out = Vec::with_capacity(N);
+			for _ in 0..N {
+				out.push(p.parse::<T>()?);
 			}
-		)*
+			out.try_into().map_err(|_| Error)
+		})
+	}
+}
+
+fn bracket<T>(p: &mut Parser, name: &'static str, f: impl FnOnce(&mut Parser) -> Result<T>) -> Result<T> {
+	p.cursor.keyword(name)?;
+	p.delim('[', f)
+}
+
+macro_rules! bracket {
+	($($t:path => $name:literal),* $(,)?) => {
+		$(impl Print for $t {
+			fn print(&self, ctx: &mut Printer) {
+				ctx.word($name);
+				ctx.sym("[");
+				self.0.print(ctx);
+				ctx.sym_("]");
+			}
+		})*
+		$(impl Parse for $t {
+			fn parse(p: &mut Parser) -> Result<Self> {
+				bracket(p, $name, |p| p.parse()).map($t)
+			}
+		})*
 	};
 }
 
-print_bracket!(
+bracket!(
 	types::Item => "item",
 	types::Battle => "battle",
 	types::Magic => "magic",
@@ -113,6 +176,26 @@ print_bracket!(
 	types::SystemFlags => "system",
 );
 
+macro_rules! flags {
+	($($t:path => $width:literal),* $(,)?) => {
+		$(impl Print for $t {
+			fn print(&self, ctx: &mut Printer) {
+				ctx.token(format!("0x{:01$X}", self.0, $width));
+			}
+		})*
+		$(impl Parse for $t {
+			fn parse(p: &mut Parser) -> Result<Self> {
+				p.parse().map($t)
+			}
+		})*
+	};
+}
+flags!(
+	types::Flags8 => 2,
+	types::Flags16 => 4,
+	types::Flags32 => 8,
+);
+
 impl Print for types::Char {
 	fn print(&self, ctx: &mut Printer) {
 		let inner = match self.0 {
@@ -125,11 +208,32 @@ impl Print for types::Char {
 	}
 }
 
+impl Parse for types::Char {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		bracket(p, "char", |p| {
+			p.alt()
+				.test_kw("self", |_| Ok(types::Char(0xFFFE)))
+				.test_kw("null", |_| Ok(types::Char(0xFFFF)))
+				.test(|p| p.parse().map(types::Char))
+				.finish()
+		})
+	}
+}
+
 impl Print for types::CharAttr {
 	fn print(&self, ctx: &mut Printer) {
 		self.0.print(ctx);
 		ctx.sym(".");
 		ctx.token(self.1.to_string())
+	}
+}
+
+impl Parse for types::CharAttr {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		let c = p.parse()?;
+		p.glued_punct('.')?;
+		let a = p.parse()?;
+		Ok(types::CharAttr(c, a))
 	}
 }
 
