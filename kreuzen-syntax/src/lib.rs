@@ -4,6 +4,7 @@ pub mod lex;
 mod parse;
 mod printer;
 mod tables;
+mod text;
 mod types;
 
 pub use parse::{Error, Parser, Rest, Result, parse, parse_header, parse_scena};

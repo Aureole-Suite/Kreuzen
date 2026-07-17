@@ -5,7 +5,6 @@ mod op;
 mod parser;
 mod stmt;
 mod tables;
-mod text;
 mod types;
 
 use kreuzen::spec::Spec;

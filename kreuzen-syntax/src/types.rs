@@ -45,7 +45,7 @@ impl Parse for f32 {
 	}
 }
 
-fn escape_str(out: &mut String, s: &str) {
+pub(crate) fn escape_str(out: &mut String, s: &str) {
 	use std::fmt::Write;
 	for c in s.chars() {
 		match c {
@@ -234,81 +234,5 @@ impl Parse for types::CharAttr {
 		p.glued_punct('.')?;
 		let a = p.parse()?;
 		Ok(types::CharAttr(c, a))
-	}
-}
-
-fn push_control(lines: &mut Vec<String>, control: &str) {
-	let len = lines.len();
-	assert!(len >= 2); // starts at 2 and is never popped without pushing after
-	if lines[len - 1].is_empty() && !lines[len - 2].ends_with('\n') {
-		lines.pop();
-	}
-	lines.last_mut().unwrap().push_str(control);
-	lines.push(String::new());
-}
-
-fn format_line(mut line: String) -> String {
-	if line.starts_with(' ') {
-		line.insert(0, '\\');
-	}
-	if line.ends_with('\n') {
-		line.pop();
-	} else {
-		line.push('\\');
-	}
-	line
-}
-
-impl Print for Text {
-	fn print(&self, ctx: &mut Printer) {
-		// start with two lines, so that push_control works. First will usually be empty.
-		let mut lines = vec![String::new(), String::new()];
-
-		for part in &self.0 {
-			match part {
-				TextPart::String(s) => escape_str(lines.last_mut().unwrap(), s),
-				TextPart::Control(TextControl::Line) => push_control(&mut lines, "\n"),
-				TextPart::Control(TextControl::Pause) => push_control(&mut lines, "{pause}"),
-				TextPart::Control(TextControl::Clear) => push_control(&mut lines, "{clear}"),
-				TextPart::Control(c) => {
-					let mut sub = Printer::new();
-					c.print(&mut sub);
-					let line = lines.last_mut().unwrap();
-					line.push('{');
-					line.push_str(&sub.finish());
-					line.push('}');
-				}
-			}
-		}
-
-		assert!(lines.len() >= 2);
-		if lines.len() == 2 && lines[0].is_empty() {
-			ctx.token(format!(r#""""{}""""#, lines[1]));
-		} else {
-			if lines.last().is_some_and(|x| x.is_empty()) {
-				lines.pop();
-			}
-			let mut iter = lines.into_iter().map(format_line);
-			ctx.token(format!(r#""""{}"#, iter.next().unwrap()));
-			ctx.indent += 1;
-			for line in iter {
-				ctx.newline(0);
-				ctx.token(line);
-			}
-			ctx.indent -= 1;
-			ctx.newline(0);
-			ctx.token(r#"""""#);
-		};
-	}
-}
-
-impl Print for TextControl {
-	fn print(&self, ctx: &mut Printer) {
-		match self {
-			TextControl::Line | TextControl::Pause | TextControl::Clear => unreachable!(),
-			TextControl::Item(v) => v.print(ctx),
-			TextControl::Magic(v) => v.print(ctx),
-			_ => ctx.token(format!("{self:?}")),
-		}
 	}
 }
