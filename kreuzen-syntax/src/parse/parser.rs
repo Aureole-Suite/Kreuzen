@@ -1,3 +1,4 @@
+use crate::Parse;
 use crate::diag::Errors;
 use crate::lex::{Cursor, CursorError};
 
@@ -170,5 +171,9 @@ impl<'a, 'e> Parser<'a, 'e> {
 
 	pub fn next_span(&self) -> std::ops::Range<usize> {
 		self.cursor.next_span()
+	}
+
+	pub fn parse<T: Parse>(&mut self) -> Result<T> {
+		T::parse(self)
 	}
 }

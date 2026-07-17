@@ -2,9 +2,10 @@ use kreuzen::code::{Arg, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, Expr};
 
+use crate::Parse;
+
 use super::alt::TryParser;
 use super::parser::{Error, Expect, Parser, Result};
-use super::types::Parse;
 use super::{PCtx, expr, op};
 
 /// A `{ ... }` block of statements.

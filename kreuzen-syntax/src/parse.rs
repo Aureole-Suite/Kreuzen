@@ -13,7 +13,7 @@ use kreuzen::{Enc, Game, Scena, ScenaInfo};
 
 use crate::diag::{Errors, Severity};
 use crate::lex::{Cursor, Tokens};
-use parser::{Parser, Result};
+pub use parser::{Parser, Result};
 
 /// Context available while parsing everything after the header.
 pub(crate) struct PCtx {

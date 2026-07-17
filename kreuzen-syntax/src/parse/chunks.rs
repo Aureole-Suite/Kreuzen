@@ -2,8 +2,9 @@ use kreuzen::code::preload::Preload;
 use kreuzen::code::shadow::{Shadow, ShadowOp};
 use kreuzen::{Chunk, Function};
 
+use crate::Parse;
+
 use super::parser::{Error, Expect, Parser, Result};
-use super::types::Parse;
 use super::{PCtx, stmt};
 
 pub fn parse_chunks(p: &mut Parser, ctx: &PCtx) -> Vec<Chunk> {

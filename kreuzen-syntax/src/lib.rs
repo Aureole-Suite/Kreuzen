@@ -6,7 +6,7 @@ mod printer;
 mod tables;
 mod types;
 
-pub use parse::{Rest, parse, parse_header, parse_scena};
+pub use parse::{Parser, Rest, parse, parse_header, parse_scena};
 pub use printer::Printer;
 
 use kreuzen::code::FlatOp;
@@ -20,6 +20,15 @@ pub trait Print {
 		self.print(&mut ctx);
 		ctx.finish()
 	}
+}
+
+/// Context-free values, mirroring the `Print` impls. Values that need the op
+/// spec (ops, exprs, statements) are parsed by functions instead.
+///
+/// A failed parse may leave the cursor mid-value; callers that want to try
+/// alternatives must go through `Alt` (or `Parser::test`), which restores it.
+pub trait Parse: Sized {
+	fn parse(p: &mut Parser) -> parse::Result<Self>;
 }
 
 impl Print for ScenaInfo {

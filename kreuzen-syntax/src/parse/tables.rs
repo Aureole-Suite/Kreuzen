@@ -15,8 +15,9 @@ use kreuzen::tables::summon::Summon;
 use kreuzen::tables::weapon_att::WeaponAtt;
 use kreuzen::tables::{Dummy, Table};
 
+use crate::Parse;
+
 use super::parser::{Parser, Result};
-use super::types::Parse;
 
 impl Parse for Table {
 	fn parse(p: &mut Parser) -> Result<Self> {

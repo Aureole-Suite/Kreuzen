@@ -3,11 +3,12 @@ use std::ops::Range;
 use kreuzen::text::{Text, TextControl, TextPart};
 use kreuzen::types::{Item, Magic, Sound};
 
+use crate::Parse;
 use crate::diag::Errors;
 
 use super::parser::{Parser, Result};
 
-impl super::types::Parse for Text {
+impl Parse for Text {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		let span = p.next_span();
 		let raw = p.text_block()?;

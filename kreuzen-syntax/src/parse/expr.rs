@@ -1,7 +1,8 @@
 use kreuzen::expr::{BinOp, Expr, UnOp};
 
+use crate::Parse;
+
 use super::parser::{Error, Parser, Result};
-use super::types::Parse;
 use super::{PCtx, op};
 
 pub fn parse_expr(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {

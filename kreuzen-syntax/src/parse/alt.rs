@@ -123,7 +123,6 @@ impl TryParser<'_, '_> {
 	}
 
 	/// Forces a clean backtrack, discarding this alternative's errors.
-	#[expect(dead_code)]
 	pub fn reject(&mut self) {
 		self.rejected = true;
 	}

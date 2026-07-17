@@ -1,22 +1,9 @@
 use kreuzen::code::Arg;
 use kreuzen::types::*;
 
+use crate::Parse;
+
 use super::parser::{Error, Parser, Result};
-
-/// Context-free values, mirroring the `Print` impls. Values that need the op
-/// spec (ops, exprs, statements) are parsed by functions instead.
-///
-/// A failed parse may leave the cursor mid-value; callers that want to try
-/// alternatives must go through `Alt` (or `Parser::test`), which restores it.
-pub trait Parse: Sized {
-	fn parse(p: &mut Parser) -> Result<Self>;
-}
-
-impl Parser<'_, '_> {
-	pub fn parse<T: Parse>(&mut self) -> Result<T> {
-		T::parse(self)
-	}
-}
 
 macro_rules! parse_int {
 	($($t:ty),*) => {
