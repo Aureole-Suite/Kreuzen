@@ -2,7 +2,6 @@ use kreuzen::code::{Arg, Op, OpMeta};
 use kreuzen::spec::Part;
 use kreuzen::types::*;
 
-use super::alt::Alt;
 use super::parser::{Error, Expect, Parser, Result};
 use super::{PCtx, expr, types};
 
@@ -146,7 +145,7 @@ fn parse_parts(p: &mut Parser, ctx: &PCtx, parts: &[Part], op: &mut Op) -> Resul
 
 /// A float-typed arg: either a float literal, or a munged int (`123'`).
 fn parse_f32_arg(p: &mut Parser) -> Result<Arg> {
-	Alt::new(p)
+	p.alt()
 		.test(|p| p.parse().map(Arg::F32))
 		.test(|p| {
 			let v = p.parse()?;
@@ -158,7 +157,7 @@ fn parse_f32_arg(p: &mut Parser) -> Result<Arg> {
 
 // The text analogue of read_dyn in kreuzen::code.
 fn parse_dyn(p: &mut Parser) -> Result<Arg> {
-	Alt::new(p)
+	p.alt()
 		.test(|p| p.parse().map(Arg::Var))
 		.test(|p| p.parse().map(Arg::NumReg))
 		.test(|p| p.parse().map(Arg::StrReg))

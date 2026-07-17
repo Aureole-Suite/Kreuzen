@@ -1,6 +1,5 @@
 use kreuzen::expr::{BinOp, Expr, UnOp};
 
-use super::alt::Alt;
 use super::parser::{Error, Parser, Result};
 use super::types::Parse;
 use super::{PCtx, op};
@@ -96,7 +95,7 @@ impl Parse for BinOp {
 
 impl Parse for UnOp {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		Alt::new(p)
+		p.alt()
 			.test(|p| p.punct('!').map(|_| UnOp::BoolNot))
 			.test(|p| p.punct('~').map(|_| UnOp::BitNot))
 			.test(|p| p.punct('-').map(|_| UnOp::Neg))
@@ -105,7 +104,7 @@ impl Parse for UnOp {
 }
 
 fn parse_atom(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {
-	Alt::new(p)
+	p.alt()
 		.test(|p| p.delim('(', |p| parse_expr(p, ctx)))
 		.test(|p| {
 			let unop = p.parse()?;

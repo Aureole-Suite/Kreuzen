@@ -2,7 +2,6 @@ use kreuzen::code::preload::Preload;
 use kreuzen::code::shadow::{Shadow, ShadowOp};
 use kreuzen::{Chunk, Function};
 
-use super::alt::Alt;
 use super::parser::{Error, Expect, Parser, Result};
 use super::types::Parse;
 use super::{PCtx, stmt};
@@ -12,7 +11,7 @@ pub fn parse_chunks(p: &mut Parser, ctx: &PCtx) -> Vec<Chunk> {
 }
 
 fn parse_chunk(p: &mut Parser, ctx: &PCtx) -> Result<Chunk> {
-	Alt::new(p)
+	p.alt()
 		.test_kw("fn", |p| Ok(Chunk::Function(parse_function(ctx, p)?)))
 		.test(|p| p.parse().map(Chunk::Table))
 		.finish()
@@ -34,7 +33,7 @@ fn parse_function(ctx: &PCtx, p: &mut super::alt::TryParser<'_, '_>) -> Result<F
 
 impl Parse for Preload {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		Alt::new(p)
+		p.alt()
 			.test_kw("Call", |p| Ok(Preload::Call(p.parse()?, p.parse()?)))
 			.test_kw("PkgLoad", |p| p.parse().map(Preload::PkgLoad))
 			.test_kw("EffLoad", |p| p.parse().map(Preload::EffLoad))
@@ -70,7 +69,7 @@ fn parse_shadow_ops(p: &mut Parser) -> Result<Vec<ShadowOp>, Error> {
 
 impl Parse for ShadowOp {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		Alt::new(p)
+		p.alt()
 			.test_kw("Call", |p| {
 				let table = p.parse()?;
 				let name = p.parse()?;

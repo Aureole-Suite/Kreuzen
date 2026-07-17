@@ -15,13 +15,12 @@ use kreuzen::tables::summon::Summon;
 use kreuzen::tables::weapon_att::WeaponAtt;
 use kreuzen::tables::{Dummy, Table};
 
-use super::alt::Alt;
 use super::parser::{Parser, Result};
 use super::types::Parse;
 
 impl Parse for Table {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		Alt::new(p)
+		p.alt()
 			.test_kw("AddCollision", |p| rows(p).map(Table::AddCollision))
 			.test_kw("ActionTable", |p| rows(p).map(Table::ActionTable))
 			.test_kw("AlgoTable", |p| rows(p).map(Table::AlgoTable))
@@ -46,10 +45,7 @@ impl Parse for Table {
 
 impl Parse for Dummy {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		Alt::new(p)
-			.test_kw("empty", |_| Ok(Dummy::Empty))
-			.test_kw("dff", |_| Ok(Dummy::Dff))
-			.finish()
+		p.alt().test_kw("empty", |_| Ok(Dummy::Empty)).test_kw("dff", |_| Ok(Dummy::Dff)).finish()
 	}
 }
 
@@ -102,7 +98,7 @@ impl Parse for StyleName {
 
 impl Parse for BookData {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		Alt::new(p)
+		p.alt()
 			.test_kw("header", |p| p.parse().map(BookData::Header))
 			.test_kw("title_page", |p| Ok(BookData::TitlePage(p.parse()?, p.parse()?)))
 			.test_kw("page", |p| p.parse().map(BookData::Page))
@@ -121,7 +117,8 @@ impl Parse for TitlePage {
 
 impl Parse for Page {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		let title = Alt::new(p)
+		let title = p
+			.alt()
 			.test_kw("title_page", |p| p.parse().map(Some))
 			.test_kw("page", |_| Ok(None))
 			.finish()?;
@@ -133,7 +130,8 @@ impl Parse for Page {
 impl Parse for Reaction {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		let id = p.parse()?;
-		let kind = Alt::new(p)
+		let kind = p
+			.alt()
 			.test(|p| p.parse().map(ReactionKind::Alias))
 			// PartReaction prints its own parens, so this is three consecutive
 			// groups rather than one array group.

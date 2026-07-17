@@ -13,7 +13,6 @@ use kreuzen::{Enc, Game, Scena, ScenaInfo};
 
 use crate::diag::{Errors, Severity};
 use crate::lex::{Cursor, Tokens};
-use alt::Alt;
 use parser::{Parser, Result};
 
 /// Context available while parsing everything after the header.
@@ -83,7 +82,8 @@ fn parse_header_inner(p: &mut Parser) -> Result<(ScenaInfo, bool)> {
 
 	p.keyword("game")?;
 	p.punct('=')?;
-	let game = Alt::new(p)
+	let game = p
+		.alt()
 		.test_kw("Cs1", |_| Ok(Game::Cs1))
 		.test_kw("Cs2", |_| Ok(Game::Cs2))
 		.test_kw("Cs3", |_| Ok(Game::Cs3))
@@ -94,10 +94,7 @@ fn parse_header_inner(p: &mut Parser) -> Result<(ScenaInfo, bool)> {
 
 	p.keyword("enc")?;
 	p.punct('=')?;
-	let enc = Alt::new(p)
-		.test_kw("Sjis", |_| Ok(Enc::Sjis))
-		.test_kw("Utf8", |_| Ok(Enc::Utf8))
-		.finish()?;
+	let enc = p.alt().test_kw("Sjis", |_| Ok(Enc::Sjis)).test_kw("Utf8", |_| Ok(Enc::Utf8)).finish()?;
 
 	p.keyword("oddness")?;
 	p.punct('=')?;

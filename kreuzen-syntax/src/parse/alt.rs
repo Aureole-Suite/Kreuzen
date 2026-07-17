@@ -89,6 +89,13 @@ impl<'a, 'b, 'e, T> Alt<'a, 'b, 'e, T> {
 	}
 }
 
+impl<'a, 'e> Parser<'a, 'e> {
+	/// Starts an ordered-choice chain; see [`Alt`].
+	pub fn alt<'b, T>(&'b mut self) -> Alt<'a, 'b, 'e, T> {
+		Alt::new(self)
+	}
+}
+
 pub struct TryParser<'a, 'e> {
 	parser: Parser<'a, 'e>,
 	committed: bool,

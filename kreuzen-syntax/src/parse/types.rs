@@ -1,7 +1,6 @@
 use kreuzen::code::Arg;
 use kreuzen::types::*;
 
-use super::alt::Alt;
 use super::parser::{Error, Parser, Result};
 
 /// Context-free values, mirroring the `Print` impls. Values that need the op
@@ -41,7 +40,7 @@ parse_int!(u8, u16, u32, i8, i16, i32, i64);
 /// Also accepts `inf`, `-inf` and `NaN`, as printed by f32's Debug.
 impl Parse for f32 {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		Alt::new(p)
+		p.alt()
 			.test(|p| p.float())
 			.test_kw("inf", |_| Ok(f32::INFINITY))
 			.test_kw("NaN", |_| Ok(f32::NAN))
@@ -158,7 +157,7 @@ impl Parse for Flags32 {
 impl Parse for Char {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		bracket(p, "char", |p| {
-			Alt::new(p)
+			p.alt()
 				.test_kw("self", |_| Ok(Char(0xFFFE)))
 				.test_kw("null", |_| Ok(Char(0xFFFF)))
 				.test(|p| p.parse().map(Char))

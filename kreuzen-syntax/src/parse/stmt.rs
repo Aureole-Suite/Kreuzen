@@ -2,7 +2,7 @@ use kreuzen::code::{Arg, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, Expr};
 
-use super::alt::{Alt, TryParser};
+use super::alt::TryParser;
 use super::parser::{Error, Expect, Parser, Result};
 use super::types::Parse;
 use super::{PCtx, expr, op};
@@ -15,7 +15,7 @@ pub fn block(p: &mut Parser, ctx: &PCtx) -> Result<Vec<Stmt>> {
 fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
 	let meta = p.meta().unwrap_or_default();
 
-	Alt::new(p)
+	p.alt()
 		.test_kw("if", |p| parse_if(p, ctx, meta))
 		.test_kw("while", |p| parse_while(p, ctx, meta))
 		.test_kw("switch", |p| parse_switch(p, ctx, meta))
@@ -44,7 +44,8 @@ fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	});
 	let els = match els {
 		Ok(meta2) => {
-			let body = Alt::new(p)
+			let body = p
+				.alt()
 				.test(|p| block(p, ctx))
 				.test(|p| {
 					// `else if`
@@ -105,7 +106,8 @@ fn parse_switch(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 
 // Setter ops print as `lhs = expr;`; reconstruct the op.
 fn parse_assignment(p: &mut TryParser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
-	let (name, lhs) = Alt::new(p)
+	let (name, lhs) = p
+		.alt()
 		.test(|p| p.parse().map(|v| ("SetAttr", Arg::Attr(v))))
 		.test(|p| p.parse().map(|v| ("SetVar", Arg::Var(v))))
 		.test(|p| p.parse().map(|v| ("SetNumReg", Arg::NumReg(v))))
@@ -130,7 +132,7 @@ fn parse_assignment(p: &mut TryParser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt>
 /// `case N:` or `default:`. `Case::None` is implicit and never written.
 impl Parse for Case {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		Alt::new(p)
+		p.alt()
 			.test_kw("case", |p| {
 				let v = p.parse()?;
 				p.punct(':')?;
