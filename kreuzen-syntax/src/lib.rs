@@ -2,14 +2,14 @@ mod code;
 pub mod diag;
 pub mod lex;
 mod parse;
-mod printer;
+mod print;
 mod scena;
 mod tables;
 mod text;
 mod types;
 
 pub use parse::{Error, Parser, Rest, Result, parse, parse_header, parse_scena};
-pub use printer::Printer;
+pub use print::Printer;
 
 pub trait Print {
 	fn print(&self, ctx: &mut Printer);
