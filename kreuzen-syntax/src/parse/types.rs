@@ -69,12 +69,8 @@ macro_rules! parse_tuple {
 		#[expect(non_snake_case)]
 		impl<$($t: Parse,)+> Parse for ($($t,)+) {
 			fn parse(p: &mut Parser) -> Result<Self> {
-				p.test(Expect::Char('('), |p| {
-					let mut inner = p.delim('(')?;
-					$(let $t = inner.parse::<$t>()?;)+
-					if !inner.cursor.at_end() {
-						return Err(Error);
-					}
+				p.delim('(', |p| {
+					$(let $t = p.parse::<$t>()?;)+
 					Ok(($($t,)+))
 				})
 			}
@@ -90,14 +86,10 @@ parse_tuple!(A B C D E);
 
 impl<T: Parse, const N: usize> Parse for [T; N] {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		p.test(Expect::Char('('), |p| {
-			let mut inner = p.delim('(')?;
+		p.delim('(', |p| {
 			let mut out = Vec::with_capacity(N);
 			for _ in 0..N {
-				out.push(inner.parse::<T>()?);
-			}
-			if !inner.cursor.at_end() {
-				return Err(Error);
+				out.push(p.parse::<T>()?);
 			}
 			out.try_into().map_err(|_| Error)
 		})
@@ -119,12 +111,7 @@ impl<T: Parse> Parse for Vec<T> {
 pub fn bracket<T>(p: &mut Parser, name: &'static str, f: impl FnOnce(&mut Parser) -> Result<T>) -> Result<T> {
 	p.test(Expect::Str(name), |p| {
 		p.cursor.keyword(name)?;
-		let mut inner = p.delim('[')?;
-		let v = f(&mut inner)?;
-		if !inner.cursor.at_end() {
-			return Err(Error);
-		}
-		Ok(v)
+		p.delim('[', f)
 	})
 }
 

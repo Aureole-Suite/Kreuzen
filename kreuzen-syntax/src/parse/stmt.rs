@@ -8,8 +8,7 @@ use super::{PCtx, expr, op};
 
 /// A `{ ... }` block of statements.
 pub fn block(p: &mut Parser, ctx: &PCtx) -> Result<Vec<Stmt>> {
-	let mut inner = p.delim('{')?;
-	Ok(super::parse_seq(&mut inner, |p| parse_stmt(p, ctx)))
+	p.delim('{', |p| Ok(super::parse_seq(p, |p| parse_stmt(p, ctx))))
 }
 
 fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
@@ -64,50 +63,54 @@ fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 
 fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	let e = expr::parse_expr(p, ctx)?;
-	let mut inner = p.delim('{')?;
-	// While has a trailing meta, so can't use super::seq
-	let mut body = Vec::new();
-	let mut meta2 = OpMeta::default();
-	while !inner.at_end() {
-		// a trailing meta before the closing brace is the loopback op's meta
-		if let Ok(m) = inner.test(Expect::Nt("trailing meta"), |p| {
-			let m = op::parse_meta_present(p)?;
-			if p.cursor.at_end() { Ok(m) } else { Err(Error) }
-		}) {
-			meta2 = m;
-			break;
+	// While has a trailing meta, so can't use super::parse_seq
+	let (body, meta2) = p.delim('{', |p| {
+		let mut body = Vec::new();
+		let mut meta2 = OpMeta::default();
+		while !p.at_end() {
+			// a trailing meta before the closing brace is the loopback op's meta
+			if let Ok(m) = p.test(Expect::Nt("trailing meta"), |p| {
+				let m = op::parse_meta_present(p)?;
+				if p.cursor.at_end() { Ok(m) } else { Err(Error) }
+			}) {
+				meta2 = m;
+				break;
+			}
+			super::seq_item(p, &mut body, |p| parse_stmt(p, ctx));
 		}
-		super::seq_item(&mut inner, &mut body, |p| parse_stmt(p, ctx));
-	}
+		Ok((body, meta2))
+	})?;
 	Ok(Stmt::While(meta, e, body, meta2))
 }
 
 fn parse_switch(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	let e = expr::parse_expr(p, ctx)?;
-	let mut inner = p.delim('{')?;
-	let mut cases: Vec<(Case, Vec<Stmt>)> = Vec::new();
-	while !inner.at_end() {
-		let arm = inner.test(Expect::Nt("case"), |p| {
-			if p.cursor.keyword("case").is_ok() {
-				let v = p.parse()?;
-				p.cursor.punct(':')?;
-				Ok(Case::Case(v))
-			} else if p.cursor.keyword("default").is_ok() {
-				p.cursor.punct(':')?;
-				Ok(Case::Default)
-			} else {
-				Err(Error)
+	let cases = p.delim('{', |p| {
+		let mut cases: Vec<(Case, Vec<Stmt>)> = Vec::new();
+		while !p.at_end() {
+			let arm = p.test(Expect::Nt("case"), |p| {
+				if p.cursor.keyword("case").is_ok() {
+					let v = p.parse()?;
+					p.cursor.punct(':')?;
+					Ok(Case::Case(v))
+				} else if p.cursor.keyword("default").is_ok() {
+					p.cursor.punct(':')?;
+					Ok(Case::Default)
+				} else {
+					Err(Error)
+				}
+			});
+			if let Ok(case) = arm {
+				cases.push((case, Vec::new()));
+				continue;
 			}
-		});
-		if let Ok(case) = arm {
-			cases.push((case, Vec::new()));
-			continue;
+			if cases.is_empty() {
+				cases.push((Case::None, Vec::new()));
+			}
+			super::seq_item(p, &mut cases.last_mut().unwrap().1, |p| parse_stmt(p, ctx));
 		}
-		if cases.is_empty() {
-			cases.push((Case::None, Vec::new()));
-		}
-		super::seq_item(&mut inner, &mut cases.last_mut().unwrap().1, |p| parse_stmt(p, ctx));
-	}
+		Ok(cases)
+	})?;
 	Ok(Stmt::Switch(meta, e, cases))
 }
 

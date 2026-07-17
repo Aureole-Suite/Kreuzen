@@ -1,7 +1,7 @@
 use kreuzen::expr::{BinOp, Expr, UnOp};
 
 use super::alt::Alt;
-use super::parser::{Error, Parser, Result};
+use super::parser::{Parser, Result};
 use super::{PCtx, op};
 
 pub fn parse_expr(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {
@@ -96,16 +96,7 @@ fn parse_atom(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {
 		Expr::Un(op, Box::new(e))
 	}
 	Alt::new(p)
-		.test(|p| {
-			let cursor = p.delim_later('(')?;
-			p.commit();
-			let mut inner = Parser::new(cursor, p.errors);
-			let e = parse_expr(&mut inner, ctx)?;
-			if !inner.cursor.at_end() {
-				return Err(Error);
-			}
-			Ok(e)
-		})
+		.test(|p| p.delim('(', |p| parse_expr(p, ctx)))
 		.test(|p| {
 			p.punct('!')?;
 			p.commit();

@@ -22,8 +22,7 @@ fn parse_function(ctx: &PCtx, p: &mut super::alt::TryParser<'_, '_>) -> Result<F
 	let body = stmt::block(p, ctx)?;
 	let mut preload = Vec::new();
 	if p.keyword("preload").is_ok() {
-		let mut inner = p.delim('{')?;
-		preload = super::parse_seq(&mut inner, parse_preload);
+		preload = p.delim('{', |p| Ok(super::parse_seq(p, parse_preload)))?;
 	}
 	let mut shadow = Vec::new();
 	while p.keyword("shadow").is_ok() {
@@ -44,31 +43,28 @@ fn parse_preload(p: &mut Parser) -> Result<Preload> {
 		return Err(Error);
 	}
 
-	let mut inner = p.delim('(')?;
-	let preload = match name {
-		"Call" => {
-			let n = inner.parse()?;
-			inner.punct(',')?;
-			Preload::Call(n, inner.parse()?)
-		}
-		"PkgLoad" => Preload::PkgLoad(inner.parse()?),
-		"EffLoad" => Preload::EffLoad(inner.parse()?),
-		"SoundPlay" => Preload::SoundPlay(inner.parse()?),
-		"SoundPlayVoice" => Preload::SoundPlayVoice(inner.parse()?),
-		"Voice" => Preload::Voice(inner.parse()?),
-		"CharAniclipPlay" => {
-			let chr = inner.parse()?;
-			inner.punct(',')?;
-			Preload::CharAniclipPlay(chr, inner.parse()?)
-		}
-		"NameplateShow" => Preload::NameplateShow(inner.parse()?),
-		"opCE02" => Preload::opCE02(inner.parse()?),
-		_ => unreachable!(),
-	};
-	if !inner.cursor.at_end() {
-		return Err(Error);
-	}
-	Ok(preload)
+	p.delim('(', |p| {
+		Ok(match name {
+			"Call" => {
+				let n = p.parse()?;
+				p.punct(',')?;
+				Preload::Call(n, p.parse()?)
+			}
+			"PkgLoad" => Preload::PkgLoad(p.parse()?),
+			"EffLoad" => Preload::EffLoad(p.parse()?),
+			"SoundPlay" => Preload::SoundPlay(p.parse()?),
+			"SoundPlayVoice" => Preload::SoundPlayVoice(p.parse()?),
+			"Voice" => Preload::Voice(p.parse()?),
+			"CharAniclipPlay" => {
+				let chr = p.parse()?;
+				p.punct(',')?;
+				Preload::CharAniclipPlay(chr, p.parse()?)
+			}
+			"NameplateShow" => Preload::NameplateShow(p.parse()?),
+			"opCE02" => Preload::opCE02(p.parse()?),
+			_ => unreachable!(),
+		})
+	})
 }
 
 fn parse_shadow(p: &mut Parser) -> Result<Shadow> {
@@ -84,8 +80,7 @@ fn parse_shadow(p: &mut Parser) -> Result<Shadow> {
 }
 
 fn parse_shadow_ops(p: &mut Parser) -> Result<Vec<ShadowOp>, Error> {
-	let mut inner = p.delim('{')?;
-	Ok(super::parse_seq(&mut inner, parse_shadow_op))
+	p.delim('{', |p| Ok(super::parse_seq(p, parse_shadow_op)))
 }
 
 fn parse_shadow_op(p: &mut Parser) -> Result<ShadowOp> {

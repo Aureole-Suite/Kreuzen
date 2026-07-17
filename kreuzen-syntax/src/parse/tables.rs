@@ -78,8 +78,7 @@ pub fn parse_table(p: &mut Parser, _ctx: &PCtx) -> Result<Table> {
 
 /// A `{ ... }` block of `;`-terminated rows.
 fn rows<T: Parse>(p: &mut Parser) -> Result<Vec<T>> {
-	let mut inner = p.delim('{')?;
-	Ok(super::parse_seq(&mut inner, |p| p.parse()))
+	p.delim('{', |p| Ok(super::parse_seq(p, |p| p.parse())))
 }
 
 macro_rules! parse_row {
