@@ -79,7 +79,7 @@ fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 				meta2 = m;
 				break;
 			}
-			super::seq_item(p, &mut body, |p| parse_stmt(p, ctx));
+			super::parse_item(p, &mut body, |p| parse_stmt(p, ctx));
 		}
 		Ok((body, meta2))
 	})?;
@@ -98,7 +98,7 @@ fn parse_switch(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 			if cases.is_empty() {
 				cases.push((Case::None, Vec::new()));
 			}
-			super::seq_item(p, &mut cases.last_mut().unwrap().1, |p| parse_stmt(p, ctx));
+			super::parse_item(p, &mut cases.last_mut().unwrap().1, |p| parse_stmt(p, ctx));
 		}
 		Ok(cases)
 	})?;

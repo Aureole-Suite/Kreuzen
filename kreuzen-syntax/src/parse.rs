@@ -25,13 +25,13 @@ pub(crate) struct PCtx {
 pub(crate) fn parse_seq<T>(p: &mut Parser, mut f: impl FnMut(&mut Parser) -> Result<T>) -> Vec<T> {
 	let mut out = Vec::new();
 	while !p.at_end() {
-		seq_item(p, &mut out, &mut f);
+		parse_item(p, &mut out, &mut f);
 	}
 	out
 }
 
 /// A single item of a statement-like sequence; see [`parse_seq`].
-pub(crate) fn seq_item<T>(p: &mut Parser, out: &mut Vec<T>, f: impl FnOnce(&mut Parser) -> Result<T>) {
+pub(crate) fn parse_item<T>(p: &mut Parser, out: &mut Vec<T>, f: impl FnOnce(&mut Parser) -> Result<T>) {
 	let ok = match f(p) {
 		Ok(v) => {
 			out.push(v);
@@ -117,7 +117,10 @@ pub fn parse_scena(info: ScenaInfo, rest: Rest<'_>, spec: &'static Spec, errors:
 		return Scena { info, chunks: Vec::new() };
 	}
 	let ctx = PCtx { spec, game: info.game };
-	let chunks = chunks::parse_chunks(&mut p, &ctx);
+	let mut chunks = Vec::new();
+	while !p.at_end() {
+		parse_item(&mut p, &mut chunks, |p| chunks::parse_chunk(p, &ctx));
+	}
 	Scena { info, chunks }
 }
 
