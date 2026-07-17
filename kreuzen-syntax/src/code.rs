@@ -160,14 +160,7 @@ impl Print for Preload {
 				match self {
 					$(Preload::$name($($arg),*) => {
 						ctx.word(stringify!($name));
-						ctx.sym("(");
-						let mut _first = true;
-						$(
-							if !_first { ctx.sym_(","); }
-							_first = false;
-							Print::print($arg, ctx);
-						)+
-						ctx.sym_(")");
+						$(Print::print($arg, ctx);)+
 					})*
 				}
 			}

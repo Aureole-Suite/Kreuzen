@@ -28,43 +28,21 @@ fn parse_function(ctx: &PCtx, p: &mut super::alt::TryParser<'_, '_>) -> Result<F
 	while p.keyword("shadow").is_ok() {
 		shadow.push(parse_shadow(p)?);
 	}
-	let function = Function { name, body, preload, shadow };
-	Ok(function)
+	Ok(Function { name, body, preload, shadow })
 }
 
 fn parse_preload(p: &mut Parser) -> Result<Preload> {
-	let span = p.next_span();
-	let name = p.ident()?;
-	if !matches!(
-		name,
-		"Call" | "PkgLoad" | "EffLoad" | "SoundPlay" | "SoundPlayVoice" | "Voice" | "CharAniclipPlay" | "NameplateShow" | "opCE02"
-	) {
-		p.errors.error(format!("unknown preload '{name}'"), span);
-		return Err(Error);
-	}
-
-	p.delim('(', |p| {
-		Ok(match name {
-			"Call" => {
-				let n = p.parse()?;
-				p.punct(',')?;
-				Preload::Call(n, p.parse()?)
-			}
-			"PkgLoad" => Preload::PkgLoad(p.parse()?),
-			"EffLoad" => Preload::EffLoad(p.parse()?),
-			"SoundPlay" => Preload::SoundPlay(p.parse()?),
-			"SoundPlayVoice" => Preload::SoundPlayVoice(p.parse()?),
-			"Voice" => Preload::Voice(p.parse()?),
-			"CharAniclipPlay" => {
-				let chr = p.parse()?;
-				p.punct(',')?;
-				Preload::CharAniclipPlay(chr, p.parse()?)
-			}
-			"NameplateShow" => Preload::NameplateShow(p.parse()?),
-			"opCE02" => Preload::opCE02(p.parse()?),
-			_ => unreachable!(),
-		})
-	})
+	Alt::new(p)
+		.test_kw("Call", |p| Ok(Preload::Call(p.parse()?, p.parse()?)))
+		.test_kw("PkgLoad", |p| p.parse().map(Preload::PkgLoad))
+		.test_kw("EffLoad", |p| p.parse().map(Preload::EffLoad))
+		.test_kw("SoundPlay", |p| p.parse().map(Preload::SoundPlay))
+		.test_kw("SoundPlayVoice", |p| p.parse().map(Preload::SoundPlayVoice))
+		.test_kw("Voice", |p| p.parse().map(Preload::Voice))
+		.test_kw("CharAniclipPlay", |p| Ok(Preload::CharAniclipPlay(p.parse()?, p.parse()?)))
+		.test_kw("NameplateShow", |p| p.parse().map(Preload::NameplateShow))
+		.test_kw("opCE02", |p| p.parse().map(Preload::opCE02))
+		.finish()
 }
 
 fn parse_shadow(p: &mut Parser) -> Result<Shadow> {
