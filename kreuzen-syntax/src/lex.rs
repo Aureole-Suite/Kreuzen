@@ -1,3 +1,5 @@
+use kreuzen::code::OpMeta;
+
 use super::diag::Errors;
 
 mod cursor;
@@ -39,6 +41,9 @@ pub enum TokenKind {
 	TextBlock(Box<str>),
 	Int(i64),
 	Float(f32),
+	/// `N@`, `N@~`, `N@M~`, or `N~` markers. A bare `~` is never a meta:
+	/// widths only exist in Reverie, where every op has a line number.
+	Meta(OpMeta),
 	Punct(char),
 }
 
@@ -183,7 +188,7 @@ impl<'a> Lex<'a> {
 		}
 
 		if matches!(self.peek_char(), Some('-' | '0'..='9')) {
-			self.consume_if(|c| c == '-');
+			let neg = self.consume_if(|c| c == '-');
 			let digitstart = self.pos;
 			while self.consume_if(|c| c.is_ascii_digit()) {}
 
@@ -191,6 +196,7 @@ impl<'a> Lex<'a> {
 				// If no digits, it's just a minus sign
 				return Some(TokenKind::Punct('-'));
 			}
+			let digitend = self.pos;
 
 			let mut float = false;
 			if self.consume(".") {
@@ -218,13 +224,25 @@ impl<'a> Lex<'a> {
 						return Some(TokenKind::Float(0.0));
 					}
 				}
-			} else {
-				match self.src[start..self.pos].parse() {
-					Ok(n) => return Some(TokenKind::Int(n)),
-					Err(_) => {
-						self.errors.error("invalid int literal", start..self.pos);
-						return Some(TokenKind::Int(0));
-					}
+			}
+
+			if !neg {
+				if self.consume("@") {
+					let line = self.parse_num(digitstart..digitend, "line number");
+					let width = self.lex_width().unwrap_or(0);
+					return Some(TokenKind::Meta(OpMeta { line, width }));
+				}
+				if self.consume("~") {
+					let width = self.parse_num(digitstart..digitend, "width");
+					return Some(TokenKind::Meta(OpMeta { line: 0, width }));
+				}
+			}
+
+			match self.src[start..self.pos].parse() {
+				Ok(n) => return Some(TokenKind::Int(n)),
+				Err(_) => {
+					self.errors.error("invalid int literal", start..self.pos);
+					return Some(TokenKind::Int(0));
 				}
 			}
 		}
@@ -242,6 +260,34 @@ impl<'a> Lex<'a> {
 		}
 
 		None
+	}
+
+	/// The width part after a `N@` line marker: `M~`, `~`, or nothing.
+	fn lex_width(&mut self) -> Option<u8> {
+		let start = self.pos;
+		while self.consume_if(|c| c.is_ascii_digit()) {}
+		if self.pos != start {
+			let end = self.pos;
+			if self.consume("~") {
+				return Some(self.parse_num(start..end, "width"));
+			}
+			self.pos = start; // the digits belong to the next token
+			return None;
+		}
+		if self.consume("~") {
+			return Some(1);
+		}
+		None
+	}
+
+	fn parse_num<T: std::str::FromStr + Default>(&mut self, range: std::ops::Range<usize>, what: &str) -> T {
+		match self.src[range.clone()].parse() {
+			Ok(v) => v,
+			Err(_) => {
+				self.errors.error(format!("invalid {what}"), range);
+				T::default()
+			}
+		}
 	}
 
 	// Contents never contain a raw '"' (the printer escapes them), so we can

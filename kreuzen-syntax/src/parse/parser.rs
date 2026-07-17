@@ -98,6 +98,10 @@ impl<'a, 'e> Parser<'a, 'e> {
 		self.test(Expect::Nt("int"), |p| Ok(p.cursor.int()?))
 	}
 
+	pub fn meta(&mut self) -> Result<kreuzen::code::OpMeta> {
+		self.test(Expect::Nt("meta"), |p| Ok(p.cursor.meta()?))
+	}
+
 	pub fn float(&mut self) -> Result<f32> {
 		self.test(Expect::Nt("float"), |p| Ok(p.cursor.float()?))
 	}

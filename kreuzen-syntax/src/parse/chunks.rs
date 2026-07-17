@@ -52,9 +52,11 @@ impl Parse for Shadow {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		let line = p
 			.test(Expect::Nt("line"), |p| {
-				let line = p.cursor.int()?;
-				p.cursor.glued_punct('@')?;
-				u16::try_from(line).map_err(|_| Error)
+				let meta = p.cursor.meta()?;
+				if meta.width != 0 {
+					return Err(Error);
+				}
+				Ok(meta.line)
 			})
 			.unwrap_or(0);
 		let ops = parse_shadow_ops(p)?;

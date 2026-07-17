@@ -120,13 +120,10 @@ fn parse_atom(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {
 		.test(|p| p.parse().map(Expr::Global))
 		.test(|p| p.parse().map(Expr::NumReg))
 		.test(|p| p.parse().map(Expr::SystemFlags))
-		// An op with a meta prefix; must be tried before plain ints, which would eat the line number.
+		.test(|p| p.parse().map(Expr::Int))
 		.test(|p| {
-			let meta = op::parse_meta_present(p)?;
-			p.commit();
+			let meta = p.meta().unwrap_or_default();
 			op::parse_op_named(p, ctx, meta).map(Expr::Op)
 		})
-		.test(|p| p.parse().map(Expr::Int))
-		.test(|p| op::parse_op_named(p, ctx, Default::default()).map(Expr::Op))
 		.finish()
 }

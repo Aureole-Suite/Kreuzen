@@ -105,6 +105,16 @@ impl<'a> Cursor<'a> {
 		}
 	}
 
+	pub fn meta(&mut self) -> Result<kreuzen::code::OpMeta> {
+		match &self.tokens[self.pos].token {
+			TokenKind::Meta(meta) => {
+				self.pos += 1;
+				Ok(*meta)
+			}
+			_ => Err(Error),
+		}
+	}
+
 	pub fn int(&mut self) -> Result<i64> {
 		match &self.tokens[self.pos].token {
 			TokenKind::Int(int) => {

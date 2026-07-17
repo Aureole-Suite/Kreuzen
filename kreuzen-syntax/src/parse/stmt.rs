@@ -13,7 +13,7 @@ pub fn block(p: &mut Parser, ctx: &PCtx) -> Result<Vec<Stmt>> {
 }
 
 fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
-	let meta = p.parse()?;
+	let meta = p.meta().unwrap_or_default();
 
 	Alt::new(p)
 		.test_kw("if", |p| parse_if(p, ctx, meta))
@@ -38,7 +38,7 @@ fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	let then = block(p, ctx)?;
 
 	let els = p.test(Expect::Str("else"), |p| {
-		let meta2 = p.parse()?;
+		let meta2 = p.meta().unwrap_or_default();
 		p.cursor.keyword("else")?;
 		Ok(meta2)
 	});
@@ -71,7 +71,7 @@ fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 		while !p.at_end() {
 			// a trailing meta before the closing brace is the loopback op's meta
 			if let Ok(m) = p.test(Expect::Nt("trailing meta"), |p| {
-				let m = op::parse_meta_present(p)?;
+				let m = p.meta()?;
 				if p.cursor.at_end() { Ok(m) } else { Err(Error) }
 			}) {
 				meta2 = m;
