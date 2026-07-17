@@ -4,6 +4,7 @@ use kreuzen::expr::{AssOp, Expr};
 
 use super::alt::{Alt, TryParser};
 use super::parser::{Error, Expect, Parser, Result};
+use super::types::Parse;
 use super::{PCtx, expr, op};
 
 /// A `{ ... }` block of statements.
@@ -12,7 +13,7 @@ pub fn block(p: &mut Parser, ctx: &PCtx) -> Result<Vec<Stmt>> {
 }
 
 fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
-	let meta = op::parse_meta(p);
+	let meta = p.parse()?;
 
 	Alt::new(p)
 		.test_kw("if", |p| parse_if(p, ctx, meta))
@@ -37,7 +38,7 @@ fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	let then = block(p, ctx)?;
 
 	let els = p.test(Expect::Str("else"), |p| {
-		let meta2 = op::parse_meta(p);
+		let meta2 = p.parse()?;
 		p.cursor.keyword("else")?;
 		Ok(meta2)
 	});
@@ -88,19 +89,7 @@ fn parse_switch(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	let cases = p.delim('{', |p| {
 		let mut cases: Vec<(Case, Vec<Stmt>)> = Vec::new();
 		while !p.at_end() {
-			let arm = p.test(Expect::Nt("case"), |p| {
-				if p.cursor.keyword("case").is_ok() {
-					let v = p.parse()?;
-					p.cursor.punct(':')?;
-					Ok(Case::Case(v))
-				} else if p.cursor.keyword("default").is_ok() {
-					p.cursor.punct(':')?;
-					Ok(Case::Default)
-				} else {
-					Err(Error)
-				}
-			});
-			if let Ok(case) = arm {
+			if let Ok(case) = p.parse() {
 				cases.push((case, Vec::new()));
 				continue;
 			}
@@ -123,7 +112,7 @@ fn parse_assignment(p: &mut TryParser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt>
 		.test(|p| p.parse().map(|v| ("SetGlobal", Arg::Global(v))))
 		.test(|p| p.parse().map(|v| ("SetCharAttr", Arg::CharAttr(v))))
 		.finish()?;
-	let assop = parse_assop(p)?;
+	let assop = p.parse()?;
 	p.commit();
 	let rhs = expr::parse_expr(p, ctx)?;
 
@@ -138,29 +127,48 @@ fn parse_assignment(p: &mut TryParser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt>
 	}))
 }
 
-fn parse_assop(p: &mut Parser) -> Result<AssOp> {
-	use AssOp::*;
-	const OPS: &[(&str, AssOp)] = &[
-		("*=", MulAss),
-		("/=", DivAss),
-		("%=", ModAss),
-		("+=", AddAss),
-		("-=", SubAss),
-		("&=", AndAss),
-		("^=", XorAss),
-		("|=", OrAss),
-	];
-	for (tok, assop) in OPS {
-		if p.operator(tok).is_ok() {
-			return Ok(*assop);
-		}
+/// `case N:` or `default:`. `Case::None` is implicit and never written.
+impl Parse for Case {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Alt::new(p)
+			.test_kw("case", |p| {
+				let v = p.parse()?;
+				p.punct(':')?;
+				Ok(Case::Case(v))
+			})
+			.test_kw("default", |p| {
+				p.punct(':')?;
+				Ok(Case::Default)
+			})
+			.finish()
 	}
-	// `=`, but not `==`
-	p.test('=', |p| {
-		p.cursor.punct('=')?;
-		if p.cursor.glued_punct('=').is_ok() {
-			return Err(Error);
+}
+
+impl Parse for AssOp {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		use AssOp::*;
+		const OPS: &[(&str, AssOp)] = &[
+			("*=", MulAss),
+			("/=", DivAss),
+			("%=", ModAss),
+			("+=", AddAss),
+			("-=", SubAss),
+			("&=", AndAss),
+			("^=", XorAss),
+			("|=", OrAss),
+		];
+		for (tok, assop) in OPS {
+			if p.operator(tok).is_ok() {
+				return Ok(*assop);
+			}
 		}
-		Ok(Ass)
-	})
+		// `=`, but not `==`
+		p.test('=', |p| {
+			p.cursor.punct('=')?;
+			if p.cursor.glued_punct('=').is_ok() {
+				return Err(Error);
+			}
+			Ok(Ass)
+		})
+	}
 }

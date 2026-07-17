@@ -7,15 +7,11 @@ use crate::diag::Errors;
 
 use super::parser::{Parser, Result};
 
-pub fn parse_text(p: &mut Parser) -> Result<Text> {
-	let span = p.next_span();
-	let raw = p.text_block()?;
-	Ok(parse_content(raw, span, p.errors))
-}
-
 impl super::types::Parse for Text {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		parse_text(p)
+		let span = p.next_span();
+		let raw = p.text_block()?;
+		Ok(parse_content(raw, span, p.errors))
 	}
 }
 

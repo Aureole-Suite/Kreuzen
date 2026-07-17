@@ -1,12 +1,13 @@
 use kreuzen::expr::{BinOp, Expr, UnOp};
 
 use super::alt::Alt;
-use super::parser::{Parser, Result};
+use super::parser::{Error, Parser, Result};
+use super::types::Parse;
 use super::{PCtx, op};
 
 pub fn parse_expr(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {
 	let mut prio = Prio::new(parse_atom(p, ctx)?);
-	while let Some(binop) = parse_binop(p) {
+	while let Ok(binop) = p.parse() {
 		prio.push(binop, parse_atom(p, ctx)?);
 	}
 	Ok(prio.finish())
@@ -61,56 +62,55 @@ fn binop_prio(op: BinOp) -> u32 {
 	}
 }
 
-fn parse_binop(p: &mut Parser) -> Option<BinOp> {
-	use BinOp::*;
-	// Multi-char operators must come before their single-char prefixes.
-	// `Or` prints as `|`, but accept `||` too.
-	const OPS: &[(&str, BinOp)] = &[
-		("==", Eq),
-		("!=", Ne),
-		("<=", Le),
-		(">=", Ge),
-		("&&", BoolAnd),
-		("||", Or),
-		("<", Lt),
-		(">", Gt),
-		("&", BitAnd),
-		("|", Or),
-		("^", Xor),
-		("+", Add),
-		("-", Sub),
-		("*", Mul),
-		("/", Div),
-		("%", Mod),
-	];
-	for (tok, binop) in OPS {
-		if p.operator(tok).is_ok() {
-			return Some(*binop);
+impl Parse for BinOp {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		use BinOp::*;
+		// Multi-char operators must come before their single-char prefixes.
+		// `Or` prints as `|`, but accept `||` too.
+		const OPS: &[(&str, BinOp)] = &[
+			("==", Eq),
+			("!=", Ne),
+			("<=", Le),
+			(">=", Ge),
+			("&&", BoolAnd),
+			("||", Or),
+			("<", Lt),
+			(">", Gt),
+			("&", BitAnd),
+			("|", Or),
+			("^", Xor),
+			("+", Add),
+			("-", Sub),
+			("*", Mul),
+			("/", Div),
+			("%", Mod),
+		];
+		for (tok, binop) in OPS {
+			if p.operator(tok).is_ok() {
+				return Ok(*binop);
+			}
 		}
+		Err(Error)
 	}
-	None
+}
+
+impl Parse for UnOp {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		Alt::new(p)
+			.test(|p| p.punct('!').map(|_| UnOp::BoolNot))
+			.test(|p| p.punct('~').map(|_| UnOp::BitNot))
+			.test(|p| p.punct('-').map(|_| UnOp::Neg))
+			.finish()
+	}
 }
 
 fn parse_atom(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {
-	fn unop(op: UnOp, e: Expr) -> Expr {
-		Expr::Un(op, Box::new(e))
-	}
 	Alt::new(p)
 		.test(|p| p.delim('(', |p| parse_expr(p, ctx)))
 		.test(|p| {
-			p.punct('!')?;
+			let unop = p.parse()?;
 			p.commit();
-			Ok(unop(UnOp::BoolNot, parse_atom(p, ctx)?))
-		})
-		.test(|p| {
-			p.punct('~')?;
-			p.commit();
-			Ok(unop(UnOp::BitNot, parse_atom(p, ctx)?))
-		})
-		.test(|p| {
-			p.punct('-')?;
-			p.commit();
-			Ok(unop(UnOp::Neg, parse_atom(p, ctx)?))
+			Ok(Expr::Un(unop, Box::new(parse_atom(p, ctx)?)))
 		})
 		.test_kw("rand", |_| Ok(Expr::Rand))
 		.test(|p| p.parse().map(Expr::Flag))

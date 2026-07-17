@@ -4,41 +4,45 @@ use kreuzen::types::*;
 
 use super::alt::Alt;
 use super::parser::{Error, Expect, Parser, Result};
-use super::{PCtx, expr, text, types};
+use super::types::Parse;
+use super::{PCtx, expr, types};
 
-/// Optional `<line>@` and `<width>~`/`~` markers. Consumes nothing if absent.
-pub fn parse_meta(p: &mut Parser) -> OpMeta {
-	let mut meta = OpMeta::default();
-	if let Ok(line) = p.test(Expect::Nt("line"), |p| {
-		let span = p.cursor.next_span();
-		let line = p.cursor.int()?;
-		p.cursor.glued_punct('@')?;
-		u16::try_from(line).map_err(|_| {
-			p.errors.error("line number out of range", span);
-			Error
-		})
-	}) {
-		meta.line = line;
+/// Optional `<line>@` and `<width>~`/`~` markers. Never fails; consumes nothing if absent.
+impl Parse for OpMeta {
+	fn parse(p: &mut Parser) -> Result<Self> {
+		let mut meta = OpMeta::default();
+		if let Ok(line) = p.test(Expect::Nt("line"), |p| {
+			let span = p.cursor.next_span();
+			let line = p.cursor.int()?;
+			p.cursor.glued_punct('@')?;
+			u16::try_from(line).map_err(|_| {
+				p.errors.error("line number out of range", span);
+				Error
+			})
+		}) {
+			meta.line = line;
+		}
+
+		if let Ok(width) = p.test(Expect::Nt("width"), |p| {
+			let span = p.cursor.next_span();
+			let width = p.cursor.int()?;
+			p.cursor.glued_punct('~')?;
+			u8::try_from(width).map_err(|_| {
+				p.errors.error("width out of range", span);
+				Error
+			})
+		}) {
+			meta.width = width;
+		} else if p.punct('~').is_ok() {
+			meta.width = 1;
+		}
+		Ok(meta)
 	}
-	if let Ok(width) = p.test(Expect::Nt("width"), |p| {
-		let span = p.cursor.next_span();
-		let width = p.cursor.int()?;
-		p.cursor.glued_punct('~')?;
-		u8::try_from(width).map_err(|_| {
-			p.errors.error("width out of range", span);
-			Error
-		})
-	}) {
-		meta.width = width;
-	} else if p.punct('~').is_ok() {
-		meta.width = 1;
-	}
-	meta
 }
 
-/// Like [`parse_meta`], but fails (without consuming) if no marker is present.
+/// Like OpMeta's `Parse` impl, but fails (without consuming) if no marker is present.
 pub fn parse_meta_present(p: &mut Parser) -> Result<OpMeta> {
-	let meta = parse_meta(p);
+	let meta: OpMeta = p.parse()?;
 	if meta == OpMeta::default() { Err(Error) } else { Ok(meta) }
 }
 
@@ -112,7 +116,7 @@ fn parse_parts(p: &mut Parser, ctx: &PCtx, parts: &[Part], op: &mut Op) -> Resul
 			P::SystemFlags => op.args.push(Arg::SystemFlags(p.parse()?)),
 
 			P::Expr => op.args.push(Arg::Expr(expr::parse_expr(p, ctx)?)),
-			P::Text => op.args.push(Arg::Text(text::parse_text(p)?)),
+			P::Text => op.args.push(Arg::Text(p.parse()?)),
 
 			P::Dyn => op.args.push(parse_dyn(p)?),
 			P::Ndyn => {
