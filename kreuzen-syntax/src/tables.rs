@@ -15,7 +15,7 @@ use kreuzen::tables::summon::Summon;
 use kreuzen::tables::weapon_att::WeaponAtt;
 use kreuzen::tables::{Dummy, Table};
 
-use crate::types::block;
+use crate::types::{block, row};
 use crate::{Parse, Parser, Print, Printer, Result};
 
 impl Print for Table {
@@ -128,188 +128,29 @@ impl Parse for Table {
 }
 
 block!(Action, "id kind target ?? cast recovery cp flags ani name effects");
-impl Print for Action {
-	fn print(&self, ctx: &mut Printer) {
-		self.id.print(ctx);
-		self.kind.print(ctx);
-		self.target.print(ctx);
-		self.u2.print(ctx);
-		self.cast_time.print(ctx);
-		self.recovery_time.print(ctx);
-		self.cp_cost.print(ctx);
-		self.flags.print(ctx);
-		self.ani.print(ctx);
-		self.name.print(ctx);
-		for item in &self.effects {
-			item.print(ctx);
-		}
-	}
-}
-
-impl Parse for Action {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(Action {
-			id: p.parse()?,
-			kind: p.parse()?,
-			target: p.parse()?,
-			u2: p.parse()?,
-			cast_time: p.parse()?,
-			recovery_time: p.parse()?,
-			cp_cost: p.parse()?,
-			flags: p.parse()?,
-			ani: p.parse()?,
-			name: p.parse()?,
-			effects: p.parse_many()?,
-		})
-	}
-}
+row!(struct Action { id, kind, target, u2, cast_time, recovery_time, cp_cost, flags, ani, name, effects* });
 
 block!(Algo, "id chance use_limit target_priority cond");
-
-impl Print for Algo {
-	fn print(&self, ctx: &mut Printer) {
-		self.id.print(ctx);
-		self.chance.print(ctx);
-		self.use_limit.print(ctx);
-		self.target_priority.print(ctx);
-		self.cond.print(ctx);
-	}
-}
-
-impl Parse for Algo {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(Algo {
-			id: p.parse()?,
-			chance: p.parse()?,
-			use_limit: p.parse()?,
-			target_priority: p.parse()?,
-			cond: p.parse()?,
-		})
-	}
-}
+row!(struct Algo { id, chance, use_limit, target_priority, cond });
 
 block!(AnimeClip);
-
-impl Print for AnimeClip {
-	fn print(&self, ctx: &mut Printer) {
-		self.kind.print(ctx);
-		self.a.print(ctx);
-		self.b.print(ctx);
-	}
-}
-
-impl Parse for AnimeClip {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(AnimeClip { kind: p.parse()?, a: p.parse()?, b: p.parse()? })
-	}
-}
+row!(struct AnimeClip { kind, a, b });
 
 block!(Break);
-
-impl Print for Break {
-	fn print(&self, ctx: &mut Printer) {
-		self.id.print(ctx);
-		self.value.print(ctx);
-	}
-}
-
-impl Parse for Break {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(Break { id: p.parse()?, value: p.parse()? })
-	}
-}
+row!(struct Break { id, value });
 
 block!(Collision);
-
-impl Print for Collision {
-	fn print(&self, ctx: &mut Printer) {
-		self.a.print(ctx);
-		self.b.print(ctx);
-	}
-}
-
-impl Parse for Collision {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(Collision { a: p.parse()?, b: p.parse()? })
-	}
-}
+row!(struct Collision { a, b });
 
 block!(Condition);
+row!(struct Condition { id, entries* });
 
-impl Print for Condition {
-	fn print(&self, ctx: &mut Printer) {
-		self.id.print(ctx);
-		for item in &self.entries {
-			item.print(ctx);
-		}
-	}
-}
+row!(struct FieldFollow { a, b, c, d, e });
 
-impl Parse for Condition {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(Condition { id: p.parse()?, entries: p.parse_many()? })
-	}
-}
-
-impl Print for FieldFollow {
-	fn print(&self, ctx: &mut Printer) {
-		self.a.print(ctx);
-		self.b.print(ctx);
-		self.c.print(ctx);
-		self.d.print(ctx);
-		self.e.print(ctx);
-	}
-}
-
-impl Parse for FieldFollow {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(FieldFollow {
-			a: p.parse()?,
-			b: p.parse()?,
-			c: p.parse()?,
-			d: p.parse()?,
-			e: p.parse()?,
-		})
-	}
-}
-
-impl Print for FieldMonster {
-	fn print(&self, ctx: &mut Printer) {
-		self.a.print(ctx);
-		self.b.print(ctx);
-		self.c.print(ctx);
-		for &v in &self.floats {
-			v.print(ctx);
-		}
-	}
-}
-
-impl Parse for FieldMonster {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(FieldMonster {
-			a: p.parse()?,
-			b: p.parse()?,
-			c: p.parse()?,
-			floats: p.parse_many()?,
-		})
-	}
-}
+row!(struct FieldMonster { a, b, c, floats* });
 
 block!(Part);
-
-impl Print for Part {
-	fn print(&self, ctx: &mut Printer) {
-		self.id.print(ctx);
-		self.a.print(ctx);
-		self.b.print(ctx);
-	}
-}
-
-impl Parse for Part {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(Part { id: p.parse()?, a: p.parse()?, b: p.parse()? })
-	}
-}
+row!(struct Part { id, a, b });
 
 block!(Reaction, "id (stars unbalance hit miss counter) ...");
 
@@ -345,13 +186,8 @@ impl Parse for Reaction {
 
 impl Print for PartReaction {
 	fn print(&self, ctx: &mut Printer) {
-		ctx._sym("(");
-		self.rating.print(ctx);
-		self.unbalance.print(ctx);
-		self.hit.print(ctx);
-		self.miss.print(ctx);
-		self.counter.print(ctx);
-		ctx.sym_(")");
+		let PartReaction { rating, unbalance, hit, miss, counter } = *self;
+		(rating, unbalance, hit, miss, counter).print(ctx);
 	}
 }
 
@@ -376,74 +212,11 @@ impl Parse for StyleName {
 }
 
 block!(Summon);
+row!(struct Summon { kind, a, b, name });
 
-impl Print for Summon {
-	fn print(&self, ctx: &mut Printer) {
-		self.kind.print(ctx);
-		self.a.print(ctx);
-		self.b.print(ctx);
-		self.name.print(ctx);
-	}
-}
+row!(struct WeaponAtt { slash, thrust, pierce, strike });
 
-impl Parse for Summon {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(Summon {
-			kind: p.parse()?,
-			a: p.parse()?,
-			b: p.parse()?,
-			name: p.parse()?,
-		})
-	}
-}
-
-impl Print for WeaponAtt {
-	fn print(&self, ctx: &mut Printer) {
-		self.slash.print(ctx);
-		self.thrust.print(ctx);
-		self.pierce.print(ctx);
-		self.strike.print(ctx);
-	}
-}
-
-impl Parse for WeaponAtt {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(WeaponAtt {
-			slash: p.parse()?,
-			thrust: p.parse()?,
-			pierce: p.parse()?,
-			strike: p.parse()?,
-		})
-	}
-}
-
-impl Print for Btlset {
-	fn print(&self, ctx: &mut Printer) {
-		self.field.print(ctx);
-		self.bounds.print(ctx);
-		self.btl_id.print(ctx);
-		self.unk1.print(ctx);
-		self.bgm.print(ctx);
-		self.unk2.print(ctx);
-		self.script.print(ctx);
-		self.variants.print(ctx);
-	}
-}
-
-impl Parse for Btlset {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(Btlset {
-			field: p.parse()?,
-			bounds: p.parse()?,
-			btl_id: p.parse()?,
-			unk1: p.parse()?,
-			bgm: p.parse()?,
-			unk2: p.parse()?,
-			script: p.parse()?,
-			variants: p.parse()?,
-		})
-	}
-}
+row!(struct Btlset { field, bounds, btl_id, unk1, bgm, unk2, script, variants });
 
 block!(Variant);
 
@@ -548,15 +321,4 @@ impl Parse for Page {
 	}
 }
 
-impl Print for TitlePage {
-	fn print(&self, ctx: &mut Printer) {
-		self.title.print(ctx);
-		self.data.print(ctx);
-	}
-}
-
-impl Parse for TitlePage {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		Ok(TitlePage { title: p.parse()?, data: p.parse()? })
-	}
-}
+row!(struct TitlePage { title, data });

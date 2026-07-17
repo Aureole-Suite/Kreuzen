@@ -20,6 +20,45 @@ macro_rules! block_ {
 
 pub(crate) use block_ as block;
 
+/// Implements `Print` and `Parse` for a struct by handling each field in order.
+/// A trailing `*` marks a repeated field, printed item by item and parsed with `parse_many`.
+macro_rules! row_ {
+	(struct $t:ident { $($fields:tt)* }) => {
+		impl crate::Print for $t {
+			fn print(&self, ctx: &mut crate::Printer) {
+				crate::types::row!(@print(self, ctx) $($fields)*);
+			}
+		}
+		impl crate::Parse for $t {
+			fn parse(p: &mut crate::Parser) -> crate::Result<Self> {
+				crate::types::row!(@parse(p, $t) [] $($fields)*)
+			}
+		}
+	};
+	(@print($self:ident, $ctx:ident)) => {};
+	(@print($self:ident, $ctx:ident) $field:ident $(, $($rest:tt)*)?) => {
+		crate::Print::print(&$self.$field, $ctx);
+		crate::types::row!(@print($self, $ctx) $($($rest)*)?);
+	};
+	(@print($self:ident, $ctx:ident) $field:ident* $(, $($rest:tt)*)?) => {
+		for item in &$self.$field {
+			crate::Print::print(item, $ctx);
+		}
+		crate::types::row!(@print($self, $ctx) $($($rest)*)?);
+	};
+	(@parse($p:ident, $t:ident) [$($acc:tt)*]) => {
+		Ok($t { $($acc)* })
+	};
+	(@parse($p:ident, $t:ident) [$($acc:tt)*] $field:ident $(, $($rest:tt)*)?) => {
+		crate::types::row!(@parse($p, $t) [$($acc)* $field: $p.parse()?,] $($($rest)*)?)
+	};
+	(@parse($p:ident, $t:ident) [$($acc:tt)*] $field:ident* $(, $($rest:tt)*)?) => {
+		crate::types::row!(@parse($p, $t) [$($acc)* $field: $p.parse_many()?,] $($($rest)*)?)
+	};
+}
+
+pub(crate) use row_ as row;
+
 macro_rules! int {
 	($($t:ty),* $(,)?) => {
 		$(impl Print for $t {
