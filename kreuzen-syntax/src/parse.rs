@@ -4,7 +4,6 @@ mod expr;
 mod op;
 mod parser;
 mod stmt;
-mod tables;
 
 use kreuzen::spec::Spec;
 use kreuzen::{Enc, Game, Scena, ScenaInfo};
