@@ -1,4 +1,3 @@
-use kreuzen::text::{Text, TextControl, TextPart};
 use kreuzen::types;
 
 use crate::{Error, Parse, Parser, Print, Printer, Result};

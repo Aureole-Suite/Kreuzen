@@ -15,7 +15,7 @@ use kreuzen::tables::summon::Summon;
 use kreuzen::tables::weapon_att::WeaponAtt;
 use kreuzen::tables::{Dummy, Table};
 
-use super::{Printer, Print};
+use super::{Print, Printer};
 
 impl Print for Table {
 	fn print(&self, ctx: &mut Printer) {
@@ -36,12 +36,12 @@ impl Print for Table {
 				ctx.word("AnimeClipTable");
 				ctx.block(t, AnimeClip::print);
 			}
-			Table::BookData { name, book } => {
+			Table::BookData(name, book) => {
 				ctx.word("BookData");
 				name.print(ctx);
 				book.print(ctx);
 			}
-			Table::Book { name, pages } => {
+			Table::Book(name, pages) => {
 				ctx.word("Book");
 				name.print(ctx);
 				ctx.block(pages, Page::print);
@@ -54,7 +54,7 @@ impl Print for Table {
 				ctx.word("ConditionTable");
 				ctx.block(t, Condition::print);
 			}
-			Table::FcAuto { name, text } => {
+			Table::FcAuto(name, text) => {
 				ctx.word("FcAuto");
 				name.print(ctx);
 				text.print(ctx);
@@ -72,7 +72,7 @@ impl Print for Table {
 				ctx.word("ReactionTable");
 				ctx.block_commented("id (stars unbalance hit miss counter) ...", t, Reaction::print);
 			}
-			Table::StyleName { name, style } => {
+			Table::StyleName(name, style) => {
 				ctx.word("StyleName");
 				name.print(ctx);
 				style.print(ctx);
@@ -90,7 +90,7 @@ impl Print for Table {
 				t.print(ctx);
 				ctx.comment("slash thrust pierce strike");
 			}
-			Table::Btlset { name, btlset } => {
+			Table::Btlset(name, btlset) => {
 				ctx.word("Btlset");
 				name.print(ctx);
 				btlset.print(ctx);

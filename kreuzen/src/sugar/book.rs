@@ -8,7 +8,7 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut chunks = Vec::with_capacity(scena.chunks.len());
 	let mut iter = std::mem::take(&mut scena.chunks).into_iter().peekable();
 	while let Some(chunk) = iter.next() {
-		let Chunk::Table(Table::BookData { name, book }) = chunk else {
+		let Chunk::Table(Table::BookData(name, book)) = chunk else {
 			chunks.push(chunk);
 			continue;
 		};
@@ -20,10 +20,10 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 		crate::ensure!(let BookData::Header(n) = book, "book header {name} has non-header contents");
 
 		let mut pages = Vec::with_capacity(n as usize);
-		while let Some(Chunk::Table(Table::BookData { name, .. })) = iter.peek()
+		while let Some(Chunk::Table(Table::BookData(name, ..))) = iter.peek()
 			&& *name == format!("{base}_{:02}", pages.len() + 1)
 		{
-			let Some(Chunk::Table(Table::BookData { name, book })) = iter.next() else {
+			let Some(Chunk::Table(Table::BookData(name, book))) = iter.next() else {
 				unreachable!()
 			};
 			pages.push(match book {
@@ -36,7 +36,7 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 		if pages.len() != n as usize {
 			tracing::warn!("book {base} header says {n} pages, found {}", pages.len());
 		}
-		chunks.push(Chunk::Table(Table::Book { name: base.to_owned(), pages }));
+		chunks.push(Chunk::Table(Table::Book(base.to_owned(), pages)));
 	}
 	scena.chunks = chunks;
 	Ok(())
@@ -45,14 +45,11 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut chunks = Vec::with_capacity(scena.chunks.len());
 	for chunk in std::mem::take(&mut scena.chunks) {
-		let Chunk::Table(Table::Book { name: base, pages }) = chunk else {
+		let Chunk::Table(Table::Book(base, pages)) = chunk else {
 			chunks.push(chunk);
 			continue;
 		};
-		chunks.push(Chunk::Table(Table::BookData {
-			name: format!("{base}_99"),
-			book: BookData::Header(pages.len() as u16),
-		}));
+		chunks.push(Chunk::Table(Table::BookData(format!("{base}_99"), BookData::Header(pages.len() as u16))));
 		for (m, page) in pages.into_iter().enumerate() {
 			let text = unparse_text(&page.text)?;
 			let book = match page.title {
@@ -60,7 +57,7 @@ pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 				None if text.is_empty() => BookData::Empty,
 				None => BookData::Page(text),
 			};
-			chunks.push(Chunk::Table(Table::BookData { name: format!("{base}_{:02}", m + 1), book }));
+			chunks.push(Chunk::Table(Table::BookData(format!("{base}_{:02}", m + 1), book)));
 		}
 	}
 	scena.chunks = chunks;
