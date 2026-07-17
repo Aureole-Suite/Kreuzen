@@ -16,7 +16,7 @@ use kreuzen::tables::weapon_att::WeaponAtt;
 use kreuzen::tables::{Dummy, Table};
 
 use super::alt::Alt;
-use super::parser::{Expect, Parser, Result};
+use super::parser::{Parser, Result};
 use super::types::Parse;
 
 impl Parse for Table {
@@ -62,10 +62,8 @@ macro_rules! parse_row {
 	($ty:ident { $($field:ident),* $(,)? }) => {
 		impl Parse for $ty {
 			fn parse(p: &mut Parser) -> Result<Self> {
-				p.test(Expect::Nt(stringify!($ty)), |p| {
-					$(let $field = p.parse()?;)*
-					Ok($ty { $($field),* })
-				})
+				$(let $field = p.parse()?;)*
+				Ok($ty { $($field),* })
 			}
 		}
 	};
@@ -98,11 +96,7 @@ parse_row!(WeaponAtt { slash, thrust, pierce, strike });
 
 impl Parse for StyleName {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		p.test(Expect::Nt("style name"), |p| {
-			let a = p.parse()?;
-			let b = p.parse()?;
-			Ok(StyleName(a, b))
-		})
+		Ok(StyleName(p.parse()?, p.parse()?))
 	}
 }
 
@@ -138,16 +132,14 @@ impl Parse for Page {
 
 impl Parse for Reaction {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		p.test(Expect::Nt("reaction"), |p| {
-			let id = p.parse()?;
-			let kind = Alt::new(p)
-				.test(|p| p.parse().map(ReactionKind::Alias))
-				// PartReaction prints its own parens, so this is three consecutive
-				// groups rather than one array group.
-				.test(|p| Ok(ReactionKind::Parts([p.parse()?, p.parse()?, p.parse()?])))
-				.finish()?;
-			Ok(Reaction { id, kind })
-		})
+		let id = p.parse()?;
+		let kind = Alt::new(p)
+			.test(|p| p.parse().map(ReactionKind::Alias))
+			// PartReaction prints its own parens, so this is three consecutive
+			// groups rather than one array group.
+			.test(|p| Ok(ReactionKind::Parts([p.parse()?, p.parse()?, p.parse()?])))
+			.finish()?;
+		Ok(Reaction { id, kind })
 	}
 }
 
@@ -160,39 +152,35 @@ impl Parse for PartReaction {
 
 impl Parse for Btlset {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		p.test(Expect::Nt("btlset"), |p| {
-			let field = p.parse()?;
-			let bounds = p.parse()?;
-			let btl_id = p.parse()?;
-			let unk1 = p.parse()?;
-			let bgm = p.parse()?;
-			let unk2 = p.parse()?;
-			let script = p.parse()?;
-			let variants = rows(p)?;
-			Ok(Btlset {
-				field,
-				bounds,
-				btl_id,
-				unk1,
-				bgm,
-				unk2,
-				script,
-				variants,
-			})
+		let field = p.parse()?;
+		let bounds = p.parse()?;
+		let btl_id = p.parse()?;
+		let unk1 = p.parse()?;
+		let bgm = p.parse()?;
+		let unk2 = p.parse()?;
+		let script = p.parse()?;
+		let variants = rows(p)?;
+		Ok(Btlset {
+			field,
+			bounds,
+			btl_id,
+			unk1,
+			bgm,
+			unk2,
+			script,
+			variants,
 		})
 	}
 }
 
 impl Parse for Variant {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		p.test(Expect::Nt("variant"), |p| {
-			let id = p.parse()?;
-			let mut monsters = Vec::new();
-			while let Ok(monster) = p.parse() {
-				let prob = if p.cursor.glued_punct(':').is_ok() { p.parse()? } else { 100 };
-				monsters.push((monster, prob));
-			}
-			Ok(Variant { id, monsters })
-		})
+		let id = p.parse()?;
+		let mut monsters = Vec::new();
+		while let Ok(monster) = p.parse() {
+			let prob = if p.glued_punct(':').is_ok() { p.parse()? } else { 100 };
+			monsters.push((monster, prob));
+		}
+		Ok(Variant { id, monsters })
 	}
 }

@@ -2,12 +2,13 @@ use kreuzen::code::Arg;
 use kreuzen::types::*;
 
 use super::alt::Alt;
-use super::parser::{Error, Expect, Parser, Result};
+use super::parser::{Error, Parser, Result};
 
 /// Context-free values, mirroring the `Print` impls. Values that need the op
 /// spec (ops, exprs, statements) are parsed by functions instead.
 ///
-/// A failed parse leaves the cursor unmoved, so callers can try alternatives.
+/// A failed parse may leave the cursor mid-value; callers that want to try
+/// alternatives must go through `Alt` (or `Parser::test`), which restores it.
 pub trait Parse: Sized {
 	fn parse(p: &mut Parser) -> Result<Self>;
 }
@@ -23,16 +24,11 @@ macro_rules! parse_int {
 		$(
 			impl Parse for $t {
 				fn parse(p: &mut Parser) -> Result<Self> {
-					p.test(Expect::Nt("int"), |p| {
-						let span = p.cursor.next_span();
-						let v = p.cursor.int()?;
-						match <$t>::try_from(v) {
-							Ok(v) => Ok(v),
-							Err(_) => {
-								p.errors.error("value out of range", span);
-								Err(Error)
-							}
-						}
+					let span = p.next_span();
+					let v = p.int()?;
+					<$t>::try_from(v).map_err(|_| {
+						p.errors.error("value out of range", span);
+						Error
 					})
 				}
 			}
@@ -109,10 +105,8 @@ impl<T: Parse> Parse for Vec<T> {
 
 /// `name[...]` where the contents are parsed by `f`.
 pub fn bracket<T>(p: &mut Parser, name: &'static str, f: impl FnOnce(&mut Parser) -> Result<T>) -> Result<T> {
-	p.test(Expect::Str(name), |p| {
-		p.cursor.keyword(name)?;
-		p.delim('[', f)
-	})
+	p.cursor.keyword(name)?;
+	p.delim('[', f)
 }
 
 macro_rules! parse_bracket {
@@ -176,21 +170,17 @@ impl Parse for Char {
 /// `char[...].N`
 impl Parse for CharAttr {
 	fn parse(p: &mut Parser) -> Result<Self> {
-		p.test(Expect::Nt("char attr"), |p| {
-			let c = p.parse::<Char>()?;
-			p.cursor.glued_punct('.')?;
-			let a = p.parse::<u8>()?;
-			Ok(CharAttr(c, a))
-		})
+		let c = p.parse()?;
+		p.glued_punct('.')?;
+		let a = p.parse()?;
+		Ok(CharAttr(c, a))
 	}
 }
 
 /// `btlset[N]:battle[M]`, the syntax for `Arg::Battle`.
 pub fn battle_arg(p: &mut Parser) -> Result<Arg> {
-	p.test(Expect::Str("btlset"), |p| {
-		let a = bracket(p, "btlset", |p| p.parse::<i32>())?;
-		p.cursor.glued_punct(':')?;
-		let b = p.parse::<Battle>()?;
-		Ok(Arg::Battle(a, b))
-	})
+	let a = bracket(p, "btlset", |p| p.parse())?;
+	p.glued_punct(':')?;
+	let b = p.parse()?;
+	Ok(Arg::Battle(a, b))
 }
