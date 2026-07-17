@@ -182,7 +182,7 @@ impl<'a> Lex<'a> {
 	fn lex_token(&mut self) -> Option<TokenKind> {
 		let start = self.pos;
 
-		if self.consume_if(unicode_ident::is_xid_start) {
+		if self.consume_if(|c| unicode_ident::is_xid_start(c) || c == '_') {
 			while self.consume_if(unicode_ident::is_xid_continue) {}
 			return Some(TokenKind::Ident(self.src[start..self.pos].into()));
 		}
