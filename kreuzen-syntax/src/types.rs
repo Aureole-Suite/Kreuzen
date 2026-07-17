@@ -4,14 +4,20 @@ use crate::{Error, Parse, Parser, Print, Printer, Result};
 
 /// Implements `Parse` for `Vec<T>` by delegating to [`parse_block`].
 macro_rules! block_ {
-	($t:ty) => {
+	($t:ty $(, $comment:literal)?) => {
 		impl crate::Parse for Vec<$t> {
 			fn parse(p: &mut crate::Parser) -> crate::Result<Self> {
 				crate::parse::parse_block(p, |p| p.parse())
 			}
 		}
+		impl crate::Print for Vec<$t> {
+			fn print(&self, ctx: &mut crate::Printer) {
+				ctx.block_commented(concat!($($comment)?), self, crate::Print::print);
+			}
+		}
 	};
 }
+
 pub(crate) use block_ as block;
 
 macro_rules! int {

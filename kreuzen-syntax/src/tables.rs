@@ -23,19 +23,19 @@ impl Print for Table {
 		match self {
 			Table::AddCollision(t) => {
 				ctx.word("AddCollision");
-				ctx.block(t, Collision::print);
+				t.print(ctx);
 			}
 			Table::ActionTable(t) => {
 				ctx.word("ActionTable");
-				ctx.block_commented("id kind target ?? cast recovery cp flags ani name effects", t, Action::print);
+				t.print(ctx);
 			}
 			Table::AlgoTable(t) => {
 				ctx.word("AlgoTable");
-				ctx.block_commented("id chance use_limit target_priority cond", t, Algo::print);
+				t.print(ctx);
 			}
 			Table::AnimeClipTable(t) => {
 				ctx.word("AnimeClipTable");
-				ctx.block(t, AnimeClip::print);
+				t.print(ctx);
 			}
 			Table::BookData(name, book) => {
 				ctx.word("BookData");
@@ -45,15 +45,15 @@ impl Print for Table {
 			Table::Book(name, pages) => {
 				ctx.word("Book");
 				name.print(ctx);
-				ctx.block(pages, Page::print);
+				pages.print(ctx);
 			}
 			Table::BreakTable(t) => {
 				ctx.word("BreakTable");
-				ctx.block_commented("id value", t, Break::print);
+				t.print(ctx);
 			}
 			Table::ConditionTable(t) => {
 				ctx.word("ConditionTable");
-				ctx.block(t, Condition::print);
+				t.print(ctx);
 			}
 			Table::FcAuto(name, text) => {
 				ctx.word("FcAuto");
@@ -67,11 +67,11 @@ impl Print for Table {
 			}
 			Table::PartTable(t) => {
 				ctx.word("PartTable");
-				ctx.block(t, Part::print);
+				t.print(ctx);
 			}
 			Table::ReactionTable(t) => {
 				ctx.word("ReactionTable");
-				ctx.block_commented("id (stars unbalance hit miss counter) ...", t, Reaction::print);
+				t.print(ctx);
 			}
 			Table::StyleName(name, style) => {
 				ctx.word("StyleName");
@@ -80,7 +80,7 @@ impl Print for Table {
 			}
 			Table::SummonTable(t) => {
 				ctx.word("SummonTable");
-				ctx.block(t, Summon::print);
+				t.print(ctx);
 			}
 			Table::FieldMonsterData(t) => {
 				ctx.word("FieldMonsterData");
@@ -89,7 +89,6 @@ impl Print for Table {
 			Table::WeaponAttTable(t) => {
 				ctx.word("WeaponAttTable");
 				t.print(ctx);
-				ctx.comment("slash thrust pierce strike");
 			}
 			Table::Btlset(name, btlset) => {
 				ctx.word("Btlset");
@@ -129,7 +128,7 @@ impl Parse for Table {
 	}
 }
 
-block!(Action);
+block!(Action, "id kind target ?? cast recovery cp flags ani name effects");
 impl Print for Action {
 	fn print(&self, ctx: &mut Printer) {
 		self.id.print(ctx);
@@ -167,7 +166,7 @@ impl Parse for Action {
 	}
 }
 
-block!(Algo);
+block!(Algo, "id chance use_limit target_priority cond");
 
 impl Print for Algo {
 	fn print(&self, ctx: &mut Printer) {
@@ -322,7 +321,7 @@ impl Parse for Part {
 	}
 }
 
-block!(Reaction);
+block!(Reaction, "id (stars unbalance hit miss counter) ...");
 
 impl Print for Reaction {
 	fn print(&self, ctx: &mut Printer) {
