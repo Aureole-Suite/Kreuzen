@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use crate::code::shadow::{Shadow, ShadowOp};
 use crate::code::{Arg, Op, OpMeta};
 use crate::decompile::Stmt;
-use crate::{Chunk, Function, Scena};
+use crate::{Body, Chunk, Function, Scena};
 
 pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut lambdas = HashMap::new();
@@ -38,7 +38,8 @@ fn merge_function(function: &mut Function, lambdas: &mut HashMap<String, Functio
 	// shadow sections of body-forked lambdas, to be claimed by this function's shadow section
 	let mut shadows = HashMap::new();
 
-	for stmt in crate::decompile::leaves_mut(&mut function.body) {
+	let Body::Tree(body) = &mut function.body else { return Ok(()) };
+	for stmt in crate::decompile::leaves_mut(body) {
 		if let Stmt::Op(op) = stmt
 			&& op.name == "Fork"
 			&& let [.., Arg::Str(name), Arg::Int(11)] = op.args.as_slice()
@@ -68,7 +69,11 @@ fn merge_function(function: &mut Function, lambdas: &mut HashMap<String, Functio
 				crate::ensure!(lambda.shadow.is_empty(), "lambda {} has more than one shadow section", lambda.name);
 				shadows.insert(lambda.name.clone(), shadow_section);
 			}
-			*stmt = Stmt::ForkLambda(meta, chr, slot, lambda.name, lambda.body);
+			crate::ensure!(
+				let Body::Tree(lambda_body) = lambda.body,
+				"lambda {} has a flat body", lambda.name
+			);
+			*stmt = Stmt::ForkLambda(meta, chr, slot, lambda.name, lambda_body);
 		}
 	}
 
@@ -119,6 +124,8 @@ pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 }
 
 fn extract_function(function: &mut Function, out: &mut Vec<Function>) -> rootcause::Result<()> {
+	let Body::Tree(body) = &mut function.body else { return Ok(()) };
+
 	// reclaim inlined shadow sections before rebuilding the lambdas themselves
 	let mut shadows = HashMap::new();
 	for shadow in &mut function.shadow {
@@ -138,7 +145,7 @@ fn extract_function(function: &mut Function, out: &mut Vec<Function>) -> rootcau
 		}
 	}
 
-	for stmt in crate::decompile::leaves_mut(&mut function.body) {
+	for stmt in crate::decompile::leaves_mut(body) {
 		if matches!(stmt, Stmt::ForkLambda(..)) {
 			let placeholder = Stmt::Break(OpMeta::default());
 			let Stmt::ForkLambda(meta, chr, slot, name, body) = std::mem::replace(stmt, placeholder) else {
@@ -156,7 +163,12 @@ fn extract_function(function: &mut Function, out: &mut Vec<Function>) -> rootcau
 				// otherwise unreferenced lambdas keep a single empty shadow section (which has line 0)
 				None => vec![Shadow::default()],
 			};
-			let mut lambda = Function { name, body, preload: Vec::new(), shadow };
+			let mut lambda = Function {
+				name,
+				body: Body::Tree(body),
+				preload: Vec::new(),
+				shadow,
+			};
 
 			let mut nested = Vec::new();
 			extract_function(&mut lambda, &mut nested)?;

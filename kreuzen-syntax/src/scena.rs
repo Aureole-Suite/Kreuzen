@@ -1,7 +1,7 @@
 use kreuzen::code::FlatOp;
 use kreuzen::code::preload::Preload;
 use kreuzen::code::shadow::{Shadow, ShadowOp};
-use kreuzen::{Chunk, Function, RawChunk, RawFunction, RawScena, Scena, ScenaInfo};
+use kreuzen::{Body, Chunk, Function, Scena, ScenaInfo};
 
 use crate::parse::Expect;
 use crate::{Error, Parse, Parser, Print, Printer, Result};
@@ -17,40 +17,14 @@ impl Print for ScenaInfo {
 	}
 }
 
-impl Print for RawFunction {
-	fn print(&self, ctx: &mut Printer) {
-		ctx.word("fn");
-		self.name.print(ctx);
-		ctx.block(&self.body, FlatOp::print);
-		if !self.preload.is_empty() {
-			ctx.word("preload");
-			self.preload.print(ctx);
-		}
-		for shadow in &self.shadow {
-			ctx.word("shadow");
-			shadow.print(ctx);
-		}
-	}
-}
-
-impl Print for RawChunk {
+impl Print for Body {
 	fn print(&self, ctx: &mut Printer) {
 		match self {
-			RawChunk::Function(f) => f.print(ctx),
-			RawChunk::Table(t) => t.print(ctx),
-		}
-	}
-}
-
-impl Print for RawScena {
-	fn print(&self, ctx: &mut Printer) {
-		ctx.word("raw");
-		self.info.print(ctx);
-		ctx.newline(1);
-		for c in &self.chunks {
-			c.print(ctx);
-			ctx.end_item();
-			ctx.newline(1);
+			Body::Flat(ops) => {
+				ctx.word("raw");
+				ctx.block(ops, FlatOp::print);
+			}
+			Body::Tree(stmts) => stmts.print(ctx),
 		}
 	}
 }

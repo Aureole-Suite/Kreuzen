@@ -3,12 +3,13 @@
 use crate::code::Arg;
 use crate::code::shadow::{ShadowOp, parse_name};
 use crate::decompile::Stmt;
-use crate::{Chunk, Scena};
+use crate::{Body, Chunk, Scena};
 
 pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 	for chunk in &mut scena.chunks {
 		let Chunk::Function(function) = chunk else { continue };
-		for stmt in crate::decompile::leaves_mut(&mut function.body) {
+		let Body::Tree(body) = &mut function.body else { continue };
+		for stmt in crate::decompile::leaves_mut(body) {
 			if let Stmt::Op(op) = stmt
 				&& op.name == "call"
 				&& let [Arg::Int(11), Arg::Str(name)] = op.args.as_slice()
@@ -39,7 +40,8 @@ pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 	for chunk in &mut scena.chunks {
 		let Chunk::Function(function) = chunk else { continue };
-		for stmt in crate::decompile::leaves_mut(&mut function.body) {
+		let Body::Tree(body) = &mut function.body else { continue };
+		for stmt in crate::decompile::leaves_mut(body) {
 			if let Stmt::Op(op) = stmt
 				&& op.name == "CallShadow"
 			{

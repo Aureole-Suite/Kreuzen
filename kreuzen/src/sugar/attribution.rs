@@ -4,16 +4,17 @@ use std::collections::HashMap;
 use crate::code::Arg;
 use crate::code::shadow::{Shadow, parse_name};
 use crate::decompile::Stmt;
-use crate::{Chunk, Scena};
+use crate::{Body, Chunk, Scena};
 
 pub fn resugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut shadows = HashMap::new();
 	let mut moves = Vec::new();
 	for chunk in &mut scena.chunks {
 		let Chunk::Function(function) = chunk else { continue };
+		let Body::Tree(body) = &mut function.body else { continue };
 		shadows.insert(function.name.clone(), &mut function.shadow);
 
-		for stmt in crate::decompile::leaves_mut(&mut function.body) {
+		for stmt in crate::decompile::leaves_mut(body) {
 			if let Stmt::Op(op) = stmt
 				&& op.name == "call"
 				&& let [Arg::Int(11), Arg::Str(name)] = op.args.as_mut_slice()
@@ -32,10 +33,11 @@ pub fn desugar(scena: &mut Scena) -> rootcause::Result<()> {
 	let mut moves = Vec::new();
 	for chunk in &mut scena.chunks {
 		let Chunk::Function(function) = chunk else { continue };
+		let Body::Tree(body) = &mut function.body else { continue };
 		shadows.insert(function.name.clone(), &mut function.shadow);
 
 		let mut current = function.name.clone();
-		for stmt in crate::decompile::leaves_mut(&mut function.body) {
+		for stmt in crate::decompile::leaves_mut(body) {
 			if let Stmt::Op(op) = stmt
 				&& op.name == "Fork"
 				&& let [.., Arg::Str(name), Arg::Int(11)] = op.args.as_slice()
