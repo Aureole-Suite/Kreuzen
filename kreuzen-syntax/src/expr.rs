@@ -40,10 +40,9 @@ fn print_expr_inner(e: &Expr, ctx: &mut Printer, prec: u32, bool_ctx: bool) {
 		Expr::SystemFlags(v) => v.print(ctx),
 		Expr::NumReg(v) => v.print(ctx),
 		Expr::Bin(op, a, b) => {
-			let (mut sym, p) = binop_prio(*op);
-			if *op == BinOp::Or && (bool_ctx || looks_boolean(a) || looks_boolean(b)) {
-				sym = "||";
-			}
+			let boolean = bool_ctx || looks_boolean(a) || looks_boolean(b);
+			let sym = binop_sym(*op, boolean);
+			let p = binop_prio(sym);
 			let child_bool_ctx = *op == BinOp::BoolAnd || sym == "||";
 			if p < prec {
 				ctx._sym("(");
@@ -87,33 +86,67 @@ fn print_expr_inner(e: &Expr, ctx: &mut Printer, prec: u32, bool_ctx: bool) {
 	}
 }
 
-fn binop_prio(op: BinOp) -> (&'static str, u32) {
+// Multi-char operators must come before their single-char prefixes.
+const BINOPS: &[(&str, BinOp, u32)] = &[
+	("==", BinOp::Eq, 2),
+	("!=", BinOp::Ne, 2),
+	("<=", BinOp::Le, 2),
+	(">=", BinOp::Ge, 2),
+	("&&", BinOp::BoolAnd, 1),
+	("||", BinOp::Or, 0),
+	("<", BinOp::Lt, 2),
+	(">", BinOp::Gt, 2),
+	("&", BinOp::BitAnd, 5),
+	("|", BinOp::Or, 3),
+	("^", BinOp::Xor, 4),
+	("+", BinOp::Add, 6),
+	("-", BinOp::Sub, 6),
+	("*", BinOp::Mul, 7),
+	("/", BinOp::Div, 7),
+	("%", BinOp::Mod, 7),
+];
+
+fn binop_sym(op: BinOp, boolean: bool) -> &'static str {
 	use BinOp::*;
 	match op {
-		Mul => ("*", 7),
-		Div => ("/", 7),
-		Mod => ("%", 7),
-		Add => ("+", 6),
-		Sub => ("-", 6),
-		BitAnd => ("&", 5),
-		Xor => ("^", 4),
-		Or => ("|", 3),
-		Eq => ("==", 2),
-		Ne => ("!=", 2),
-		Lt => ("<", 2),
-		Gt => (">", 2),
-		Le => ("<=", 2),
-		Ge => (">=", 2),
-		BoolAnd => ("&&", 1),
+		Mul => "*",
+		Div => "/",
+		Mod => "%",
+		Add => "+",
+		Sub => "-",
+		BitAnd => "&",
+		Xor => "^",
+		Or if boolean => "||",
+		Or => "|",
+		Eq => "==",
+		Ne => "!=",
+		Lt => "<",
+		Gt => ">",
+		Le => "<=",
+		Ge => ">=",
+		BoolAnd => "&&",
 	}
+}
+
+fn binop_prio(sym: &str) -> u32 {
+	BINOPS.iter().find(|(tok, ..)| *tok == sym).unwrap().2
 }
 
 pub fn parse(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {
 	let mut prio = Prio::new(parse_atom(p, ctx)?);
-	while let Ok(binop) = p.parse() {
-		prio.push(binop, parse_atom(p, ctx)?);
+	while let Ok((binop, p2)) = parse_binop(p) {
+		prio.push(binop, p2, parse_atom(p, ctx)?);
 	}
 	Ok(prio.finish())
+}
+
+fn parse_binop(p: &mut Parser) -> Result<(BinOp, u32)> {
+	for (tok, binop, prio) in BINOPS {
+		if p.operator(tok).is_ok() {
+			return Ok((*binop, *prio));
+		}
+	}
+	Err(Error)
 }
 
 struct Prio {
@@ -137,8 +170,7 @@ impl Prio {
 		}
 	}
 
-	fn push(&mut self, binop: BinOp, e: Expr) {
-		let prio = binop_prio(binop).1;
+	fn push(&mut self, binop: BinOp, prio: u32, e: Expr) {
 		self.reduce(prio);
 		self.ops.push((binop, prio));
 		self.stack.push(e);
@@ -177,38 +209,6 @@ impl Parse for AssOp {
 			}
 			Ok(Ass)
 		})
-	}
-}
-
-impl Parse for BinOp {
-	fn parse(p: &mut Parser) -> Result<Self> {
-		use BinOp::*;
-		// Multi-char operators must come before their single-char prefixes.
-		// `Or` prints as `|`, but accept `||` too.
-		const OPS: &[(&str, BinOp)] = &[
-			("==", Eq),
-			("!=", Ne),
-			("<=", Le),
-			(">=", Ge),
-			("&&", BoolAnd),
-			("||", Or),
-			("<", Lt),
-			(">", Gt),
-			("&", BitAnd),
-			("|", Or),
-			("^", Xor),
-			("+", Add),
-			("-", Sub),
-			("*", Mul),
-			("/", Div),
-			("%", Mod),
-		];
-		for (tok, binop) in OPS {
-			if p.operator(tok).is_ok() {
-				return Ok(*binop);
-			}
-		}
-		Err(Error)
 	}
 }
 
