@@ -5,7 +5,7 @@ use kreuzen::{Chunk, Function};
 use super::alt::Alt;
 use super::parser::{Error, Expect, Parser, Result};
 use super::types::Parse;
-use super::{PCtx, stmt, tables};
+use super::{PCtx, stmt};
 
 pub fn parse_chunks(p: &mut Parser, ctx: &PCtx) -> Vec<Chunk> {
 	super::parse_seq(p, |p| parse_chunk(p, ctx))
@@ -14,7 +14,7 @@ pub fn parse_chunks(p: &mut Parser, ctx: &PCtx) -> Vec<Chunk> {
 fn parse_chunk(p: &mut Parser, ctx: &PCtx) -> Result<Chunk> {
 	Alt::new(p)
 		.test_kw("fn", |p| Ok(Chunk::Function(parse_function(ctx, p)?)))
-		.test(|p| tables::parse_table(p, ctx).map(Chunk::Table))
+		.test(|p| p.parse().map(Chunk::Table))
 		.finish()
 }
 
