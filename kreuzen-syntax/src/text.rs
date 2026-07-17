@@ -77,11 +77,8 @@ impl Parse for Text {
 							parts.push(TextPart::String(line.to_owned()));
 						}
 					}
-				} else {
-					match p.delim('{', |p| p.parse()) {
-						Ok(control) => parts.push(TextPart::Control(control)),
-						Err(_) => p.report(|c| c.skip_any()),
-					}
+				} else if let Ok(control) = p.delim('{', |p| p.parse()) {
+					parts.push(TextPart::Control(control));
 				}
 			}
 			Ok(Text(parts))

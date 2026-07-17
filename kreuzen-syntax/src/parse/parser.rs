@@ -117,15 +117,21 @@ impl<'a, 'e> Parser<'a, 'e> {
 
 	/// Runs `f` on the contents of a `delim`-delimited group, which must consume all of it.
 	pub fn delim<T>(&mut self, delim: char, f: impl FnOnce(&mut Parser<'a, '_>) -> Result<T>) -> Result<T> {
-		self.test(delim, |p| {
-			let cursor = p.cursor.delim(delim)?;
-			let mut inner = Parser::new(cursor, p.errors);
-			let v = f(&mut inner)?;
-			if !inner.cursor.at_end() {
-				return Err(Error);
+		let cursor = self.test(delim, |p| Ok(p.cursor.delim(delim)?))?;
+		let mut inner = Parser::new(cursor, self.errors);
+		match f(&mut inner) {
+			Ok(v) => {
+				if !inner.at_end() {
+					inner.report(|_| {});
+				}
+				Ok(v)
 			}
-			Ok(v)
-		})
+			Err(e) => {
+				inner.report(|_| {});
+				self.expect.clear();
+				Err(e)
+			}
+		}
 	}
 
 	pub fn at_end(&mut self) -> bool {
