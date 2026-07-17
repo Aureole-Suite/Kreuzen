@@ -1,9 +1,8 @@
-use kreuzen::code::shadow::Shadow;
 use kreuzen::{Chunk, Function};
 
-use crate::{Parse, Parser, Result};
+use crate::{Parser, Result};
 
-use super::parser::{Error, Expect};
+use super::parser::Error;
 use super::{PCtx, stmt};
 
 pub fn parse_chunk(p: &mut Parser, ctx: &PCtx) -> Result<Chunk> {

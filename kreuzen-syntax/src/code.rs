@@ -1,4 +1,3 @@
-use kreuzen::code::shadow::Shadow;
 use kreuzen::code::{Arg, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::{AssOp, BinOp, Expr, UnOp};
