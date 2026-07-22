@@ -369,10 +369,10 @@
 44   'CharEmote' char u8 f32 u16 f32
 45   'CharLookDir' char f32 f32 f32 u16 u16
 46   'CharLookChar'
-4600 char char u16
-4601 char char u16 f32 f32 f32
-4602 char char u16
-4603 char char u16 f32 # labeled "move only head" and "move only eyes"
+4600 'CharLookChar' char char u16
+4601 'CharLookPos' char char u16 f32 f32 f32
+4602 'CharLookCharRelease' char char u16
+4603 'CharLookCharBlend' char char u16 f32 # labeled "move only head" and "move only eyes"
 4700 str u16
 4701 str u16
 4800 'CharAddStat' char u16 i16
