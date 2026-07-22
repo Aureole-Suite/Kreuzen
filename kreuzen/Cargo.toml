@@ -17,6 +17,7 @@ compact-debug = "0.1.4"
 pretty_assertions = "1.4.1"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 kreuzen-syntax.path = "../kreuzen-syntax"
+rayon = "1.12.0"
 
 [features]
 live = []

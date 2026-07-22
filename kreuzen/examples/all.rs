@@ -1,5 +1,6 @@
 use kreuzen::{Enc, Game};
 use kreuzen_syntax::Print as _;
+use rayon::prelude::*;
 use std::cell::Cell;
 use std::path::{Path, PathBuf};
 use tracing::Level;
@@ -86,25 +87,30 @@ fn ls(path: impl AsRef<Path>) -> Vec<String> {
 
 fn game(game: Game, enc: Enc, path: &Path, folder: &str) {
 	let path = path.join("data/scripts");
-	for dir in ls(&path) {
-		for file in ls(path.join(&dir).join(folder)) {
-			if game == Game::Tx && file == "magic.dat" {
-				// This file is just garbage data
-				continue;
-			}
-			let script = path.join(&dir).join(folder).join(&file);
-			let scriptname = format!("{game:?}/{dir}/{folder}/{file}");
-			let basename = file.strip_suffix(".dat").unwrap_or(&file);
-			let outfile = PathBuf::from("out").join(format!("{game:?}/{folder}/{dir}/{basename}.krz"));
-			let _span = tracing::error_span!("script", name = %scriptname).entered();
-			match process(game, enc, &script, &outfile) {
-				Ok(()) => {}
-				Err(e) => {
-					println!("Error processing {scriptname}: {e}");
-				}
+	let files: Vec<(String, String)> = ls(&path)
+		.into_iter()
+		.flat_map(|dir| {
+			ls(path.join(&dir).join(folder))
+				.into_iter()
+				.filter(|file| !(game == Game::Tx && file == "magic.dat")) // This file is just garbage data
+				.map(move |file| (dir.clone(), file))
+				.collect::<Vec<_>>()
+		})
+		.collect();
+
+	files.into_par_iter().for_each(|(dir, file)| {
+		let script = path.join(&dir).join(folder).join(&file);
+		let scriptname = format!("{game:?}/{dir}/{folder}/{file}");
+		let basename = file.strip_suffix(".dat").unwrap_or(&file);
+		let outfile = PathBuf::from("out").join(format!("{game:?}/{folder}/{dir}/{basename}.krz"));
+		let _span = tracing::error_span!("script", name = %scriptname).entered();
+		match process(game, enc, &script, &outfile) {
+			Ok(()) => {}
+			Err(e) => {
+				println!("Error processing {scriptname}: {e}");
 			}
 		}
-	}
+	});
 }
 
 fn process(game: Game, enc: Enc, script: &Path, outfile: &Path) -> rootcause::Result<()> {
