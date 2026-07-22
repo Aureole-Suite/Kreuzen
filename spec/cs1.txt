@@ -221,7 +221,11 @@
 34   char char f32 u8
 35   char
 36   'CharMoveTo' char char charmoveto
-37   char u8
+37   'CharMoveStop' char
+3700 'CharMoveWait'
+3701 'CharMoveCancel'
+3702
+3703
 38   char f32 f32 f32 f32 f32
 
 39 'Fade'

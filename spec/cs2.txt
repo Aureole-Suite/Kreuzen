@@ -293,7 +293,11 @@
 35   char char f32 u8
 36   char
 37   'CharMoveTo' char char charmoveto
-38   char u8
+38   'CharMoveStop' char
+3800 'CharMoveWait'
+3801 'CharMoveCancel'
+3802
+3803
 3900 char f32 f32 f32 f32 f32 u8 u16
 3901 char f32 f32 f32 f32 f32 u8 u16
 

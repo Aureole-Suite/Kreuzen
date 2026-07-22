@@ -431,9 +431,9 @@
 3E   char char f32 u8 rev_3e
 3F   char u32
 40   'CharMoveTo' char char charmoveto
-41   char
-4100
-4101
+41   'CharMoveStop' char
+4100 'CharMoveWait'
+4101 'CharMoveCancel'
 4104 f32 f32 f32 f32 u8
 42   u8 char f32 f32 f32 f32 f32 u8 u16
 
