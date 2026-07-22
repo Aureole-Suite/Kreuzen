@@ -12,9 +12,12 @@ use crate::lex::{Cursor, Tokens};
 pub use parser::{Error, Expect, Parser, Result};
 
 /// Context available while parsing everything after the header.
+#[derive(Clone, Copy)]
 pub(crate) struct PCtx {
 	pub spec: &'static Spec,
 	pub game: Game,
+	pub can_break: bool,
+	pub can_cont: bool,
 }
 
 /// Parses a `{}` block containing a statement-like sequence: items are
@@ -91,7 +94,12 @@ fn parse_header_inner(p: &mut Parser) -> Result<ScenaInfo> {
 /// get it from `kreuzen::spec::for_game`.
 pub fn parse_scena(info: ScenaInfo, rest: Rest<'_>, spec: &'static Spec, errors: &mut Errors) -> Scena {
 	let mut p = Parser::new(rest.cursor, errors);
-	let ctx = PCtx { spec, game: info.game };
+	let ctx = PCtx {
+		spec,
+		game: info.game,
+		can_break: false,
+		can_cont: false,
+	};
 	let mut chunks = Vec::new();
 	while !p.at_end() {
 		parse_item(&mut p, &mut chunks, |p| chunks::parse_chunk(p, &ctx));

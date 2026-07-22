@@ -20,13 +20,25 @@ fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
 		.test_kw("if", |p| parse_if(p, ctx, meta))
 		.test_kw("while", |p| parse_while(p, ctx, meta))
 		.test_kw("switch", |p| parse_switch(p, ctx, meta))
-		.test_kw("break", |_| Ok(Stmt::Break(meta)))
-		.test_kw("continue", |_| Ok(Stmt::Continue(meta)))
+		.test_kw("break", |p| {
+			if !ctx.can_break {
+				let span = p.prev_span();
+				p.errors.error("break outside of while/switch", span);
+			}
+			Ok(Stmt::Break(meta))
+		})
+		.test_kw("continue", |p| {
+			if !ctx.can_cont {
+				let span = p.prev_span();
+				p.errors.error("continue outside of while", span);
+			}
+			Ok(Stmt::Continue(meta))
+		})
 		.test_kw("ForkLambda", |p| {
 			let chr = p.parse()?;
 			let slot = p.int()?;
 			let name = p.parse()?;
-			let body = block(p, ctx)?;
+			let body = block(p, &PCtx { can_break: false, can_cont: false, ..*ctx })?;
 			Ok(Stmt::ForkLambda(meta, chr, slot, name, body))
 		})
 		.test(|p| parse_assignment(p, ctx, meta))
@@ -66,6 +78,7 @@ fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 
 fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	let e = crate::expr::parse(p, ctx)?;
+	let ctx = &PCtx { can_break: true, can_cont: true, ..*ctx };
 	// While has a trailing meta, so can't use super::parse_block
 	let (body, meta2) = p.delim('{', |p| {
 		let mut body = Vec::new();
@@ -88,6 +101,7 @@ fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 
 fn parse_switch(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 	let e = crate::expr::parse(p, ctx)?;
+	let ctx = &PCtx { can_break: true, ..*ctx };
 	let cases = p.delim('{', |p| {
 		let mut cases: Vec<(Case, Vec<Stmt>)> = Vec::new();
 		while !p.at_end() {
