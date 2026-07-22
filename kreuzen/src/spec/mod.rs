@@ -139,7 +139,7 @@ pub enum Part {
 	Cs1_3C,
 
 	Tx_isforceload,
-	Tx_2F,
+	Tx_CharAniLoop,
 
 	Cs3_98,
 	Cs3_c0,

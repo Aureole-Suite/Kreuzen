@@ -172,7 +172,7 @@ fn parse_parts(p: &mut Parser, ctx: &PCtx, parts: &[Part], op: &mut Op) -> Resul
 					parse_parts(p, ctx, &[P::U8], op)?;
 				}
 			}
-			P::Tx_2F => {
+			P::Tx_CharAniLoop => {
 				if let Ok(s) = p.parse() {
 					op.args.push(Arg::Str(s));
 					op.args.push(Arg::Int(p.parse()?));

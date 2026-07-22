@@ -453,7 +453,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 					read_parts(op, f, &[P::U8])?;
 				}
 			}
-			P::Tx_2F => {
+			P::Tx_CharAniLoop => {
 				if f.scena == "t5110" && f.check(b"AniWvWait\xFF").is_ok() {
 					op.args.push(Arg::Str("AniWvWait".to_string()));
 					op.args.push(Arg::Int(0xFF));
@@ -815,7 +815,7 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 					write_parts(d, f, op, cursor, &[P::U8], op_end)?;
 				}
 			}
-			P::Tx_2F => {
+			P::Tx_CharAniLoop => {
 				if matches!(op.args.get(*cursor), Some(Arg::Str(s)) if s == "AniWvWait") {
 					f.slice(b"AniWvWait\xFF");
 					*cursor += 2;

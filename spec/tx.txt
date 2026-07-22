@@ -124,11 +124,11 @@
 
 2D   'CharSetPos' char pos f32
 2E   char
-2E00 u8 str
+2E00 'CharAniPlay' u8 str
 2E01 u8 str
 2E03 u8 str u8 u8
 
-2F   char tx_2f u8 str f32 f32 u32
+2F   'CharAniLoop' char tx_charaniloop u8 str f32 f32 u32
 
 30 'Bgm'
 3000 'BgmPlay' music f32 u16 u32 u8
