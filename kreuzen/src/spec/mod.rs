@@ -138,7 +138,6 @@ pub enum Part {
 	CharMoveTo,
 	Cs1_3C,
 
-	Tx_3C,
 	Tx_isforceload,
 	Tx_2F,
 

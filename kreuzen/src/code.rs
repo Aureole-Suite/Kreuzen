@@ -441,7 +441,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 				a => a,
 			}),
 
-			P::CharMoveTo | P::Cs1_3C | P::Tx_3C | P::Cs3_98 | P::Cs3_c0 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
+			P::CharMoveTo | P::Cs1_3C | P::Cs3_98 | P::Cs3_c0 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
 				read_parts(op, f, extra_parts(p, &op.args, f.game)?)?;
 			}
 
@@ -494,10 +494,6 @@ pub fn extra_parts(p: &Part, args: &[Arg], game: Game) -> rootcause::Result<&'st
 	Ok(match p {
 		P::Cs1_3C => match arg(1)? {
 			Arg::Char(Char(0xFFFF)) => &[P::F32, P::F32, P::F32],
-			_ => &[],
-		},
-		P::Tx_3C => match arg(0)? {
-			Arg::Int(1) => &[P::F32, P::F32, P::F32],
 			_ => &[],
 		},
 		P::Cs3_98 => {
@@ -807,7 +803,7 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 				arg => write_dyn(f, d, arg)?,
 			},
 
-			P::CharMoveTo | P::Cs1_3C | P::Tx_3C | P::Cs3_98 | P::Cs3_c0 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
+			P::CharMoveTo | P::Cs1_3C | P::Cs3_98 | P::Cs3_c0 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
 				write_parts(d, f, op, cursor, extra_parts(p, &op.args, d.game)?, op_end)?;
 			}
 

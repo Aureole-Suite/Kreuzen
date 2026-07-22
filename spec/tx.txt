@@ -192,8 +192,8 @@
 
 3A   'CharEmote' char u8 f32 u16 f32
 3B   'CharLookDir' char f32 f32 f32 u16 u16
-3C0000 char u16 u16
-3C0100 char u16 u16 f32 f32 f32
+3C0000 'CharLookChar' char char u16
+3C0100 'CharLookPos' char char u16 pos
 3D00 str u16
 3D01 str u16
 3E00 char u16 u16

@@ -243,7 +243,7 @@
 39FF 'FadeWait' u16
 3A   'CharEmote' char u8 f32 u16
 3B   'CharLookDir' char f32 f32 f32 u16 u16
-3C   char char u16 cs1_3c
+3C   'CharLookChar' char char u16 cs1_3c
 3D00 str u16
 3D01 str u16
 3E00 char u16 u16
