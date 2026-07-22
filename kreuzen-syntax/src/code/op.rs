@@ -1,17 +1,77 @@
 use kreuzen::code::{Arg, Op, OpMeta};
+use kreuzen::expr::Expr;
 use kreuzen::spec::Part;
 use kreuzen::types::*;
 
 use crate::code::expr;
 
-use super::PCtx;
-use super::parser::{Error, Expect, Parser, Result};
+use crate::{Error, Expect, PCtx, Parser, Print, Printer, Result};
 
 // Pseudo-ops created by kreuzen::sugar, which don't exist in the spec.
 const SUGAR_OPS: &[(&str, &[Part])] = &[("CallShadow", &[Part::U16])];
 
-/// An op whose name has not been consumed yet, with the given (already parsed) meta.
-pub fn parse_op_named(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Op> {
+impl Print for Op {
+	fn print(&self, ctx: &mut Printer) {
+		self.meta.print(ctx);
+		// Setters print infix, but only if the expr is an assignment;
+		// bare exprs (no trailing Ass op in the data) use the generic form.
+		if matches!(self.name, "SetAttr" | "SetVar" | "SetNumReg" | "SetGlobal" | "SetCharAttr")
+			&& let [lhs, Arg::Expr(expr @ Expr::Ass(..))] = self.args.as_slice()
+		{
+			lhs.print(ctx);
+			expr::print(expr, ctx);
+		} else {
+			ctx.token(self.name);
+			for arg in &self.args {
+				arg.print(ctx);
+			}
+		}
+	}
+}
+
+impl Print for Arg {
+	fn print(&self, ctx: &mut Printer) {
+		match self {
+			Arg::Str(v) => v.print(ctx),
+			Arg::Int(v) => v.print(ctx),
+			Arg::F32(v) => v.print(ctx),
+			Arg::F32Munged(v) => {
+				v.print(ctx);
+				ctx.sym_("'");
+			}
+			Arg::I32Munged(v) => {
+				v.print(ctx);
+				ctx.sym_("'");
+			}
+			Arg::Char(v) => v.print(ctx),
+			Arg::Item(v) => v.print(ctx),
+			Arg::Battle(a, v) => {
+				ctx.token(format!("btlset[{a}]"));
+				ctx.sym(":");
+				v.print(ctx);
+			}
+			Arg::Magic(v) => v.print(ctx),
+			Arg::Sound(v) => v.print(ctx),
+			Arg::Music(v) => v.print(ctx),
+			Arg::Flag(v) => v.print(ctx),
+			Arg::Global(v) => v.print(ctx),
+			Arg::Var(v) => v.print(ctx),
+			Arg::FuncArg(v) => v.print(ctx),
+			Arg::NumReg(v) => v.print(ctx),
+			Arg::StrReg(v) => v.print(ctx),
+			Arg::Attr(v) => v.print(ctx),
+			Arg::CharAttr(v) => v.print(ctx),
+			Arg::Flags8(v) => v.print(ctx),
+			Arg::Flags16(v) => v.print(ctx),
+			Arg::Flags32(v) => v.print(ctx),
+			Arg::SystemFlags(v) => v.print(ctx),
+			Arg::Expr(v) => expr::print(v, ctx),
+			Arg::Text(v) => v.print(ctx),
+		}
+	}
+}
+
+pub fn parse(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Op> {
 	let span = p.next_span();
 	let name = p.ident()?;
 

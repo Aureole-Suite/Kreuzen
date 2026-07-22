@@ -1,6 +1,5 @@
 mod alt;
 mod chunks;
-pub mod op;
 mod parser;
 mod stmt;
 

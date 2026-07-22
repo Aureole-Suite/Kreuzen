@@ -241,7 +241,7 @@ fn parse_atom(p: &mut Parser, ctx: &PCtx) -> Result<Expr> {
 		.test(|p| p.parse().map(Expr::Int))
 		.test(|p| {
 			let meta = p.meta().unwrap_or_default();
-			crate::parse::op::parse_op_named(p, ctx, meta).map(Expr::Op)
+			super::op::parse(p, ctx, meta).map(Expr::Op)
 		})
 		.finish()
 }

@@ -6,8 +6,7 @@ use crate::Parse;
 use crate::code::expr;
 
 use super::alt::TryParser;
-use super::parser::{Error, Expect, Parser, Result};
-use super::{PCtx, op};
+use crate::{Error, Expect, PCtx, Parser, Result};
 
 /// A `{ ... }` block of statements.
 pub fn block(p: &mut Parser, ctx: &PCtx) -> Result<Vec<Stmt>> {
@@ -43,7 +42,7 @@ fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
 			Ok(Stmt::ForkLambda(meta, chr, slot, name, body))
 		})
 		.test(|p| parse_assignment(p, ctx, meta))
-		.test(|p| op::parse_op_named(p, ctx, meta).map(Stmt::Op))
+		.test(|p| crate::code::op::parse(p, ctx, meta).map(Stmt::Op))
 		.finish()
 }
 

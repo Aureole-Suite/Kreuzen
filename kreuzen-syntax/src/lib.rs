@@ -9,7 +9,8 @@ mod tables;
 mod text;
 mod types;
 
-pub use parse::{Error, Parser, Rest, Result, parse, parse_header, parse_scena};
+pub use parse::{Error, Parser, Rest, parse, parse_header, parse_scena};
+use parse::{Expect, PCtx, Result};
 pub use print::Printer;
 
 pub trait Print {
