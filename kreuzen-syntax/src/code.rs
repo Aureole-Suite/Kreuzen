@@ -2,7 +2,9 @@ use kreuzen::code::{Arg, FlatOp, Label, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::Expr;
 
-use crate::{Print, Printer, expr};
+pub mod expr;
+
+use crate::{Print, Printer};
 
 impl Print for OpMeta {
 	fn print(&self, ctx: &mut Printer) {

@@ -3,6 +3,7 @@ use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::Expr;
 
 use crate::Parse;
+use crate::code::expr;
 
 use super::alt::TryParser;
 use super::parser::{Error, Expect, Parser, Result};
@@ -47,7 +48,7 @@ fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
 }
 
 fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
-	let e = crate::expr::parse(p, ctx)?;
+	let e = expr::parse(p, ctx)?;
 	let then = block(p, ctx)?;
 
 	let els = p.test(Expect::Str("else"), |p| {
@@ -77,7 +78,7 @@ fn parse_if(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 }
 
 fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
-	let e = crate::expr::parse(p, ctx)?;
+	let e = expr::parse(p, ctx)?;
 	let ctx = &PCtx { can_break: true, can_cont: true, ..*ctx };
 	// While has a trailing meta, so can't use super::parse_block
 	let (body, meta2) = p.delim('{', |p| {
@@ -100,7 +101,7 @@ fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 }
 
 fn parse_switch(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
-	let e = crate::expr::parse(p, ctx)?;
+	let e = expr::parse(p, ctx)?;
 	let ctx = &PCtx { can_break: true, ..*ctx };
 	let cases = p.delim('{', |p| {
 		let mut cases: Vec<(Case, Vec<Stmt>)> = Vec::new();
@@ -131,7 +132,7 @@ fn parse_assignment(p: &mut TryParser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt>
 		.finish()?;
 	let assop = p.parse()?;
 	p.commit();
-	let rhs = crate::expr::parse(p, ctx)?;
+	let rhs = expr::parse(p, ctx)?;
 
 	if !ctx.spec.by_name.contains_key(name) {
 		let span = p.prev_span();

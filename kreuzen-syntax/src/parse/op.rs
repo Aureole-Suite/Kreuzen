@@ -2,6 +2,8 @@ use kreuzen::code::{Arg, Op, OpMeta};
 use kreuzen::spec::Part;
 use kreuzen::types::*;
 
+use crate::code::expr;
+
 use super::PCtx;
 use super::parser::{Error, Expect, Parser, Result};
 
@@ -74,7 +76,7 @@ fn parse_parts(p: &mut Parser, ctx: &PCtx, parts: &[Part], op: &mut Op) -> Resul
 			P::Flags32 => op.args.push(Arg::Flags32(p.parse()?)),
 			P::SystemFlags => op.args.push(Arg::SystemFlags(p.parse()?)),
 
-			P::Expr => op.args.push(Arg::Expr(crate::expr::parse(p, ctx)?)),
+			P::Expr => op.args.push(Arg::Expr(expr::parse(p, ctx)?)),
 			P::Text => op.args.push(Arg::Text(p.parse()?)),
 
 			P::Dyn => op.args.push(parse_dyn(p)?),
