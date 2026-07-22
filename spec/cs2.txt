@@ -298,19 +298,19 @@
 3901 char f32 f32 f32 f32 f32 u8 u16
 
 3A 'Fade'
-3A00 u16 f32
+3A00 'FadeOut' u16 f32
 3A02 u16 f32
-3A03 u16 f32
-3A05 u16
-3A0A u16
-3A0B u16
+3A03 'FadeOutWhite' u16 f32
+3A05 'LetterboxShow' u16
+3A0A 'BlurOn' u16
+3A0B 'BlurOff' u16
 3A0C u16
-3A64 u16 f32
-3A65 u16 f32
+3A64 'FadeIn' u16 f32
+3A65 'FadeCross' u16 f32
 3A67 u16 f32
-3A69 u16
-3AFE u16
-3AFF u16
+3A69 'LetterboxHide' u16
+3AFE 'FadeCrossWait' u16
+3AFF 'FadeWait' u16
 
 3B   'CharEmote' char u8 f32 u16
 3C   'CharLookDir' char f32 f32 f32 u16 u16
