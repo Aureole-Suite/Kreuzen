@@ -104,7 +104,14 @@ impl Print for Stmt {
 
 impl Print for [Stmt] {
 	fn print(&self, ctx: &mut Printer) {
-		ctx.block(self, Stmt::print);
+		if self.is_empty() {
+			// Occasionally we get long elseif chains with empty bodies, which look much better if split
+			ctx._sym_("{");
+			ctx.newline(0);
+			ctx._sym_("}");
+		} else {
+			ctx.block(self, Stmt::print);
+		}
 	}
 }
 
