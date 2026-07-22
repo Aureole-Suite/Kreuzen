@@ -303,8 +303,8 @@
 5B04 u16 u16
 5B05 u16
 5B06 u16 u16
-5D00 str flags32
-5D01 str flags32
+5D00 'ObjFlagsSet' str flags32
+5D01 'ObjFlagsUnset' str flags32
 5D02 'ObjSetPos' str pos
 5D03 'ObjSetRot' str f32 f32 f32
 5D04 'ObjSetScale' str f32 f32 f32

@@ -678,8 +678,8 @@
 # 6701 char u16
 6702 char
 6703 char
-6800 'ObjFlagSet' str u32
-6801 'ObjFlagUnset' str u32
+6800 'ObjFlagsSet' str flags32
+6801 'ObjFlagsUnset' str flags32
 6802 'ObjSetPos' str pos
 6803 'ObjSetRot' str f32 f32 f32
 6804 'ObjSetScale' str f32 f32 f32
