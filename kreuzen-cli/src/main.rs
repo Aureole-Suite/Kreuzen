@@ -68,6 +68,12 @@ struct Args {
 	output: Option<PathBuf>,
 }
 
+impl Args {
+	fn game_for(&self, path: &Path) -> Option<Game> {
+		self.game.map(Game::from).or_else(|| detect_game(path))
+	}
+}
+
 fn main() -> ExitCode {
 	tracing_subscriber::registry()
 		.with(tracing_subscriber::fmt::layer().with_writer(std::io::stderr))
@@ -86,7 +92,7 @@ fn main() -> ExitCode {
 		success = false;
 	} else {
 		for path in &args.files {
-			let _span = tracing::info_span!("process_arg", path = %path.display()).entered();
+			let _span = tracing::debug_span!("process_arg", path = %path.display()).entered();
 			if !path.exists() {
 				tracing::error!("File does not exist: {}", path.display());
 				success = false;
@@ -128,7 +134,7 @@ fn handle_dir(args: &Args, path: &Path, out: Option<&Path>) -> bool {
 		if entry.metadata().is_ok_and(|m| m.is_file()) {
 			if entry.path().extension().is_some_and(|e| e == "krz") {
 				krz.push(entry.path().strip_prefix(path).unwrap().to_owned());
-			} else if entry.path().extension().is_some_and(|e| e == "dat") {
+			} else if entry.path().extension().is_some_and(|e| e == "dat") && !skip_dat(args, entry.path()) {
 				dat.push(entry.path().strip_prefix(path).unwrap().to_owned());
 			}
 		}
@@ -223,7 +229,7 @@ fn compile(args: &Args, infile: &Path, outfile: &Path) -> bool {
 }
 
 fn decompile_inner(args: &Args, infile: &Path, outfile: &Path) -> rootcause::Result<bool> {
-	let Some(game) = args.game.map(Game::from).or_else(|| detect_game(infile)) else {
+	let Some(game) = args.game_for(infile) else {
 		tracing::error!("Could not detect game from exe name or path; specify --game to decompile");
 		return Ok(false);
 	};
@@ -261,6 +267,14 @@ fn compile_inner(_args: &Args, infile: &Path, outfile: &Path) -> rootcause::Resu
 	let data = kreuzen::write(&scena).context("failed to write scena")?;
 	write_file(outfile, &data)?;
 	Ok(true)
+}
+
+fn skip_dat(args: &Args, path: &Path) -> bool {
+	match path.file_name().and_then(|n| n.to_str()) {
+		Some("utf8sjis.dat" | "sjisutf8.dat") => true,
+		Some("magic.dat") => args.game_for(path) == Some(Game::Tx),
+		_ => false,
+	}
 }
 
 fn detect_game(infile: &Path) -> Option<Game> {
