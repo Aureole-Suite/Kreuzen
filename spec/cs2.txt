@@ -21,7 +21,7 @@
 16   u8 u16
 17   u8
 18   'TextShow' char text
-1901 char u16 u8
+1901 'PopupSetPos' char u16 u8
 1902 char u16
 1905 'TextSetPos' i16 i16 i16 i16 u8
 1A   'TextTalk' char text
@@ -218,9 +218,9 @@
 28A5 u16 u16 u16
 
 29   u8 f32 f32 f32 f32
-2A   char
-2B   char flags32
-2C   char flags32
+2A   'CharFlagsGet' char
+2B   'CharFlagsSet' char flags32
+2C   'CharFlagsUnset' char flags32
 
 2D 'Cam'
 2D00
@@ -516,9 +516,9 @@
 6804 'QuestFlagsUnset' flags8
 6805
 6806 u16 # SSD has a weird if here
-69   u16
-6900 u8 u8
-6901 u16 u8
+69   'QuestGet' u16
+6900 'QuestFlagsGet' u8 u8
+6901 'QuestTaskGet' u16 u8
 
 6A   'ActiveVoice' u16
 6A00 'ActiveVoicePlay' f32

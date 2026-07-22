@@ -21,7 +21,7 @@
 16   u8 u16
 17   u8
 18   'TextShow' char text
-1901 char u16 u8
+1901 'PopupSetPos' char u16 u8
 1902 char u16
 1905 'TextSetPos' i16 i16 i16 i16 u8
 1A   'TextTalk' char text
@@ -89,9 +89,9 @@
 271A char
 
 28   u8 f32 f32 f32 f32
-29   char
-2A   char flags32
-2B   char flags32
+29   'CharFlagsGet' char
+2A   'CharFlagsSet' char flags32
+2B   'CharFlagsUnset' char flags32
 2C 'Cam'
 2C00
 2C02 'CamLookAt' u8 pos u16
@@ -377,10 +377,9 @@
 6703 'QuestFlagsSet' flags8 u8
 6704 'QuestFlagsUnset' flags8 u8
 6705
-
-68   u16
-6800 u8 u8
-6801 u16 u8
+68   'QuestGet' u16
+6800 'QuestFlagsGet' u8 u8
+6801 'QuestTaskGet' u16 u8
 
 69   'ActiveVoice' u16
 6900 'ActiveVoicePlay' f32
