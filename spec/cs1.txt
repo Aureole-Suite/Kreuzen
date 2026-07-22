@@ -18,8 +18,8 @@
 13   'CharCreate' char str str str u8 flags32 pos f32 f32 f32 f32 str str battle f32 f32 flag
 14   'Fork' char u8 u8 str
 15   'ForkKill' char u8
-16   u8
-17   u8
+16   'EventBegin' u8
+17   'EventEnd' u8
 18   'TextShow' char text
 1900 u16 u16 u16 u16 u8
 1901 'PopupSetPos' char u16 u8
@@ -324,7 +324,7 @@
 55   char u8 str
 56   str u16
 57
-58   char u8
+58   'TextEnd' char u8
 59   u16
 5A   u8 str u16
 5B00 char u16

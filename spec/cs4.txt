@@ -31,8 +31,8 @@
 1D   'CharCreate' char str str str u8 flags32 u32 pos f32 f32 f32 f32 str str battle f32 f32 flag
 1E   'Fork' char u8 u8 str
 1F   'ForkKill' char u8
-20   u8 dyn dyn dyn dyn
-21   u8
+20   'EventBegin' u8 dyn dyn dyn dyn
+21   'EventEnd' u8
 22   'TextShow' char text
 2300 u16 u16 u16 u16 u8
 2301 'PopupSetPos' u16 u16 u8 u8
@@ -561,7 +561,7 @@
 6100 str u8 char f32 f32 f32 f32 f32 f32 f32 u16
 6102
 62   u16 u16
-63   char u8
+63   'TextEnd' char u8
 6400 f32
 6401 f32
 
