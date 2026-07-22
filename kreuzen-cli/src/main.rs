@@ -174,15 +174,26 @@ fn handle_dir(args: &Args, path: &Path, out: Option<&Path>) -> bool {
 fn handle_file(args: &Args, path: &Path, out: Option<&Path>) -> bool {
 	if path.extension().is_some_and(|e| e == "krz") {
 		let infile = path;
-		let outfile = out.map_or_else(|| out_file(path, ".krz", ".dat"), |x| x.to_owned());
+		let outfile = resolve_out(out, path, ".krz", ".dat");
 		compile(args, infile, &outfile)
 	} else if path.extension().is_some_and(|e| e == "dat") {
 		let infile = path;
-		let outfile = out.map_or_else(|| out_file(path, ".dat", ".krz"), |x| x.to_owned());
+		let outfile = resolve_out(out, path, ".dat", ".krz");
 		decompile(args, infile, &outfile)
 	} else {
 		tracing::error!("File is not krz or dat");
 		false
+	}
+}
+
+/// Resolve the output path for a single file. When no output is given, the file
+/// is written next to the input with a swapped suffix. When the output is an
+/// existing directory, the derived filename is placed inside it.
+fn resolve_out(out: Option<&Path>, path: &Path, old_suffix: &str, new_suffix: &str) -> PathBuf {
+	match out {
+		None => out_file(path, old_suffix, new_suffix),
+		Some(out) if out.is_dir() => out.join(out_file(path, old_suffix, new_suffix).file_name().unwrap()),
+		Some(out) => out.to_owned(),
 	}
 }
 
