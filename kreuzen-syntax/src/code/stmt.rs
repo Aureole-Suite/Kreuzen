@@ -2,15 +2,110 @@ use kreuzen::code::{Arg, Op, OpMeta};
 use kreuzen::decompile::{Case, Stmt};
 use kreuzen::expr::Expr;
 
-use crate::Parse;
 use crate::code::expr;
+use crate::{Parse, Print, Printer};
 
-use super::alt::TryParser;
+use crate::parse::TryParser;
 use crate::{Error, Expect, PCtx, Parser, Result};
 
 /// A `{ ... }` block of statements.
 pub fn block(p: &mut Parser, ctx: &PCtx) -> Result<Vec<Stmt>> {
-	super::parse_block(p, |p| parse_stmt(p, ctx))
+	crate::parse::parse_block(p, |p| parse_stmt(p, ctx))
+}
+
+impl Print for Stmt {
+	fn print(&self, ctx: &mut Printer) {
+		match self {
+			Stmt::Op(op) => {
+				op.print(ctx);
+			}
+			Stmt::Break(m) => {
+				m.print(ctx);
+				ctx.word("break");
+			}
+			Stmt::Continue(m) => {
+				m.print(ctx);
+				ctx.word("continue");
+			}
+			Stmt::If(m, e, then, els) => {
+				m.print(ctx);
+				ctx.word("if");
+				expr::print_bool(e, ctx);
+				then.print(ctx);
+				if let Some((m2, els)) = els {
+					m2.print(ctx);
+					ctx.word("else");
+					if let [stmt @ Stmt::If(..)] = els.as_slice() {
+						stmt.print(ctx);
+					} else {
+						els.print(ctx);
+					}
+				}
+			}
+			Stmt::While(m, e, body, m2) => {
+				m.print(ctx);
+				ctx.word("while");
+				expr::print_bool(e, ctx);
+				if *m2 == OpMeta::default() {
+					body.print(ctx);
+				} else {
+					// The loopback op's meta, as a trailing marker in the block.
+					// It is not `;`-terminated, so this can't use ctx.block.
+					ctx._sym_("{");
+					ctx.indent += 1;
+					for stmt in body {
+						ctx.newline(0);
+						stmt.print(ctx);
+						ctx.end_item();
+					}
+					ctx.newline(0);
+					ctx.indent -= 1;
+					m2.print(ctx);
+					ctx.sym_("}");
+				}
+			}
+			Stmt::ForkLambda(m, chr, slot, name, body) => {
+				m.print(ctx);
+				ctx.word("ForkLambda");
+				chr.print(ctx);
+				slot.print(ctx);
+				name.print(ctx);
+				body.print(ctx);
+			}
+			Stmt::Switch(m, e, cases) => {
+				m.print(ctx);
+				ctx.word("switch");
+				expr::print(e, ctx);
+				ctx.block(cases, |(case, body), ctx| {
+					match case {
+						Case::Default => {
+							ctx.word("default");
+							ctx.sym_(":");
+						}
+						Case::Case(v) => {
+							ctx.word("case");
+							ctx.token(v.to_string());
+							ctx.sym_(":");
+						}
+						Case::None => {}
+					}
+					ctx.indent += 1;
+					for stmt in body {
+						ctx.newline(0);
+						stmt.print(ctx);
+						ctx.end_item();
+					}
+					ctx.indent -= 1;
+				});
+			}
+		}
+	}
+}
+
+impl Print for [Stmt] {
+	fn print(&self, ctx: &mut Printer) {
+		ctx.block(self, Stmt::print);
+	}
 }
 
 fn parse_stmt(p: &mut Parser, ctx: &PCtx) -> Result<Stmt> {
@@ -92,7 +187,7 @@ fn parse_while(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 				meta2 = m;
 				break;
 			}
-			super::parse_item(p, &mut body, |p| parse_stmt(p, ctx));
+			crate::parse::parse_item(p, &mut body, |p| parse_stmt(p, ctx));
 		}
 		Ok((body, meta2))
 	})?;
@@ -112,7 +207,7 @@ fn parse_switch(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Stmt> {
 			if cases.is_empty() {
 				cases.push((Case::None, Vec::new()));
 			}
-			super::parse_item(p, &mut cases.last_mut().unwrap().1, |p| parse_stmt(p, ctx));
+			crate::parse::parse_item(p, &mut cases.last_mut().unwrap().1, |p| parse_stmt(p, ctx));
 		}
 		Ok(cases)
 	})?;

@@ -1,9 +1,6 @@
 use kreuzen::{Body, Chunk, Function};
 
-use crate::{Parser, Result};
-
-use super::parser::Error;
-use super::{PCtx, stmt};
+use crate::{Error, PCtx, Parser, Result};
 
 pub fn parse_chunk(p: &mut Parser, ctx: &PCtx) -> Result<Chunk> {
 	p.alt()
@@ -14,7 +11,7 @@ pub fn parse_chunk(p: &mut Parser, ctx: &PCtx) -> Result<Chunk> {
 
 fn parse_function(ctx: &PCtx, p: &mut Parser) -> Result<Function, Error> {
 	let name = p.parse()?;
-	let body = Body::Tree(stmt::block(p, ctx)?);
+	let body = Body::Tree(crate::code::block(p, ctx)?);
 	let mut preload = Vec::new();
 	if p.keyword("preload").is_ok() {
 		preload = p.parse()?;
