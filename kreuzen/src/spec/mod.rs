@@ -135,10 +135,8 @@ pub enum Part {
 	Dyn_Char,
 	Dyn_Sound,
 
-	Cs1_36,
+	CharMoveTo,
 	Cs1_3C,
-
-	Cs2_37,
 
 	Tx_3C,
 	Tx_isforceload,
@@ -147,7 +145,6 @@ pub enum Part {
 	Cs3_98,
 	Cs3_c0,
 
-	Cs4_40,
 	Cs4_wtf_are_you_doing,
 
 	Rev_3E,

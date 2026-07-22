@@ -441,7 +441,7 @@ fn read_parts(op: &mut Op, f: &mut CReader, parts: &[Part]) -> rootcause::Result
 				a => a,
 			}),
 
-			P::Cs1_36 | P::Cs1_3C | P::Cs2_37 | P::Tx_3C | P::Cs3_98 | P::Cs3_c0 | P::Cs4_40 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
+			P::CharMoveTo | P::Cs1_3C | P::Tx_3C | P::Cs3_98 | P::Cs3_c0 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
 				read_parts(op, f, extra_parts(p, &op.args, f.game)?)?;
 			}
 
@@ -492,16 +492,8 @@ pub fn extra_parts(p: &Part, args: &[Arg], game: Game) -> rootcause::Result<&'st
 	use Part as P;
 	let arg = |i: usize| args.get(i).context_with(|| format!("no arg {i} for conditional part {p:?}"));
 	Ok(match p {
-		P::Cs1_36 => match arg(1)? {
-			Arg::Char(Char(0xFE02..=0xFE03)) => &[P::F32],
-			_ => &[],
-		},
 		P::Cs1_3C => match arg(1)? {
 			Arg::Char(Char(0xFFFF)) => &[P::F32, P::F32, P::F32],
-			_ => &[],
-		},
-		P::Cs2_37 => match arg(1)? {
-			Arg::Char(Char(0xFE04)) => &[P::Str],
 			_ => &[],
 		},
 		P::Tx_3C => match arg(0)? {
@@ -520,11 +512,11 @@ pub fn extra_parts(p: &Part, args: &[Arg], game: Game) -> rootcause::Result<&'st
 			};
 			op_c0(*v as u16)
 		}
-		P::Cs4_40 => {
+		P::CharMoveTo => {
 			let Arg::Char(v) = arg(1)? else {
-				rootcause::bail!("Expected Char for Cs4_40 part");
+				rootcause::bail!("Expected Char for CharMoveTo part");
 			};
-			op_40(*v)
+			op_char_move_to(*v, game)
 		}
 		P::Rev_79 => match arg(0)? {
 			Arg::Int(7) => &[P::U8],
@@ -545,13 +537,20 @@ pub fn extra_parts(p: &Part, args: &[Arg], game: Game) -> rootcause::Result<&'st
 }
 
 #[rustfmt::skip]
-fn op_40(a: crate::types::Char) -> &'static [Part] {
+fn op_char_move_to(a: crate::types::Char, game: Game) -> &'static [Part] {
 	use Part::*;
-	match a.0 {
-		0xFE02..= 0xFE04 => &[F32, F32, F32, F32, F32, U8, Flags16, F32, F32, U8],
-		0xFE05           => &[F32, F32, F32, F32,      U8, Flags16, F32, F32, U8, Str],
-		0xFE15           => &[Dyn, Dyn, Dyn, Dyn,      U8, Flags16, F32, F32, U8],
-		_                => &[F32, F32, F32, F32,      U8, Flags16, F32, F32, U8],
+	match game {
+		Game::Cs4 | Game::Reverie => match a.0 {
+			0xFE02..=0xFE04 => &[F32, F32, F32, F32, F32, U8, Flags16, F32, F32, U8],
+			0xFE05          => &[F32, F32, F32, F32,      U8, Flags16, F32, F32, U8, Str],
+			0xFE15          => &[Dyn, Dyn, Dyn, Dyn,      U8, Flags16, F32, F32, U8],
+			_               => &[F32, F32, F32, F32,      U8, Flags16, F32, F32, U8],
+		},
+		_ => match a.0 {
+			0xFE02..=0xFE03 => &[F32, F32, F32, F32, F32, U8, Flags16],
+			0xFE04          => &[F32, F32, F32, F32,      U8, Flags16, Str],
+			_               => &[F32, F32, F32, F32,      U8, Flags16],
+		},
 	}
 }
 
@@ -808,7 +807,7 @@ fn write_parts(d: &OData, f: &mut Writer, op: &Op, cursor: &mut usize, parts: &[
 				arg => write_dyn(f, d, arg)?,
 			},
 
-			P::Cs1_36 | P::Cs1_3C | P::Cs2_37 | P::Tx_3C | P::Cs3_98 | P::Cs3_c0 | P::Cs4_40 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
+			P::CharMoveTo | P::Cs1_3C | P::Tx_3C | P::Cs3_98 | P::Cs3_c0 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
 				write_parts(d, f, op, cursor, extra_parts(p, &op.args, d.game)?, op_end)?;
 			}
 

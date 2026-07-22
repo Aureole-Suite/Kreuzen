@@ -343,7 +343,7 @@
 3D   'CharTurnDir' char f32 f32 u8
 3E   char char f32 u8
 3F   char
-40   'CharMoveTo' char char f32 f32 f32 cs1_36 f32 u8 u16 cs2_37
+40   'CharMoveTo' char char charmoveto
 41   char
 4100
 4101
