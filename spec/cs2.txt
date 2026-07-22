@@ -50,18 +50,19 @@
 2101 battle u8 u16 u16 u16 u16
 22   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8
 23   'CharAniclipStop' char u32 u8
-2400 char str str
-2401 char str str
+24 'CharAniclip'
+2400 'CharAniclipLoad' char str str
+2401 'CharAniclipUnload' char str str
 2402 char str str
-2404 char str str
-2405 char str str
-2406 char flags32
-2407 char flags32
-2408 char u8 str str str str str str str str str str str str str str str str
-2409 char u8
-240A char str str
-240B char str str
-240D char
+2404 'CharAniclipAddAsset' char str str
+2405 'CharAniclipRemoveAsset' char str str
+2406 'CharAniclipLoadByCatalog' char flags32
+2407 'CharAniclipReleaseByCatalog' char flags32
+2408 'CharAniPreload' char u8 str str str str str str str str str str str str str str str str
+2409 'CharAniUndoPreload' char u8
+240A 'CharAniclipChangeSkin' char str str
+240B 'CharAniclipLoadFace' char str str
+240D 'CharAniClear' char
 240E char u32 str str
 25   u8 char str str f32 f32 f32 f32 f32 f32 f32 f32 f32
 

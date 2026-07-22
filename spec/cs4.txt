@@ -948,8 +948,8 @@ CE28 u8 str u8
 CE32 u8 str u32 u8
 CF   u8
 D000 char str str str str f32 f32 f32
-D100 str u16 f32 f32
-D101 str u16
+D100 'CharAniBlendSet' str char f32 f32
+D101 'CharAniBlendReset' str char
 D2   i16 rev_D2
 D300 f32 f32 f32 f32 u16 u8 u8 u8
 D301
