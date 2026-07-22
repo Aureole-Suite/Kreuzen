@@ -198,9 +198,9 @@
 3340 char char f32 f32
 3341 'BtlCharTurnToChar' char char f32 f32
 3342 char u8 f32 f32 f32 u8 u8
-3346 f32 f32 f32
-3347
-3348 char u16
+3346 'BtlCamTargetSet' f32 f32 f32
+3347 'BtlCamTargetReset'
+3348 'BtlCamTargetAdd' char u16
 # 3349 char # something with "attack with KeA slot"
 334A f32 # in AniBtlBurstWait
 334B u16 u8

@@ -109,9 +109,9 @@
 2836 char char f32 u16
 2837 char char f32 f32 f32 f32 f32 u8
 283C 'BtlCharTurnToChar' char char f32 f32
-2846 f32 f32 f32
-2847
-2848 char
+2846 'BtlCamTargetSet' f32 f32 f32
+2847 'BtlCamTargetReset'
+2848 'BtlCamTargetAdd' char
 2850 u16 str u32 u32 u32 u32 u16 str
 285A 'BtlCharSetAtDelay' char u32
 285B u8 u32

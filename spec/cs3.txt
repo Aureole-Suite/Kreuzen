@@ -178,9 +178,9 @@
 333B u8
 333C 'BtlCharTurnToChar' char char f32 f32
 333D char u8 f32 f32 f32 u8
-3346 f32 f32 f32
-3347
-3348 char
+3346 'BtlCamTargetSet' f32 f32 f32
+3347 'BtlCamTargetReset'
+3348 'BtlCamTargetAdd' char
 334A f32
 334B char u8
 3352 char u8
