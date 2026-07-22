@@ -220,7 +220,7 @@
 33   'CharTurnDir' char f32 f32 u8
 34   char char f32 u8
 35   char
-36   char char f32 f32 f32 cs1_36 f32 u8 u16
+36   'CharMoveTo' char char f32 f32 f32 cs1_36 f32 u8 u16
 37   char u8
 38   char f32 f32 f32 f32 f32
 
