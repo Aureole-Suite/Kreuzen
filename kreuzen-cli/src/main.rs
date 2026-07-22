@@ -253,12 +253,13 @@ fn compile_inner(_args: &Args, infile: &Path, outfile: &Path) -> rootcause::Resu
 
 	let mut errors = diag::Errors::new();
 	let scena = kreuzen_syntax::parse(&source, |i| kreuzen::spec::for_game(i.game, i.variant), &mut errors);
-	if errors.max_severity() >= diag::Severity::Error {
+	if !errors.is_empty() {
 		print!("{}", diag::render(&infile.display().to_string(), &source, &errors));
+	}
+	if errors.max_severity() >= diag::Severity::Error {
 		return Ok(false);
 	}
 	let Some(scena) = scena else {
-		print!("{}", diag::render(&infile.display().to_string(), &source, &errors));
 		return Ok(false);
 	};
 

@@ -82,7 +82,7 @@ pub fn parse(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Op> {
 	}
 
 	let Some(opcode) = ctx.spec.by_name.get(name) else {
-		p.errors.error(format!("unknown op '{name}'"), span);
+		p.errors.error("unknown op", span);
 		return Err(Error);
 	};
 
@@ -97,6 +97,9 @@ pub fn parse(p: &mut Parser, ctx: &PCtx, meta: OpMeta) -> Result<Op> {
 		op_spec = op_spec.child(byte).ok_or(Error)?;
 		op.name = op_spec.name.as_str();
 		parse_parts(p, ctx, &op_spec.parts, &mut op)?;
+	}
+	if name != op.name {
+		p.errors.warning(format!("deprecated op name: use '{}'", op.name), span);
 	}
 	Ok(op)
 }
