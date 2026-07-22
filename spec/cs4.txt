@@ -729,7 +729,12 @@
 8401 f32 f32 f32 f32
 8402 f32 f32 f32 f32
 8403 char str u8
-86   u8 u16 u16 u16 flag u16 u16 f32 f32 f32 str
+86 'QuestMarker'
+8601 'QuestMarkerChar'  u16 u16 flag flag u16 char pos str
+8603 'QuestMarkerExit'  u16 u16 flag flag u16 char pos str
+8604 'QuestMarkerLp'    u16 u16 flag flag u16 char pos str
+860B u16 u16 flag flag u16 char pos str
+86FF 'QuestMarkerClear' u16 u16 flag flag u16 char pos str
 87   u8 u32
 88   'BondPointsSet' u16
 89   'BondPointsAdd' u16

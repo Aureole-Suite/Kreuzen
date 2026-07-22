@@ -454,7 +454,9 @@
 7901 f32 f32 f32 f32
 7902 f32 f32 f32 f32
 7903 u16 str u8
-7B   u8 u16 u16 u16 u16 u16 u16 f32 f32 f32 str
+7B01 'QuestMarkerChar'  u16 u16 flag flag u16 char pos str
+7B02 'QuestMarkerPos'   u16 u16 flag flag u16 char pos str
+7BFF 'QuestMarkerClear' u16 u16 flag flag u16 char pos str
 7D   'BondPointsSet' u16 u16
 7E   'BondPointsAdd' u16
 7F00 char char str str

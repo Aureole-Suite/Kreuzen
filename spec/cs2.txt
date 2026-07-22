@@ -581,7 +581,11 @@
 7A02 f32 f32 f32 f32
 7A1B flags32
 7B   u8 u8
-7C   u8 u16 u16 u16 u32 u16 f32 f32 f32 str
+7C01 'QuestMarkerChar'  u16 u16 flag flag u16 char pos str
+7C02 'QuestMarkerPos'   u16 u16 flag flag u16 char pos str
+7C03 'QuestMarkerExit'  u16 u16 flag flag u16 char pos str
+7C04 'QuestMarkerLp'    u16 u16 flag flag u16 char pos str
+7CFF 'QuestMarkerClear' u16 u16 flag flag u16 char pos str
 7E   'BondPointsSet' u16 u16
 7F   'BondPointsAdd' u16
 8000 char char str str
@@ -647,9 +651,9 @@
 9F   'NoteGetCount' u8
 
 A0   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
-A100 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
+A100 char u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
 A101
-A102 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+A102 u8 flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag
 A103 f32 f32 f32
 A200 u8
 A201 u16
