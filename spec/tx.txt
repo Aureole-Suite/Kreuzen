@@ -158,10 +158,10 @@
 
 32 'CharFace'
 3202 char u16 u16
-3203 char str str str str
-3204 char str
-320A char
-320B char
+3203 'CharFaceSetClip' char str str str str
+3204 'CharFaceSet' char str
+320A 'CharFaceControlBegin' char
+320B 'CharFaceControlEnd' char
 
 33   'CharTurnDir' char f32 f32 u8
 34   char char f32 u8

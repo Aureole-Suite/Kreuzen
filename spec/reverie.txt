@@ -424,9 +424,9 @@
 3BFF 'ControllerRumble' f32 f32 f32
 
 3C 'CharFace'
-3C03 char str str str str str
-3C04 char str
-3C05 char str str str str str
+3C03 'CharFaceSetClip' char str str str str str
+3C04 'CharFaceSet' char str
+3C05 'CharFaceSetSplit' char str str str str str
 3D   'CharTurnDir' char f32 f32 u8
 3E   char char f32 u8 rev_3e
 3F   char u32

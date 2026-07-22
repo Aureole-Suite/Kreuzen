@@ -284,10 +284,10 @@
 
 33 'CharFace'
 3302 char u16 u16
-3303 char str str str str
-3304 char str
-330A char
-330B char
+3303 'CharFaceSetClip' char str str str str
+3304 'CharFaceSet' char str
+330A 'CharFaceControlBegin' char
+330B 'CharFaceControlEnd' char
 
 34   'CharTurnDir' char f32 f32 u8
 35   char char f32 u8
