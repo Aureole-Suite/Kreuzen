@@ -483,8 +483,8 @@
 4902 'PartyClear' u8
 4903
 4904 'PartyLock' char
-4905 char
-4906 char
+4905 'CharExists2' char
+4906 'CharIsPartyLead' char
 4907
 4908 'PartySetFormation' char f32 f32 u8
 4909 char
@@ -494,7 +494,7 @@
 490D char char char char char char char char char char char char char char char char char char char char char char char char
 490E u8
 490F u8
-4910
+4910 'PartyGetCount'
 4911 u16
 4912 u8
 4914 char char char char char char char char char char char char char char char char char char char char char char char char char char char char char char

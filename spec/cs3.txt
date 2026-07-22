@@ -383,8 +383,8 @@
 4902 'PartyClear'
 4903
 4904 'PartyLock' char
-4905 char
-4906 char
+4905 'CharExists2' char
+4906 'CharIsPartyLead' char
 4907
 4908 'PartySetFormation' char f32 f32 u8
 4909 char
