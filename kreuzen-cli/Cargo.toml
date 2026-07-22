@@ -1,0 +1,23 @@
+[package]
+name = "kreuzen-cli"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "kreuzen"
+path = "src/main.rs"
+
+[dependencies]
+kreuzen.path = "../kreuzen"
+kreuzen-syntax.path = "../kreuzen-syntax"
+rootcause = "0.12.1"
+clap = { version = "4.5.20", features = ["derive"] }
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "fmt"] }
+tracing = { version = "0.1.44", features = ["attributes"] }
+walkdir = "2.5.0"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_System_Console"] }
+
+[features]
+live = ["kreuzen/live"]

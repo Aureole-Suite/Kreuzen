@@ -1,5 +1,5 @@
 [workspace]
-members = ["kreuzen", "kreuzen-macros", "kreuzen-syntax"]
+members = ["kreuzen", "kreuzen-cli", "kreuzen-macros", "kreuzen-syntax"]
 resolver = "3"
 
 [profile.release]
