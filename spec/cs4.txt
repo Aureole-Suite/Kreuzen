@@ -739,18 +739,18 @@
 87   u8 u32
 88   'BondPointsSet' u16
 89   'BondPointsAdd' u16
-8A00 char char str str
-8A01 char char str str
-8A02 char char
-8A03 char f32 f32 f32 f32 f32 f32 f32 f32 f32
-8A0A char str str str
-8A0B char
-8A0C char str str str
-8A0D str
-8A32 char str
-8A33 char str
-8AFE char str f32
-8AFF char str f32
+8A00 'CharAttach' char char str str
+8A01 'CharDetach' char char str str
+8A02 'CharIsAttached' char char
+8A03 'CharSetTransform' char f32 f32 f32 f32 f32 f32 f32 f32 f32
+8A0A 'CharAttachObj' char str str str
+8A0B 'CharDetachObj' char
+8A0C 'CharHoldObj' char str str str
+8A0D 'ObjRelease' str
+8A32 'BoneIKOn' char str
+8A33 'BoneIKOff' char str
+8AFE 'SpringOn' char str f32
+8AFF 'SpringOff' char str f32
 8B   f32 f32 f32 f32 f32 u8
 
 8C 'Debug'

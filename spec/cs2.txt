@@ -593,11 +593,11 @@
 7CFF 'QuestMarkerClear' u16 u16 flag flag u16 char pos str
 7E   'BondPointsSet' u16 u16
 7F   'BondPointsAdd' u16
-8000 char char str str
-8001 char char str str
-8002 char
-80FE char str f32
-80FF char str f32
+8000 'CharAttach' char char str str
+8001 'CharDetach' char char str str
+8002 'CharIsAttached' char
+80FE 'SpringOn' char str f32
+80FF 'SpringOff' char str f32
 81   f32 f32 f32 f32 u32 u8
 8200 u16
 8201
