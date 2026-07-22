@@ -59,8 +59,8 @@ struct Args {
 
 	#[clap(long, help = "Source game")]
 	game: Option<GameArg>,
-	#[clap(long, default_value = "utf8", help = "Source text encoding")]
-	enc: EncArg,
+	#[clap(long, help = "Script text encoding")]
+	enc: Option<EncArg>,
 	#[clap(long, default_value = "sugar", help = "Decompile depth")]
 	mode: DecompileMode,
 
@@ -223,13 +223,14 @@ fn compile(args: &Args, infile: &Path, outfile: &Path) -> bool {
 }
 
 fn decompile_inner(args: &Args, infile: &Path, outfile: &Path) -> rootcause::Result<bool> {
-	let Some(game) = args.game else {
-		tracing::error!("Must specify --game to decompile");
+	let Some(game) = args.game.map(Game::from).or_else(|| detect_game(infile)) else {
+		tracing::error!("Could not detect game from exe name or path; specify --game to decompile");
 		return Ok(false);
 	};
+	let enc = args.enc.map(Enc::from).unwrap_or_else(|| detect_enc(game, infile));
 
 	let bytes = std::fs::read(infile).context_with(|| format!("failed to read file: {}", infile.display()))?;
-	let scena = kreuzen::read(game.into(), args.enc.into(), &bytes).context("failed to read scena")?;
+	let scena = kreuzen::read(game, enc, &bytes).context("failed to read scena")?;
 	let scena = match args.mode {
 		DecompileMode::Flat => scena,
 		DecompileMode::Tree => kreuzen::decompile(&scena)?,
@@ -260,6 +261,56 @@ fn compile_inner(_args: &Args, infile: &Path, outfile: &Path) -> rootcause::Resu
 	let data = kreuzen::write(&scena).context("failed to write scena")?;
 	write_file(outfile, &data)?;
 	Ok(true)
+}
+
+fn detect_game(infile: &Path) -> Option<Game> {
+	detect_game_from_exe().or_else(|| {
+		parents(infile).find_map(|c| match c {
+			"Trails of Cold Steel" => Some(Game::Cs1),
+			"Trails of Cold Steel II" => Some(Game::Cs2),
+			"The Legend of Heroes Trails of Cold Steel III" => Some(Game::Cs3),
+			"The Legend of Heroes Trails of Cold Steel IV" => Some(Game::Cs4),
+			"The Legend of Heroes Trails into Reverie" => Some(Game::Reverie),
+			"Tokyo Xanadu eX+" => Some(Game::Tx),
+			_ => None,
+		})
+	})
+}
+
+fn detect_game_from_exe() -> Option<Game> {
+	match std::env::current_exe().ok()?.file_stem()?.to_str()? {
+		"kreuzen-cs1" => Some(Game::Cs1),
+		"kreuzen-cs2" => Some(Game::Cs2),
+		"kreuzen-cs3" => Some(Game::Cs3),
+		"kreuzen-cs4" => Some(Game::Cs4),
+		"kreuzen-rev" => Some(Game::Reverie),
+		"kreuzen-tx" => Some(Game::Tx),
+		_ => None,
+	}
+}
+
+/// For Cs1/Cs2, picks sjis or utf8 based on a `dat`/`dat_us` ancestor folder;
+/// every other game is always utf8.
+fn detect_enc(game: Game, infile: &Path) -> Enc {
+	if matches!(game, Game::Cs1 | Game::Cs2) {
+		for c in parents(infile) {
+			match c {
+				"dat" => return Enc::Sjis,
+				"dat_us" => return Enc::Utf8,
+				_ => {}
+			}
+		}
+	}
+	// Probably a sensible default for the cs1/2 scripts as well;
+	// most modders are probably interested in the english ones.
+	Enc::Utf8
+}
+
+fn parents(path: &Path) -> impl Iterator<Item = &str> {
+	path.parent()
+		.into_iter()
+		.flat_map(|p| p.components())
+		.filter_map(|c| c.as_os_str().to_str())
 }
 
 fn write_file(outfile: &Path, data: &[u8]) -> rootcause::Result<()> {
