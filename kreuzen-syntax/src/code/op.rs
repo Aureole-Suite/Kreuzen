@@ -155,7 +155,7 @@ fn parse_parts(p: &mut Parser, ctx: &PCtx, parts: &[Part], op: &mut Op) -> Resul
 			}),
 
 			P::Cs1_36 | P::Cs1_3C | P::Cs2_37 | P::Tx_3C | P::Cs3_98 | P::Cs3_c0 | P::Cs4_40 | P::Rev_79 | P::Rev_D2 | P::Rev_E002 => {
-				let extra = kreuzen::code::extra_parts(part, &op.args, ctx.game).map_err(|e| {
+				let extra = kreuzen::code::extra_parts(part, &op.args, ctx.spec.game).map_err(|e| {
 					p.errors.error(format!("{e}"), p.next_span());
 					Error
 				})?;

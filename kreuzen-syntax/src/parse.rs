@@ -2,7 +2,7 @@ mod alt;
 mod parser;
 
 use kreuzen::spec::Spec;
-use kreuzen::{Enc, Game, Scena, ScenaInfo};
+use kreuzen::{Enc, Scena, ScenaInfo};
 
 use crate::diag::{Errors, Severity};
 use crate::lex::{Cursor, Tokens};
@@ -13,7 +13,6 @@ pub use parser::{Error, Expect, Parser, Result};
 #[derive(Clone, Copy)]
 pub(crate) struct PCtx {
 	pub spec: &'static Spec,
-	pub game: Game,
 	pub can_break: bool,
 	pub can_cont: bool,
 }
@@ -94,7 +93,6 @@ pub fn parse_scena(info: ScenaInfo, rest: Rest<'_>, spec: &'static Spec, errors:
 	let mut p = Parser::new(rest.cursor, errors);
 	let ctx = PCtx {
 		spec,
-		game: info.game,
 		can_break: false,
 		can_cont: false,
 	};

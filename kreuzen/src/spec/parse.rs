@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
 use crate::spec::{Op, Opcode, Part, Spec};
+use crate::Game;
 
 pub type Lines = BTreeMap<Opcode, (String, Vec<Part>)>;
 
@@ -66,8 +67,8 @@ fn parse_line(line0: &str, add: &mut impl FnMut(Opcode, String, Vec<Part>)) -> r
 	Ok(())
 }
 
-pub fn parse_spec(ops: &Lines) -> Spec {
-	Spec { ops: build_ops(ops), by_name: build_names(ops) }
+pub fn parse_spec(game: Game, ops: &Lines) -> Spec {
+	Spec { game, ops: build_ops(ops), by_name: build_names(ops) }
 }
 
 fn build_ops(ops: &Lines) -> [Option<Op>; 256] {

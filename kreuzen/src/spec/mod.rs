@@ -9,35 +9,35 @@ mod parse;
 use parse::{Lines, parse_lines, parse_spec};
 
 macro_rules! spec {
-	($($name:ident),* $(,)?) => {
+	($($group:ident: $($name:ident),* $(,)?);* $(;)?) => {
 		#[cfg(test)]
 		mod parse_test {
 			use super::*;
-			$(#[test] fn $name() {
+			$($(#[test] fn $name() {
 				LazyLock::force(&lines::$name);
-			})*
+			})*)*
 		}
 
 		#[allow(non_upper_case_globals)]
 		#[cfg(not(feature = "live"))]
 		mod text {
-			$(pub static $name: &str =
-				include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../spec/", stringify!($name), ".txt"));)*
+			$($(pub static $name: &str =
+				include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../spec/", stringify!($name), ".txt"));)*)*
 		}
 
 		#[allow(non_upper_case_globals)]
 		#[cfg(feature = "live")]
 		mod text {
 			use super::*;
-			$(pub static $name: LazyLock<String> = LazyLock::new(|| {
+			$($(pub static $name: LazyLock<String> = LazyLock::new(|| {
 				std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../spec/", stringify!($name), ".txt"))
 					.unwrap()
-			});)*
+			});)*)*
 		}
 
 		fn text_for(name: &str) -> Option<&'static str> {
 			match name {
-				$(stringify!($name) => Some(&text::$name),)*
+				$($(stringify!($name) => Some(&text::$name),)*)*
 				_ => None,
 			}
 		}
@@ -45,12 +45,12 @@ macro_rules! spec {
 		#[allow(non_upper_case_globals)]
 		mod lines {
 			use super::*;
-			$(pub static $name: LazyLock<Lines> = LazyLock::new(|| parse_lines(stringify!($name)));)*
+			$($(pub static $name: LazyLock<Lines> = LazyLock::new(|| parse_lines(stringify!($name)));)*)*
 		}
 
 		fn lines_for(name: &str) -> Option<&'static Lines> {
 			match name {
-				$(stringify!($name) => Some(&lines::$name),)*
+				$($(stringify!($name) => Some(&lines::$name),)*)*
 				_ => None,
 			}
 		}
@@ -58,18 +58,18 @@ macro_rules! spec {
 		#[allow(non_upper_case_globals)]
 		mod specs {
 			use super::*;
-			$(pub static $name: LazyLock<Spec> = LazyLock::new(|| parse_spec(&lines::$name));)*
+			$($(pub static $name: LazyLock<Spec> = LazyLock::new(|| parse_spec(Game::$group, &lines::$name));)*)*
 		}
 	};
 }
 
 spec! {
-	cs1, cs1_1, cs1_2, cs1_3, cs1_menu,
-	cs2, cs2_1, cs2_menu,
-	cs3, cs3_1, cs3_2, cs3_3,
-	cs4, cs4_1,
-	reverie, reverie_1,
-	tx,
+	Cs1: cs1, cs1_1, cs1_2, cs1_3, cs1_menu;
+	Cs2: cs2, cs2_1, cs2_menu;
+	Cs3: cs3, cs3_1, cs3_2, cs3_3;
+	Cs4: cs4, cs4_1;
+	Reverie: reverie, reverie_1;
+	Tx: tx;
 }
 
 pub fn for_game(game: Game, variant: u8) -> &'static Spec {
@@ -161,6 +161,7 @@ pub enum Part {
 
 #[derive(Debug)]
 pub struct Spec {
+	pub game: Game,
 	pub ops: [Option<Op>; 256],
 	pub by_name: BTreeMap<String, Opcode>,
 }
