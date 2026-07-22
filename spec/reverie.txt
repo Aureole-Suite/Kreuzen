@@ -440,15 +440,15 @@
 43 'Fade'
 4300 'FadeOut' u16 f32 u16
 4301 u16 f32 u16
-4302 u16 f32 u16
+4302 'FadeBattle' u16 f32 u16
 4303 'FadeOutWhite' u16 f32 u16
 # 4304 u16 f32 u16
 4305 'LetterboxShow' u16
-4306 u16
+4306 'CutsceneTextOn' u16
 430A 'CutsceneBlurOn' u16
 430B 'CutsceneBlurOff' u16
-430C u16
-430D u16 u16
+430C 'CutsceneBlurWait' u16
+430D 'FadeFancy' u16 u16
 # 430E u16 u16
 430F u16 u16 u8
 4364 'FadeIn' u16 f32 u16
@@ -456,8 +456,8 @@
 4367 u16 f32 u16
 4368 u16 f32 u16
 4369 'LetterboxHide' u16
-436A u16
-436B u16
+436A 'CutsceneTextOff' u16
+436B 'CutsceneTextWait' u16
 43FE 'FadeCrossWait' u16
 43FF 'FadeWait' u16 u16
 
