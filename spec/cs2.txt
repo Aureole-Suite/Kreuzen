@@ -566,13 +566,13 @@
 7200 u8 u16 u16 u16 u16 u16 u16 u16
 7201
 73   'ShopShow' u16 u32 u16
-7400
-7401
-7402 u16
-7403 f32 f32 f32
-7404 u16
-7405 f32
-7406 u16
+7400 'DofOn'
+7401 'DofOff'
+7402 'DofSetMode' u16
+7403 'DofSetPos' pos
+7404 'DofSetChar' char
+7405 'DofSetDistance' f32
+7406 'DofSetLevel' u16
 7500 u8
 7501
 7502

@@ -434,13 +434,13 @@
 7009
 700A
 72   'ShopShow' u16 u32 u16
-7300
-7301
-7302 u16
-7303 pos
-7304 u16
-7305 f32
-7306 u16
+7300 'DofOn'
+7301 'DofOff'
+7302 'DofSetMode' u16
+7303 'DofSetPos' pos
+7304 'DofSetChar' char
+7305 'DofSetDistance' f32
+7306 'DofSetLevel' u16
 7307 u8 f32
 7308
 7309
