@@ -309,7 +309,7 @@
 350C 'CharFlag2Get' char flags32
 
 36 'Cam'
-3600
+3600 'CamReset'
 # 3601
 3602 'CamLookAt' u8 pos u16
 3603 'CamLookAtChar' u8 char str f32 f32 f32 u16
@@ -590,8 +590,8 @@
 6700 char u16
 6702 char
 6703 char
-6800 str u16
-6801 str u16
+6800 'ObjFlagSet' str u16
+6801 'ObjFlagUnset' str u16
 6802 'ObjSetPos' str pos
 6803 'ObjSetRot' str f32 f32 f32
 6804 'ObjSetScale' str f32 f32 f32

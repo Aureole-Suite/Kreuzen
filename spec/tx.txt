@@ -93,7 +93,7 @@
 2A   'CharFlagsSet' char flags32
 2B   'CharFlagsUnset' char flags32
 2C 'Cam'
-2C00
+2C00 'CamReset'
 2C02 'CamLookAt' u8 pos u16
 2C03 'CamLookAtChar' u8 char str f32 f32 f32 u16 u8
 2C04 'CamRotate' u8 f32 f32 f32 u16 u8

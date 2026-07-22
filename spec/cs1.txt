@@ -157,7 +157,7 @@
 2C   'CharFlagsUnset' char flags32
 
 2D 'Cam'
-2D00
+2D00 'CamReset'
 2D02 'CamLookAt' u8 pos u16
 2D03 'CamLookAtChar' u8 char str f32 f32 f32 u16
 2D04 'CamRotate' u8 f32 f32 f32 u16 u8
