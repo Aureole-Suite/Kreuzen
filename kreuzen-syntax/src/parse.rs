@@ -1,5 +1,4 @@
 mod alt;
-mod chunks;
 mod parser;
 
 use kreuzen::spec::Spec;
@@ -101,7 +100,7 @@ pub fn parse_scena(info: ScenaInfo, rest: Rest<'_>, spec: &'static Spec, errors:
 	};
 	let mut chunks = Vec::new();
 	while !p.at_end() {
-		parse_item(&mut p, &mut chunks, |p| chunks::parse_chunk(p, &ctx));
+		parse_item(&mut p, &mut chunks, |p| crate::scena::parse_chunk(p, &ctx));
 	}
 	Scena { info, chunks }
 }
