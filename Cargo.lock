@@ -306,7 +306,7 @@ checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
 
 [[package]]
 name = "kreuzen"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "compact-debug",
  "derive_more",
@@ -324,7 +324,7 @@ dependencies = [
 
 [[package]]
 name = "kreuzen-cli"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "clap",
  "kreuzen",
@@ -338,7 +338,7 @@ dependencies = [
 
 [[package]]
 name = "kreuzen-macros"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -348,7 +348,7 @@ dependencies = [
 
 [[package]]
 name = "kreuzen-syntax"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "codespan-reporting",
  "kreuzen",

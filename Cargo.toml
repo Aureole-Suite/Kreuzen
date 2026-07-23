@@ -1,6 +1,7 @@
 [workspace]
 members = ["kreuzen", "kreuzen-cli", "kreuzen-macros", "kreuzen-syntax"]
 resolver = "3"
+package.version = "1.0.0"
 
 [profile.release]
 debug = true
