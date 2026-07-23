@@ -70,11 +70,19 @@ fn parse_text(s: &str) -> rootcause::Result<Text> {
 	let mut chars = s.chars();
 	while let Some(c) = chars.next() {
 		if c == '\\' {
-			crate::ensure!(let Some('n') = chars.next(), "unknown escape in book text {s:?}");
-			if !scratch.is_empty() {
-				parts.push(TextPart::String(std::mem::take(&mut scratch)));
+			match chars.next() {
+				Some('n') => {
+					if !scratch.is_empty() {
+						parts.push(TextPart::String(std::mem::take(&mut scratch)));
+					}
+					parts.push(TextPart::Control(TextControl::Line));
+				}
+				Some(c) => {
+					scratch.push('\\');
+					scratch.push(c);
+				}
+				None => rootcause::bail!("missing escape in book text {s:?}"),
 			}
-			parts.push(TextPart::Control(TextControl::Line));
 		} else {
 			scratch.push(c);
 		}
@@ -89,10 +97,7 @@ fn unparse_text(text: &Text) -> rootcause::Result<String> {
 	let mut out = String::new();
 	for part in &text.0 {
 		match part {
-			TextPart::String(s) => {
-				crate::ensure!(!s.contains('\\'), "backslash in book text {s:?}");
-				out.push_str(s);
-			}
+			TextPart::String(s) => out.push_str(s),
 			TextPart::Control(TextControl::Line) => out.push_str("\\n"),
 			TextPart::Control(c) => rootcause::bail!("{c:?} is not allowed in book text"),
 		}
