@@ -294,8 +294,8 @@
 330B 'CharFaceControlEnd' char
 
 34   'CharTurnDir' char f32 f32 u8
-35   char char f32 u8
-36   char
+35   'CharTurnToChar' char char f32 u8
+36   'CharTurnWait' char
 37   'CharMoveTo' char char charmoveto
 38   'CharMoveStop' char
 3800 'CharMoveWait'
@@ -330,11 +330,11 @@
 4000 char
 4001 char
 4002
-4003
+4003 'PartyControlOn'
 4004 char
 4005 'CharIsPartyLead' char
 4006 char
-4007
+4007 'PartyControlOff'
 4008 char u8 u8 u16
 4009 char
 400A 'CharExists' char
@@ -358,7 +358,7 @@
 4503 char f32 f32 f32 f32 u16 u8
 4504 char u16
 4505 char u16
-46   str str
+46   'ObjAniPlay' str str
 47   f32 f32 f32 f32 f32 u16
 48   u8 u16
 49   u8
@@ -477,15 +477,15 @@
 5F11 u16 u16
 5F12 u16 u16
 5F13 u16
-60 char
-6000 f32 u8 u16
-6001
-6002 f32 f32 f32
+60 'CharPath' char
+6000 'CharPathPlay' f32 u8 u16
+6001 'CharPathBegin'
+6002 'CharPathAddPoint' f32 f32 f32
 6003 f32 u8 u16
 6004 f32 f32 f32 f32 f32 u8 u16
 6005 f32 f32 f32 f32 f32 f32 f32
 
-61   u8 u16 u16 f32 f32 f32
+61   'CharLightSetDir' u8 u16 u16 f32 f32 f32
 62   'CharAniSpeed' char f32
 63   str f32 u16
 64   char f32 f32 f32 f32 u8
@@ -584,9 +584,10 @@
 76   f32
 78   char u32 f32 flag f32 f32 f32 f32 u16
 79   char u16 u16 u16
-7A00 f32 f32 f32 f32
-7A01 f32 f32 f32 f32
-7A02 f32 f32 f32 f32
+7A 'Monotone'
+7A00 'MonotoneSetColor' f32 f32 f32 f32
+7A01 'MonotoneSetOffset' f32 f32 f32 f32
+7A02 'MonotoneSetPreset' f32 f32 f32 f32
 7A1B flags32
 7B   u8 u8
 7C01 'QuestMarkerChar'  u16 u16 flag flag u16 char pos str

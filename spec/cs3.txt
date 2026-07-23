@@ -343,8 +343,8 @@
 3C03 'CharFaceSetClip' char str str str str str
 3C04 'CharFaceSet' char str
 3D   'CharTurnDir' char f32 f32 u8
-3E   char char f32 u8
-3F   char
+3E   'CharTurnToChar' char char f32 u8
+3F   'CharTurnWait' char
 40   'CharMoveTo' char char charmoveto
 41   'CharMoveStop' char
 4100 'CharMoveWait'
@@ -411,7 +411,7 @@
 4F00 char f32 i16 u16 u32 f32
 4F01 char
 4F03 char f32 f32 f32 f32 u16 u8
-50   dyn str
+50   'ObjAniPlay' dyn str
 51   f32 f32 f32 f32 f32 u16 f32 f32 f32 f32
 52   u8 u16
 53   u8 u8
@@ -551,14 +551,14 @@
 6914 'LinkAuto'
 6915
 
-6A   char
-6A00 f32 u8 u16
-6A01
-6A02 pos
+6A   'CharPath' char
+6A00 'CharPathPlay' f32 u8 u16
+6A01 'CharPathBegin'
+6A02 'CharPathAddPoint' pos
 6A03 f32 u8 u16
 6A04 f32 f32 f32 f32 f32 u8 u16
 6A05 f32 f32 f32 f32 f32 f32 f32
-6B   u8 u16 u16 f32 f32 f32 # i32 in chr067
+6B   'CharLightSetDir' u8 u16 u16 f32 f32 f32 # i32 in chr067
 6C   'CharAniSpeed' char f32
 6E   u16 f32 f32 f32 f32 u8
 
@@ -648,9 +648,10 @@
 80   f32
 82   char f32 f32 u16 f32 f32 f32 f32 u16
 83   u16 u16 u16 u16
+84 'Monotone'
 8400 'MonotoneSetColor' f32 f32 f32 f32
-8401 f32 f32 f32 f32
-8402 f32 f32 f32 f32
+8401 'MonotoneSetOffset' f32 f32 f32 f32
+8402 'MonotoneSetPreset' f32 f32 f32 f32
 8403 'MonotoneCharSet' char str u8
 86 'QuestMarker'
 8601 'QuestMarkerChar'  u16 u16 flag flag u16 char pos str
