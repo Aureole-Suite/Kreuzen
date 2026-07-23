@@ -14,7 +14,7 @@ enum GameArg {
 	Cs2,
 	Cs3,
 	Cs4,
-	Rev,
+	Reverie,
 	Tx,
 }
 
@@ -25,7 +25,7 @@ impl From<GameArg> for Game {
 			GameArg::Cs2 => Game::Cs2,
 			GameArg::Cs3 => Game::Cs3,
 			GameArg::Cs4 => Game::Cs4,
-			GameArg::Rev => Game::Reverie,
+			GameArg::Reverie => Game::Reverie,
 			GameArg::Tx => Game::Tx,
 		}
 	}
@@ -309,7 +309,7 @@ fn detect_game_from_exe() -> Option<Game> {
 		"kreuzen-cs2" => Some(Game::Cs2),
 		"kreuzen-cs3" => Some(Game::Cs3),
 		"kreuzen-cs4" => Some(Game::Cs4),
-		"kreuzen-rev" => Some(Game::Reverie),
+		"kreuzen-reverie" => Some(Game::Reverie),
 		"kreuzen-tx" => Some(Game::Tx),
 		_ => None,
 	}
