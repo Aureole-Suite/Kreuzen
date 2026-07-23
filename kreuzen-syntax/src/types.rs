@@ -53,6 +53,7 @@ impl Parse for f32 {
 	fn parse(p: &mut Parser) -> Result<Self> {
 		p.alt()
 			.test(|p| p.float())
+			.test(|p| Ok(p.int()? as f32))
 			.test_kw("inf", |_| Ok(f32::INFINITY))
 			.test_kw("NaN", |_| Ok(f32::NAN))
 			.test(|p| {

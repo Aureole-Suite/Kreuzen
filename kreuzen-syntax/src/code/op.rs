@@ -211,12 +211,22 @@ fn parse_parts(p: &mut Parser, ctx: &PCtx, parts: &[Part], op: &mut Op) -> Resul
 /// A float-typed arg: either a float literal, or a munged int (`123'`).
 fn parse_f32_arg(p: &mut Parser) -> Result<Arg> {
 	p.alt()
-		.test(|p| p.parse().map(Arg::F32))
 		.test(|p| {
-			let v = p.parse()?;
-			p.glued_punct('\'')?;
-			Ok(Arg::F32Munged(v))
+			let span = p.next_span();
+			let v = p.int()?;
+			p.commit();
+			if p.glued_punct('\'').is_ok() {
+				let v = v.try_into().map_err(|_| {
+					p.errors.error(concat!("value out of range for ", stringify!($t)), span);
+					Error
+				})?;
+				Ok(Arg::F32Munged(v))
+			} else {
+				p.errors.warning("expected float. Add .0 or ' to disambiguate", span);
+				Ok(Arg::F32(v as f32))
+			}
 		})
+		.test(|p| p.parse().map(Arg::F32))
 		.finish()
 }
 
@@ -228,6 +238,7 @@ fn parse_dyn(p: &mut Parser) -> Result<Arg> {
 		.test(|p| p.parse().map(Arg::StrReg))
 		.test(|p| p.parse().map(Arg::Global))
 		.test(|p| p.parse().map(Arg::Str))
+		.test(|p| Ok(Arg::Int(p.parse::<i32>()? as i64)))
 		.test(|p| {
 			let v = p.parse()?;
 			if p.glued_punct('\'').is_ok() {
@@ -236,7 +247,6 @@ fn parse_dyn(p: &mut Parser) -> Result<Arg> {
 				Ok(Arg::F32(v))
 			}
 		})
-		.test(|p| Ok(Arg::Int(p.parse::<i32>()? as i64)))
 		.finish()
 }
 
