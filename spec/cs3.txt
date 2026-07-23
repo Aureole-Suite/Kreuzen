@@ -64,7 +64,9 @@
 290F u8
 2910 u8
 
-2A   u8 char str str u8
+2A00 'CharAttachPoint' char str str u8
+2A01 char str str u8
+2A02 char str str u8
 2B00 'Battle' battle u8 i32 u8 i32 u8
 
 2C   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8 u8
@@ -528,8 +530,8 @@
 6802 'ObjSetPos' str pos
 6803 'ObjSetRot' str f32 f32 f32
 6804 'ObjSetScale' str f32 f32 f32
-6805 str
-6806 str
+6805 'ObjShow' str
+6806 'ObjHide' str
 6807 str f32 f32 f32 f32 u16 u8
 680B str char
 681E str str str str f32 f32 f32
@@ -721,18 +723,19 @@ A6   char f32 f32 f32
 A9   'NoteGetCount' u8
 AA   u8 u8
 A8   'SystemFlagsGet' flags32
-AB00 char u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
-AB01
-AB02 u8 flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag
-AB03 f32 f32 f32
+AB00 'NpcTableAdd' char u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
+AB01 'NpcTableCommit'
+AB02 'NpcTableSetFlags' u8 flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag
+AB03 'NpcTableSetScale' f32 f32 f32
+AC 'Event'
 AC00 u8
-AC01 u32
-AC02 u32
-AC03 dyn
-AC04 dyn
+AC01 'EventSetVisited' u32
+AC02 'EventIsVisited' u32
+AC03 'EventGetFadeState' dyn
+AC04 'EventGetPartyState' dyn
 AC05 u16
 AC06
-AC07 u16
+AC07 'EventActive' u16
 AC09 u16
 AD00 u8
 AD01 u8

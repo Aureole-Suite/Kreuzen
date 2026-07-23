@@ -40,7 +40,9 @@
 1F06 u8 u16
 1F07 'MenuDisable' u8 u16
 
-20   u8 char str str u8
+2000 'CharAttachPoint' char str str u8
+2001 char str str u8
+2002 char str str u8
 21 'Battle'
 2100 battle u8
 2101 battle u8 u16 u16 u16 u16
@@ -253,12 +255,12 @@
 3F02
 3F03
 3F04 char
-3F05 char
+3F05 'CharIsPartyLead' char
 3F06 char
 3F07
 3F08 char u8 u8 u16
 3F09 char
-3F0A char
+3F0A 'CharExists' char
 3F0B char
 
 40   f32 f32 f32 f32 u16 u8
@@ -387,7 +389,7 @@
 6507 char u8
 6508 char u32
 6509 char u8
-66   f32 u16
+66   'LetterboxDim' f32 u16
 
 67 'Quest' u16
 6701 'QuestTaskSet' u16

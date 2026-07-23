@@ -44,7 +44,10 @@
 1F0B u8 u16
 1F0C u8 u16
 
-20   u8 char str str u8
+2000 'CharAttachPoint' char str str u8
+2001 char str str u8
+2002 char str str u8
+2003 char str str u8
 21 'Battle'
 2100 battle u8 i32 u8 i32 u8
 2101 battle u8 u16 u16 u16 u16
@@ -329,12 +332,12 @@
 4002
 4003
 4004 char
-4005 char
+4005 'CharIsPartyLead' char
 4006 char
 4007
 4008 char u8 u8 u16
 4009 char
-400A char
+400A 'CharExists' char
 400B char
 400D u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 400E
@@ -512,7 +515,7 @@
 660A char u32 u32
 660B char u8
 660C char u8 u8
-67   f32 u16
+67   'LetterboxDim' f32 u16
 
 68 'Quest' u16
 6801 'QuestTaskSet' u16
@@ -656,15 +659,16 @@
 9F   'NoteGetCount' u8
 
 A0   u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 f32 f32 f32 f32 u8 str str
-A100 char u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
-A101
-A102 u8 flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag
-A103 f32 f32 f32
+A100 'NpcTableAdd' char u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
+A101 'NpcTableCommit'
+A102 'NpcTableSetFlags' u8 flag flag flag flag flag flag flag flag flag flag flag flag flag flag flag
+A103 'NpcTableSetScale' f32 f32 f32
+A2 'Event'
 A200 u8
-A201 u16
-A202 u16
-A203 u16
-A204 u16
+A201 'EventSetVisited' u16
+A202 'EventIsVisited' u16
+A203 'EventGetFadeState' u16
+A204 'EventGetPartyState' u16
 A3   u8 u8
 A4   'SetEndFunc' str u16
 A5   u8

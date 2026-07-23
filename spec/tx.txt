@@ -45,7 +45,10 @@
 1F0C u8
 1F0D u8 flags32
 
-20   u8 char str str u8
+2000 'CharAttachPoint' char str str u8
+2001 char str str u8
+2002 char str str u8
+2004 char str str u8
 2100 u32 u8 u8 i32 u8 i32 u8
 2101 u32 u8 u8 u16 u16 u16 u16
 22   'CharAniclipPlay' char str u8 u8 u8 u8 u8 f32 f32 f32 f32 u8
@@ -204,10 +207,10 @@
 3F02
 3F03
 3F04 u16
-3F05 u16
+3F05 'CharIsPartyLead' char
 3F06 u16
 3F07
-3F0A u16
+3F0A 'CharExists' char
 3F0B u16
 3F0E u8
 3F0F
@@ -548,14 +551,15 @@ A002 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
 A003 f32 f32 f32
 A004 u16 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8 u8
 A005 u8 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16 u16
+A1 'Event'
 A100 u8
-A101 u16
-A102 u16
-A103 u16
-A104 u16
+A101 'EventSetVisited' u16
+A102 'EventIsVisited' u16
+A103 'EventGetFadeState' u16
+A104 'EventGetPartyState' u16
 A105
 A106
-A107
+A107 'EventActive'
 A200 u16 u8
 A3   'SetEndFunc' str u16
 A4   u8
