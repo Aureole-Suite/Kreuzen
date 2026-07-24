@@ -186,7 +186,9 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 		Game::Reverie if f.pos() == table_top => 1,
 		Game::Reverie => {
 			f.align_zeroed(4)?;
-			f.check_u32(0xFF000000)?;
+			if f.check_u32(0xFF000000).is_err() {
+				tracing::warn!("unusual header, possibly from Decompiler2");
+			}
 			if f.check_u32(0xFF000000).is_ok() { 2 } else { 0 }
 		}
 		_ => 0,
