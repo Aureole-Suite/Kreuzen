@@ -59,27 +59,14 @@ impl std::fmt::Debug for Hexdump {
 	}
 }
 
-fn read(f: &mut CReader) -> rootcause::Result<Vec<FlatOp>> {
-	let mut ops = Vec::new();
-	while !f.remaining().is_empty() {
-		if f.check_u8(0).is_ok() {
-			break;
-		}
-		let pos = f.pos();
-		let op = read_op(f)
-			.context_with(|| format!("Failed to read op at {pos:04X}"))
-			.attach_with(|| OpContext(std::mem::take(&mut ops)))
-			.attach_with(|| Hexdump(format!("{:#2.48X}", f.dump().start(pos).mark(f.pos()))))?;
-		ops.push((Label(pos as u32), op))
-	}
-
-	let wtf = (f.game, f.scena) == (Game::Cs3, "system");
-	let mut ops = insert_labels(&ops, wtf)
-		.context("could not resolve labels")
-		.attach_with(|| OpContext(std::mem::take(&mut ops)))?;
-	remap_labels(&mut ops);
-
-	Ok(ops)
+fn read_one_op(f: &mut CReader, ops: &mut Vec<(Label, FlatOp)>) -> rootcause::Result<()> {
+	let pos = f.pos();
+	let op = read_op(f)
+		.context_with(|| format!("Failed to read op at {pos:04X}"))
+		.attach_with(|| OpContext(std::mem::take(ops)))
+		.attach_with(|| Hexdump(format!("{:#2.48X}", f.dump().start(pos).mark(f.pos()))))?;
+	ops.push((Label(pos as u32), op));
+	Ok(())
 }
 
 pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::Result<Vec<FlatOp>> {
@@ -87,15 +74,36 @@ pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::
 	let d = f.data();
 	crate::ensure!(start <= end && end <= d.len());
 	let mut g = CReader { reader: Reader::new(&d[..end]).at(start)?, ..*f };
-	let v = read(&mut g)?;
+
+	let mut ops = Vec::new();
+	while !g.remaining().is_empty() {
+		if g.check_u8(0).is_ok() {
+			break;
+		}
+		read_one_op(&mut g, &mut ops)?;
+	}
+
+	let wtf = (f.game, f.scena) == (Game::Cs3, "system");
+	resolve_outlines(f, &mut ops, wtf)?;
+	let mut ops = insert_labels(&ops)
+		.context("could not resolve labels")
+		.attach_with(|| OpContext(std::mem::take(&mut ops)))?;
+	remap_labels(&mut ops);
+
 	if !g.remaining().iter().all(|x| *x == 0) {
 		tracing::warn!("Data remaining after function: {:02X?}", g.remaining());
 	}
 	f.seek(end)?;
-	Ok(v)
+	Ok(ops)
 }
 
-fn insert_labels(ops: &[(Label, FlatOp)], wtf: bool) -> rootcause::Result<Vec<FlatOp>> {
+fn resolve_outlines(f: &mut CReader, ops: &mut Vec<(Label, FlatOp)>, wtf: bool) -> rootcause::Result<()> {
+	const WEIRD_LABEL: Label = Label(10651);
+
+	todo!()
+}
+
+fn insert_labels(ops: &[(Label, FlatOp)]) -> rootcause::Result<Vec<FlatOp>> {
 	let mut labels = BTreeSet::new();
 	for (_, op) in ops {
 		match op {
