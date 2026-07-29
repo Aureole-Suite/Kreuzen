@@ -38,16 +38,9 @@ impl std::fmt::Display for Label {
 pub struct OpContext(pub Vec<(Label, FlatOp)>);
 impl std::fmt::Display for OpContext {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		const MAX: usize = 5;
-		if let Some(more) = self.0.len().checked_sub(MAX) {
-			writeln!(f, "Context: (omitting {more} ops)")?;
-			for (Label(l), op) in self.0.iter().rev().take(MAX).rev() {
-				writeln!(f, "  {l:04X} {op:?}")?;
-			}
-		} else if self.0.is_empty() {
-			writeln!(f, "Context: (empty)")?;
-		} else {
-			writeln!(f, "Context:")?;
+		writeln!(f, "Context:")?;
+		for (Label(l), op) in self.0.iter() {
+			writeln!(f, "  {l:04X} {op:?}")?;
 		}
 		Ok(())
 	}
@@ -81,7 +74,9 @@ fn read(f: &mut CReader) -> rootcause::Result<Vec<FlatOp>> {
 	}
 
 	let wtf = (f.game, f.scena) == (Game::Cs3, "system");
-	let mut ops = insert_labels(ops, wtf)?;
+	let mut ops = insert_labels(&ops, wtf)
+		.context("could not resolve labels")
+		.attach_with(|| OpContext(std::mem::take(&mut ops)))?;
 	remap_labels(&mut ops);
 
 	Ok(ops)
@@ -100,9 +95,9 @@ pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::
 	Ok(v)
 }
 
-fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> rootcause::Result<Vec<FlatOp>> {
+fn insert_labels(ops: &[(Label, FlatOp)], wtf: bool) -> rootcause::Result<Vec<FlatOp>> {
 	let mut labels = BTreeSet::new();
-	for (_, op) in &ops {
+	for (_, op) in ops {
 		match op {
 			FlatOp::Op(_) => {}
 			FlatOp::Label(_) => unreachable!(),
@@ -119,10 +114,10 @@ fn insert_labels(ops: Vec<(Label, FlatOp)>, wtf: bool) -> rootcause::Result<Vec<
 	}
 	let mut ops2 = Vec::with_capacity(ops.len() + labels.len());
 	for (pos, op) in ops {
-		if labels.remove(&pos) {
-			ops2.push(FlatOp::Label(pos));
+		if labels.remove(pos) {
+			ops2.push(FlatOp::Label(*pos));
 		}
-		ops2.push(op);
+		ops2.push(op.clone());
 	}
 
 	const WEIRD_LABEL: Label = Label(10651);
