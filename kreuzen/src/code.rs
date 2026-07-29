@@ -83,8 +83,9 @@ pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::
 		read_one_op(&mut g, &mut ops)?;
 	}
 
-	let wtf = (f.game, f.scena) == (Game::Cs3, "system");
-	resolve_outlines(f, &mut ops, wtf)?;
+	if (f.game, f.scena) == (Game::Cs3, "system") {
+		fix_broken_label(&mut ops, s);
+	}
 	let mut ops = insert_labels(&ops)
 		.context("could not resolve labels")
 		.attach_with(|| OpContext(std::mem::take(&mut ops)))?;
@@ -97,10 +98,20 @@ pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::
 	Ok(ops)
 }
 
-fn resolve_outlines(f: &mut CReader, ops: &mut Vec<(Label, FlatOp)>, wtf: bool) -> rootcause::Result<()> {
+/// Fixes up a label in cs3's `system` that points into the middle of an unrelated function.
+///
+/// It should point two ops past the branch that uses it.
+fn fix_broken_label(ops: &mut [(Label, FlatOp)], s: (usize, usize)) {
 	const WEIRD_LABEL: Label = Label(10651);
 
-	todo!()
+	if !(s.0..s.1).contains(&(WEIRD_LABEL.0 as usize))
+		&& let Some(i) = ops.iter().position(|(_, op)| matches!(op, FlatOp::If(_, _, WEIRD_LABEL)))
+		&& let Some(&(target, _)) = ops.get(i + 2)
+	{
+		tracing::warn!("Fixing up broken label");
+		let (_, FlatOp::If(_, _, l)) = &mut ops[i] else { unreachable!() };
+		*l = target;
+	}
 }
 
 fn insert_labels(ops: &[(Label, FlatOp)]) -> rootcause::Result<Vec<FlatOp>> {
@@ -126,16 +137,6 @@ fn insert_labels(ops: &[(Label, FlatOp)]) -> rootcause::Result<Vec<FlatOp>> {
 			ops2.push(FlatOp::Label(*pos));
 		}
 		ops2.push(op.clone());
-	}
-
-	const WEIRD_LABEL: Label = Label(10651);
-	if wtf
-		&& labels.len() == 1
-		&& let Some(if_loc) = ops2.iter().position(|op| matches!(op, FlatOp::If(_, _, WEIRD_LABEL)))
-		&& labels.remove(&WEIRD_LABEL)
-	{
-		tracing::warn!("Fixing up broken label");
-		ops2.insert(if_loc + 2, FlatOp::Label(WEIRD_LABEL));
 	}
 
 	crate::ensure!(labels.is_empty(), "Some labels were not used: {labels:?}");
