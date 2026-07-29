@@ -1,5 +1,6 @@
 use std::cell::Cell;
 use std::collections::{BTreeSet, HashMap};
+use std::ops::Range;
 use std::rc::Rc;
 
 use gospel::read::{Le as _, Reader};
@@ -83,9 +84,12 @@ pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::
 		read_one_op(&mut g, &mut ops)?;
 	}
 
+	let s = Label(s.0 as _)..Label(s.1 as _);
+
 	if (f.game, f.scena) == (Game::Cs3, "system") {
-		fix_broken_label(&mut ops, s);
+		fix_broken_label(&mut ops, s.clone());
 	}
+	resolve_outlines(f, &mut ops, s)?;
 	let mut ops = insert_labels(&ops)
 		.context("could not resolve labels")
 		.attach_with(|| OpContext(std::mem::take(&mut ops)))?;
@@ -101,10 +105,10 @@ pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::
 /// Fixes up a label in cs3's `system` that points into the middle of an unrelated function.
 ///
 /// It should point two ops past the branch that uses it.
-fn fix_broken_label(ops: &mut [(Label, FlatOp)], s: (usize, usize)) {
+fn fix_broken_label(ops: &mut [(Label, FlatOp)], s: Range<Label>) {
 	const WEIRD_LABEL: Label = Label(10651);
 
-	if !(s.0..s.1).contains(&(WEIRD_LABEL.0 as usize))
+	if !s.contains(&WEIRD_LABEL)
 		&& let Some(i) = ops.iter().position(|(_, op)| matches!(op, FlatOp::If(_, _, WEIRD_LABEL)))
 		&& let Some(&(target, _)) = ops.get(i + 2)
 	{
@@ -112,6 +116,49 @@ fn fix_broken_label(ops: &mut [(Label, FlatOp)], s: (usize, usize)) {
 		let (_, FlatOp::If(_, _, l)) = &mut ops[i] else { unreachable!() };
 		*l = target;
 	}
+}
+
+/// Resolves labels that point outside the function.
+///
+/// Some scripts have been edited with hex editors, which cannot resize a function. To make room,
+/// those replace a `goto` and a number of `nop`s with a jump to unused space elsewhere in the file,
+/// where the new code sits followed by a jump back. This can't be written back out the way it came
+/// in, but the inlined code is equivalent.
+fn resolve_outlines(f: &mut CReader, ops: &mut Vec<(Label, FlatOp)>, s: Range<Label>) -> rootcause::Result<()> {
+	let mut index = 0;
+	while index < ops.len() {
+		if let (l, FlatOp::Goto(meta, l1)) = ops[index]
+			&& !s.contains(&l1)
+		{
+			tracing::warn!("restoring outlined code from {l1} to {l}");
+			f.seek(l1.0 as usize)?;
+			let mut body = Vec::new();
+			// Add in nops instead of the gotos, both as a visual marker and to keep the label/meta
+			body.push((l, FlatOp::Op(Op { name: "nop", meta, args: Vec::new() })));
+			let l2 = loop {
+				read_one_op(f, &mut body)?;
+				if let (l, FlatOp::Goto(meta, l2)) = *body.last().unwrap()
+					&& s.contains(&l2)
+				{
+					body.pop();
+					body.push((l, FlatOp::Op(Op { name: "nop", meta, args: Vec::new() })));
+					break l2;
+				}
+			};
+
+			let end_index = ops.iter().position(|o| o.0 == l2).context_with(|| format!("could not find {l2}"))?;
+			crate::ensure!(end_index > index);
+			let other = ops.splice(index..end_index, body);
+			for (_, op) in other {
+				if !matches!(&op, FlatOp::Op(op) if op.name == "nop") {
+					tracing::warn!("outline replaces non-nop op {op:?}");
+				}
+			}
+		} else {
+			index += 1;
+		}
+	}
+	Ok(())
 }
 
 fn insert_labels(ops: &[(Label, FlatOp)]) -> rootcause::Result<Vec<FlatOp>> {
