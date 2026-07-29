@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Clone, Default)]
 pub struct Split {
 	pub entries: Vec<Entry>,
@@ -33,6 +35,9 @@ fn is_valid_preload(main_names: &[String], preload: &[String]) -> bool {
 
 /// Finds the index at which the shadow section begins.
 ///
+/// Only used to delimit the region in which preloads may occur; elements after this point are
+/// classified by name, so a main element may well appear there.
+///
 /// Assumes that no main or preload element starts with `_aN_`. Hopefully this holds.
 fn find_shadow_start(list: &[String]) -> usize {
 	list.iter().position(|s| strip_shadow_prefix(s).is_some()).unwrap_or(list.len())
@@ -48,54 +53,67 @@ fn find_preload_start(list: &[String]) -> usize {
 }
 
 pub fn parse(list: &[String]) -> Split {
-	let mut shadow_start = find_shadow_start(list);
+	// Initial version had a stricter dependency on chunk order, but some scripts modded with other tools do not follow the usual patterns.
+	// So we instead use a fairly ugly check that mixes name and positionality.
+	// We can't go fully name based, since there's some functions in cs4 btlwin that genuinely start with _.
+	let shadow_start = find_shadow_start(list);
 	let preload_start = find_preload_start(&list[..shadow_start]);
-	let main = &list[..preload_start];
-	let preload = &list[preload_start..shadow_start];
+
+	let mut entries: Vec<Entry> = Vec::new();
+	let mut by_name = HashMap::new();
+	let mut preloads = Vec::new();
+	let mut shadows = Vec::new();
 	let mut charater_section = None;
-	if list.get(shadow_start).map(|s| s.as_str()) == Some("_a0_CharaterSection") {
-		charater_section = Some(shadow_start);
-		shadow_start += 1;
-	}
-	let shadow = &list[shadow_start..];
 
-	let mut entries: Vec<Entry> = main
+	for (offset, s) in list.iter().enumerate() {
+		if s == "_a0_CharaterSection" {
+			assert!(charater_section.is_none(), "duplicate charater section");
+			charater_section = Some(offset);
+		} else if let Some((n, base)) = strip_shadow_prefix(s) {
+			shadows.push((n, base, offset));
+		} else if (preload_start..shadow_start).contains(&offset) {
+			preloads.push((&s[1..], offset));
+		} else {
+			by_name.entry(s.as_str()).or_insert(entries.len());
+			entries.push(Entry {
+				name: s.clone(),
+				main: offset,
+				preload: None,
+				shadow: Vec::new(),
+			});
+		}
+	}
+
+	for (base, offset) in preloads {
+		let Some(&i) = by_name.get(base) else {
+			panic!("preload {:?} has no matching main entry", list[offset])
+		};
+		let e = &mut entries[i];
+		assert!(e.preload.is_none(), "duplicate preload for {:?}", e.name);
+		e.preload = Some(offset);
+	}
+
+	// Sorting by level lets the assert below check that no level is missing.
+	shadows.sort_by_key(|&(n, ..)| n);
+	for (n, base, offset) in shadows {
+		let Some(&i) = by_name.get(base) else {
+			panic!("shadow {:?} has no matching main entry", list[offset])
+		};
+		let e = &mut entries[i];
+		assert_eq!(e.shadow.len(), n as usize, "shadow {:?} is missing lower levels", list[offset]);
+		e.shadow.push(offset);
+	}
+
+	// Writing always emits mains, then preloads, then the charater section, then shadows, so
+	// anything else will come back out in a different order than it went in.
+	let emitted = entries
 		.iter()
-		.enumerate()
-		.map(|(i, n)| Entry {
-			name: n.clone(),
-			main: i,
-			preload: None,
-			shadow: Vec::new(),
-		})
-		.collect();
-
-	{
-		let mut main_iter = entries.iter_mut();
-		for (s, offset) in preload.iter().zip(preload_start..) {
-			let base = &s[1..];
-			match main_iter.find(|a| a.name == base) {
-				Some(e) => e.preload = Some(offset),
-				None => panic!("preload {s:?} has no matching main entry"),
-			}
-		}
-	}
-
-	{
-		let mut main_iter = entries.iter_mut();
-		let mut cur = None;
-		for (s, offset) in shadow.iter().zip(shadow_start..) {
-			let (n, base) = strip_shadow_prefix(s).expect("shadow element lacks _aN_ prefix");
-			if n == 0 {
-				match main_iter.find(|a| a.name == base) {
-					Some(e) => cur = Some(e),
-					None => panic!("shadow {s:?} has no matching main entry"),
-				}
-			}
-			let e = cur.as_mut().expect("shadow levels must be filled in ascending N order");
-			assert_eq!(e.shadow.len(), n as usize, "shadow levels must be filled in ascending N order");
-			e.shadow.push(offset);
-		}
+		.map(|e| e.main)
+		.chain(entries.iter().filter_map(|e| e.preload))
+		.chain(charater_section)
+		.chain(entries.iter().flat_map(|e| e.shadow.iter().copied()));
+	if let Some((_, i)) = emitted.enumerate().find(|&(pos, i)| pos != i) {
+		tracing::warn!("chunk {:?} is out of order", list[i]);
 	}
 
 	Split { entries, charater_section }

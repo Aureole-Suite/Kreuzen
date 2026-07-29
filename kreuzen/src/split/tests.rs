@@ -21,7 +21,8 @@ fn validate(names: &[String], split: &Split) {
 		assert_eq!(names[i], "_a0_CharaterSection", "charater section name mismatch");
 	}
 
-	let parts = split
+	// The sections need not be in any particular order, but every element must be used exactly once.
+	let mut parts = split
 		.entries
 		.iter()
 		.map(|e| e.main)
@@ -29,6 +30,7 @@ fn validate(names: &[String], split: &Split) {
 		.chain(split.charater_section)
 		.chain(split.entries.iter().flat_map(|e| e.shadow.iter().copied()))
 		.collect::<Vec<_>>();
+	parts.sort();
 	assert!((0..names.len()).eq(parts.iter().copied()), "bad indices: {parts:?}");
 }
 
@@ -93,6 +95,53 @@ fn w1210_a1_shadow() {
 	assert_eq!(entries[1].shadow, vec![4]);
 	assert!(entries[0].preload.is_none());
 	assert!(entries[1].preload.is_none());
+}
+
+#[test]
+fn main_after_shadow_section() {
+	let entries = s([
+		"",
+		"PreInit",
+		"Init",
+		"EV_OneShotTest",
+		"_Init",
+		"_a0_CharaterSection",
+		"_a0_Init",
+		"_a0_EV_OneShotTest",
+		"ModdedFunc",
+		"ModdedFunc2",
+	]);
+
+	assert_eq!(entries.len(), 6);
+	assert_eq!(entries[2].name, "Init");
+	assert_eq!(entries[2].preload, Some(4));
+	assert_eq!(entries[2].shadow, vec![6]);
+	assert_eq!(entries[3].shadow, vec![7]);
+	assert_eq!(entries[4].name, "ModdedFunc");
+	assert_eq!(entries[4].main, 8);
+	assert_eq!(entries[5].name, "ModdedFunc2");
+	assert_eq!(entries[5].main, 9);
+}
+
+#[test]
+fn unordered_shadow() {
+	let entries = s([
+		"Init",
+		"Foo",
+		"Bar",
+		"_Init",
+		"_Bar",
+		"_a0_Bar",
+		"_a1_Bar",
+		"_a0_Init",
+	]);
+
+	assert_eq!(entries.len(), 3);
+	assert_eq!(entries[0].preload, Some(3));
+	assert_eq!(entries[0].shadow, vec![7]);
+	assert!(entries[1].preload.is_none());
+	assert_eq!(entries[2].preload, Some(4));
+	assert_eq!(entries[2].shadow, vec![5, 6]);
 }
 
 #[test]
