@@ -38,6 +38,15 @@ fn find_shadow_start(list: &[String]) -> usize {
 	list.iter().position(|s| strip_shadow_prefix(s).is_some()).unwrap_or(list.len())
 }
 
+/// Finds the index at which the trailing main section begins.
+///
+/// Scripts modded with other tools sometimes have a few extra functions at the end of the file,
+/// after the preloads and shadows. Since those both start with `_`, anything after the last such
+/// element is a main function.
+fn find_extra_start(list: &[String]) -> usize {
+	list.iter().rposition(|s| s.starts_with('_')).map_or(list.len(), |i| i + 1)
+}
+
 /// Finds the index at which the preload section begins.
 fn find_preload_start(list: &[String]) -> usize {
 	let min_start = list.iter().rposition(|s| !s.starts_with('_')).map_or(0, |i| i + 1);
@@ -48,7 +57,8 @@ fn find_preload_start(list: &[String]) -> usize {
 }
 
 pub fn parse(list: &[String]) -> Split {
-	let mut shadow_start = find_shadow_start(list);
+	let extra_start = find_extra_start(list);
+	let mut shadow_start = find_shadow_start(&list[..extra_start]);
 	let preload_start = find_preload_start(&list[..shadow_start]);
 	let main = &list[..preload_start];
 	let preload = &list[preload_start..shadow_start];
@@ -57,7 +67,8 @@ pub fn parse(list: &[String]) -> Split {
 		charater_section = Some(shadow_start);
 		shadow_start += 1;
 	}
-	let shadow = &list[shadow_start..];
+	let shadow = &list[shadow_start..extra_start];
+	let extra = &list[extra_start..];
 
 	let mut entries: Vec<Entry> = main
 		.iter()
@@ -97,6 +108,18 @@ pub fn parse(list: &[String]) -> Split {
 			e.shadow.push(offset);
 		}
 	}
+
+	if !extra.is_empty() && !main.is_empty() {
+		tracing::warn!("{} functions out of order, probably modded", extra.len());
+	}
+
+	// Modded entries, in case modder felt like putting them at the end.
+	entries.extend(extra.iter().zip(extra_start..).map(|(n, offset)| Entry {
+		name: n.clone(),
+		main: offset,
+		preload: None,
+		shadow: Vec::new(),
+	}));
 
 	Split { entries, charater_section }
 }

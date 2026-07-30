@@ -1,10 +1,35 @@
 use super::{Entry, Split, parse};
 
 fn s<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<Entry> {
+	let (names, split) = parse_and_validate(names);
+	// Nothing has moved, so the sections are still in the order they will be written back in.
+	let parts = parts(&split);
+	assert!((0..names.len()).eq(parts.iter().copied()), "bad indices: {parts:?}");
+	split.entries
+}
+
+/// Like [`s`], but for scripts with functions appended after the preloads and shadows. Those are
+/// written back before them, so the order does not survive.
+fn s_appended<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<Entry> {
+	parse_and_validate(names).1.entries
+}
+
+fn parse_and_validate<'a>(names: impl IntoIterator<Item = &'a str>) -> (Vec<String>, Split) {
 	let names = names.into_iter().map(|n| n.to_owned()).collect::<Vec<_>>();
-	let entries = parse(&names);
-	validate(&names, &entries);
-	entries.entries
+	let split = parse(&names);
+	validate(&names, &split);
+	(names, split)
+}
+
+fn parts(split: &Split) -> Vec<usize> {
+	split
+		.entries
+		.iter()
+		.map(|e| e.main)
+		.chain(split.entries.iter().filter_map(|e| e.preload))
+		.chain(split.charater_section)
+		.chain(split.entries.iter().flat_map(|e| e.shadow.iter().copied()))
+		.collect()
 }
 
 fn validate(names: &[String], split: &Split) {
@@ -21,15 +46,9 @@ fn validate(names: &[String], split: &Split) {
 		assert_eq!(names[i], "_a0_CharaterSection", "charater section name mismatch");
 	}
 
-	let parts = split
-		.entries
-		.iter()
-		.map(|e| e.main)
-		.chain(split.entries.iter().filter_map(|e| e.preload))
-		.chain(split.charater_section)
-		.chain(split.entries.iter().flat_map(|e| e.shadow.iter().copied()))
-		.collect::<Vec<_>>();
-	assert!((0..names.len()).eq(parts.iter().copied()), "bad indices: {parts:?}");
+	let mut parts = parts(split);
+	parts.sort();
+	assert!((0..names.len()).eq(parts.iter().copied()), "elements used more than once or not at all: {parts:?}");
 }
 
 #[test]
@@ -104,6 +123,44 @@ fn no_preload_no_shadow() {
 		assert!(e.preload.is_none());
 		assert!(e.shadow.is_empty());
 	}
+}
+
+#[test]
+fn main_appended_after_shadows() {
+	let entries = s_appended([
+		"",
+		"PreInit",
+		"Init",
+		"EV_OneShotTest",
+		"_Init",
+		"_a0_CharaterSection",
+		"_a0_Init",
+		"_a0_EV_OneShotTest",
+		"ModdedFunc",
+		"ModdedFunc2",
+	]);
+
+	assert_eq!(entries.len(), 6);
+	assert_eq!(entries[2].name, "Init");
+	assert_eq!(entries[2].preload, Some(4));
+	assert_eq!(entries[2].shadow, vec![6]);
+	assert_eq!(entries[3].shadow, vec![7]);
+	assert_eq!(entries[4].name, "ModdedFunc");
+	assert_eq!(entries[4].main, 8);
+	assert_eq!(entries[5].name, "ModdedFunc2");
+	assert_eq!(entries[5].main, 9);
+}
+
+#[test]
+fn main_appended_after_preloads() {
+	let entries = s_appended(["Init", "Func1", "_Init", "_Func1", "ModdedFunc"]);
+
+	assert_eq!(entries.len(), 3);
+	assert_eq!(entries[0].preload, Some(2));
+	assert_eq!(entries[1].preload, Some(3));
+	assert_eq!(entries[2].name, "ModdedFunc");
+	assert_eq!(entries[2].main, 4);
+	assert!(entries[2].preload.is_none());
 }
 
 #[test]
