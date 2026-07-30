@@ -76,7 +76,11 @@ impl Args {
 
 fn main() -> ExitCode {
 	tracing_subscriber::registry()
-		.with(tracing_subscriber::fmt::layer().with_writer(std::io::stderr))
+		.with(
+			tracing_subscriber::fmt::layer()
+				.with_writer(std::io::stderr)
+				.with_ansi_sanitization(false),
+		)
 		.with(
 			tracing_subscriber::EnvFilter::builder()
 				.with_default_directive(tracing::Level::INFO.into())

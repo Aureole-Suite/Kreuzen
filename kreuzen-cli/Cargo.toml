@@ -12,7 +12,7 @@ kreuzen.path = "../kreuzen"
 kreuzen-syntax.path = "../kreuzen-syntax"
 rootcause = "0.12.1"
 clap = { version = "4.5.20", features = ["derive"] }
-tracing-subscriber = { version = "0.3.22", features = ["env-filter", "fmt"] }
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
 tracing = { version = "0.1.44", features = ["attributes"] }
 walkdir = "2.5.0"
 
