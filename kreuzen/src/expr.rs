@@ -79,8 +79,8 @@ impl rootcause::handlers::AttachmentHandler<Vec<Expr>> for StackView {
 		if value.is_empty() {
 			writeln!(f, "Stack: (empty)")?;
 		}
+		writeln!(f, "Stack:")?;
 		for val in value {
-			writeln!(f, "Stack:")?;
 			writeln!(f, "  {val:?}")?;
 		}
 		Ok(())
