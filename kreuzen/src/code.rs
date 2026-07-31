@@ -89,7 +89,9 @@ pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::
 	if (f.game, f.scena) == (Game::Cs3, "system") {
 		fix_broken_label(&mut ops, s.clone());
 	}
-	resolve_outlines(f, &mut ops, s)?;
+	resolve_outlines(f, &mut ops, s)
+		.context("resolving outlines")
+		.attach_with(|| OpContext(std::mem::take(&mut ops)))?;
 	let mut ops = insert_labels(&ops)
 		.context("could not resolve labels")
 		.attach_with(|| OpContext(std::mem::take(&mut ops)))?;
