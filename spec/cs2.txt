@@ -458,21 +458,21 @@
 5E09 str
 5E0A str
 5E0B str u16
-5F00 u16 u16 u8 u32
+5F00 'LinkCreateBattleLink' char char u8 u32
 5F01 u16
-5F02 u16 u16 u16
-5F04 u16
-5F05 u16 u16 u16
-5F06 u16 u16 u16 u32
+5F02 'LinkSetLevel' char char u16
+5F04 'LinkSetLevelCap' u16
+5F05 'LinkSetExp' char char u16
+5F06 'LinkAddExp' char char u16 u32
 5F07 u16
 5F08 u16
 5F09 u16
-5F0A u16 u16 u8
+5F0A 'LinkDisableBattleLinking' char char u8
 5F0B u16
-5F0C u16 u16
-5F0D u16 u16
-5F0E u16 u16 u32
-5F0F u16 u16
+5F0C 'LinkGetLevel' char char
+5F0D 'LinkGetExp' char char
+5F0E 'LinkUnlockOverdrive' char char u32
+5F0F 'LinkIsOverdriveUnlocked' char char
 5F10 u16 u16
 5F11 u16 u16
 5F12 u16 u16
