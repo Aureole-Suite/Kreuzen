@@ -210,7 +210,14 @@ pub fn read(game: Game, enc: Enc, bytes: &[u8]) -> rootcause::Result<Scena> {
 	let pad = f.slice(first - pos)?;
 	crate::ensure!(pad.iter().all(|b| *b == 0));
 
-	let mut f = CReader { game, enc, scena: &name, variant, reader: f };
+	let mut f = CReader {
+		game,
+		enc,
+		scena: &name,
+		variant,
+		outline_start: f.len(),
+		reader: f,
+	};
 
 	let ranges = starts.iter().copied().zip(iter).collect::<Vec<_>>();
 	let split = split::parse(&names);

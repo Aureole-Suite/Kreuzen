@@ -20,6 +20,7 @@ pub struct CReader<'a> {
 	pub enc: Enc,
 	pub scena: &'a str,
 	pub variant: u8,
+	pub outline_start: usize,
 	#[deref]
 	#[deref_mut]
 	pub reader: Reader<'a>,

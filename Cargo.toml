@@ -1,4 +1,4 @@
 [workspace]
 members = ["kreuzen", "kreuzen-cli", "kreuzen-macros", "kreuzen-syntax"]
 resolver = "3"
-package.version = "1.1.0"
+package.version = "1.1.1"

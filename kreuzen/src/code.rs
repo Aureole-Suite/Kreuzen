@@ -72,6 +72,7 @@ fn read_one_op(f: &mut CReader, ops: &mut Vec<(Label, FlatOp)>) -> rootcause::Re
 
 pub(crate) fn read_code_chunk(f: &mut CReader, s: (usize, usize)) -> rootcause::Result<Vec<FlatOp>> {
 	let (start, end) = s;
+	let end = end.min(f.outline_start);
 	let d = f.data();
 	crate::ensure!(start <= end && end <= d.len());
 	let mut g = CReader { reader: Reader::new(&d[..end]).at(start)?, ..*f };
@@ -134,6 +135,7 @@ fn resolve_outlines(f: &mut CReader, ops: &mut Vec<(Label, FlatOp)>, s: Range<La
 		{
 			tracing::warn!("restoring outlined code from {l1} to {l}");
 			f.seek(l1.0 as usize)?;
+			f.outline_start = (f.outline_start).min(l1.0 as usize);
 			let mut body = Vec::new();
 			// Add in nops instead of the gotos, both as a visual marker and to keep the label/meta
 			body.push((l, FlatOp::Op(Op { name: "nop", meta, args: Vec::new() })));
