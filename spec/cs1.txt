@@ -349,7 +349,7 @@
 5D07 str f32 f32 f32 f32 u16 u8
 5D08 str f32 f32 f32 u16 u8
 5D09 str
-5E00 'LinkCreateBattleLink' char char u32
+5E00 'LinkSetCombatLink' char char u32
 5E01 u16
 5E02 'LinkSetLevel' char char u16
 5E04 'LinkSetLevelCap' u16
@@ -358,7 +358,7 @@
 5E07 u16
 5E08 u16
 5E09 u16
-5E0A 'LinkDisableBattleLinking' char char u8
+5E0A 'LinkDisableCombatLinking' char char u8
 5E0B u16
 5E0C 'LinkGetLevel' char char
 5E0D 'LinkGetExp' char char
